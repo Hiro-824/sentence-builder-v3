@@ -1,0 +1,9 @@
+export const padding = 12;
+export const blockCornerRadius = 10;
+export const blockStrokeWidth = 2;
+export const highlightStrokeWidth = 4;
+export const placeholderWidth = 100;
+export const placeholderHeight = 72;
+export const placeholderCornerRadius = 36;
+export const labelFontSize = 32;
+export const dropdownHeight = 60;
