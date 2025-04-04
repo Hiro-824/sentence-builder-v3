@@ -62,8 +62,8 @@ export class Renderer {
         });
 
         //Initial Zoom Level
-        //const initialTransform = d3.zoomIdentity.translate(0, 0).scale(0.5);
-        //d3.select("svg").transition().duration(300).call(zoom.transform, initialTransform);
+        const initialTransform = d3.zoomIdentity.translate(0, 0).scale(0.5);
+        d3.select("svg").transition().duration(300).call(zoom.transform, initialTransform);
     }
 
     renderBlock(blockData, parent) {
