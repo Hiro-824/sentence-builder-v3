@@ -1075,5 +1075,6 @@ export class Renderer {
     closeAllDropdowns() {
         d3.selectAll(".dropdown-options").attr("display", "none");
         this.currentlyOpenedDropdownId = null;
+        this.currentlyHoveredOptionIndex = null;
     }
 }
