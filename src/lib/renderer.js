@@ -15,6 +15,11 @@ export class Renderer {
         this.currentlyOpenedDropdownId = null;
 
         this.svg = svg;
+
+        this.svg.on("mousedown", () => {
+            this.closeAllDropdowns();
+        });
+
         this.render();
     }
 
