@@ -59,7 +59,7 @@ export class Renderer {
 
         this.svg.call(zoom).on("wheel", (event) => {
             event.preventDefault();
-        });
+        }, { passive: false });
 
         //Initial Zoom Level
         const initialTransform = d3.zoomIdentity.translate(0, 0).scale(0.5);
