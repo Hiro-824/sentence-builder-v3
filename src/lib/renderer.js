@@ -9,7 +9,9 @@ export class Renderer {
         this.onValidateAttachment = onValidateAttachment || (() => true);
         this.onValidateSelectionContextually = onValidateSelectionContextually || (() => true); // Default to always allow
 
-        this.latestDragStartPosition = { x: 0, y: 0 };
+        this.dragStartBlockPosition = { x: 0, y: 0 };
+        this.dragStartMousePosition = { x: 0, y: 0 };
+
         this.currentlyHoveredDropdownId = null;
         this.currentlyHoveredOptionIndex = null;
         this.currentlyOpenedDropdownId = null;
@@ -20,15 +22,48 @@ export class Renderer {
             this.closeAllDropdowns();
         });
 
+        this.renderGrid();
         this.render();
     }
 
     render() {
-        d3.select("#svg").selectAll("*").remove();
+        d3.select("#grid").selectAll("*").remove();
         const blocks = this.data.blocks;
         blocks.forEach(blockData => {
-            this.renderBlock(blockData, this.svg);
+            this.renderBlock(blockData, this.grid);
         });
+    }
+
+    renderGrid() {
+        const width = 1440;
+        const height = 812;
+
+        this.grid = this.svg.append("g").attr("id", "grid");
+        const spacing = 50;
+        const gridData = [];
+
+        for (let x = -width * 6; x <= width * 6; x += spacing) {
+            for (let y = -height * 6; y <= height * 6; y += spacing) {
+                gridData.push({ x, y });
+            }
+        }
+
+        const zoom = d3.zoom()
+            .scaleExtent(
+                [0.2, 1.5],
+            )
+            .translateExtent([[-width * 4, -height * 4], [width * 4, height * 4]])
+            .on("zoom", (event) => {
+                this.grid.attr("transform", event.transform);
+            });
+
+        this.svg.call(zoom).on("wheel", (event) => {
+            event.preventDefault();
+        });
+
+        //Initial Zoom Level
+        //const initialTransform = d3.zoomIdentity.translate(0, 0).scale(0.5);
+        //d3.select("svg").transition().duration(300).call(zoom.transform, initialTransform);
     }
 
     renderBlock(blockData, parent) {
@@ -265,7 +300,7 @@ export class Renderer {
                         let element = d3.select(`#${blockData.id}`);
                         element.raise();
                         // Traverse up until the immediate parent is the svg (whose id is "svg")
-                        while (element.node().parentNode && element.node().parentNode.id !== "svg") {
+                        while (element.node().parentNode && element.node().parentNode.id !== "grid") {
                             element = d3.select(element.node().parentNode);
                         }
                         element.raise();
@@ -415,12 +450,26 @@ export class Renderer {
             .attr("stroke-width", highlightStrokeWidth);
 
         //ドラッグ開始地点を記録
-        this.latestDragStartPosition = { x: d.x, y: d.y };
+        this.dragStartBlockPosition = { x: d.x, y: d.y };
+        const [startX, startY] = d3.pointer(event.sourceEvent, this.svg.node());
+        this.dragStartMousePosition = { x: startX, y: startY };
+
+        /*
+        // ズレがあるかを記録(子ブロックが親ブロックに移動した場合など)
+        this.latestDragConsiderOffset = (event.x !== d.x);
+
+        console.log(`ドラッグ開始：eventはx座標が${event.x}だと主張しています`)
+        console.log(`ドラッグ開始：正しいx座標は${d.x}です`)*/
     }
 
     dragging(event, d) {
-        d.x = event.x;
-        d.y = event.y;
+
+        const transform = d3.zoomTransform(this.svg.node());
+
+        const [mouseX, mouseY] = d3.pointer(event.sourceEvent, this.svg.node());
+        d.x = this.dragStartBlockPosition.x + (mouseX - this.dragStartMousePosition.x) / transform.k;
+        d.y = this.dragStartBlockPosition.y + (mouseY - this.dragStartMousePosition.y) / transform.k;
+
         const id = `#${d.id}`
         d3.select(id).attr("transform", `translate(${d.x}, ${d.y})`);
 
@@ -477,9 +526,12 @@ export class Renderer {
         }
 
         // 移動していなければ、dropdownが開かれた可能性を考慮する
-        const dx = event.x - this.latestDragStartPosition.x;
-        const dy = event.y - this.latestDragStartPosition.y;
+        const [mouseX, mouseY] = d3.pointer(event.sourceEvent, this.svg.node());
+        const dx = mouseX - this.dragStartMousePosition.x;
+        const dy = mouseY - this.dragStartMousePosition.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
+
+        console.log(distance);
 
         if (distance < 5 && this.currentlyHoveredDropdownId !== null) {
             const dropdownElem = document.getElementById(this.currentlyHoveredDropdownId);
