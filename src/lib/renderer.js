@@ -11,6 +11,7 @@ export class Renderer {
 
         this.dragStartBlockPosition = { x: 0, y: 0 };
         this.dragStartMousePosition = { x: 0, y: 0 };
+        this.hasDragged = false;
 
         this.currentlyHoveredDropdownId = null;
         this.currentlyHoveredOptionIndex = null;
@@ -425,17 +426,9 @@ export class Renderer {
     }
 
     dragStart(event, d) {
-        //ブロックを子でなくす
-        this.moveBlockToTopLevel(d.id);
-        this.render();
 
-        //配列の最初に移動
-        const blockDataIndex = this.data.blocks.findIndex(b => b.id === d.id);
-        if (blockDataIndex !== -1) {
-            const [draggedBlock] = this.data.blocks.splice(blockDataIndex, 1);
-            this.data.blocks.push(draggedBlock);
-            this.updateData();
-        }
+        console.log("dragStart has been invoked")
+        this.hasDragged = false;
 
         //UI上でも最前面に
         const id = `#${d.id}`
@@ -450,27 +443,46 @@ export class Renderer {
             .attr("stroke-width", highlightStrokeWidth);
 
         //ドラッグ開始地点を記録
-        this.dragStartBlockPosition = { x: d.x, y: d.y };
+        //this.dragStartBlockPosition = { x: d.x, y: d.y };
+        const absoltuePosition = this.calculateAbsolutePosition(d.id);
+        this.dragStartBlockPosition = absoltuePosition ? absoltuePosition : { x: d.x, y: d.y };
         const [startX, startY] = d3.pointer(event.sourceEvent, this.svg.node());
         this.dragStartMousePosition = { x: startX, y: startY };
-
-        /*
-        // ズレがあるかを記録(子ブロックが親ブロックに移動した場合など)
-        this.latestDragConsiderOffset = (event.x !== d.x);
-
-        console.log(`ドラッグ開始：eventはx座標が${event.x}だと主張しています`)
-        console.log(`ドラッグ開始：正しいx座標は${d.x}です`)*/
     }
 
     dragging(event, d) {
+        console.log("dragging has been invoked")
+        this.hasDragged = true;
+
+        //ブロックを子でなくす
+        this.moveBlockToTopLevel(d.id);
+        this.render();
+
+        //配列の最初に移動
+        const blockDataIndex = this.data.blocks.findIndex(b => b.id === d.id);
+        if (blockDataIndex !== -1) {
+            const [draggedBlock] = this.data.blocks.splice(blockDataIndex, 1);
+            this.data.blocks.push(draggedBlock);
+            this.updateData();
+        }
 
         const transform = d3.zoomTransform(this.svg.node());
+
+        const id = `#${d.id}`
+        d3.select(id)
+            .raise()
+            .classed("grab", false)
+            .classed("grabbing", true);
+
+        const frameId = `#frame-${d.id}`;
+        d3.select(frameId)
+            .attr("stroke", "yellow")
+            .attr("stroke-width", highlightStrokeWidth);
 
         const [mouseX, mouseY] = d3.pointer(event.sourceEvent, this.svg.node());
         d.x = this.dragStartBlockPosition.x + (mouseX - this.dragStartMousePosition.x) / transform.k;
         d.y = this.dragStartBlockPosition.y + (mouseY - this.dragStartMousePosition.y) / transform.k;
 
-        const id = `#${d.id}`
         d3.select(id).attr("transform", `translate(${d.x}, ${d.y})`);
 
         const placeholderId = this.detectPlaceholderOverlap(d, d.x, d.y);
@@ -492,8 +504,22 @@ export class Renderer {
 
     dragEnd(event, d) {
 
+        console.log("dragEnd has been invoked")
         this.deemphasizeAllPlaceholder();
         this.deemphasizeAllBlock();
+        this.render();
+
+        if (!this.hasDragged) {
+            this.hasDragged = false;
+            if (this.currentlyHoveredDropdownId) {
+                const dropdownElem = document.getElementById(this.currentlyHoveredDropdownId);
+                if (dropdownElem) dropdownElem.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+            }
+            return;
+        }
+
+        this.hasDragged = false;
+
         const placeholderId = this.detectPlaceholderOverlap(d, d.x, d.y);
         const overlapInfo = this.detectBlockOverlap(d, d.x, d.y);
         if (placeholderId) {
@@ -523,19 +549,6 @@ export class Renderer {
             const [draggedBlock] = this.data.blocks.splice(blockDataIndex, 1);
             this.data.blocks.push(draggedBlock);
             this.updateData();
-        }
-
-        // 移動していなければ、dropdownが開かれた可能性を考慮する
-        const [mouseX, mouseY] = d3.pointer(event.sourceEvent, this.svg.node());
-        const dx = mouseX - this.dragStartMousePosition.x;
-        const dy = mouseY - this.dragStartMousePosition.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-
-        console.log(distance);
-
-        if (distance < 5 && this.currentlyHoveredDropdownId !== null) {
-            const dropdownElem = document.getElementById(this.currentlyHoveredDropdownId);
-            if (dropdownElem) dropdownElem.dispatchEvent(new MouseEvent('click', { bubbles: true }));
         }
     }
 
@@ -834,6 +847,44 @@ export class Renderer {
                 targetParent.children.splice(index, 0, { type: "placeholder", content: blockToMove });
             }
         }
+    }
+
+    calculateAbsolutePosition(blockId, blocks = this.data.blocks, offsetX = 0, offsetY = 0) {
+        for (let i = 0; i < blocks.length; i++) {
+            const block = blocks[i];
+
+            // If the current block is the one we're looking for:
+            if (block.id === blockId) {
+                return { x: offsetX + block.x, y: offsetY + block.y };
+            }
+
+            // If the block has children, iterate over them:
+            if (block.children) {
+                for (let j = 0; j < block.children.length; j++) {
+                    const child = block.children[j];
+
+                    // Only process placeholders and attachments that contain a "content" block.
+                    if (child.type === "placeholder" || child.type === "attachment") {
+                        const content = child.content;
+                        if (content) {
+                            // If this child block is the one we're looking for,
+                            // calculate its absolute position.
+                            if (content.id === blockId) {
+                                return { x: offsetX + block.x + content.x, y: offsetY + block.y + content.y };
+                            } else {
+                                // Otherwise, search within this child block recursively.
+                                const result = this.calculateAbsolutePosition(blockId, [content], offsetX + block.x, offsetY + block.y);
+                                if (result) {
+                                    return result;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // Return null if no block with the given ID was found.
+        return null;
     }
 
     // 挿入後のデータを予測する(データを実際には変更しない)
