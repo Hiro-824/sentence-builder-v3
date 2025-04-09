@@ -452,8 +452,6 @@ export class Renderer {
 
     dragging(event, d) {
 
-        if(this.hasDragged === false && event.dx + event.dy <= 0) return;
-
         console.log("dragging has been invoked")
         this.hasDragged = true;
 
