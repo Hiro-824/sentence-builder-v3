@@ -96,7 +96,7 @@ export const thatObjectiveRelativeCategory: Category = {
                 {
                     name: "DP",
                     features: {
-                        "case": ["NOM"],
+                        "case": ["ACC"],
                     },
                     arguments: []
                 }
