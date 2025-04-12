@@ -1,17 +1,21 @@
 export interface Category {
-    name: string;
+    base: string;
     features: Record<string, string[]>;
-    arguments: Category[];
+    specifiers: Category[];
+    complements: Category[];
 }
 
 export interface Lexicon {
-    head: string;
+    word: string;
     categories: Category[];
 }
 
 export type argument = Constituent | null;
 
 export interface Constituent {
-    lexicon: Lexicon;
-    arguments: argument[];
+    head: Lexicon;
+    preModifiers: argument[];
+    specifiers: argument[];
+    complements: argument[];
+    postModifiers: argument[];
 }
