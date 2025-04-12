@@ -215,13 +215,151 @@ const SentenceBuilder = () => {
         ]
     }
 
+    const sentenceBlock2 = {
+        id: "e148de85abf6440c48613325bd0c92cc8",
+        category: "Sentence",
+        x: 100,
+        y: 360,
+        color: "lightBlue",
+        children: [
+            {
+                id: "subject",
+                type: "placeholder",
+                content: null,
+            },
+            {
+                id: "predicate",
+                type: "placeholder",
+                content: null,
+            },
+            {
+                id: "period",
+                type: "text",
+                content: ".",
+            }
+        ]
+    }
+
+    const theBlock = {
+        id: "x6f1c048367664668aeeb94e3b58567c7",
+        x: 100,
+        y: 50,
+        color: "dodgerblue",
+        children: [
+            {
+                id: "text",
+                type: "text",
+                content: "the",
+            },
+            {
+                id: "NP",
+                type: "placeholder",
+                content: null,
+            }
+        ]
+    }
+
+    const penBlock = {
+        id: "y6f1c048367664668aeeb94e3b58567c7",
+        x: 100,
+        y: 155,
+        color: "dodgerblue",
+        children: [
+            {
+                id: "text",
+                type: "dropdown",
+                content: ["pen", "pens"],
+                selected: 0,
+            },
+        ]
+    }
+
+    const thatBlock = {
+        id: "z6f1c048367664668aeeb94e3b58567c7",
+        x: 100,
+        y: 250,
+        color: "mediumseagreen",
+        children: [
+            {
+                id: "NP",
+                type: "placeholder",
+                content: null,
+            },
+            {
+                id: "text",
+                type: "text",
+                content: "that"
+            },
+            {
+                id: "TP",
+                type: "placeholder",
+                content: null,
+            }
+        ]
+    }
+
+    const thisBlock = {
+        id: "w6f1c048367664668aeeb94e3b58567c7",
+        x: 100,
+        y: 475,
+        color: "dodgerblue",
+        children: [
+            {
+                id: "text",
+                type: "dropdown",
+                content: ["this", "these"],
+                selected: 0,
+            },
+        ]
+    }
+
+    const beBlock = {
+        id: "h6f1c048367664668aeeb94e3b58567c7",
+        x: 100,
+        y: 570,
+        color: "tomato",
+        children: [
+            {
+                id: "text",
+                type: "dropdown",
+                content: ["is", "am", "are", "was", "were", "been", "being", "be"],
+                selected: 0,
+            },
+            {
+                id: "NP",
+                type: "placeholder",
+            }
+        ]
+    }
+
+    const buyBlock = {
+        id: "i6f1c048367664668aeeb94e3b58567c7",
+        x: 100,
+        y: 675,
+        color: "tomato",
+        children: [
+            {
+                id: "text",
+                type: "dropdown",
+                content: ["buy", "buys", "bought", "buying"],
+                selected: 0,
+            },
+        ]
+    }
+
     // ブロックの色、mediumseagreenとかも綺麗かも
 
     const data = {
         blocks: [
-            ...pronounBlocks,
-            loveBlock,
             sentenceBlock,
+            sentenceBlock2,
+            theBlock,
+            thatBlock,
+            penBlock,
+            thisBlock,
+            beBlock,
+            iBlock,
+            buyBlock
         ]
     }
 

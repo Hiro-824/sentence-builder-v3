@@ -141,3 +141,23 @@ export const LovesCategories: Category[] = [
         ]
     },
 ]
+
+export const NotCategory: Category = {
+    base: "VP",
+    features: {
+        form: ["base"],
+        isNeg: ["+"]
+    },
+    specifiers: [],
+    complements: [
+        {
+            base: "VP",
+            features: {
+                form: ["base"],
+                isNeg: ["-"]
+            },
+            specifiers: [],
+            complements: []
+        }
+    ]
+}

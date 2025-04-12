@@ -1,7 +1,6 @@
 import { Category, Constituent } from "./category";
 
 export class Grammar {
-
     validateConstituent(constituent: Constituent): Category[] {
         const categories = constituent.head.categories;
         const grammaticalCategories: Category[] = [];

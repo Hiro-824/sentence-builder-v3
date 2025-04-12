@@ -83,9 +83,25 @@ export class Renderer {
                 .on("end", this.dragEnd.bind(this))
             );
 
+        const r = blockCornerRadius;
+        /*const hexPathData = `M ${height / 2} 0 
+                        L ${width + padding * 4 - height / 2} 0
+                        L ${width + padding * 4} ${height / 2}
+                        L ${width + padding * 4 - height / 2} ${height}
+                        L ${height / 2} ${height}
+                        L 0 ${height / 2}
+                        Z`;*/
+
+        const rectPathData = `M 0 ${r}
+                        a ${r} ${r} 0 0 1 ${r} ${-r} h ${width - 2 * r}
+                        a ${r} ${r} 0 0 1 ${r} ${r} v ${height - 2 * r}
+                        a ${r} ${r} 0 0 1 ${-r} ${r} h ${-(width - 2 * r)}
+                        a ${r} ${r} 0 0 1 ${-r} ${-r} z`;
+
         //フレームを描画
         const strokeColor = this.darkenColor(blockData.color, 30);
-        blockGroup.append("rect")
+        blockGroup.append("path")
+            .attr("d", rectPathData)
             .attr("id", `frame-${blockData.id}`)
             .attr("width", width)
             .attr("height", height)

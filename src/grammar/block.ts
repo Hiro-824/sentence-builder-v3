@@ -1,7 +1,10 @@
+import { Lexicon } from "./category";
+
 export type blockChildType = "text" | "dropdown" | "placeholder" | "attachment";
 
 export interface Block {
     id: string;
+    lexicons: Lexicon[];
     x: number;
     y: number;
     color: string;

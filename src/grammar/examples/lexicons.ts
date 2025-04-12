@@ -1,5 +1,5 @@
 import { Lexicon } from "../category";
-import { TPs, ICategory, SheCategory, LoveCategories, LovesCategories, ItCategories } from "./categories";
+import { TPs, ICategory, SheCategory, LoveCategories, LovesCategories, ItCategories, NotCategory } from "./categories";
 
 export const TP_Lexicon: Lexicon = {
     word: "",
@@ -29,4 +29,9 @@ export const Loves_Lexicon: Lexicon = {
 export const It_Lexicon: Lexicon = {
     word: "it",
     categories: ItCategories
+}
+
+export const Not_Lexicon: Lexicon = {
+    word: "not",
+    categories: [NotCategory]
 }

@@ -1,5 +1,5 @@
 import { Constituent } from "../category";
-import { It_Lexicon, Loves_Lexicon, TP_Lexicon } from "./lexicons";
+import { It_Lexicon, Love_Lexicon, Loves_Lexicon, Not_Lexicon, TP_Lexicon } from "./lexicons";
 
 export const SheLovesIt: Constituent = {
     head: TP_Lexicon,
@@ -26,6 +26,24 @@ export const SheLovesIt: Constituent = {
                     complements: [],
                     postModifiers: []
                 }
+            ],
+            postModifiers: []
+        }
+    ],
+    postModifiers: []
+}
+
+export const NotLoveIt: Constituent = {
+    head: Not_Lexicon,
+    preModifiers: [],
+    specifiers: [],
+    complements: [
+        {
+            head: Love_Lexicon,
+            preModifiers: [],
+            specifiers: [],
+            complements: [
+                null
             ],
             postModifiers: []
         }
