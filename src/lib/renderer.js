@@ -1,4 +1,4 @@
-import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight } from "./const.js";
+import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding } from "./const.js";
 import * as d3 from "d3";
 
 export class Renderer {
@@ -98,22 +98,36 @@ export class Renderer {
                         a ${r} ${r} 0 0 1 ${-r} ${r} h ${-(width - 2 * r)}
                         a ${r} ${r} 0 0 1 ${-r} ${-r} z`;
 
+        let opacity = 1;
+        if(blockData.isTransparent && blockData.isTransparent === true) {
+            opacity = 0.5;
+        }
+
+        let actualCornerRadius = blockCornerRadius;
+        if(blockData.isRound && blockData.isRound === true) {
+            actualCornerRadius = height / 2;
+        }
+
         //フレームを描画
         const strokeColor = this.darkenColor(blockData.color, 30);
-        blockGroup.append("path")
+        blockGroup.append("rect")
             .attr("d", rectPathData)
             .attr("id", `frame-${blockData.id}`)
+            .attr("opacity", opacity)
             .attr("width", width)
             .attr("height", height)
             .attr("fill", blockData.color)
-            .attr("rx", blockCornerRadius)
-            .attr("ry", blockCornerRadius)
+            .attr("rx", actualCornerRadius)
+            .attr("ry", actualCornerRadius)
             .attr("stroke", strokeColor)
             .attr("stroke-width", blockStrokeWidth);
 
         //内部を描画
         const children = blockData.children;
-        let x = padding;
+        let x = horizontalPadding;
+        if(blockData.isRound && blockData.isRound === true) {
+            x += horizontalPadding;
+        }
         for (let count = 0; count < children.length; count++) {
             const child = children[count];
             if (child.type === "placeholder") {
@@ -125,7 +139,7 @@ export class Renderer {
                     content.x = x;
                     content.y = (height - childHeight) / 2;
                     this.renderBlock(content, blockGroup);
-                    x += (childWidth + padding)
+                    x += (childWidth + horizontalPadding)
                 } else {
                     //ブロックがはまっていない場合
                     const y = (height - placeholderHeight) / 2;
@@ -139,7 +153,7 @@ export class Renderer {
                         .attr("rx", placeholderCornerRadius)
                         .attr("ry", placeholderCornerRadius)
                         .attr("fill", inputColor);
-                    x += (placeholderWidth + padding);
+                    x += (placeholderWidth + horizontalPadding);
                 }
             } else if (child.type === "text") {
                 const content = child.content;
@@ -153,7 +167,7 @@ export class Renderer {
                     .attr('font-size', `${labelFontSize}pt`)
                     .attr('font-weight', 'bold')
                     .attr('dy', '-0.15em');
-                x += (box.width + padding);
+                x += (box.width + horizontalPadding);
             } else if (child.type === "dropdown") {
                 const selected = child.selected;
                 const text = child.content[selected];
@@ -184,7 +198,7 @@ export class Renderer {
                     .attr("ry", blockCornerRadius)
                     .attr("fill", inputColor);
 
-                const textX = x + padding;
+                const textX = x + horizontalPadding;
                 const textY = ((height - box.height) / 2) + box.height;
                 dropdownGroup.append("text")
                     .text(text)
@@ -197,7 +211,7 @@ export class Renderer {
 
                 dropdownGroup.append("text")
                     .text("▼")
-                    .attr("x", textX + box.width + padding)
+                    .attr("x", textX + box.width + horizontalPadding)
                     .attr("y", textY - 10)
                     .attr('fill', 'white')
                     .attr('font-size', `10pt`)
@@ -207,7 +221,7 @@ export class Renderer {
                 const optionsScale = 0.8;
                 const optionHeight = dropdownHeight;
                 const optionsWidth = Math.max(...child.content.map(option =>
-                    this.calculateTextHeightAndWidth(option).width)) + padding * 2;
+                    this.calculateTextHeightAndWidth(option).width)) + horizontalPadding * 2;
 
                 const optionsPosition = {
                     x: x,
@@ -282,7 +296,7 @@ export class Renderer {
                     // Option text
                     optionGroup.append("text")
                         .text(option)
-                        .attr("x", optionsPosition.x + padding)
+                        .attr("x", optionsPosition.x + horizontalPadding)
                         .attr("y", optionY + (optionHeight * 0.5) + (optionBox.height * 0.5))
                         .attr("fill", "white")
                         .attr("font-size", `${labelFontSize}pt`)
@@ -334,7 +348,7 @@ export class Renderer {
                     this.currentlyHoveredDropdownId = null;
                 })
 
-                x += (dropdownWidth + padding);
+                x += (dropdownWidth + horizontalPadding);
             } else if (child.type === "attachment") {
                 const content = child.content;
                 if (content) {
@@ -344,7 +358,7 @@ export class Renderer {
                     content.x = x;
                     content.y = (height - childHeight) / 2;
                     this.renderBlock(content, blockGroup);
-                    x += (childWidth + padding)
+                    x += (childWidth + horizontalPadding)
                 }
             }
         }
@@ -365,13 +379,16 @@ export class Renderer {
         const selected = dropdown.selected;
         const text = dropdown.content[selected];
         const box = this.calculateTextHeightAndWidth(text);
-        return padding * 4 + box.width;
+        return horizontalPadding * 4 + box.width;
     }
 
     calculateWidth(blockData) {
         const children = blockData.children;
         const paddingNumber = children.length + 1;
         let width = 0;
+        if(blockData.isRound && blockData.isRound === true) {
+            width += horizontalPadding * 2;
+        }
         children.forEach(child => {
             if (child.type === "placeholder") {
                 const content = child.content;
@@ -396,7 +413,7 @@ export class Renderer {
                 }
             }
         });
-        width += (padding * paddingNumber);
+        width += (horizontalPadding * paddingNumber);
         return width;
     }
 
@@ -443,7 +460,6 @@ export class Renderer {
 
     dragStart(event, d) {
 
-        console.log("dragStart has been invoked")
         this.hasDragged = false;
 
         //UI上でも最前面に
@@ -468,7 +484,6 @@ export class Renderer {
 
     dragging(event, d) {
 
-        console.log("dragging has been invoked")
         this.hasDragged = true;
 
         //ブロックを子でなくす
@@ -521,7 +536,6 @@ export class Renderer {
 
     dragEnd(event, d) {
 
-        console.log("dragEnd has been invoked")
         this.deemphasizeAllPlaceholder();
         this.deemphasizeAllBlock();
         this.render();

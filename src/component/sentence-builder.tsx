@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import React, { useEffect, useRef } from "react";
@@ -13,6 +14,7 @@ const SentenceBuilder = () => {
         x: 100,
         y: 50,
         color: "dodgerblue",
+        isRound: true,
         children: [
             {
                 id: "text",
@@ -35,6 +37,7 @@ const SentenceBuilder = () => {
         x: 200,
         y: 50,
         color: "dodgerblue",
+        isRound: true,
         children: [
             {
                 id: "text",
@@ -57,6 +60,7 @@ const SentenceBuilder = () => {
         x: 375,
         y: 50,
         color: "dodgerblue",
+        isRound: true,
         children: [
             {
                 id: "text",
@@ -79,6 +83,7 @@ const SentenceBuilder = () => {
         x: 525,
         y: 50,
         color: "dodgerblue",
+        isRound: true,
         children: [
             {
                 id: "text",
@@ -100,6 +105,7 @@ const SentenceBuilder = () => {
         category: "PronounPhrase",
         x: 100,
         y: 150,
+        isRound: true,
         color: "dodgerblue",
         children: [
             {
@@ -123,6 +129,7 @@ const SentenceBuilder = () => {
         x: 225,
         y: 150,
         color: "dodgerblue",
+        isRound: true,
         children: [
             {
                 id: "text",
@@ -145,6 +152,7 @@ const SentenceBuilder = () => {
         x: 375,
         y: 150,
         color: "dodgerblue",
+        isRound: true,
         children: [
             {
                 id: "text",
@@ -207,11 +215,6 @@ const SentenceBuilder = () => {
                 type: "placeholder",
                 content: null,
             },
-            {
-                id: "period",
-                type: "text",
-                content: ".",
-            }
         ]
     }
 
@@ -219,7 +222,7 @@ const SentenceBuilder = () => {
         id: "e148de85abf6440c48613325bd0c92cc8",
         category: "Sentence",
         x: 100,
-        y: 360,
+        y: 800,
         color: "lightBlue",
         children: [
             {
@@ -232,18 +235,14 @@ const SentenceBuilder = () => {
                 type: "placeholder",
                 content: null,
             },
-            {
-                id: "period",
-                type: "text",
-                content: ".",
-            }
         ]
     }
 
     const theBlock = {
         id: "x6f1c048367664668aeeb94e3b58567c7",
         x: 100,
-        y: 50,
+        y: 900,
+        isRound: true,
         color: "dodgerblue",
         children: [
             {
@@ -263,6 +262,7 @@ const SentenceBuilder = () => {
         id: "y6f1c048367664668aeeb94e3b58567c7",
         x: 100,
         y: 155,
+        isRound: true,
         color: "dodgerblue",
         children: [
             {
@@ -278,13 +278,10 @@ const SentenceBuilder = () => {
         id: "z6f1c048367664668aeeb94e3b58567c7",
         x: 100,
         y: 250,
+        isRound: true,
         color: "mediumseagreen",
+        isTransparent: true,
         children: [
-            {
-                id: "NP",
-                type: "placeholder",
-                content: null,
-            },
             {
                 id: "text",
                 type: "text",
@@ -294,7 +291,7 @@ const SentenceBuilder = () => {
                 id: "TP",
                 type: "placeholder",
                 content: null,
-            }
+            },
         ]
     }
 
@@ -302,6 +299,7 @@ const SentenceBuilder = () => {
         id: "w6f1c048367664668aeeb94e3b58567c7",
         x: 100,
         y: 475,
+        isRound: true,
         color: "dodgerblue",
         children: [
             {
@@ -344,6 +342,10 @@ const SentenceBuilder = () => {
                 content: ["buy", "buys", "bought", "buying"],
                 selected: 0,
             },
+            {
+                id: "NP",
+                type: "placeholder",
+            }
         ]
     }
 
