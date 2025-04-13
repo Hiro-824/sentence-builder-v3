@@ -1,8 +1,14 @@
+export interface ModInfo {
+    target: Category;
+    side: "left" | "right" | "both";
+}
+
 export interface Category {
     base: string;
     features: Record<string, string[]>;
     specifiers: Category[];
     complements: Category[];
+    modify?: ModInfo;
 }
 
 export interface Lexicon {
@@ -14,8 +20,8 @@ export type argument = Constituent | null;
 
 export interface Constituent {
     head: Lexicon;
-    preModifiers: argument[];
+    preAdjuncts: Constituent[];
     specifiers: argument[];
     complements: argument[];
-    postModifiers: argument[];
+    postAdjuncts: Constituent[];
 }

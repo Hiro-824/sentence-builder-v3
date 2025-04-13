@@ -1,37 +1,37 @@
-import { Category, Constituent } from "./category";
+import { argument, Category, Constituent } from "./category";
 
 export class Grammar {
     validateConstituent(constituent: Constituent): Category[] {
-        const categories = constituent.head.categories;
-        const grammaticalCategories: Category[] = [];
-        categories.forEach((category) => {
-            const specifierValidity = this.validateSpecifiers(category, constituent);
-            const complementValidity = this.validateComplements(category, constituent);
-            if (specifierValidity && complementValidity) grammaticalCategories.push(category);
+        const { categories } = constituent.head;
+        console.log("validating", constituent.head.word);
+        return categories.filter(category => {
+            const specifiersValid = this.validateArguments(category.specifiers, constituent.specifiers);
+            const complementsValid = this.validateArguments(category.complements, constituent.complements);
+            const preAdjunctsValid = this.validateAdjuncts(constituent, constituent.preAdjuncts, "left");
+            const postAdjunctsValid = this.validateAdjuncts(constituent, constituent.postAdjuncts, "right");
+            return specifiersValid && complementsValid && preAdjunctsValid && postAdjunctsValid;
         });
-        return grammaticalCategories;
     }
 
-    validateSpecifiers(category: Category, constituent: Constituent): boolean {
-        let allSpecifiersValid = true;
-        for (let i = 0; i < category.specifiers.length; i++) {
-            const requiredSpecifierCategory = category.specifiers[i];
-            const providedSpecifierValue = constituent.specifiers[i];
-            const compatible = providedSpecifierValue === null ? true : this.isCompatible(requiredSpecifierCategory, providedSpecifierValue);
-            if (!compatible) allSpecifiersValid = false;
-        }
-        return allSpecifiersValid;
+    validateArguments(required: Category[], provided: argument[]): boolean {
+        console.log("provided", provided);
+        console.log("required", required);
+        return required.every((requiredCategory, i) => {
+            const providedValue = provided[i];
+            console.log("provided value is", providedValue)
+            console.log("providedValue === null", providedValue === null)
+            return providedValue === null ? true : this.isCompatible(requiredCategory, providedValue);
+        });
     }
 
-    validateComplements(category: Category, constituent: Constituent): boolean {
-        let allComplementsValid = true;
-        for (let i = 0; i < category.complements.length; i++) {
-            const requiredComplementCategory = category.complements[i];
-            const providedComplementValue = constituent.complements[i];
-            const compatible = providedComplementValue === null ? true : this.isCompatible(requiredComplementCategory, providedComplementValue);
-            if (!compatible) allComplementsValid = false;
-        }
-        return allComplementsValid;
+    validateAdjuncts(modified: Constituent, adjuncts: Constituent[], side: "right" | "left"): boolean {
+        return adjuncts.every((adjunct) => {
+            return adjunct.head.categories.every((adjunctCategory) => {
+                if (adjunctCategory.modify === undefined) return false;
+                if (adjunctCategory.modify.side !== "both" && adjunctCategory.modify.side !== side) return false;
+                return this.isCompatible(adjunctCategory.modify.target, modified);
+            });
+        })
     }
 
     isCompatible(required: Category, value: Constituent) {

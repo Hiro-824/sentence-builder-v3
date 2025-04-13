@@ -1,44 +1,53 @@
 import { Block, BlockChild } from "./block";
-import { Lexicon } from "./category";
+import { Constituent } from "./category";
 
 export class Converter {
-    convertLexiconsIntoBlock(lexicons: Lexicon[], color: string): Block {
-        const head: BlockChild = (lexicons.length === 1) ? {
-            id: "head",
-            type: "text",
-            content: lexicons[0].word,
-        } : {
-            id: "head",
-            type: "dropdown",
-            content: lexicons.map((lexicon) => lexicon.word),
-            selected: 0,
+    convertBlockIntoConstituent(block: Block): Constituent {
+        const headIndex = block.children.findIndex(child => child.id === "head");
+        const headChild = block.children[headIndex];
+        // Helper function that converts a child if its content is a Block; otherwise returns null.
+        const convertIfBlock = (child: BlockChild): Constituent | null =>
+            this.isBlock(child.content) ? this.convertBlockIntoConstituent(child.content) : null;
+        
+        const specifierChildren = block.children.filter(child => child.id.includes("specifier"));
+        const complementChildren = block.children.filter(child => child.id.includes("complement"));
+        const preAdjunctChildren = block.children.slice(0, headIndex).filter(child => child.type === "attachment");
+        const postAdjunctChildren = block.children.slice(headIndex + 1).filter(child => child.type === "attachment");
+
+        const head =
+            headChild.type === "dropdown" && headChild.selected !== undefined
+                ? block.lexicons[headChild.selected]
+                : block.lexicons[0];
+
+        const specifiers = specifierChildren.map(convertIfBlock);
+        const complements = complementChildren.map(convertIfBlock);
+        const preAdjuncts = preAdjunctChildren.map(convertIfBlock).filter((child): child is Constituent => child !== null);
+        const postAdjuncts = postAdjunctChildren.map(convertIfBlock).filter((child): child is Constituent => child !== null);
+
+        return {
+            head,
+            specifiers,
+            complements,
+            preAdjuncts,
+            postAdjuncts
+        };
+    }
+
+    isBlock(value: unknown): value is Block {
+        if (typeof value !== "object" || value === null) {
+            return false;
         }
 
-        const specifiers: BlockChild[] = lexicons[0].categories[0].specifiers.map((specifier, index) => ({
-            id: `specifier-${index}`,
-            type: "placeholder",
-            content: null
-        }));
+        // Use a type assertion to access properties safely.
+        const block = value as Partial<Block>;
 
-        const complements: BlockChild[] = lexicons[0].categories[0].complements.map((complement, index) => ({
-            id: `complement-${index}`,
-            type: "placeholder",
-            content: null
-        }));
-
-        const block: Block = {
-            id: "",
-            lexicons: lexicons,
-            x: 0,
-            y: 0,
-            color: color,
-            children: [
-                ...specifiers,
-                head,
-                ...complements,
-            ]
-        };
-
-        return block;
+        return (
+            typeof block.id === "string" &&
+            Array.isArray(block.lexicons) &&
+            typeof block.x === "number" &&
+            typeof block.y === "number" &&
+            typeof block.color === "string" &&
+            Array.isArray(block.children)
+        );
     }
 }

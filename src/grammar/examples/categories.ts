@@ -161,3 +161,19 @@ export const NotCategory: Category = {
         }
     ]
 }
+
+export const BeautifulCategory: Category = {
+    base: "AdjP",
+    features: {},
+    specifiers: [],
+    complements: [],
+    modify: {
+        target: {
+            base: "NP",
+            features: {},
+            specifiers: [],
+            complements: []
+        },
+        side: "left"
+    }
+}

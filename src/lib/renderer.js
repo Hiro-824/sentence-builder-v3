@@ -1113,6 +1113,7 @@ export class Renderer {
 
         // Create the attachment child.
         const attachmentChild = {
+            id: "attachment",
             type: "attachment",
             side: side, // "left" or "right"
             content: blockToMove

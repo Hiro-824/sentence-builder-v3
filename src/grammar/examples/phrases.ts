@@ -3,42 +3,42 @@ import { It_Lexicon, Love_Lexicon, Loves_Lexicon, TP_Lexicon } from "./lexicons"
 
 export const SheLovesIt: Constituent = {
     head: TP_Lexicon,
-    preModifiers: [],
+    preAdjuncts: [],
     specifiers: [
         {
             head: It_Lexicon,
-            preModifiers: [],
+            preAdjuncts: [],
             specifiers: [],
             complements: [],
-            postModifiers: []
+            postAdjuncts: []
         }
     ],
     complements: [
         {
             head: Loves_Lexicon,
-            preModifiers: [],
+            preAdjuncts: [],
             specifiers: [],
             complements: [
                 {
                     head: It_Lexicon,
-                    preModifiers: [],
+                    preAdjuncts: [],
                     specifiers: [],
                     complements: [],
-                    postModifiers: []
+                    postAdjuncts: []
                 }
             ],
-            postModifiers: []
+            postAdjuncts: []
         }
     ],
-    postModifiers: []
+    postAdjuncts: []
 }
 
 export const NotLoveIt: Constituent = {
-    head: Love_Lexicon,
-    preModifiers: [],
+    preAdjuncts: [],
     specifiers: [],
+    head: Love_Lexicon,
     complements: [
         null
     ],
-    postModifiers: []
+    postAdjuncts: []
 }
