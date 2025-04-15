@@ -558,9 +558,6 @@ export class Renderer {
             this.moveBlockToParent(d.id, parentId, index);
             this.render();
         } else if (overlapInfo) {
-
-            console.log(overlapInfo)
-
             const targetBlockId = overlapInfo.id.split("-")[1];
             this.attachBlockToParent(d.id, targetBlockId, overlapInfo.side);
             this.render();
@@ -1002,9 +999,6 @@ export class Renderer {
 
     // 実際にデータを変更(アタッチ)する
     attachBlockToParent(blockId, parentId, side) {
-
-        console.log(side);
-
         let blockToMove = null;
         let currentParent = null;
         let currentChildIndex = -1;
@@ -1071,9 +1065,6 @@ export class Renderer {
 
     // アタッチ後のデータを予測する(データを実際には変更しない)
     predictAttachBlockToParent(blockId, parentId, side) {
-
-        console.log("predict:", side, blockId, "to", parentId);
-
         const newBlocks = JSON.parse(JSON.stringify(this.data.blocks));
 
         let blockToMove = null;
