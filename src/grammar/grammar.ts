@@ -1,12 +1,14 @@
 import { argument, Category, Constituent } from "./category";
 
 export class Grammar {
-    validateConstituent(constituent: Constituent): Category[] {
+    validateConstituent(constituent: Constituent, ignoreAdjunct = false): Category[] {
         const { categories } = constituent.head;
-        console.log("validating", constituent.head.word);
         return categories.filter(category => {
             const specifiersValid = this.validateArguments(category.specifiers, constituent.specifiers);
             const complementsValid = this.validateArguments(category.complements, constituent.complements);
+            if(ignoreAdjunct) {
+                return specifiersValid && complementsValid;
+            }
             const preAdjunctsValid = this.validateAdjuncts(constituent, constituent.preAdjuncts, "left");
             const postAdjunctsValid = this.validateAdjuncts(constituent, constituent.postAdjuncts, "right");
             return specifiersValid && complementsValid && preAdjunctsValid && postAdjunctsValid;
@@ -14,35 +16,33 @@ export class Grammar {
     }
 
     validateArguments(required: Category[], provided: argument[]): boolean {
-        console.log("provided", provided);
-        console.log("required", required);
         return required.every((requiredCategory, i) => {
             const providedValue = provided[i];
-            console.log("provided value is", providedValue)
-            console.log("providedValue === null", providedValue === null)
             return providedValue === null ? true : this.isCompatible(requiredCategory, providedValue);
         });
     }
 
     validateAdjuncts(modified: Constituent, adjuncts: Constituent[], side: "right" | "left"): boolean {
         return adjuncts.every((adjunct) => {
-            return adjunct.head.categories.every((adjunctCategory) => {
+            return adjunct.head.categories.some((adjunctCategory) => {
                 if (adjunctCategory.modify === undefined) return false;
                 if (adjunctCategory.modify.side !== "both" && adjunctCategory.modify.side !== side) return false;
-                return this.isCompatible(adjunctCategory.modify.target, modified);
+                return this.isCompatible(adjunctCategory.modify.target, modified, true);
             });
         })
     }
 
-    isCompatible(required: Category, value: Constituent) {
+    isCompatible(required: Category, value: Constituent, ignoreAdjunct = false) {
         // 基底範疇の確認
         let validCategoryFound = false;
-        const possibleHeadCategories = this.validateConstituent(value);
+        const possibleHeadCategories = this.validateConstituent(value, ignoreAdjunct);
         possibleHeadCategories.forEach(category => {
             const baseValid = (category.base === required.base);
             const featureValid = this.featureChecking(category.features, required.features);
             if (baseValid && featureValid) validCategoryFound = true;
         });
+
+        if(!validCategoryFound) console.log(required, "and", value, "are not compatible")
 
         return validCategoryFound;
     }

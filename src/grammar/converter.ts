@@ -8,7 +8,6 @@ export class Converter {
         // Helper function that converts a child if its content is a Block; otherwise returns null.
         const convertIfBlock = (child: BlockChild): Constituent | null =>
             this.isBlock(child.content) ? this.convertBlockIntoConstituent(child.content) : null;
-        
         const specifierChildren = block.children.filter(child => child.id.includes("specifier"));
         const complementChildren = block.children.filter(child => child.id.includes("complement"));
         const preAdjunctChildren = block.children.slice(0, headIndex).filter(child => child.type === "attachment");

@@ -4,7 +4,7 @@ import React, { useEffect, useRef } from "react";
 import * as d3 from "d3";
 import { Renderer } from "../lib/renderer";
 import { Block } from "@/grammar/block";
-import { A_Block, Idea_Block, Sentence_Block, Sleep_Block, The_Block } from "@/grammar/lexicons/test-blocks";
+import { A_Block, Colorless_Block, Furiously_Block, Green_Block, Idea_Block, Sentence_Block, Sleep_Block, The_Block } from "@/grammar/lexicons/test-blocks";
 import { Converter } from "@/grammar/converter";
 import { Grammar } from "@/grammar/grammar";
 
@@ -16,11 +16,11 @@ const SentenceBuilder = () => {
     const data = {
         blocks: [
             Sentence_Block,
-            //Colorless_Block,
-            //Green_Block,
+            Colorless_Block,
+            Green_Block,
             Idea_Block,
             Sleep_Block,
-            //Furiously_Block,
+            Furiously_Block,
             A_Block,
             The_Block
         ]
@@ -31,7 +31,6 @@ const SentenceBuilder = () => {
     
     function validate(block: Block): boolean {
         const constituent = converter.convertBlockIntoConstituent(block);
-        console.log(constituent);
         const categories = grammar.validateConstituent(constituent);
         return (categories.length > 0);
     }
