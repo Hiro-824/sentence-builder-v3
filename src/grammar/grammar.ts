@@ -41,9 +41,6 @@ export class Grammar {
             const featureValid = this.featureChecking(category.features, required.features);
             if (baseValid && featureValid) validCategoryFound = true;
         });
-
-        if(!validCategoryFound) console.log(required, "and", value, "are not compatible")
-
         return validCategoryFound;
     }
 
