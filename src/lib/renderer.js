@@ -218,21 +218,19 @@ export class Renderer {
                     .attr('font-weight', 'bold')
                     .attr('dy', '-0.15em');
 
-                const optionsScale = 0.8;
                 const optionHeight = dropdownHeight;
                 const optionsWidth = Math.max(...child.content.map(option =>
                     this.calculateTextHeightAndWidth(option).width)) + horizontalPadding * 2;
 
                 const optionsPosition = {
                     x: x,
-                    y: y + dropdownHeight + padding * 2,
-                    width: optionsWidth * optionsScale,
-                    height: (optionHeight * child.content.length + blockCornerRadius * 2) * optionsScale
+                    y: y + dropdownHeight + padding,
+                    width: optionsWidth,
+                    height: (optionHeight * child.content.length + blockCornerRadius * 2)
                 };
 
                 const optionsGroup = dropdownGroup.append("g")
                     .attr("display", "none")
-                    .attr("transform", `scale(${optionsScale})`)
                     .classed("dropdown-options", true);
 
                 // Background for options
