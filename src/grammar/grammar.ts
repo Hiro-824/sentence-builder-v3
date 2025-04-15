@@ -24,6 +24,11 @@ export class Grammar {
 
     validateAdjuncts(modified: Constituent, adjuncts: Constituent[], side: "right" | "left"): boolean {
         return adjuncts.every((adjunct) => {
+            // First validate the adjunct itself as a constituent
+            const validCategories = this.validateConstituent(adjunct);
+            if (validCategories.length === 0) return false;
+
+            // Then check if it can modify the target
             return adjunct.head.categories.some((adjunctCategory) => {
                 if (adjunctCategory.modify === undefined) return false;
                 if (adjunctCategory.modify.side !== "both" && adjunctCategory.modify.side !== side) return false;
