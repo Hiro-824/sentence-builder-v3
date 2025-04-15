@@ -558,6 +558,9 @@ export class Renderer {
             this.moveBlockToParent(d.id, parentId, index);
             this.render();
         } else if (overlapInfo) {
+
+            console.log(overlapInfo)
+
             const targetBlockId = overlapInfo.id.split("-")[1];
             this.attachBlockToParent(d.id, targetBlockId, overlapInfo.side);
             this.render();
@@ -648,7 +651,6 @@ export class Renderer {
         }
         return null;
     }
-    
 
     detectBlockOverlap(blockData) {
         const calculateOverlapArea = (rect1, rect2) => {
@@ -702,22 +704,23 @@ export class Renderer {
                 const draggedBounds = draggedBlockRect.node().getBoundingClientRect();
                 const draggedCenterX = draggedBounds.left + draggedBounds.width / 2;
 
-                side = draggedCenterX >= overlappedCenterX ? "right" : "left";
+                const possibleSide = draggedCenterX >= overlappedCenterX ? "right" : "left";
 
                 // Extract candidate block id from frame id ("frame-<blockId>")
                 const info = id.split("-");
                 const parentId = info[1];
 
-                const expectedBlock = this.predictAttachBlockToParent(blockData.id, parentId, side);
+                const expectedBlock = this.predictAttachBlockToParent(blockData.id, parentId, possibleSide);
                 const isValid = this.onValidateAttachment(expectedBlock);
 
-                if (isValid) bestOverlapBlockId = id;
+                if (isValid) {
+                    bestOverlapBlockId = id;
+                    side = possibleSide;
+                }
             }
         });
 
-        if (bestOverlapBlockId) {
-            return { id: bestOverlapBlockId, side: side };
-        }
+        if (bestOverlapBlockId && side) return { id: bestOverlapBlockId, side: side };
         return null;
     }
 
@@ -999,6 +1002,9 @@ export class Renderer {
 
     // 実際にデータを変更(アタッチ)する
     attachBlockToParent(blockId, parentId, side) {
+
+        console.log(side);
+
         let blockToMove = null;
         let currentParent = null;
         let currentChildIndex = -1;
@@ -1065,6 +1071,9 @@ export class Renderer {
 
     // アタッチ後のデータを予測する(データを実際には変更しない)
     predictAttachBlockToParent(blockId, parentId, side) {
+
+        console.log("predict:", side, blockId, "to", parentId);
+
         const newBlocks = JSON.parse(JSON.stringify(this.data.blocks));
 
         let blockToMove = null;

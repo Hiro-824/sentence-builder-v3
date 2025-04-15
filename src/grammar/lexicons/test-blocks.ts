@@ -35,7 +35,7 @@ export const Colorless_Block: Block = {
     ],
     x: 24,
     y: 24,
-    color: "mediumseagreen",
+    color: "dodgerBlue",
     isTransparent: true,
     isRound: true,
     children: [
@@ -54,7 +54,7 @@ export const Green_Block: Block = {
     ],
     x: 24,
     y: 24,
-    color: "mediumseagreen",
+    color: "dodgerBlue",
     isRound: true,
     isTransparent: true,
     children: [
@@ -118,7 +118,7 @@ export const Furiously_Block: Block = {
     ],
     x: 24,
     y: 24,
-    color: "mediumseagreen",
+    color: "tomato",
     isRound: true,
     isTransparent: true,
     children: [
