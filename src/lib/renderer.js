@@ -583,70 +583,72 @@ export class Renderer {
 
     detectPlaceholderOverlap(blockData, mouseX, mouseY) {
         const calculateOverlapArea = (rect1, rect2) => {
-            // Get bounding rectangles of both elements
             const rect1Bounds = rect1.node().getBoundingClientRect();
             const rect2Bounds = rect2.node().getBoundingClientRect();
-
-            // Calculate the overlapping area
             const xOverlap = Math.max(0, Math.min(rect1Bounds.right, rect2Bounds.right) - Math.max(rect1Bounds.left, rect2Bounds.left));
             const yOverlap = Math.max(0, Math.min(rect1Bounds.bottom, rect2Bounds.bottom) - Math.max(rect1Bounds.top, rect2Bounds.top));
-
-            return xOverlap * yOverlap; // Area of overlap
+            return xOverlap * yOverlap;
         };
-
+    
         const calculateCursorDistance = (rect, mouseX, mouseY) => {
             const rectBounds = rect.node().getBoundingClientRect();
+            // If the mouse is inside the placeholder, the distance is 0.
+            if (mouseX >= rectBounds.left && mouseX <= rectBounds.right &&
+                mouseY >= rectBounds.top && mouseY <= rectBounds.bottom) {
+                return 0;
+            }
+            // Otherwise, compute the distance to the center.
             const rectCenterX = rectBounds.left + rectBounds.width / 2;
             const rectCenterY = rectBounds.top + rectBounds.height / 2;
-
-            // Euclidean distance from the mouse pointer to the center of the placeholder
             return Math.sqrt(Math.pow(mouseX - rectCenterX, 2) + Math.pow(mouseY - rectCenterY, 2));
         };
-
+    
         const placeholders = d3.selectAll("rect")
             .filter(function () {
                 const id = d3.select(this).attr("id");
                 return id && id.includes("placeholder");
             })
             .filter(function () {
-                const excludedParent = d3.select(`#${blockData.id}`).node(); // Replace with your element's selector
+                const excludedParent = d3.select(`#${blockData.id}`).node();
                 return !excludedParent || !excludedParent.contains(this);
             })
             .nodes()
             .map(rect => rect.id)
             .reverse();
-
+    
         const block = d3.select(`#frame-${blockData.id}`);
-
-        let minDistance = Infinity;
+    
+        let bestScore = Infinity;
         let bestPlaceholderId = null;
-
+    
         placeholders.forEach(id => {
             const placeholder = d3.select(`#${id}`);
             const overlapArea = calculateOverlapArea(placeholder, block);
-            const distance = calculateCursorDistance(placeholder, mouseX, mouseY)
-            if (distance < minDistance && overlapArea > 0) {
-                minDistance = distance;
+            if (overlapArea === 0) {
+                // Skip placeholders that have no overlap.
+                return;
+            }
+            const distance = calculateCursorDistance(placeholder, mouseX, mouseY);
+            // Create a score that favors small distance and penalizes large overlap area.
+            const score = distance / (overlapArea + 1);  // +1 avoids division by zero
+    
+            if (score < bestScore) {
+                bestScore = score;
                 bestPlaceholderId = id;
             }
         });
-
-        // After finding bestPlaceholderId, validate the insertion
+    
         if (bestPlaceholderId) {
-
-            // 親idの検出("frame-"を除く")
             const info = bestPlaceholderId.split("-");
             const parentId = info[2];
             const index = info[1];
-
-            // Call the validation callback
             const expectedBlock = this.predictMoveBlockToParent(blockData.id, parentId, index);
             const isValid = this.onValidateInsertion(expectedBlock);
             return isValid ? bestPlaceholderId : null;
         }
-
         return null;
     }
+    
 
     detectBlockOverlap(blockData) {
         const calculateOverlapArea = (rect1, rect2) => {
