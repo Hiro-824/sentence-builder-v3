@@ -1,5 +1,5 @@
 import { Block } from "../block";
-import { A_Lexicon, Colorless_Lexicon, Furiously_Lexicon, Green_Lexicon, Idea_Lexicon, Ideas_Lexicon, Sentence_Lexicon, Sleep_Lexicon, Sleeps_Lexicon, The_Lexicon } from "./test-lexicons";
+import { A_Lexicon, Colorless_Lexicon, Furiously_Lexicon, Green_Lexicon, Idea_Lexicon, Ideas_Lexicon, Sentence_Lexicon, Sleep_Lexicon, Sleeps_Lexicon, The_Lexicon } from "./lexicons";
 
 export const Sentence_Block: Block = {
     id: "sentence",
@@ -173,5 +173,28 @@ export const The_Block: Block = {
             type: "placeholder",
             content: null
         }
+    ]
+}
+
+export const blocks = {
+    "文": [
+        Sentence_Block
+    ],
+    "冠詞": [
+        A_Block,
+        The_Block
+    ],
+    "名詞": [
+        Idea_Block,
+    ],
+    "動詞": [
+        Sleep_Block,
+    ],
+    "形容詞": [
+        Colorless_Block,
+        Green_Block,
+    ],
+    "副詞": [
+        Furiously_Block,
     ]
 }

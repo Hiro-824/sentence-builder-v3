@@ -4,12 +4,11 @@ import React, { useEffect, useRef } from "react";
 import * as d3 from "d3";
 import { Renderer } from "../lib/renderer";
 import { Block } from "@/grammar/block";
-import { A_Block, Colorless_Block, Furiously_Block, Green_Block, Idea_Block, Sentence_Block, Sleep_Block, The_Block } from "@/grammar/lexicons/test-blocks";
+import { blocks } from "@/grammar/lexicons/blocks";
 import { Converter } from "@/grammar/converter";
 import { Grammar } from "@/grammar/grammar";
 import BlockList from "./block-list";
 import { cloneBlock } from "@/grammar/block";
-//import { Sentence_Lexicon } from "@/grammar/lexicons/test-lexicons";
 
 interface SentenceBuilderData {
     blocks: Block[];
@@ -19,14 +18,12 @@ const SentenceBuilder = () => {
     const svgContainerRef = useRef(null);
     const rendererRef = useRef<Renderer>(null);
 
-    // ブロックの色、mediumseagreenとかも綺麗かも
-
-    const data: SentenceBuilderData = {
-        blocks: []
-    };
-
     const converter = new Converter();
     const grammar = new Grammar();
+
+    const data: SentenceBuilderData = {
+        blocks: [] // ブロックの色、mediumseagreenとかも綺麗かも
+    };
 
     function validate(block: Block): boolean {
         const constituent = converter.convertBlockIntoConstituent(block);
@@ -81,9 +78,7 @@ const SentenceBuilder = () => {
                 }}
             />
             <BlockList
-                blocks={[
-                    A_Block, Colorless_Block, Furiously_Block, Green_Block, Idea_Block, Sentence_Block, Sleep_Block, The_Block
-                ]}
+                blocks={blocks}
                 onBlockClick={
                     (selectedBlockDefinition) => {
                         const id = "b" + crypto.randomUUID().replaceAll(/-/g, '');

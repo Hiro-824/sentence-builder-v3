@@ -1,5 +1,5 @@
 import { Lexicon } from "../category";
-import { A_Category, Adjective_Category, Adverb_Categories, CP_Categories, Intransitive_Base_Categories, Intransitive_Es_Categories, Plural_Noun_Categories, Singular_Noun_Categories, The_Categories, TP_Categories } from "./test-categories";
+import { A_Category, Adjective_Category, Adverb_Categories, CP_Categories, Intransitive_Base_Categories, Intransitive_Es_Categories, Plural_Noun_Categories, Singular_Noun_Categories, The_Categories, TP_Categories } from "./categories";
 
 export const Sentence_Lexicon: Lexicon = {
     word: "",
