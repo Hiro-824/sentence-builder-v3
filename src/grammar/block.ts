@@ -19,3 +19,18 @@ export interface BlockChild {
     selected?: number;
     content: unknown;
 }
+
+export function cloneBlock(block: Block, newId: string): Block {
+    return {
+        ...block,
+        id: newId,
+        children: block.children.map(child => ({
+            ...child,
+            content: child.type === "placeholder" || child.type === "attachment" 
+                ? child.content 
+                : Array.isArray(child.content) 
+                    ? [...child.content] 
+                    : child.content
+        }))
+    };
+}

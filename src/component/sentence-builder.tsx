@@ -7,7 +7,13 @@ import { Block } from "@/grammar/block";
 import { A_Block, Colorless_Block, Furiously_Block, Green_Block, Idea_Block, Sentence_Block, Sleep_Block, The_Block } from "@/grammar/lexicons/test-blocks";
 import { Converter } from "@/grammar/converter";
 import { Grammar } from "@/grammar/grammar";
-import { Sentence_Lexicon } from "@/grammar/lexicons/test-lexicons";
+import BlockList from "./block-list";
+import { cloneBlock } from "@/grammar/block";
+//import { Sentence_Lexicon } from "@/grammar/lexicons/test-lexicons";
+
+interface SentenceBuilderData {
+    blocks: Block[];
+}
 
 const SentenceBuilder = () => {
     const svgContainerRef = useRef(null);
@@ -15,17 +21,8 @@ const SentenceBuilder = () => {
 
     // ブロックの色、mediumseagreenとかも綺麗かも
 
-    const data = {
-        blocks: [
-            Sentence_Block,
-            Colorless_Block,
-            Green_Block,
-            Idea_Block,
-            Sleep_Block,
-            Furiously_Block,
-            A_Block,
-            The_Block
-        ]
+    const data: SentenceBuilderData = {
+        blocks: []
     };
 
     const converter = new Converter();
@@ -38,10 +35,9 @@ const SentenceBuilder = () => {
     }
 
     function addBlock(block: Block) {
-        const id = "b" + crypto.randomUUID().replaceAll(/-/g, '');
-        block.id = id;
         data.blocks.push(block);
         rendererRef.current?.render();
+        console.log(data.blocks);
     }
 
     useEffect(() => {
@@ -75,77 +71,27 @@ const SentenceBuilder = () => {
 
     return (
         <>
-            <div 
-                ref={svgContainerRef} 
+            <div
+                ref={svgContainerRef}
                 style={{
                     position: 'fixed',
-                    left: '20rem'
+                    left: '12rem'
                 }}
             />
-            <button
-                style={{
-                    position: 'fixed',
-                    bottom: '20px',
-                    right: '20px',
-                    width: '50px',
-                    height: '50px',
-                    borderRadius: '50%',
-                    backgroundColor: '#007bff',
-                    color: 'white',
-                    border: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '24px',
-                    cursor: 'pointer'
-                }}
-                onClick={() => {
-                    addBlock(
-                        {
-                            id: "sentence-2",
-                            lexicons: [
-                                Sentence_Lexicon
-                            ],
-                            x: 24,
-                            y: 24,
-                            color: "lightBlue",
-                            children: [
-                                {
-                                    id: "specifier",
-                                    type: "placeholder",
-                                    content: null,
-                                },
-                                {
-                                    id: "head",
-                                    type: "text",
-                                    content: "",
-                                },
-                                {
-                                    id: "complement",
-                                    type: "placeholder",
-                                    content: null,
-                                }
-                            ]
-                        }
-                    );
-                }}
-            >
-                +
-            </button>
-            <div
-                style={{
-                    position: 'fixed',
-                    bottom: '0px',
-                    top: '0px',
-                    left: '0px',
-                    width: '20rem',
-                    backgroundColor: 'white',
-                    color: 'white',
-                    border: 'none',
-                    display: 'flex',
-                }}
-            >
-            </div>
+            <BlockList
+                blocks={[
+                    A_Block, Colorless_Block, Furiously_Block, Green_Block, Idea_Block, Sentence_Block, Sleep_Block, The_Block
+                ]}
+                onBlockClick={
+                    (selectedBlockDefinition) => {
+                        const id = "b" + crypto.randomUUID().replaceAll(/-/g, '');
+                        const blockToAdd = cloneBlock(selectedBlockDefinition, id);
+                        blockToAdd.x = 20;
+                        blockToAdd.y = 20;
+                        addBlock(blockToAdd);
+                    }
+                }
+            />
         </>
     );
 };
