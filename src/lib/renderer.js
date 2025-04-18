@@ -83,14 +83,6 @@ export class Renderer {
                 .on("end", this.dragEnd.bind(this))
             );
 
-        const r = blockCornerRadius;
-
-        const rectPathData = `M 0 ${r}
-                        a ${r} ${r} 0 0 1 ${r} ${-r} h ${width - 2 * r}
-                        a ${r} ${r} 0 0 1 ${r} ${r} v ${height - 2 * r}
-                        a ${r} ${r} 0 0 1 ${-r} ${r} h ${-(width - 2 * r)}
-                        a ${r} ${r} 0 0 1 ${-r} ${-r} z`;
-
         let opacity = 1;
         if(blockData.isTransparent && blockData.isTransparent === true) {
             opacity = 0.5;
@@ -104,7 +96,6 @@ export class Renderer {
         //フレームを描画
         const strokeColor = this.darkenColor(blockData.color, 30);
         blockGroup.append("rect")
-            .attr("d", rectPathData)
             .attr("id", `frame-${blockData.id}`)
             .attr("opacity", opacity)
             .attr("width", width)
