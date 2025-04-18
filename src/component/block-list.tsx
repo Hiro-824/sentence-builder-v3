@@ -21,9 +21,9 @@ const BlockList = ({ blocks, onBlockClick }: BlockListProps) => {
                 top: '0px',
                 left: '0px',
                 width: '12rem',
-                backgroundColor: 'white',
+                backgroundColor: 'rgba(249, 249, 249, 0.5)', // semi-transparent background
                 color: 'black',
-                border: 'none',
+                borderRight: '1px solid gainsboro',
                 display: 'flex',
                 flexDirection: 'column',
                 overflowY: 'auto',

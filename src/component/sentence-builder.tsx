@@ -37,7 +37,6 @@ const SentenceBuilder = () => {
     function addBlock(block: Block) {
         data.blocks.push(block);
         rendererRef.current?.render();
-        console.log(data.blocks);
     }
 
     useEffect(() => {
@@ -75,7 +74,6 @@ const SentenceBuilder = () => {
                 ref={svgContainerRef}
                 style={{
                     position: 'fixed',
-                    left: '12rem'
                 }}
             />
             <BlockList
@@ -86,7 +84,7 @@ const SentenceBuilder = () => {
                     (selectedBlockDefinition) => {
                         const id = "b" + crypto.randomUUID().replaceAll(/-/g, '');
                         const blockToAdd = cloneBlock(selectedBlockDefinition, id);
-                        blockToAdd.x = 20;
+                        blockToAdd.x = 400;
                         blockToAdd.y = 20;
                         addBlock(blockToAdd);
                     }

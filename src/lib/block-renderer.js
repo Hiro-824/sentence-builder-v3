@@ -13,7 +13,7 @@ export class BlockRenderer {
         const width = this.calculateWidth(blockData);
         const height = this.calculateHeight(blockData);
 
-        this.svg.attr("height", blockPreviewScaleExtent * (height + blockStrokeWidth * 2));
+        this.svg.attr("height", blockPreviewScaleExtent * (height + blockStrokeWidth * 3));
 
         //グループを作成
         const blockGroup = parent.append("g")
@@ -21,7 +21,7 @@ export class BlockRenderer {
             .attr("id", blockData.id)
             .classed("pointer", true)
             .datum(blockData)
-            .on("click", this.onClick)
+            .on("mousedown", this.onClick)
 
         let opacity = 1;
         if (blockData.isTransparent && blockData.isTransparent === true) {
@@ -36,7 +36,7 @@ export class BlockRenderer {
         //フレームを描画
         const strokeColor = this.darkenColor(blockData.color, 30);
         blockGroup.append("rect")
-            .attr("id", `frame-${blockData.id}`)
+            .attr("id", `preview-${blockData.id}`)
             .attr("opacity", opacity)
             .attr("width", width)
             .attr("height", height)
@@ -69,7 +69,7 @@ export class BlockRenderer {
                     const y = (height - placeholderHeight) / 2;
                     const inputColor = this.darkenColor(blockData.color, 30);
                     blockGroup.append("rect")
-                        .attr("id", `placeholder-${count}-${blockData.id}-${child.id}`)
+                        .attr("id", `preview-${count}-${blockData.id}-${child.id}`)
                         .attr("x", x)
                         .attr("y", y)
                         .attr("width", placeholderWidth)
@@ -102,7 +102,7 @@ export class BlockRenderer {
                 const inputColor = this.darkenColor(blockData.color, 30);
                 const y = (height - dropdownHeight) / 2;
 
-                const dropdownId = `dropdown-${count}-${blockData.id}`;
+                const dropdownId = `preview-${count}-${blockData.id}`;
 
                 const dropdownGroup = blockGroup.append("g")
                     .classed("pointer", true)
