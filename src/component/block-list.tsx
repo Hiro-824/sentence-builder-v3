@@ -15,7 +15,7 @@ const BlockList = ({ blocks, onBlockClick }: BlockListProps) => {
         bottom: 0,
         top: 0,
         left: 0,
-        width: '12rem',
+        width: '10rem',
         backgroundColor: 'rgba(249, 249, 249, 0.5)',
         color: 'black',
         borderRight: '1px solid gainsboro',
