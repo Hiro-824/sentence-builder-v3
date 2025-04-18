@@ -27,6 +27,15 @@ export class Renderer {
         this.render();
     }
 
+    getGridState() {
+        const transform = d3.zoomTransform(this.grid.node());
+        return {
+            x: transform.x,
+            y: transform.y,
+            k: transform.k
+        };
+    }
+
     render() {
         d3.select("#grid").selectAll("*").remove();
         const blocks = this.data.blocks;

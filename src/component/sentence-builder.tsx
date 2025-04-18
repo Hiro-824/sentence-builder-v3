@@ -35,6 +35,10 @@ const SentenceBuilder = () => {
     }
 
     function addBlock(block: Block) {
+        if (!rendererRef.current) return;
+        const gridState = rendererRef.current.getGridState();
+        block.x = (200 - gridState.x) / gridState.k;
+        block.y = (10 - gridState.y) / gridState.k;
         data.blocks.push(block);
         rendererRef.current?.render();
     }
@@ -84,8 +88,6 @@ const SentenceBuilder = () => {
                     (selectedBlockDefinition) => {
                         const id = "b" + crypto.randomUUID().replaceAll(/-/g, '');
                         const blockToAdd = cloneBlock(selectedBlockDefinition, id);
-                        blockToAdd.x = 400;
-                        blockToAdd.y = 20;
                         addBlock(blockToAdd);
                     }
                 }
