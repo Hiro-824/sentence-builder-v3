@@ -84,13 +84,6 @@ export class Renderer {
             );
 
         const r = blockCornerRadius;
-        /*const hexPathData = `M ${height / 2} 0 
-                        L ${width + padding * 4 - height / 2} 0
-                        L ${width + padding * 4} ${height / 2}
-                        L ${width + padding * 4 - height / 2} ${height}
-                        L ${height / 2} ${height}
-                        L 0 ${height / 2}
-                        Z`;*/
 
         const rectPathData = `M 0 ${r}
                         a ${r} ${r} 0 0 1 ${r} ${-r} h ${width - 2 * r}
@@ -166,7 +159,8 @@ export class Renderer {
                     .attr('fill', 'white')
                     .attr('font-size', `${labelFontSize}pt`)
                     .attr('font-weight', 'bold')
-                    .attr('dy', '-0.15em');
+                    .attr('dy', '-0.15em')
+                    .style('user-select', 'none');
                 x += (box.width + horizontalPadding);
             } else if (child.type === "dropdown") {
                 const selected = child.selected;
@@ -208,6 +202,7 @@ export class Renderer {
                     .attr('font-size', `${labelFontSize}pt`)
                     .attr('font-weight', 'bold')
                     .attr('dy', '-0.15em')
+                    .style('user-select', 'none')
 
                 dropdownGroup.append("text")
                     .text("▼")
@@ -216,7 +211,8 @@ export class Renderer {
                     .attr('fill', 'white')
                     .attr('font-size', `10pt`)
                     .attr('font-weight', 'bold')
-                    .attr('dy', '-0.15em');
+                    .attr('dy', '-0.15em')
+                    .style('user-select', 'none');
 
                 const optionHeight = dropdownHeight;
                 const optionsWidth = Math.max(...child.content.map(option =>
@@ -299,7 +295,8 @@ export class Renderer {
                         .attr("fill", "white")
                         .attr("font-size", `${labelFontSize}pt`)
                         .attr("dy", "-0.15em")
-                        .attr('font-weight', isSelected ? 'bold' : 'normal');
+                        .attr('font-weight', isSelected ? 'bold' : 'normal')
+                        .style('user-select', 'none');
 
                     // Hover effects remain the same
                     optionGroup

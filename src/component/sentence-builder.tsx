@@ -75,7 +75,13 @@ const SentenceBuilder = () => {
 
     return (
         <>
-            <div ref={svgContainerRef} />
+            <div 
+                ref={svgContainerRef} 
+                style={{
+                    position: 'fixed',
+                    left: '20rem'
+                }}
+            />
             <button
                 style={{
                     position: 'fixed',
@@ -126,6 +132,20 @@ const SentenceBuilder = () => {
             >
                 +
             </button>
+            <div
+                style={{
+                    position: 'fixed',
+                    bottom: '0px',
+                    top: '0px',
+                    left: '0px',
+                    width: '20rem',
+                    backgroundColor: 'white',
+                    color: 'white',
+                    border: 'none',
+                    display: 'flex',
+                }}
+            >
+            </div>
         </>
     );
 };
