@@ -136,6 +136,63 @@ export const Intransitive_Es_Categories: Category[] = [
     },
 ]
 
+export const Transitive_Base_Categories: Category[] = [
+    {
+        base: "TB",
+        features: {
+            form: ["base"]
+        },
+        specifiers: [],
+        complements: [
+            {
+                base: "DP",
+                features: {
+                    case: ["acc"]
+                },
+                specifiers: [],
+                complements: []
+            }
+        ]
+    },
+    {
+        base: "VP",
+        features: {
+            form: ["base"]
+        },
+        specifiers: [],
+        complements: [
+            {
+                base: "DP",
+                features: {
+                    case: ["acc"]
+                },
+                specifiers: [],
+                complements: []
+            }
+        ]
+    }
+]
+
+export const Transitive_Es_Categories: Category[] = [
+    {
+        base: "TB",
+        features: {
+            form: ["es"]
+        },
+        specifiers: [],
+        complements: [
+            {
+                base: "DP",
+                features: {
+                    case: ["acc"]
+                },
+                specifiers: [],
+                complements: []
+            }
+        ]
+    },
+]
+
 export const Singular_Noun_Categories: Category[] = [
     {
         base: "NP",
@@ -278,6 +335,100 @@ export const Adverb_Categories: Category[] = [
             side: "both"
         }
     }
+]
+
+export const Relative_Pronoun_Categories: Category[] = [
+    {
+        base: "CP",
+        features: {
+            relative: ["true"]
+        },
+        specifiers: [],
+        complements: [
+            {
+                base: "TP",
+                features: {},
+                specifiers: [],
+                complements: [
+                    {
+                        base: "DP",
+                        features: {
+                            case: ["acc"]
+                        },
+                        specifiers: [],
+                        complements: []
+                    }
+                ]
+            }
+        ],
+        modify: {
+            target: {
+                base: "NP",
+                features: {
+                    φ: ["3S", "3P"]
+                },
+                specifiers: [],
+                complements: []
+            },
+            side: "right"
+        }
+    },
+    {
+        base: "CP",
+        features: {
+            relative: ["true"]
+        },
+        specifiers: [],
+        complements: [
+            {
+                base: "TB",
+                features: {
+                    form: ["base", "ed"]
+                },
+                specifiers: [],
+                complements: []
+            }
+        ],
+        modify: {
+            target: {
+                base: "NP",
+                features: {
+                    φ: ["3P"]
+                },
+                specifiers: [],
+                complements: []
+            },
+            side: "right"
+        }
+    },    
+    {
+        base: "CP",
+        features: {
+            relative: ["true"]
+        },
+        specifiers: [],
+        complements: [
+            {
+                base: "TB",
+                features: {
+                    form: ["es", "ed"]
+                },
+                specifiers: [],
+                complements: []
+            }
+        ],
+        modify: {
+            target: {
+                base: "NP",
+                features: {
+                    φ: ["3S"]
+                },
+                specifiers: [],
+                complements: []
+            },
+            side: "right"
+        }
+    },
 ]
 
 //TODO: modifierのtargetが複数指定できるように

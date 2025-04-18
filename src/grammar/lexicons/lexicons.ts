@@ -1,5 +1,5 @@
 import { Lexicon } from "../category";
-import { A_Category, Adjective_Category, Adverb_Categories, CP_Categories, Intransitive_Base_Categories, Intransitive_Es_Categories, Plural_Noun_Categories, Singular_Noun_Categories, The_Categories, TP_Categories } from "./categories";
+import { A_Category, Adjective_Category, Adverb_Categories, CP_Categories, Intransitive_Base_Categories, Intransitive_Es_Categories, Plural_Noun_Categories, Relative_Pronoun_Categories, Singular_Noun_Categories, The_Categories, TP_Categories, Transitive_Base_Categories, Transitive_Es_Categories } from "./categories";
 
 export const Sentence_Lexicon: Lexicon = {
     word: "",
@@ -37,6 +37,20 @@ export const Ideas_Lexicon: Lexicon = {
     ]
 }
 
+export const Book_Lexicon: Lexicon = {
+    word: "book",
+    categories: [
+        ...Singular_Noun_Categories,
+    ]
+}
+
+export const Books_Lexicon: Lexicon = {
+    word: "books",
+    categories: [
+        ...Plural_Noun_Categories,
+    ]
+}
+
 export const Sleep_Lexicon: Lexicon = {
     word: "sleep",
     categories: [
@@ -48,6 +62,20 @@ export const Sleeps_Lexicon: Lexicon = {
     word: "sleeps",
     categories: [
         ...Intransitive_Es_Categories,
+    ]
+}
+
+export const Have_Lexicon: Lexicon = {
+    word: "have",
+    categories: [
+        ...Transitive_Base_Categories
+    ]
+}
+
+export const Has_Lexicon: Lexicon = {
+    word: "have",
+    categories: [
+        ...Transitive_Es_Categories
     ]
 }
 
@@ -66,4 +94,14 @@ export const A_Lexicon: Lexicon = {
 export const The_Lexicon: Lexicon = {
     word: "a",
     categories: [...The_Categories]
+}
+
+export const Relative_That_Lexicon: Lexicon = {
+    word: "that",
+    categories: [...Relative_Pronoun_Categories]
+}
+
+export const Relative_Which_Lexicon: Lexicon = {
+    word: "which",
+    categories: [...Relative_Pronoun_Categories]
 }

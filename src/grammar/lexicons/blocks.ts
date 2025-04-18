@@ -1,5 +1,5 @@
 import { Block } from "../block";
-import { A_Lexicon, Colorless_Lexicon, Furiously_Lexicon, Green_Lexicon, Idea_Lexicon, Ideas_Lexicon, Sentence_Lexicon, Sleep_Lexicon, Sleeps_Lexicon, The_Lexicon } from "./lexicons";
+import { A_Lexicon, Book_Lexicon, Books_Lexicon, Colorless_Lexicon, Furiously_Lexicon, Green_Lexicon, Has_Lexicon, Have_Lexicon, Idea_Lexicon, Ideas_Lexicon, Relative_That_Lexicon, Relative_Which_Lexicon, Sentence_Lexicon, Sleep_Lexicon, Sleeps_Lexicon, The_Lexicon } from "./lexicons";
 
 export const Sentence_Block: Block = {
     id: "sentence",
@@ -89,6 +89,29 @@ export const Idea_Block: Block = {
     ]
 }
 
+export const Book_Block: Block = {
+    id: "idea",
+    lexicons: [
+        Book_Lexicon,
+        Books_Lexicon,
+    ],
+    x: 24,
+    y: 24,
+    color: "dodgerBlue",
+    isRound: true,
+    children: [
+        {
+            id: "head",
+            type: "dropdown",
+            content: [
+                "book",
+                "books"
+            ],
+            selected: 0,
+        }
+    ]
+}
+
 export const Sleep_Block: Block = {
     id: "sleep",
     lexicons: [
@@ -107,6 +130,33 @@ export const Sleep_Block: Block = {
                 "sleeps"
             ],
             selected: 0,
+        }
+    ]
+}
+
+export const Have_Block: Block = {
+    id: "",
+    lexicons: [
+        Have_Lexicon,
+        Has_Lexicon,
+    ],
+    x: 24,
+    y: 24,
+    color: "tomato",
+    children: [
+        {
+            id: "head",
+            type: "dropdown",
+            content: [
+                "have",
+                "has"
+            ],
+            selected: 0,
+        },
+        {
+            id: "complement",
+            type: "placeholder",
+            content: null,
         }
     ]
 }
@@ -176,6 +226,54 @@ export const The_Block: Block = {
     ]
 }
 
+export const That_Block: Block = {
+    id: "",
+    lexicons: [
+        Relative_That_Lexicon
+    ],
+    x: 0,
+    y: 0,
+    color: "dodgerblue",
+    isRound: true,
+    isTransparent: true,
+    children: [
+        {
+            id: "head",
+            type: "text",
+            content: "that"
+        },
+        {
+            id: "complement",
+            type: "placeholder",
+            content: null
+        }
+    ]
+}
+
+export const Which_Block: Block = {
+    id: "",
+    lexicons: [
+        Relative_Which_Lexicon
+    ],
+    x: 0,
+    y: 0,
+    color: "dodgerblue",
+    isRound: true,
+    isTransparent: true,
+    children: [
+        {
+            id: "head",
+            type: "text",
+            content: "which"
+        },
+        {
+            id: "complement",
+            type: "placeholder",
+            content: null
+        }
+    ]
+}
+
 export const blocks = {
     "文": [
         Sentence_Block
@@ -186,9 +284,11 @@ export const blocks = {
     ],
     "名詞": [
         Idea_Block,
+        Book_Block,
     ],
     "動詞": [
         Sleep_Block,
+        Have_Block,
     ],
     "形容詞": [
         Colorless_Block,
@@ -196,5 +296,9 @@ export const blocks = {
     ],
     "副詞": [
         Furiously_Block,
+    ],
+    "関係詞": [
+        That_Block,
+        Which_Block,
     ]
 }
