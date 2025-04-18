@@ -6,7 +6,7 @@ export class Grammar {
         return categories.filter(category => {
             const specifiersValid = this.validateArguments(category.specifiers, constituent.specifiers);
             const complementsValid = this.validateArguments(category.complements, constituent.complements);
-            if(ignoreAdjunct) {
+            if (ignoreAdjunct) {
                 return specifiersValid && complementsValid;
             }
             const preAdjunctsValid = this.validateAdjuncts(constituent, constituent.preAdjuncts, "left");
@@ -39,15 +39,43 @@ export class Grammar {
     }
 
     isCompatible(required: Category, value: Constituent, ignoreAdjunct = false) {
-        // 基底範疇の確認
         let validCategoryFound = false;
         const possibleHeadCategories = this.validateConstituent(value, ignoreAdjunct);
         possibleHeadCategories.forEach(category => {
+            // 基底範疇の確認
             const baseValid = (category.base === required.base);
+
+            // 統語素性の確認
             const featureValid = this.featureChecking(category.features, required.features);
+
+            /*
+            // Complementの確認
+            const emptyComplementCategories = category.complements.filter((complement, idx) => value.complements[idx] === null);
+            const complementsToBeEmpty = required.complements || [];
+            const complementsValid = complementsToBeEmpty.every(reqComp =>
+                emptyComplementCategories.some(slot =>
+                    slot.base === reqComp.base &&
+                    this.featureChecking(slot.features, reqComp.features)
+                )
+            );
+
+            // Specifierの確認
+            const emptySpecifierCategories = category.specifiers.filter((complement, idx) => value.specifiers[idx] === null);
+            const specifiersToBeEmpty = required.specifiers || [];
+            const specifiersValid = specifiersToBeEmpty.every(reqSpec =>
+                emptySpecifierCategories.some(slot =>
+                    slot.base === reqSpec.base &&
+                    this.featureChecking(slot.features, reqSpec.features)
+                )
+            );
+            */
+           
+            //空引数は、直下の引数だけでなく全て遡る必要がある
+
             if (baseValid && featureValid) validCategoryFound = true;
         });
-        if(validCategoryFound) console.log(required, "and", value, "are compatible")
+
+        if (validCategoryFound) console.log(required, "and", value, "are compatible")
         return validCategoryFound;
     }
 
