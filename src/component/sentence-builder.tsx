@@ -34,7 +34,7 @@ const SentenceBuilder = () => {
     function addBlock(block: Block) {
         if (!rendererRef.current) return;
         const gridState = rendererRef.current.getGridState();
-        block.x = (200 - gridState.x) / gridState.k;
+        block.x = (180 - gridState.x) / gridState.k;
         block.y = (10 - gridState.y) / gridState.k;
         data.blocks.push(block);
         rendererRef.current?.render();
