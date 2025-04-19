@@ -91,6 +91,42 @@ export const TP_Categories: Category[] = [
             }
         ]
     },
+    {
+        base: "TP",
+        features: {
+            incomplete: ["true"]
+        },
+        specifiers: [
+            {
+                base: "DP",
+                features: {
+                    φ: ["1S", "2S", "1P", "2P", "3P"],
+                    case: ["nom"]
+                },
+                specifiers: [],
+                complements: []
+            }
+        ],
+        complements: [
+            {
+                base: "TB",
+                features: {
+                    form: ["base", "ed"]
+                },
+                specifiers: [],
+                complements: [
+                    {
+                        base: "DP",
+                        features: {
+                            case: ["acc"]
+                        },
+                        specifiers: [],
+                        complements: []
+                    }
+                ]
+            }
+        ]
+    },
 ]
 
 export const CP_Categories: Category[] = [
