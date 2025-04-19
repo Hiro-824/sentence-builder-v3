@@ -40,7 +40,13 @@ export class Grammar {
     isCompatible(required: Category, value: Constituent, ignoreAdjunct = false) {
         let validCategoryFound = false;
         const possibleHeadCategories = this.validateConstituent(value, ignoreAdjunct);
+        const possibleNullSpecifiers: number[][] = [];
+        const possibleNullComplements: number[][] = [];
+
         possibleHeadCategories.forEach(category => {
+            const nullSpecifiers: number[] = [];
+            const nullComplements: number[] = [];
+
             // 基底範疇の確認
             const baseValid = (category.base === required.base);
 
@@ -50,24 +56,42 @@ export class Grammar {
             // Complementの確認
             const emptyComplementCategories = category.complements.filter((complement, idx) => value.complements[idx] === null);
             const complementsToBeEmpty = required.complements || [];
-            const complementsValid = complementsToBeEmpty.every(reqComp =>
-                emptyComplementCategories.some(slot =>
+            const complementsValid = complementsToBeEmpty.every((reqComp, i) => {
+                const valid = emptyComplementCategories.some(slot =>
                     slot.base === reqComp.base &&
                     this.featureChecking(slot.features, reqComp.features)
-                )
-            );
+                );
+                if (valid) {
+                    console.log(`${i}番目のComplementはnullである必要があり、実際にnullです`)
+                    nullComplements.push(i);
+                }
+                return valid;
+            });
 
             // Specifierの確認
             const emptySpecifierCategories = category.specifiers.filter((complement, idx) => value.specifiers[idx] === null);
             const specifiersToBeEmpty = required.specifiers || [];
-            const specifiersValid = specifiersToBeEmpty.every(reqSpec =>
-                emptySpecifierCategories.some(slot =>
+            const specifiersValid = specifiersToBeEmpty.every((reqSpec, i) => {
+                const valid = emptySpecifierCategories.some(slot =>
                     slot.base === reqSpec.base &&
                     this.featureChecking(slot.features, reqSpec.features)
                 )
-            );
-           
+                if (valid) {
+                    console.log(`${i}番目のSpecifierはnullである必要があり、実際にnullです`)
+                    nullSpecifiers.push(i);
+                }
+                return valid;
+            });
+
             if (baseValid && featureValid && specifiersValid && complementsValid) validCategoryFound = true;
+            possibleNullSpecifiers.push(nullSpecifiers);
+            possibleNullComplements.push(nullComplements);
+
+            if(nullComplements.length > 0) {
+                console.log(value.head.word, "が", category.base, "の場合、", nullComplements, "が空欄である必要があり、実際に空欄です")
+            } else {
+                console.log(value.head.word, "が", category.base, "の場合、空欄は必要ありません") 
+            }
         });
 
         return validCategoryFound;
