@@ -26,7 +26,6 @@ export class Grammar {
         return adjuncts.every((adjunct) => {
             // First validate the adjunct itself as a constituent
             const validCategories = this.validateConstituent(adjunct);
-            console.log(adjunct.head, "has possible categories:", validCategories);
             if (validCategories.length === 0) return false;
 
             // Then check if it can modify the target
@@ -71,7 +70,6 @@ export class Grammar {
             if (baseValid && featureValid && specifiersValid && complementsValid) validCategoryFound = true;
         });
 
-        if (validCategoryFound) console.log(required, "and", value, "are compatible")
         return validCategoryFound;
     }
 
