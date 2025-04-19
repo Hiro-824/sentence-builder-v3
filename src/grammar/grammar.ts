@@ -48,7 +48,6 @@ export class Grammar {
             // 統語素性の確認
             const featureValid = this.featureChecking(category.features, required.features);
 
-            /*
             // Complementの確認
             const emptyComplementCategories = category.complements.filter((complement, idx) => value.complements[idx] === null);
             const complementsToBeEmpty = required.complements || [];
@@ -68,11 +67,8 @@ export class Grammar {
                     this.featureChecking(slot.features, reqSpec.features)
                 )
             );
-            */
            
-            //空引数は、直下の引数だけでなく全て遡る必要がある
-
-            if (baseValid && featureValid) validCategoryFound = true;
+            if (baseValid && featureValid && specifiersValid && complementsValid) validCategoryFound = true;
         });
 
         if (validCategoryFound) console.log(required, "and", value, "are compatible")

@@ -3,7 +3,9 @@ import { Category } from "../category";
 export const TP_Categories: Category[] = [
     {
         base: "TP",
-        features: {},
+        features: {
+            incomplete: ["false"]
+        },
         specifiers: [
             {
                 base: "DP",
@@ -28,7 +30,9 @@ export const TP_Categories: Category[] = [
     },
     {
         base: "TP",
-        features: {},
+        features: {
+            incomplete: ["false"]
+        },
         specifiers: [
             {
                 base: "DP",
@@ -50,7 +54,43 @@ export const TP_Categories: Category[] = [
                 complements: []
             }
         ]
-    }
+    },
+    {
+        base: "TP",
+        features: {
+            incomplete: ["true"]
+        },
+        specifiers: [
+            {
+                base: "DP",
+                features: {
+                    φ: ["3S"],
+                    case: ["nom"]
+                },
+                specifiers: [],
+                complements: []
+            }
+        ],
+        complements: [
+            {
+                base: "TB",
+                features: {
+                    form: ["es", "ed"]
+                },
+                specifiers: [],
+                complements: [
+                    {
+                        base: "DP",
+                        features: {
+                            case: ["acc"]
+                        },
+                        specifiers: [],
+                        complements: []
+                    }
+                ]
+            }
+        ]
+    },
 ]
 
 export const CP_Categories: Category[] = [
@@ -347,18 +387,11 @@ export const Relative_Pronoun_Categories: Category[] = [
         complements: [
             {
                 base: "TP",
-                features: {},
+                features: {
+                    incomplete: ["true"]
+                },
                 specifiers: [],
-                complements: [
-                    {
-                        base: "DP",
-                        features: {
-                            case: ["acc"]
-                        },
-                        specifiers: [],
-                        complements: []
-                    }
-                ]
+                complements: []
             }
         ],
         modify: {
@@ -400,7 +433,7 @@ export const Relative_Pronoun_Categories: Category[] = [
             },
             side: "right"
         }
-    },    
+    },
     {
         base: "CP",
         features: {
