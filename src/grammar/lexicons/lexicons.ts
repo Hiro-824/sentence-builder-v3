@@ -92,7 +92,7 @@ export const A_Lexicon: Lexicon = {
 }
 
 export const The_Lexicon: Lexicon = {
-    word: "a",
+    word: "the",
     categories: [...The_Categories]
 }
 
