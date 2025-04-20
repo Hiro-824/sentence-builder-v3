@@ -31,7 +31,7 @@ export const Idea_Lexicon: Lexicon = {
 }
 
 export const Ideas_Lexicon: Lexicon = {
-    word: "idea",
+    word: "ideas",
     categories: [
         ...Plural_Noun_Categories,
     ]
@@ -73,7 +73,7 @@ export const Have_Lexicon: Lexicon = {
 }
 
 export const Has_Lexicon: Lexicon = {
-    word: "have",
+    word: "has",
     categories: [
         ...Transitive_Es_Categories
     ]
