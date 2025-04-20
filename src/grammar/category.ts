@@ -19,6 +19,7 @@ export interface Lexicon {
 export type argument = Constituent | null;
 
 export interface Constituent {
+    id: string;
     head: Lexicon;
     preAdjuncts: Constituent[];
     specifiers: argument[];

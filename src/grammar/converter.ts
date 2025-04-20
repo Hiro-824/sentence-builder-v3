@@ -3,6 +3,8 @@ import { Constituent } from "./category";
 
 export class Converter {
     convertBlockIntoConstituent(block: Block): Constituent {
+        const id = block.id;
+
         const headIndex = block.children.findIndex(child => child.id === "head");
         const headChild = block.children[headIndex];
         // Helper function that converts a child if its content is a Block; otherwise returns null.
@@ -24,6 +26,7 @@ export class Converter {
         const postAdjuncts = postAdjunctChildren.map(convertIfBlock).filter((child): child is Constituent => child !== null);
 
         return {
+            id,
             head,
             specifiers,
             complements,
