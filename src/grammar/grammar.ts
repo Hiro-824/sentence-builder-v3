@@ -49,39 +49,39 @@ export class Grammar {
             // 統語素性の確認
             const featureValid = this.featureChecking(category.features, required.features);
 
-            // Complementの確認について、
-            // 一番右のComplementだけを確認する
-            // 一致しているなら、そのPlaceholderが常に空欄のはずだよ、と知らせる(知らされた側はそれを非表示に)
-            // 一致していなくても、空欄が存在するならOK(非表示にしてもらう必要はない)
-            // 空欄が存在しないなら、エラー
-            // という風に書き換えたい
+            let emptyComplementValid = true;
+            if (required.complements.length > 0) {
+                const categoryTobeEmpty = required.complements[required.complements.length - 1];
+                const categoryEmpty = this.findLastEmptyCategory(value, category);
+                if (categoryEmpty.length === 0) emptyComplementValid = false;
+                if (categoryEmpty.some((category) => (category.base === categoryTobeEmpty.base && this.featureChecking(category.features, categoryTobeEmpty.features)))) {
+                    console.log("This placeholder", categoryTobeEmpty.base, "must be kept empty!");
+                }
+            }
 
-            // Complementの確認
-            const emptyComplementCategories = category.complements.filter((complement, idx) => value.complements[idx] === null);
-            const complementsToBeEmpty = required.complements || [];
-            const complementsValid = complementsToBeEmpty.every((reqComp) => {
-                const valid = emptyComplementCategories.some(slot =>
-                    slot.base === reqComp.base &&
-                    this.featureChecking(slot.features, reqComp.features)
-                );
-                return valid;
-            });
-
-            // Specifierの確認
-            const emptySpecifierCategories = category.specifiers.filter((complement, idx) => value.specifiers[idx] === null);
-            const specifiersToBeEmpty = required.specifiers || [];
-            const specifiersValid = specifiersToBeEmpty.every((reqSpec) => {
-                const valid = emptySpecifierCategories.some(slot =>
-                    slot.base === reqSpec.base &&
-                    this.featureChecking(slot.features, reqSpec.features)
-                )
-                return valid;
-            });
-
-            if (baseValid && featureValid && specifiersValid && complementsValid) validCategoryFound = true;
+            if (baseValid && featureValid && emptyComplementValid) validCategoryFound = true;
         });
 
         return validCategoryFound;
+    }
+
+    findLastEmptyCategory(constituent: Constituent, category: Category): Category[] {
+        const possibleCategories = [];
+        const complements = constituent.complements;
+        const lastComplement = complements[complements.length - 1];
+        if (lastComplement === null) {
+            if (category.complements.length >= complements.length) {
+                possibleCategories.push(category.complements[complements.length - 1]);
+            }
+        } else {
+            if (category.complements.length > 0) {
+                const possibleChildCategories = this.validateConstituent(lastComplement);
+                possibleChildCategories.forEach((category) => {
+                    possibleCategories.push(...this.findLastEmptyCategory(lastComplement, category));
+                })
+            }
+        }
+        return possibleCategories;
     }
 
     featureChecking(features1: Record<string, string[]>, features2: Record<string, string[]>) {
