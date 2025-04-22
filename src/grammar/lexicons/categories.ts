@@ -300,6 +300,55 @@ export const Plural_Noun_Categories: Category[] = [
     },
 ]
 
+export const I_Category: Category = {
+    base: "DP",
+    features: {
+        φ: ["1S"],
+        case: ["nom"]
+    },
+    specifiers: [],
+    complements: []
+}
+
+export const Posessive_Categories: Category[] = [
+    {
+        base: "DP",
+        features: {
+            φ: ["3S"],
+            case: ["nom", "acc"]
+        },
+        specifiers: [],
+        complements: [
+            {
+                base: "NP",
+                features: {
+                    φ: ["3S"]
+                },
+                specifiers: [],
+                complements: []
+            }
+        ]
+    },
+    {
+        base: "DP",
+        features: {
+            φ: ["3P"],
+            case: ["nom", "acc"]
+        },
+        specifiers: [],
+        complements: [
+            {
+                base: "NP",
+                features: {
+                    φ: ["3P"]
+                },
+                specifiers: [],
+                complements: []
+            }
+        ]
+    }
+]
+
 export const A_Category: Category = {
     base: "DP",
     features: {

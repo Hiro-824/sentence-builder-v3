@@ -16,6 +16,7 @@ export interface Block {
 export interface BlockChild {
     id: string;
     hidden: boolean;
+    headIndex?: number[];
     type: blockChildType;
     selected?: number;
     content: unknown;

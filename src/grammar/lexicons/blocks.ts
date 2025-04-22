@@ -1,5 +1,5 @@
 import { Block } from "../block";
-import { A_Lexicon, Book_Lexicon, Books_Lexicon, Colorless_Lexicon, Furiously_Lexicon, Green_Lexicon, Has_Lexicon, Have_Lexicon, Idea_Lexicon, Ideas_Lexicon, Relative_That_Lexicon, Relative_Which_Lexicon, Sentence_Lexicon, Sleep_Lexicon, Sleeps_Lexicon, The_Lexicon } from "./lexicons";
+import { A_Lexicon, Book_Lexicon, Books_Lexicon, Colorless_Lexicon, Furiously_Lexicon, Green_Lexicon, Has_Lexicon, Have_Lexicon, I_Lexicon, Idea_Lexicon, Ideas_Lexicon, My_Lexicon, Relative_That_Lexicon, Relative_Which_Lexicon, Sentence_Lexicon, Sleep_Lexicon, Sleeps_Lexicon, The_Lexicon } from "./lexicons";
 
 export const Sentence_Block: Block = {
     id: "sentence",
@@ -68,6 +68,37 @@ export const Green_Block: Block = {
             content: "green",
             hidden: false,
         },
+    ]
+}
+
+export const I_Block: Block = {
+    id: "I",
+    lexicons: [
+        I_Lexicon,
+        My_Lexicon,
+    ],
+    x: 0,
+    y: 0,
+    color: "dodgerblue",
+    isRound: true,
+    children: [
+        {
+            id: "head",
+            hidden: false,
+            type: "dropdown",
+            content: [
+                "I",
+                "my",
+            ],
+            selected: 0
+        },
+        {
+            id: "complement",
+            hidden: true,
+            type: "placeholder",
+            content: null,
+            headIndex: [1]
+        }
     ]
 }
 
@@ -296,6 +327,9 @@ export const Which_Block: Block = {
 export const blocks = {
     "文": [
         Sentence_Block
+    ],
+    "代名詞": [
+        I_Block
     ],
     "冠詞": [
         A_Block,

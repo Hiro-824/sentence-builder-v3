@@ -31,6 +31,40 @@ const SentenceBuilder = () => {
         return (categories.length > 0);
     }
 
+    function onDropdownChange(block: Block) {
+        console.log("Dropdown Changed", block);
+        updateChildVisibilityBasedOnHead(block);
+    }
+
+    function updateChildVisibilityBasedOnHead(block: Block): void {
+        let headSelectedValue: number | undefined = undefined;
+
+        const headDropdown = block.children.find(
+            (child) => child.id.includes('head') && child.type === 'dropdown'
+        );
+
+        if (headDropdown && typeof headDropdown.selected === 'number') {
+            headSelectedValue = headDropdown.selected;
+        }
+
+        for (const child of block.children) {
+            child.hidden = false;
+            if (child.headIndex && Array.isArray(child.headIndex) && headSelectedValue !== undefined) {
+                const hide = !child.headIndex.includes(headSelectedValue);
+                child.hidden = hide;
+                if(hide && child.type === "placeholder" && converter.isBlock(child.content)) {
+                    child.content.x += 30;
+                    child.content.y += 30;
+                    rendererRef.current?.moveBlockToTopLevel(child.content.id);
+                }
+            }
+
+            if (child.type === 'placeholder' && converter.isBlock(child.content)) {
+                updateChildVisibilityBasedOnHead(child.content);
+            }
+        }
+    }
+
     function addBlock(block: Block) {
         if (!rendererRef.current) return;
         const gridState = rendererRef.current.getGridState();
@@ -61,7 +95,7 @@ const SentenceBuilder = () => {
         window.addEventListener("resize", updateSvgSize);
 
         // Create a new Renderer instance with the data and svg element
-        rendererRef.current = new Renderer(data, svg, ((data: unknown) => data), validate, validate, validate);
+        rendererRef.current = new Renderer(data, svg, onDropdownChange, ((data: unknown) => data), validate, validate, validate);
 
         // Cleanup listener on unmount
         return () => {

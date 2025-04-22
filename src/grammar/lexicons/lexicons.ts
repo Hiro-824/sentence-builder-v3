@@ -1,5 +1,5 @@
 import { Lexicon } from "../category";
-import { A_Category, Adjective_Category, Adverb_Categories, CP_Categories, Intransitive_Base_Categories, Intransitive_Es_Categories, Plural_Noun_Categories, Relative_Pronoun_Categories, Singular_Noun_Categories, The_Categories, TP_Categories, Transitive_Base_Categories, Transitive_Es_Categories } from "./categories";
+import { A_Category, Adjective_Category, Adverb_Categories, CP_Categories, I_Category, Intransitive_Base_Categories, Intransitive_Es_Categories, Plural_Noun_Categories, Posessive_Categories, Relative_Pronoun_Categories, Singular_Noun_Categories, The_Categories, TP_Categories, Transitive_Base_Categories, Transitive_Es_Categories } from "./categories";
 
 export const Sentence_Lexicon: Lexicon = {
     word: "",
@@ -7,6 +7,16 @@ export const Sentence_Lexicon: Lexicon = {
         ...TP_Categories,
         ...CP_Categories,
     ]
+}
+
+export const I_Lexicon: Lexicon = {
+    word: "I",
+    categories: [I_Category],
+}
+
+export const My_Lexicon: Lexicon = {
+    word: "my",
+    categories: Posessive_Categories,
 }
 
 export const Colorless_Lexicon: Lexicon = {

@@ -2,8 +2,9 @@ import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, pla
 import * as d3 from "d3";
 
 export class Renderer {
-    constructor(data, svg, onDataChanged, onValidateInsertion, onValidateAttachment, onValidateSelectionContextually) {
+    constructor(data, svg, onDropdownChange, onDataChanged, onValidateInsertion, onValidateAttachment, onValidateSelectionContextually) {
         this.data = data;
+        this.onDropdownChange = onDropdownChange;
         this.onDataChanged = onDataChanged || (() => data);
         this.onValidateInsertion = onValidateInsertion || (() => true); // Default to always allow
         this.onValidateAttachment = onValidateAttachment || (() => true);
@@ -116,7 +117,7 @@ export class Renderer {
             .attr("stroke-width", blockStrokeWidth);
 
         //内部を描画
-        const children = blockData.children;
+        const children = blockData.children.filter((child) => !child.hidden);
         let x = horizontalPadding;
         if(blockData.isRound && blockData.isRound === true) {
             x += horizontalPadding;
@@ -261,12 +262,14 @@ export class Renderer {
                                     resultingBlock = block;
                                 }
                             }
+                            this.onDropdownChange(resultingBlock);
+                            /*
                             const isValid = this.onValidateSelectionContextually(resultingBlock);
                             if (!isValid) {
                                 blockData.x += 30;
                                 blockData.y += 30;
                                 this.moveBlockToTopLevel(blockData.id);
-                            }
+                            }*/
                             this.render();
                             this.currentlyOpenedDropdownId = null;
                             let element = d3.select(`#${blockData.id}`);
@@ -378,7 +381,7 @@ export class Renderer {
     }
 
     calculateWidth(blockData) {
-        const children = blockData.children;
+        const children = blockData.children.filter((child) => !child.hidden);
         const paddingNumber = children.length + 1;
         let width = 0;
         if(blockData.isRound && blockData.isRound === true) {
@@ -413,7 +416,7 @@ export class Renderer {
     }
 
     calculateHeight(blockData) {
-        const children = blockData.children;
+        const children = blockData.children.filter((child) => !child.hidden);
         let heights = [placeholderHeight - padding * 2];
         children.forEach(child => {
             if (child.type === "placeholder") {
