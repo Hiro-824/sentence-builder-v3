@@ -15,6 +15,7 @@ export interface Block {
 
 export interface BlockChild {
     id: string;
+    hidden: boolean;
     type: blockChildType;
     selected?: number;
     content: unknown;

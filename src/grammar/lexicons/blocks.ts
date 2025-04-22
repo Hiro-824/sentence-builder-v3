@@ -14,16 +14,19 @@ export const Sentence_Block: Block = {
             id: "specifier",
             type: "placeholder",
             content: null,
+            hidden: false,
         },
         {
             id: "head",
             type: "text",
             content: "",
+            hidden: false,
         },
         {
             id: "complement",
             type: "placeholder",
             content: null,
+            hidden: false,
         }
     ]
 }
@@ -43,6 +46,7 @@ export const Colorless_Block: Block = {
             id: "head",
             type: "text",
             content: "colorless",
+            hidden: false,
         },
     ]
 }
@@ -62,6 +66,7 @@ export const Green_Block: Block = {
             id: "head",
             type: "text",
             content: "green",
+            hidden: false,
         },
     ]
 }
@@ -85,6 +90,7 @@ export const Idea_Block: Block = {
                 "ideas"
             ],
             selected: 0,
+            hidden: false,
         }
     ]
 }
@@ -108,6 +114,7 @@ export const Book_Block: Block = {
                 "books"
             ],
             selected: 0,
+            hidden: false,
         }
     ]
 }
@@ -130,6 +137,7 @@ export const Sleep_Block: Block = {
                 "sleeps"
             ],
             selected: 0,
+            hidden: false,
         }
     ]
 }
@@ -152,11 +160,13 @@ export const Have_Block: Block = {
                 "has"
             ],
             selected: 0,
+            hidden: false,
         },
         {
             id: "complement",
             type: "placeholder",
             content: null,
+            hidden: false,
         }
     ]
 }
@@ -175,7 +185,8 @@ export const Furiously_Block: Block = {
         {
             id: "head",
             type: "text",
-            content: "furiously"
+            content: "furiously",
+            hidden: false,
         }
     ]
 }
@@ -193,12 +204,14 @@ export const A_Block: Block = {
         {
             id: "head",
             type: "text",
-            content: "a (an)"
+            content: "a (an)",
+            hidden: false,
         },
         {
             id: "complement",
             type: "placeholder",
-            content: null
+            content: null,
+            hidden: false,
         }
     ]
 }
@@ -216,12 +229,14 @@ export const The_Block: Block = {
         {
             id: "head",
             type: "text",
-            content: "the"
+            content: "the",
+            hidden: false,
         },
         {
             id: "complement",
             type: "placeholder",
-            content: null
+            content: null,
+            hidden: false,
         }
     ]
 }
@@ -240,12 +255,14 @@ export const That_Block: Block = {
         {
             id: "head",
             type: "text",
-            content: "that"
+            content: "that",
+            hidden: false,
         },
         {
             id: "complement",
             type: "placeholder",
-            content: null
+            content: null,
+            hidden: false,
         }
     ]
 }
@@ -264,12 +281,14 @@ export const Which_Block: Block = {
         {
             id: "head",
             type: "text",
-            content: "which"
+            content: "which",
+            hidden: false,
         },
         {
             id: "complement",
             type: "placeholder",
-            content: null
+            content: null,
+            hidden: false,
         }
     ]
 }
