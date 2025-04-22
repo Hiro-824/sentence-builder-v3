@@ -3,9 +3,7 @@ import { Category } from "../category";
 export const TP_Categories: Category[] = [
     {
         base: "TP",
-        features: {
-            incomplete: ["false"]
-        },
+        features: {},
         specifiers: [
             {
                 base: "DP",
@@ -30,9 +28,7 @@ export const TP_Categories: Category[] = [
     },
     {
         base: "TP",
-        features: {
-            incomplete: ["false"]
-        },
+        features: {},
         specifiers: [
             {
                 base: "DP",
@@ -52,78 +48,6 @@ export const TP_Categories: Category[] = [
                 },
                 specifiers: [],
                 complements: []
-            }
-        ]
-    },
-    {
-        base: "TP",
-        features: {
-            incomplete: ["true"]
-        },
-        specifiers: [
-            {
-                base: "DP",
-                features: {
-                    φ: ["3S"],
-                    case: ["nom"]
-                },
-                specifiers: [],
-                complements: []
-            }
-        ],
-        complements: [
-            {
-                base: "TB",
-                features: {
-                    form: ["es", "ed"]
-                },
-                specifiers: [],
-                complements: [
-                    {
-                        base: "DP",
-                        features: {
-                            case: ["acc"]
-                        },
-                        specifiers: [],
-                        complements: []
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        base: "TP",
-        features: {
-            incomplete: ["true"]
-        },
-        specifiers: [
-            {
-                base: "DP",
-                features: {
-                    φ: ["1S", "2S", "1P", "2P", "3P"],
-                    case: ["nom"]
-                },
-                specifiers: [],
-                complements: []
-            }
-        ],
-        complements: [
-            {
-                base: "TB",
-                features: {
-                    form: ["base", "ed"]
-                },
-                specifiers: [],
-                complements: [
-                    {
-                        base: "DP",
-                        features: {
-                            case: ["acc"]
-                        },
-                        specifiers: [],
-                        complements: []
-                    }
-                ]
             }
         ]
     },
@@ -472,11 +396,18 @@ export const Relative_Pronoun_Categories: Category[] = [
         complements: [
             {
                 base: "TP",
-                features: {
-                    incomplete: ["true"]
-                },
+                features: {},
                 specifiers: [],
-                complements: []
+                complements: [
+                    {
+                        base: "DP",
+                        features: {
+                            φ: ["3S", "3P"]
+                        },
+                        specifiers: [],
+                        complements: []
+                    }
+                ]
             }
         ],
         modify: {
