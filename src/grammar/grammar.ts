@@ -49,6 +49,8 @@ export class Grammar {
             // 統語素性の確認
             const featureValid = this.featureChecking(category.features, required.features);
 
+            // 空補部の確認
+            // 型が不一致の空欄の場合、さらに制約を設けるべきかも
             let emptyComplementValid = true;
             if (required.complements.length > 0) {
                 const categoryTobeEmpty = required.complements[required.complements.length - 1];
