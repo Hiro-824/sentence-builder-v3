@@ -2,10 +2,9 @@ import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, pla
 import * as d3 from "d3";
 
 export class Renderer {
-    constructor(data, svg, onDropdownChange, onDataChanged, onValidateInsertion, onValidateAttachment, onValidateSelectionContextually) {
+    constructor(data, svg, onDataChanged, onValidateInsertion, onValidateAttachment, onValidateSelectionContextually) {
         this.data = data;
-        this.onDropdownChange = onDropdownChange;
-        this.onDataChanged = onDataChanged || (() => data);
+        this.onDataChanged = onDataChanged;
         this.onValidateInsertion = onValidateInsertion || (() => true); // Default to always allow
         this.onValidateAttachment = onValidateAttachment || (() => true);
         this.onValidateSelectionContextually = onValidateSelectionContextually || (() => true); // Default to always allow
@@ -117,7 +116,7 @@ export class Renderer {
             .attr("stroke-width", blockStrokeWidth);
 
         //内部を描画
-        const children = blockData.children.filter((child) => !child.hidden);
+        const children = blockData.children.filter((child) => !child.hidden && !child.keepEmpty);
         let x = horizontalPadding;
         if(blockData.isRound && blockData.isRound === true) {
             x += horizontalPadding;
@@ -262,14 +261,13 @@ export class Renderer {
                                     resultingBlock = block;
                                 }
                             }
-                            this.onDropdownChange(resultingBlock);
-                            /*
+                            this.onDataChanged();
                             const isValid = this.onValidateSelectionContextually(resultingBlock);
                             if (!isValid) {
                                 blockData.x += 30;
                                 blockData.y += 30;
                                 this.moveBlockToTopLevel(blockData.id);
-                            }*/
+                            }
                             this.render();
                             this.currentlyOpenedDropdownId = null;
                             let element = d3.select(`#${blockData.id}`);
@@ -381,7 +379,7 @@ export class Renderer {
     }
 
     calculateWidth(blockData) {
-        const children = blockData.children.filter((child) => !child.hidden);
+        const children = blockData.children.filter((child) => !child.hidden && !child.keepEmpty);
         const paddingNumber = children.length + 1;
         let width = 0;
         if(blockData.isRound && blockData.isRound === true) {
@@ -416,7 +414,7 @@ export class Renderer {
     }
 
     calculateHeight(blockData) {
-        const children = blockData.children.filter((child) => !child.hidden);
+        const children = blockData.children.filter((child) => !child.hidden && !child.keepEmpty);
         let heights = [placeholderHeight - padding * 2];
         children.forEach(child => {
             if (child.type === "placeholder") {
@@ -450,12 +448,6 @@ export class Renderer {
         return rgb;
     }
 
-    updateData() {
-        const currentData = this.data;
-        this.data = this.onDataChanged(currentData);
-        this.render();
-    }
-
     dragStart(event, d) {
 
         this.hasDragged = false;
@@ -473,7 +465,6 @@ export class Renderer {
             .attr("stroke-width", highlightStrokeWidth);
 
         //ドラッグ開始地点を記録
-        //this.dragStartBlockPosition = { x: d.x, y: d.y };
         const absoltuePosition = this.calculateAbsolutePosition(d.id);
         this.dragStartBlockPosition = absoltuePosition ? absoltuePosition : { x: d.x, y: d.y };
         const [startX, startY] = d3.pointer(event.sourceEvent, this.svg.node());
@@ -486,6 +477,7 @@ export class Renderer {
 
         //ブロックを子でなくす
         this.moveBlockToTopLevel(d.id);
+        this.onDataChanged();
         this.render();
 
         //配列の最初に移動
@@ -493,7 +485,7 @@ export class Renderer {
         if (blockDataIndex !== -1) {
             const [draggedBlock] = this.data.blocks.splice(blockDataIndex, 1);
             this.data.blocks.push(draggedBlock);
-            this.updateData();
+            this.render();
         }
 
         const transform = d3.zoomTransform(this.svg.node());
@@ -556,10 +548,12 @@ export class Renderer {
             const parentId = info[2];
             const index = info[1];
             this.moveBlockToParent(d.id, parentId, index);
+            this.onDataChanged();
             this.render();
         } else if (overlapInfo) {
             const targetBlockId = overlapInfo.id.split("-")[1];
             this.attachBlockToParent(d.id, targetBlockId, overlapInfo.side);
+            this.onDataChanged();
             this.render();
         }
 
@@ -577,7 +571,8 @@ export class Renderer {
         if (blockDataIndex !== -1) {
             const [draggedBlock] = this.data.blocks.splice(blockDataIndex, 1);
             this.data.blocks.push(draggedBlock);
-            this.updateData();
+            this.onDataChanged();
+            this.render();
         }
     }
 
@@ -806,7 +801,7 @@ export class Renderer {
             blockToMove.x = absoluteX;
             blockToMove.y = absoluteY;
             this.data.blocks.push(blockToMove);
-            this.updateData();
+            this.render();
         }
     }
 
@@ -857,7 +852,7 @@ export class Renderer {
             if (topLevelIndex !== -1) {
                 this.data.blocks.splice(topLevelIndex, 1);
             }
-            this.updateData();
+            this.render();
         }
 
         // Insert the block into the target parent's children array.

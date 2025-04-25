@@ -15,18 +15,21 @@ export const Sentence_Block: Block = {
             type: "placeholder",
             content: null,
             hidden: false,
+            keepEmpty: false,
         },
         {
             id: "head",
             type: "text",
             content: "",
             hidden: false,
+            keepEmpty: false,
         },
         {
             id: "complement",
             type: "placeholder",
             content: null,
             hidden: false,
+            keepEmpty: false,
         }
     ]
 }
@@ -47,6 +50,7 @@ export const Colorless_Block: Block = {
             type: "text",
             content: "colorless",
             hidden: false,
+            keepEmpty: false,
         },
     ]
 }
@@ -67,6 +71,7 @@ export const Green_Block: Block = {
             type: "text",
             content: "green",
             hidden: false,
+            keepEmpty: false,
         },
     ]
 }
@@ -85,6 +90,7 @@ export const I_Block: Block = {
         {
             id: "head",
             hidden: false,
+            keepEmpty: false,
             type: "dropdown",
             content: [
                 "I",
@@ -95,6 +101,7 @@ export const I_Block: Block = {
         {
             id: "complement",
             hidden: true,
+            keepEmpty: false,
             type: "placeholder",
             content: null,
             headIndex: [1]
@@ -122,6 +129,7 @@ export const Idea_Block: Block = {
             ],
             selected: 0,
             hidden: false,
+            keepEmpty: false,
         }
     ]
 }
@@ -146,6 +154,7 @@ export const Book_Block: Block = {
             ],
             selected: 0,
             hidden: false,
+            keepEmpty: false,
         }
     ]
 }
@@ -169,6 +178,7 @@ export const Sleep_Block: Block = {
             ],
             selected: 0,
             hidden: false,
+            keepEmpty: false,
         }
     ]
 }
@@ -192,12 +202,14 @@ export const Have_Block: Block = {
             ],
             selected: 0,
             hidden: false,
+            keepEmpty: false,
         },
         {
             id: "complement",
             type: "placeholder",
             content: null,
             hidden: false,
+            keepEmpty: false,
         }
     ]
 }
@@ -218,6 +230,7 @@ export const Furiously_Block: Block = {
             type: "text",
             content: "furiously",
             hidden: false,
+            keepEmpty: false,
         }
     ]
 }
@@ -237,12 +250,14 @@ export const A_Block: Block = {
             type: "text",
             content: "a (an)",
             hidden: false,
+            keepEmpty: false,
         },
         {
             id: "complement",
             type: "placeholder",
             content: null,
             hidden: false,
+            keepEmpty: false,
         }
     ]
 }
@@ -262,12 +277,14 @@ export const The_Block: Block = {
             type: "text",
             content: "the",
             hidden: false,
+            keepEmpty: false,
         },
         {
             id: "complement",
             type: "placeholder",
             content: null,
             hidden: false,
+            keepEmpty: false,
         }
     ]
 }
@@ -288,12 +305,14 @@ export const That_Block: Block = {
             type: "text",
             content: "that",
             hidden: false,
+            keepEmpty: false,
         },
         {
             id: "complement",
             type: "placeholder",
             content: null,
             hidden: false,
+            keepEmpty: false,
         }
     ]
 }
@@ -314,12 +333,14 @@ export const Which_Block: Block = {
             type: "text",
             content: "which",
             hidden: false,
+            keepEmpty: false,
         },
         {
             id: "complement",
             type: "placeholder",
             content: null,
             hidden: false,
+            keepEmpty: false,
         }
     ]
 }

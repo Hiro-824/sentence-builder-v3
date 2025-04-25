@@ -7,13 +7,15 @@ export class Grammar {
         const possibleCategories = categories.filter(category => {
             const specifiersValid = this.validateArguments(category.specifiers, constituent.specifiers);
             const complementsValid = this.validateArguments(category.complements, constituent.complements);
-            lastEmptyIds.push(...specifiersValid.lastEmptyIds, ...complementsValid.lastEmptyIds);
+            lastEmptyIds.push(...specifiersValid.lastEmptyIds);
+            lastEmptyIds.push(...complementsValid.lastEmptyIds);
             if (ignoreAdjunct) {
                 return specifiersValid.isValid && complementsValid.isValid;
             }
             const preAdjunctsValid = this.validateAdjuncts(constituent, constituent.preAdjuncts, "left");
             const postAdjunctsValid = this.validateAdjuncts(constituent, constituent.postAdjuncts, "right");
-            lastEmptyIds.push(...preAdjunctsValid.lastEmptyIds, ...postAdjunctsValid.lastEmptyIds);
+            lastEmptyIds.push(...preAdjunctsValid.lastEmptyIds);
+            lastEmptyIds.push(...postAdjunctsValid.lastEmptyIds);
             return specifiersValid.isValid && complementsValid.isValid && preAdjunctsValid.isValid && postAdjunctsValid.isValid;
         });
         return {
@@ -41,7 +43,9 @@ export class Grammar {
         const lastEmptyIds: string[] = [];
         const isValid = adjuncts.every((adjunct) => {
             // First validate the adjunct itself as a constituent
-            const validCategories = this.validateConstituent(adjunct).possibleCategories;
+            const validationResult = this.validateConstituent(adjunct);
+            const validCategories = validationResult.possibleCategories;
+            lastEmptyIds.push(...validationResult.lastEmptyIds);
             if (validCategories.length === 0) return false;
 
             // Then check if it can modify the target
@@ -62,7 +66,8 @@ export class Grammar {
     isCompatible(required: Category, value: Constituent, ignoreAdjunct = false): { isCompatible: boolean, lastEmpty: boolean } {
         let validCategoryFound = false;
         let lastEmpty = false;
-        const possibleHeadCategories = this.validateConstituent(value, ignoreAdjunct).possibleCategories;
+        const validationResult = this.validateConstituent(value, ignoreAdjunct);
+        const possibleHeadCategories = validationResult.possibleCategories;
 
         possibleHeadCategories.forEach(category => {
 

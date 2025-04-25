@@ -28,14 +28,25 @@ const SentenceBuilder = () => {
     function validate(block: Block): boolean {
         const constituent = converter.convertBlockIntoConstituent(block);
         const validationResult = grammar.validateConstituent(constituent);
-        console.log(validationResult.lastEmptyIds);
         const categories = validationResult.possibleCategories;
         return (categories.length > 0);
     }
 
-    function onDropdownChange(block: Block) {
-        console.log("Dropdown Changed", block);
-        updateChildVisibilityBasedOnHead(block);
+    function onDataChanged() {
+        data.blocks.forEach((block) => {
+            resetkeepEmpty(block);
+            updateChildVisibilityBasedOnHead(block);
+            hidePlaceholderTobeEmpty(block);
+        })
+    }
+
+    function resetkeepEmpty(block: Block) {
+        for (const child of block.children) {
+            child.keepEmpty = false;
+            if (child.type === 'placeholder' && converter.isBlock(child.content)) {
+                resetkeepEmpty(child.content);
+            }
+        }
     }
 
     function updateChildVisibilityBasedOnHead(block: Block): void {
@@ -54,7 +65,7 @@ const SentenceBuilder = () => {
             if (child.headIndex && Array.isArray(child.headIndex) && headSelectedValue !== undefined) {
                 const hide = !child.headIndex.includes(headSelectedValue);
                 child.hidden = hide;
-                if(hide && child.type === "placeholder" && converter.isBlock(child.content)) {
+                if (hide && child.type === "placeholder" && converter.isBlock(child.content)) {
                     child.content.x += 30;
                     child.content.y += 30;
                     rendererRef.current?.moveBlockToTopLevel(child.content.id);
@@ -65,6 +76,51 @@ const SentenceBuilder = () => {
                 updateChildVisibilityBasedOnHead(child.content);
             }
         }
+    }
+
+    function hidePlaceholderTobeEmpty(block: Block) {
+        const constituent = converter.convertBlockIntoConstituent(block);
+        const validationResult = grammar.validateConstituent(constituent);
+        console.log(validationResult.lastEmptyIds);
+        validationResult.lastEmptyIds.forEach((id) => {
+            const blockWithPlaceholderTobeNull = findBlock(id, data.blocks);
+            if (blockWithPlaceholderTobeNull) {
+                const lastComplement = findLastComplement(blockWithPlaceholderTobeNull);
+                if (lastComplement !== undefined) lastComplement.keepEmpty = true;
+            }
+        })
+    }
+
+    function findBlock(blockId: string, blocks: Block[]) {
+        for (let i = 0; i < blocks.length; i++) {
+            const block = blocks[i];
+            if (block.id === blockId) {
+                return block;
+            }
+            if (block.children) {
+                for (let j = 0; j < block.children.length; j++) {
+                    const child = block.children[j];
+                    if (child.type === "placeholder") {
+                        const content = child.content;
+                        if (converter.isBlock(content)) {
+                            if (content.id === blockId) {
+                                return block;
+                            } else {
+                                findBlock(blockId, [content]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    function findLastComplement(block: Block) {
+        const blockComplementChildren = block.children.filter((child) => (child.id.includes("complement")));
+        const lastComplementChild = blockComplementChildren[blockComplementChildren.length - 1];
+        if (!lastComplementChild || lastComplementChild.type !== "placeholder") return;
+        if (lastComplementChild.content === null) return lastComplementChild;
+        if (converter.isBlock(lastComplementChild.content)) return findLastComplement(lastComplementChild.content);
     }
 
     function addBlock(block: Block) {
@@ -97,7 +153,7 @@ const SentenceBuilder = () => {
         window.addEventListener("resize", updateSvgSize);
 
         // Create a new Renderer instance with the data and svg element
-        rendererRef.current = new Renderer(data, svg, onDropdownChange, ((data: unknown) => data), validate, validate, validate);
+        rendererRef.current = new Renderer(data, svg, onDataChanged, validate, validate, validate);
 
         // Cleanup listener on unmount
         return () => {
