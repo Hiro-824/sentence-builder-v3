@@ -35,8 +35,8 @@ const SentenceBuilder = () => {
     function onDataChanged() {
         data.blocks.forEach((block) => {
             resetkeepEmpty(block);
-            updateChildVisibilityBasedOnHead(block);
             hidePlaceholderTobeEmpty(block);
+            updateChildVisibilityBasedOnHead(block);
         })
     }
 
