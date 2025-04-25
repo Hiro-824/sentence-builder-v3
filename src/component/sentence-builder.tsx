@@ -33,6 +33,7 @@ const SentenceBuilder = () => {
     }
 
     function onDataChanged() {
+        console.log("data changed", data)
         data.blocks.forEach((block) => {
             resetkeepEmpty(block);
             hidePlaceholderTobeEmpty(block);
@@ -82,7 +83,7 @@ const SentenceBuilder = () => {
         const constituent = converter.convertBlockIntoConstituent(block);
         const validationResult = grammar.validateConstituent(constituent);
         validationResult.lastEmptyIds.forEach((id) => {
-            const blockWithPlaceholderTobeNull = findBlock(id, data.blocks);
+            const blockWithPlaceholderTobeNull = findBlock(id, block);
             if (blockWithPlaceholderTobeNull) {
                 const lastComplement = findLastComplement(blockWithPlaceholderTobeNull);
                 if (lastComplement !== undefined) lastComplement.keepEmpty = true;
@@ -90,27 +91,26 @@ const SentenceBuilder = () => {
         })
     }
 
-    function findBlock(blockId: string, blocks: Block[]) {
-        for (let i = 0; i < blocks.length; i++) {
-            const block = blocks[i];
-            if (block.id === blockId) {
-                return block;
-            }
-            if (block.children) {
-                for (let j = 0; j < block.children.length; j++) {
-                    const child = block.children[j];
-                    if (child.type === "placeholder" || child.type === "attachment") {
-                        const content = child.content;
-                        if (converter.isBlock(content)) {
-                            if (content.id === blockId) {
-                                return block;
-                            } else {
-                                return findBlock(blockId, [content]);
-                            }
+    function findBlock(blockId: string, block: Block) {
+        if (block.id === blockId) {
+            return block;
+        }
+        if (block.children) {
+            for (let j = 0; j < block.children.length; j++) {
+                const child = block.children[j];
+                if (child.type === "placeholder" || child.type === "attachment") {
+                    const content = child.content;
+                    if (converter.isBlock(content)) {
+                        if (content.id === blockId) {
+                            return block;
+                        } else {
+                            return findBlock(blockId, content);
                         }
                     }
                 }
             }
+        } else {
+            console.log("NOT FOUND");
         }
     }
 
