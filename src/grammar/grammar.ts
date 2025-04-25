@@ -30,7 +30,7 @@ export class Grammar {
             const providedValue = provided[i];
             if(providedValue === null) return true;
             const compatibility = this.isCompatible(requiredCategory, providedValue);
-            if(compatibility.lastEmpty) lastEmptyIds.push(providedValue.id)
+            if(compatibility.lastEmptyIds) lastEmptyIds.push(...compatibility.lastEmptyIds);
             return compatibility.isCompatible;
         });
         return {
@@ -53,7 +53,7 @@ export class Grammar {
                 if (adjunctCategory.modify === undefined) return false;
                 if (adjunctCategory.modify.side !== "both" && adjunctCategory.modify.side !== side) return false;
                 const compatibility = this.isCompatible(adjunctCategory.modify.target, modified, true);
-                if(compatibility.lastEmpty) lastEmptyIds.push(modified.id);
+                if(compatibility.lastEmptyIds) lastEmptyIds.push(...compatibility.lastEmptyIds);
                 return compatibility.isCompatible;
             });
         })
@@ -63,11 +63,11 @@ export class Grammar {
         };
     }
 
-    isCompatible(required: Category, value: Constituent, ignoreAdjunct = false): { isCompatible: boolean, lastEmpty: boolean } {
+    isCompatible(required: Category, value: Constituent, ignoreAdjunct = false): { isCompatible: boolean, lastEmptyIds: string[] } {
         let validCategoryFound = false;
-        let lastEmpty = false;
         const validationResult = this.validateConstituent(value, ignoreAdjunct);
         const possibleHeadCategories = validationResult.possibleCategories;
+        const lastEmptyIds = validationResult.lastEmptyIds;
 
         possibleHeadCategories.forEach(category => {
 
@@ -86,7 +86,7 @@ export class Grammar {
                 if (categoryEmpty.length === 0) emptyComplementValid = false;
                 if (categoryEmpty.some((category) => (category.base === categoryTobeEmpty.base && this.featureChecking(category.features, categoryTobeEmpty.features)))) {
                     console.log(value.id, "must have its last complement empty, and it does!");
-                    lastEmpty = true;
+                    lastEmptyIds.push(value.id);
                 }
             }
 
@@ -95,7 +95,7 @@ export class Grammar {
 
         return {
             isCompatible: validCategoryFound,
-            lastEmpty: lastEmpty,
+            lastEmptyIds: lastEmptyIds,
         };
     }
 
