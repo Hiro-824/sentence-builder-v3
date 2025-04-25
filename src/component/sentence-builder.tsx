@@ -81,23 +81,18 @@ const SentenceBuilder = () => {
     function hidePlaceholderTobeEmpty(block: Block) {
         const constituent = converter.convertBlockIntoConstituent(block);
         const validationResult = grammar.validateConstituent(constituent);
-        //console.log(validationResult.lastEmptyIds);
         validationResult.lastEmptyIds.forEach((id) => {
             const blockWithPlaceholderTobeNull = findBlock(id, data.blocks);
             if (blockWithPlaceholderTobeNull) {
                 const lastComplement = findLastComplement(blockWithPlaceholderTobeNull);
                 if (lastComplement !== undefined) lastComplement.keepEmpty = true;
-            } else {
-                console.log("NOT FOUND")
             }
         })
     }
 
     function findBlock(blockId: string, blocks: Block[]) {
-        console.log("Looking for", blockId)
         for (let i = 0; i < blocks.length; i++) {
             const block = blocks[i];
-            console.log(block);
             if (block.id === blockId) {
                 return block;
             }
