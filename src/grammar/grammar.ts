@@ -1,45 +1,68 @@
 import { argument, Category, Constituent } from "./category";
 
 export class Grammar {
-    validateConstituent(constituent: Constituent, ignoreAdjunct = false): Category[] {
+    validateConstituent(constituent: Constituent, ignoreAdjunct = false): { possibleCategories: Category[], lastEmptyIds: string[] } {
         const { categories } = constituent.head;
-        return categories.filter(category => {
+        const lastEmptyIds: string[] = [];
+        const possibleCategories = categories.filter(category => {
             const specifiersValid = this.validateArguments(category.specifiers, constituent.specifiers);
             const complementsValid = this.validateArguments(category.complements, constituent.complements);
+            lastEmptyIds.push(...specifiersValid.lastEmptyIds, ...complementsValid.lastEmptyIds);
             if (ignoreAdjunct) {
-                return specifiersValid && complementsValid;
+                return specifiersValid.isValid && complementsValid.isValid;
             }
             const preAdjunctsValid = this.validateAdjuncts(constituent, constituent.preAdjuncts, "left");
             const postAdjunctsValid = this.validateAdjuncts(constituent, constituent.postAdjuncts, "right");
-            return specifiersValid && complementsValid && preAdjunctsValid && postAdjunctsValid;
+            lastEmptyIds.push(...preAdjunctsValid.lastEmptyIds, ...postAdjunctsValid.lastEmptyIds);
+            return specifiersValid.isValid && complementsValid.isValid && preAdjunctsValid.isValid && postAdjunctsValid.isValid;
         });
+        return {
+            possibleCategories: possibleCategories,
+            lastEmptyIds: lastEmptyIds
+        }
     }
 
-    validateArguments(required: Category[], provided: argument[]): boolean {
-        return required.every((requiredCategory, i) => {
+    validateArguments(required: Category[], provided: argument[]): { isValid: boolean, lastEmptyIds: string[] } {
+        const lastEmptyIds: string[] = [];
+        const isValid = required.every((requiredCategory, i) => {
             const providedValue = provided[i];
-            return providedValue === null ? true : this.isCompatible(requiredCategory, providedValue);
+            if(providedValue === null) return true;
+            const compatibility = this.isCompatible(requiredCategory, providedValue);
+            if(compatibility.lastEmpty) lastEmptyIds.push(providedValue.id)
+            return compatibility.isCompatible;
         });
+        return {
+            isValid: isValid,
+            lastEmptyIds: lastEmptyIds,
+        }
     }
 
-    validateAdjuncts(modified: Constituent, adjuncts: Constituent[], side: "right" | "left"): boolean {
-        return adjuncts.every((adjunct) => {
+    validateAdjuncts(modified: Constituent, adjuncts: Constituent[], side: "right" | "left"): { isValid: boolean, lastEmptyIds: string[] } {
+        const lastEmptyIds: string[] = [];
+        const isValid = adjuncts.every((adjunct) => {
             // First validate the adjunct itself as a constituent
-            const validCategories = this.validateConstituent(adjunct);
+            const validCategories = this.validateConstituent(adjunct).possibleCategories;
             if (validCategories.length === 0) return false;
 
             // Then check if it can modify the target
             return validCategories.some((adjunctCategory) => {
                 if (adjunctCategory.modify === undefined) return false;
                 if (adjunctCategory.modify.side !== "both" && adjunctCategory.modify.side !== side) return false;
-                return this.isCompatible(adjunctCategory.modify.target, modified, true);
+                const compatibility = this.isCompatible(adjunctCategory.modify.target, modified, true);
+                if(compatibility.lastEmpty) lastEmptyIds.push(modified.id);
+                return compatibility.isCompatible;
             });
         })
+        return {
+            isValid: isValid,
+            lastEmptyIds: lastEmptyIds
+        };
     }
 
-    isCompatible(required: Category, value: Constituent, ignoreAdjunct = false) {
+    isCompatible(required: Category, value: Constituent, ignoreAdjunct = false): { isCompatible: boolean, lastEmpty: boolean } {
         let validCategoryFound = false;
-        const possibleHeadCategories = this.validateConstituent(value, ignoreAdjunct);
+        let lastEmpty = false;
+        const possibleHeadCategories = this.validateConstituent(value, ignoreAdjunct).possibleCategories;
 
         possibleHeadCategories.forEach(category => {
 
@@ -57,14 +80,18 @@ export class Grammar {
                 const categoryEmpty = this.findLastEmptyCategory(value, category);
                 if (categoryEmpty.length === 0) emptyComplementValid = false;
                 if (categoryEmpty.some((category) => (category.base === categoryTobeEmpty.base && this.featureChecking(category.features, categoryTobeEmpty.features)))) {
-                    console.log("This placeholder", categoryTobeEmpty.base, "must be kept empty!");
+                    console.log(value.id, "must have its last complement empty, and it does!");
+                    lastEmpty = true;
                 }
             }
 
             if (baseValid && featureValid && emptyComplementValid) validCategoryFound = true;
         });
 
-        return validCategoryFound;
+        return {
+            isCompatible: validCategoryFound,
+            lastEmpty: lastEmpty,
+        };
     }
 
     findLastEmptyCategory(constituent: Constituent, category: Category): Category[] {
@@ -77,7 +104,7 @@ export class Grammar {
             }
         } else {
             if (category.complements.length > 0) {
-                const possibleChildCategories = this.validateConstituent(lastComplement);
+                const possibleChildCategories = this.validateConstituent(lastComplement).possibleCategories;
                 possibleChildCategories.forEach((category) => {
                     possibleCategories.push(...this.findLastEmptyCategory(lastComplement, category));
                 })

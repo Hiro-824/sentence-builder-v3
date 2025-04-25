@@ -27,7 +27,9 @@ const SentenceBuilder = () => {
 
     function validate(block: Block): boolean {
         const constituent = converter.convertBlockIntoConstituent(block);
-        const categories = grammar.validateConstituent(constituent);
+        const validationResult = grammar.validateConstituent(constituent);
+        console.log(validationResult.lastEmptyIds);
+        const categories = validationResult.possibleCategories;
         return (categories.length > 0);
     }
 
