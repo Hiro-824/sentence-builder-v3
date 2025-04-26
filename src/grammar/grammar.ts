@@ -84,7 +84,7 @@ export class Grammar {
                         if (lastEmptyComplements.some((lastEmptyComplement) => (constituent.id === lastEmptyComplement.id && idx === lastEmptyComplement.index))) {
                             return ""
                         }
-                        return `{${constituent.id}-${type}${idx + 1}}${indicatorWord}`;
+                        return `＿＿${indicatorWord}`;
                     }
 
                     return innerKey
