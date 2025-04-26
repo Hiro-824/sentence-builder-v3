@@ -38,7 +38,7 @@ const SentenceBuilder = () => {
             resetkeepEmpty(block);
             updateChildVisibilityBasedOnHead(block);
             hidePlaceholderTobeEmpty(block);
-            console.log(grammar.translateConstituent(converter.convertBlockIntoConstituent(block), []));
+            block.translation = grammar.translateConstituent(converter.convertBlockIntoConstituent(block), []);
         })
     }
 

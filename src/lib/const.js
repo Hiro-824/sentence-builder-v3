@@ -8,5 +8,6 @@ export const placeholderHeight = 72;
 export const placeholderCornerRadius = 36;
 export const labelFontSize = 32;
 export const dropdownHeight = 60;
+export const bubbleColor = "#121212";
 
 export const blockPreviewScaleExtent = 0.45;

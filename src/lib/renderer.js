@@ -1,4 +1,4 @@
-import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding } from "./const.js";
+import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor } from "./const.js";
 import * as d3 from "d3";
 
 export class Renderer {
@@ -93,16 +93,16 @@ export class Renderer {
             );
 
         let opacity = 1;
-        if(blockData.isTransparent && blockData.isTransparent === true) {
+        if (blockData.isTransparent && blockData.isTransparent === true) {
             opacity = 0.5;
         }
 
         let actualCornerRadius = blockCornerRadius;
-        if(blockData.isRound && blockData.isRound === true) {
+        if (blockData.isRound && blockData.isRound === true) {
             actualCornerRadius = height / 2;
         }
 
-        //フレームを描画
+        // フレームを描画
         const strokeColor = this.darkenColor(blockData.color, 30);
         blockGroup.append("rect")
             .attr("id", `frame-${blockData.id}`)
@@ -115,10 +115,10 @@ export class Renderer {
             .attr("stroke", strokeColor)
             .attr("stroke-width", blockStrokeWidth);
 
-        //内部を描画
+        // 内部を描画
         const children = blockData.children.filter((child) => !child.hidden && !child.keepEmpty);
         let x = horizontalPadding;
-        if(blockData.isRound && blockData.isRound === true) {
+        if (blockData.isRound && blockData.isRound === true) {
             x += horizontalPadding;
         }
         for (let count = 0; count < children.length; count++) {
@@ -358,6 +358,43 @@ export class Renderer {
                 }
             }
         }
+
+        // バブルを描画
+        if (parent.attr("id") === "grid") {
+            const translation = blockData.translation;
+            const box = this.calculateTextHeightAndWidth(translation);
+        
+            const bubbleWidth = box.width + padding * 10;
+            const bubbleHeight = box.height + padding * 10;
+            const bubbleY = -(height + 10);
+        
+            const blockCenterX = width / 2;
+            const bubbleX = blockCenterX - (bubbleWidth / 2);
+        
+            blockGroup.append("rect")
+                .attr("id", `bubble-${blockData.id}`)
+                .attr("opacity", 0.5)
+                .attr("width", bubbleWidth)
+                .attr("height", bubbleHeight)
+                .attr("x", bubbleX) // <--- move the bubble to be centered
+                .attr("y", bubbleY)
+                .attr("fill", bubbleColor)
+                .attr("rx", blockCornerRadius)
+                .attr("ry", blockCornerRadius)
+                .attr("pointer-events", "none");
+        
+            blockGroup.append("text")
+                .text(translation)
+                .attr("x", blockCenterX) // <--- center the text horizontally
+                .attr("y", bubbleY + (bubbleHeight / 2)) // <--- vertically center inside bubble
+                .attr('fill', 'white')
+                .attr('font-size', `${labelFontSize}pt`)
+                .attr('font-weight', 'bold')
+                .attr('dy', '0.35em') // tweak for visual center
+                .attr('text-anchor', 'middle') // center text
+                .style('user-select', 'none');
+        }
+        
     }
 
     calculateTextHeightAndWidth(content) {
@@ -382,7 +419,7 @@ export class Renderer {
         const children = blockData.children.filter((child) => !child.hidden && !child.keepEmpty);
         const paddingNumber = children.length + 1;
         let width = 0;
-        if(blockData.isRound && blockData.isRound === true) {
+        if (blockData.isRound && blockData.isRound === true) {
             width += horizontalPadding * 2;
         }
         children.forEach(child => {
@@ -584,7 +621,7 @@ export class Renderer {
             const yOverlap = Math.max(0, Math.min(rect1Bounds.bottom, rect2Bounds.bottom) - Math.max(rect1Bounds.top, rect2Bounds.top));
             return xOverlap * yOverlap;
         };
-    
+
         const calculateCursorDistance = (rect, mouseX, mouseY) => {
             const rectBounds = rect.node().getBoundingClientRect();
             // If the mouse is inside the placeholder, the distance is 0.
@@ -597,7 +634,7 @@ export class Renderer {
             const rectCenterY = rectBounds.top + rectBounds.height / 2;
             return Math.sqrt(Math.pow(mouseX - rectCenterX, 2) + Math.pow(mouseY - rectCenterY, 2));
         };
-    
+
         const placeholders = d3.selectAll("rect")
             .filter(function () {
                 const id = d3.select(this).attr("id");
@@ -610,12 +647,12 @@ export class Renderer {
             .nodes()
             .map(rect => rect.id)
             .reverse();
-    
+
         const block = d3.select(`#frame-${blockData.id}`);
-    
+
         let bestScore = Infinity;
         let bestPlaceholderId = null;
-    
+
         placeholders.forEach(id => {
             const placeholder = d3.select(`#${id}`);
             const overlapArea = calculateOverlapArea(placeholder, block);
@@ -626,13 +663,13 @@ export class Renderer {
             const distance = calculateCursorDistance(placeholder, mouseX, mouseY);
             // Create a score that favors small distance and penalizes large overlap area.
             const score = distance / (overlapArea + 1);  // +1 avoids division by zero
-    
+
             if (score < bestScore) {
                 bestScore = score;
                 bestPlaceholderId = id;
             }
         });
-    
+
         if (bestPlaceholderId) {
             const info = bestPlaceholderId.split("-");
             const parentId = info[2];

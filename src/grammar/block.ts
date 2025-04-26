@@ -11,6 +11,7 @@ export interface Block {
     isTransparent?: boolean;
     isRound?: boolean;
     children: BlockChild[];
+    translation?: string;
 }
 
 export interface BlockChild {
