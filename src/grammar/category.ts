@@ -8,6 +8,7 @@ export interface Category {
     features: Record<string, string[]>;
     specifiers: Category[];
     complements: Category[];
+    translation: Record<string, string>;
     modify?: ModInfo;
 }
 

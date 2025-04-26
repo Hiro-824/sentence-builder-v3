@@ -12,7 +12,8 @@ export const TP_Categories: Category[] = [
                     case: ["nom"]
                 },
                 specifiers: [],
-                complements: []
+                complements: [],
+                translation: {}
             }
         ],
         complements: [
@@ -22,9 +23,14 @@ export const TP_Categories: Category[] = [
                     form: ["base", "ed"]
                 },
                 specifiers: [],
-                complements: []
+                complements: [],
+                translation: {}
             }
-        ]
+        ],
+        translation: {
+            "wa": "{S1}は{C1}",
+            "ga": "{S1}が{C1}"
+        },
     },
     {
         base: "TP",
@@ -37,7 +43,8 @@ export const TP_Categories: Category[] = [
                     case: ["nom"]
                 },
                 specifiers: [],
-                complements: []
+                complements: [],
+                translation: {}
             }
         ],
         complements: [
@@ -47,9 +54,14 @@ export const TP_Categories: Category[] = [
                     form: ["es", "ed"]
                 },
                 specifiers: [],
-                complements: []
+                complements: [],
+                translation: {}
             }
-        ]
+        ],
+        translation: {
+            "wa": "{S1}は{C1}",
+            "ga": "{S1}が{C1}"
+        },
     },
 ]
 
@@ -65,7 +77,8 @@ export const CP_Categories: Category[] = [
                     case: ["nom"]
                 },
                 specifiers: [],
-                complements: []
+                complements: [],
+                translation: {}
             }
         ],
         complements: [
@@ -75,9 +88,14 @@ export const CP_Categories: Category[] = [
                     form: ["base", "ed"]
                 },
                 specifiers: [],
-                complements: []
+                complements: [],
+                translation: {}
             }
-        ]
+        ],
+        translation: {
+            "wa": "{S1}は{C1}",
+            "ga": "{S1}が{C1}"
+        },
     },
     {
         base: "CP",
@@ -90,7 +108,8 @@ export const CP_Categories: Category[] = [
                     case: ["nom"]
                 },
                 specifiers: [],
-                complements: []
+                complements: [],
+                translation: {}
             }
         ],
         complements: [
@@ -100,9 +119,14 @@ export const CP_Categories: Category[] = [
                     form: ["es", "ed"]
                 },
                 specifiers: [],
-                complements: []
+                complements: [],
+                translation: {}
             }
-        ]
+        ],
+        translation: {
+            "wa": "{S1}は{C1}",
+            "ga": "{S1}が{C1}"
+        },
     }
 ]
 
@@ -113,7 +137,8 @@ export const Intransitive_Base_Categories: Category[] = [
             form: ["base"]
         },
         specifiers: [],
-        complements: []
+        complements: [],
+        translation: {}
     },
     {
         base: "VP",
@@ -121,7 +146,8 @@ export const Intransitive_Base_Categories: Category[] = [
             form: ["base"]
         },
         specifiers: [],
-        complements: []
+        complements: [],
+        translation: {}
     }
 ]
 
@@ -132,7 +158,8 @@ export const Intransitive_Es_Categories: Category[] = [
             form: ["es"]
         },
         specifiers: [],
-        complements: []
+        complements: [],
+        translation: {}
     },
 ]
 
@@ -150,9 +177,11 @@ export const Transitive_Base_Categories: Category[] = [
                     case: ["acc"]
                 },
                 specifiers: [],
-                complements: []
+                complements: [],
+                translation: {}
             }
-        ]
+        ],
+        translation: {},
     },
     {
         base: "VP",
@@ -167,9 +196,11 @@ export const Transitive_Base_Categories: Category[] = [
                     case: ["acc"]
                 },
                 specifiers: [],
-                complements: []
+                complements: [],
+                translation: {}
             }
-        ]
+        ],
+        translation: {},
     }
 ]
 
@@ -187,9 +218,11 @@ export const Transitive_Es_Categories: Category[] = [
                     case: ["acc"]
                 },
                 specifiers: [],
-                complements: []
+                complements: [],
+                translation: {}
             }
-        ]
+        ],
+        translation: {},
     },
 ]
 
@@ -200,7 +233,8 @@ export const Singular_Noun_Categories: Category[] = [
             φ: ["3S"]
         },
         specifiers: [],
-        complements: []
+        complements: [],
+        translation: {}
     },
 ]
 
@@ -211,7 +245,8 @@ export const Plural_Noun_Categories: Category[] = [
             φ: ["3P"],
         },
         specifiers: [],
-        complements: []
+        complements: [],
+        translation: {}
     },
     {
         base: "DP",
@@ -220,7 +255,8 @@ export const Plural_Noun_Categories: Category[] = [
             case: ["nom", "acc"]
         },
         specifiers: [],
-        complements: []
+        complements: [],
+        translation: {}
     },
 ]
 
@@ -231,7 +267,10 @@ export const I_Category: Category = {
         case: ["nom"]
     },
     specifiers: [],
-    complements: []
+    complements: [],
+    translation: {
+        "base": "私"
+    }
 }
 
 export const Posessive_Categories: Category[] = [
@@ -249,9 +288,11 @@ export const Posessive_Categories: Category[] = [
                     φ: ["3S"]
                 },
                 specifiers: [],
-                complements: []
+                complements: [],
+                translation: {}
             }
-        ]
+        ],
+        translation: {},
     },
     {
         base: "DP",
@@ -267,9 +308,11 @@ export const Posessive_Categories: Category[] = [
                     φ: ["3P"]
                 },
                 specifiers: [],
-                complements: []
+                complements: [],
+                translation: {}
             }
-        ]
+        ],
+        translation: {},
     }
 ]
 
@@ -287,9 +330,13 @@ export const A_Category: Category = {
                 φ: ["3S"]
             },
             specifiers: [],
-            complements: []
+            complements: [],
+            translation: {
+                "base": "ある1つの",
+            }
         }
-    ]
+    ],
+    translation: {},
 }
 
 export const The_Categories: Category[] = [
@@ -307,9 +354,11 @@ export const The_Categories: Category[] = [
                     φ: ["3S"]
                 },
                 specifiers: [],
-                complements: []
+                complements: [],
+                translation: {}
             }
-        ]
+        ],
+        translation: {},
     },
     {
         base: "DP",
@@ -325,9 +374,11 @@ export const The_Categories: Category[] = [
                     φ: ["3P"]
                 },
                 specifiers: [],
-                complements: []
+                complements: [],
+                translation: {}
             }
-        ]
+        ],
+        translation: {},
     }
 ]
 
@@ -338,12 +389,14 @@ export const Adjective_Category: Category = {
     },
     specifiers: [],
     complements: [],
+    translation: {},
     modify: {
         target: {
             base: "NP",
             features: {},
             specifiers: [],
-            complements: []
+            complements: [],
+            translation: {}
         },
         side: "left"
     }
@@ -357,12 +410,14 @@ export const Adverb_Categories: Category[] = [
         },
         specifiers: [],
         complements: [],
+        translation: {},
         modify: {
             target: {
                 base: "VP",
                 features: {},
                 specifiers: [],
-                complements: []
+                complements: [],
+                translation: {}
             },
             side: "both"
         }
@@ -374,12 +429,14 @@ export const Adverb_Categories: Category[] = [
         },
         specifiers: [],
         complements: [],
+        translation: {},
         modify: {
             target: {
                 base: "TB",
                 features: {},
                 specifiers: [],
-                complements: []
+                complements: [],
+                translation: {}
             },
             side: "both"
         }
@@ -405,11 +462,14 @@ export const Relative_Pronoun_Categories: Category[] = [
                             φ: ["3S", "3P"]
                         },
                         specifiers: [],
-                        complements: []
+                        complements: [],
+                        translation: {}
                     }
-                ]
+                ],
+                translation: {},
             }
         ],
+        translation: {},
         modify: {
             target: {
                 base: "NP",
@@ -417,7 +477,8 @@ export const Relative_Pronoun_Categories: Category[] = [
                     φ: ["3S", "3P"]
                 },
                 specifiers: [],
-                complements: []
+                complements: [],
+                translation: {}
             },
             side: "right"
         }
@@ -435,9 +496,11 @@ export const Relative_Pronoun_Categories: Category[] = [
                     form: ["base", "ed"]
                 },
                 specifiers: [],
-                complements: []
+                complements: [],
+                translation: {}
             }
         ],
+        translation: {},
         modify: {
             target: {
                 base: "NP",
@@ -445,7 +508,8 @@ export const Relative_Pronoun_Categories: Category[] = [
                     φ: ["3P"]
                 },
                 specifiers: [],
-                complements: []
+                complements: [],
+                translation: {}
             },
             side: "right"
         }
@@ -463,9 +527,11 @@ export const Relative_Pronoun_Categories: Category[] = [
                     form: ["es", "ed"]
                 },
                 specifiers: [],
-                complements: []
+                complements: [],
+                translation: {}
             }
         ],
+        translation: {},
         modify: {
             target: {
                 base: "NP",
@@ -473,7 +539,8 @@ export const Relative_Pronoun_Categories: Category[] = [
                     φ: ["3S"]
                 },
                 specifiers: [],
-                complements: []
+                complements: [],
+                translation: {}
             },
             side: "right"
         }

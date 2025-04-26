@@ -20,17 +20,122 @@ export class Grammar {
         });
         return {
             possibleCategories: possibleCategories,
-            lastEmptyIds: lastEmptyIds
+            lastEmptyIds: lastEmptyIds,
         }
+    }
+
+    translateConstituent(
+        constituent: Constituent,
+        lastEmptyComplements: { id: string, index: number }[],
+        key?: string,
+    ): string {
+        const validationResult = this.validateConstituent(constituent);
+        if (validationResult.possibleCategories.length === 0) return "";
+
+        const category = validationResult.possibleCategories[0];
+        const lastEmptyIds = validationResult.lastEmptyIds;
+        lastEmptyIds.forEach((lastEmptyId) => {
+            const constituentToHaveLastComplementEmpty = this.findConstituent(lastEmptyId, constituent);
+            if (constituentToHaveLastComplementEmpty) {
+                const lastComplement = this.findLastComplement(constituentToHaveLastComplementEmpty);
+                if (lastComplement !== null) {
+                    lastEmptyComplements.push(lastComplement);
+                }
+            }
+        });
+
+        const translationTemplate =
+            key && category.translation[key]
+                ? category.translation[key]
+                : Object.values(category.translation)[0];
+
+        const preAdj = (constituent.preAdjuncts || [])
+            .map(a => this.translateConstituent(a, lastEmptyComplements))
+            .join("");
+        const postAdj = (constituent.postAdjuncts || [])
+            .map(a => this.translateConstituent(a, lastEmptyComplements))
+            .join("");
+
+        // our new regex:  \{([SC])(\d+)(?:\{([^}]+)\})?\}
+        // 1 → “S” or “C”
+        // 2 → digit index
+        // 3 → optional inner‐key
+        // 4 → optional word role indicator
+        const filled =
+            translationTemplate.replace(
+                /\{([SC])(\d+)(?:\{([^}]+)\})?(?:\[(.*?)\])?\}/g,
+                (_, type, numStr, innerKey, indicator) => {
+                    const idx = parseInt(numStr, 10) - 1;
+                    const indicatorWord = indicator ? indicator : "";
+
+                    const arr =
+                        type === "S"
+                            ? constituent.specifiers || []
+                            : constituent.complements || [];
+                    const child = arr[idx];
+
+                    if (!child) {
+                        if (lastEmptyComplements.some((lastEmptyComplement) => (constituent.id === lastEmptyComplement.id && idx === lastEmptyComplement.index))) {
+                            return ""
+                        }
+                        return `{${constituent.id}-${type}${idx + 1}}${indicatorWord}`;
+                    }
+
+                    return innerKey
+                        ? this.translateConstituent(child, lastEmptyComplements, innerKey) + indicatorWord
+                        : this.translateConstituent(child, lastEmptyComplements) + indicatorWord;
+                }
+            );
+
+        return postAdj + preAdj + filled;
+    }
+
+    findConstituent(
+        id: string,
+        constituent: Constituent
+    ): Constituent | null {
+        // check current node
+        if (constituent.id === id) {
+            return constituent;
+        }
+
+        // gather all potential child slots
+        const children: (Constituent | null)[] = [
+            ...constituent.preAdjuncts,
+            ...constituent.specifiers,
+            ...constituent.complements,
+            ...constituent.postAdjuncts,
+        ];
+
+        // recurse into each non-null child
+        for (const child of children) {
+            if (child !== null) {
+                const found = this.findConstituent(id, child);
+                if (found !== null) {
+                    return found;
+                }
+            }
+        }
+
+        // nothing found in this subtree
+        return null;
+    }
+
+    findLastComplement(constituent: Constituent): { id: string, index: number } | null {
+        const complements = constituent.complements;
+        if (complements.length === 0) return null;
+        const lastComplement = complements[complements.length - 1];
+        if (lastComplement === null) return { id: constituent.id, index: complements.length - 1 };
+        return this.findLastComplement(lastComplement);
     }
 
     validateArguments(required: Category[], provided: argument[]): { isValid: boolean, lastEmptyIds: string[] } {
         const lastEmptyIds: string[] = [];
         const isValid = required.every((requiredCategory, i) => {
             const providedValue = provided[i];
-            if(providedValue === null) return true;
+            if (providedValue === null) return true;
             const compatibility = this.isCompatible(requiredCategory, providedValue);
-            if(compatibility.lastEmptyIds) lastEmptyIds.push(...compatibility.lastEmptyIds);
+            if (compatibility.lastEmptyIds) lastEmptyIds.push(...compatibility.lastEmptyIds);
             return compatibility.isCompatible;
         });
         return {
@@ -53,7 +158,7 @@ export class Grammar {
                 if (adjunctCategory.modify === undefined) return false;
                 if (adjunctCategory.modify.side !== "both" && adjunctCategory.modify.side !== side) return false;
                 const compatibility = this.isCompatible(adjunctCategory.modify.target, modified, true);
-                if(compatibility.lastEmptyIds) lastEmptyIds.push(...compatibility.lastEmptyIds);
+                if (compatibility.lastEmptyIds) lastEmptyIds.push(...compatibility.lastEmptyIds);
                 return compatibility.isCompatible;
             });
         })

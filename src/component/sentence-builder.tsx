@@ -36,8 +36,9 @@ const SentenceBuilder = () => {
         console.log("data changed", data)
         data.blocks.forEach((block) => {
             resetkeepEmpty(block);
-            hidePlaceholderTobeEmpty(block);
             updateChildVisibilityBasedOnHead(block);
+            hidePlaceholderTobeEmpty(block);
+            console.log(grammar.translateConstituent(converter.convertBlockIntoConstituent(block), []));
         })
     }
 
@@ -96,30 +97,29 @@ const SentenceBuilder = () => {
 
     function findBlock(blockId: string, block: Block): Block | null {
         if (block.id === blockId) {
-          return block;
+            return block;
         }
-      
+
         if (!block.children) {
-          return null;
+            return null;
         }
-      
+
         for (const child of block.children) {
-          if ((child.type === "placeholder" || child.type === "attachment")
-              && converter.isBlock(child.content)) {
-            const content = child.content;
-      
-            // recurse
-            const found = findBlock(blockId, content);
-            if (found) {
-              return found;
+            if ((child.type === "placeholder" || child.type === "attachment")
+                && converter.isBlock(child.content)) {
+                const content = child.content;
+
+                // recurse
+                const found = findBlock(blockId, content);
+                if (found) {
+                    return found;
+                }
             }
-          }
         }
-      
+
         // none of this block’s subtree had it
         return null;
-      }
-      
+    }
 
     function findLastComplement(block: Block) {
         const blockComplementChildren = block.children.filter((child) => (child.id.includes("complement")));
