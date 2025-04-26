@@ -133,7 +133,7 @@ const SentenceBuilder = () => {
         if (!rendererRef.current) return;
         const gridState = rendererRef.current.getGridState();
         block.x = (180 - gridState.x) / gridState.k;
-        block.y = (10 - gridState.y) / gridState.k;
+        block.y = (60 - gridState.y) / gridState.k;
         data.blocks.push(block);
         onDataChanged();
         rendererRef.current?.render();
