@@ -54,7 +54,7 @@ export class BlockRenderer {
         }
         for (let count = 0; count < children.length; count++) {
             const child = children[count];
-            if(!child.hidden) {
+            if(!child.hidden && !child.keepEmpty) {
                 if (child.type === "placeholder") {
                     const content = child.content;
                     if (content) {
@@ -176,7 +176,7 @@ export class BlockRenderer {
     }
 
     calculateWidth(blockData) {
-        const children = blockData.children.filter((child) => !child.hidden);
+        const children = blockData.children.filter((child) => !child.hidden && !child.keepEmpty);
         const paddingNumber = children.length + 1;
         let width = 0;
         if (blockData.isRound && blockData.isRound === true) {
@@ -211,7 +211,7 @@ export class BlockRenderer {
     }
 
     calculateHeight(blockData) {
-        const children = blockData.children.filter((child) => !child.hidden);
+        const children = blockData.children.filter((child) => !child.hidden && !child.keepEmpty);
         let heights = [placeholderHeight - padding * 2];
         children.forEach(child => {
             if (child.type === "placeholder") {
