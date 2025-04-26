@@ -1,5 +1,13 @@
 import { Block } from "../block";
-import { A_Lexicon, Book_Lexicon, Books_Lexicon, Colorless_Lexicon, Furiously_Lexicon, Green_Lexicon, Has_Lexicon, Have_Lexicon, I_Lexicon, Idea_Lexicon, Ideas_Lexicon, My_Lexicon, Relative_That_Lexicon, Relative_Which_Lexicon, Sentence_Lexicon, Sleep_Lexicon, Sleeps_Lexicon, The_Lexicon } from "./lexicons";
+import { Colorless_Lexicon, Green_Lexicon } from "../lexicons/adjectives";
+import { Furiously_Lexicon } from "../lexicons/adverbs";
+import { A_Lexicon, The_Lexicon } from "../lexicons/determiners";
+import { Sentence_Lexicon } from "../lexicons/sentences";
+import { Idea_Lexicon, Ideas_Lexicon, Book_Lexicon, Books_Lexicon } from "../lexicons/nouns";
+import { I_Lexicon, Me_Lexicon, Mine_Lexicon, My_Lexicon } from "../lexicons/pronouns";
+import { Relative_That_Lexicon, Relative_Which_Lexicon } from "../lexicons/relatives";
+import { Sleep_Lexicon, Sleeps_Lexicon, Have_Lexicon, Has_Lexicon } from "../lexicons/verbs";
+
 
 export const Sentence_Block: Block = {
     id: "sentence",
@@ -81,6 +89,8 @@ export const I_Block: Block = {
     lexicons: [
         I_Lexicon,
         My_Lexicon,
+        Me_Lexicon,
+        Mine_Lexicon,
     ],
     x: 0,
     y: 0,
@@ -95,6 +105,8 @@ export const I_Block: Block = {
             content: [
                 "I",
                 "my",
+                "me",
+                "mine",
             ],
             selected: 0
         },

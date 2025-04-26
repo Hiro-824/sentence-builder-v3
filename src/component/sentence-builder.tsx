@@ -4,7 +4,7 @@ import React, { useEffect, useRef } from "react";
 import * as d3 from "d3";
 import { Renderer } from "../lib/renderer";
 import { Block } from "@/grammar/block";
-import { blocks } from "@/grammar/lexicons/blocks";
+import { blocks } from "@/grammar/blocks/blocks";
 import { Converter } from "@/grammar/converter";
 import { Grammar } from "@/grammar/grammar";
 import BlockList from "./block-list";
