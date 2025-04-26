@@ -82,37 +82,44 @@ const SentenceBuilder = () => {
     function hidePlaceholderTobeEmpty(block: Block) {
         const constituent = converter.convertBlockIntoConstituent(block);
         const validationResult = grammar.validateConstituent(constituent);
+        console.log(validationResult.lastEmptyIds);
         validationResult.lastEmptyIds.forEach((id) => {
             const blockWithPlaceholderTobeNull = findBlock(id, block);
             if (blockWithPlaceholderTobeNull) {
                 const lastComplement = findLastComplement(blockWithPlaceholderTobeNull);
                 if (lastComplement !== undefined) lastComplement.keepEmpty = true;
+            } else {
+                console.log("COULDN'T FIND IT")
             }
         })
     }
 
-    function findBlock(blockId: string, block: Block) {
+    function findBlock(blockId: string, block: Block): Block | null {
         if (block.id === blockId) {
-            return block;
+          return block;
         }
-        if (block.children) {
-            for (let j = 0; j < block.children.length; j++) {
-                const child = block.children[j];
-                if (child.type === "placeholder" || child.type === "attachment") {
-                    const content = child.content;
-                    if (converter.isBlock(content)) {
-                        if (content.id === blockId) {
-                            return block;
-                        } else {
-                            return findBlock(blockId, content);
-                        }
-                    }
-                }
+      
+        if (!block.children) {
+          return null;
+        }
+      
+        for (const child of block.children) {
+          if ((child.type === "placeholder" || child.type === "attachment")
+              && converter.isBlock(child.content)) {
+            const content = child.content;
+      
+            // recurse
+            const found = findBlock(blockId, content);
+            if (found) {
+              return found;
             }
-        } else {
-            console.log("NOT FOUND");
+          }
         }
-    }
+      
+        // none of this block’s subtree had it
+        return null;
+      }
+      
 
     function findLastComplement(block: Block) {
         const blockComplementChildren = block.children.filter((child) => (child.id.includes("complement")));
