@@ -3,32 +3,43 @@ import { argument, Category, Constituent } from "./category";
 export class Grammar {
     validateConstituent(constituent: Constituent, ignoreAdjunct = false): { possibleCategories: Category[], lastEmptyIds: string[] } {
         const { categories } = constituent.head;
-        const lastEmptyIds = new Set<string>(); // ← Use Set here
-    
-        const possibleCategories = categories.filter(category => {
+        const lastEmptyIds = new Set<string>();
+        const possibleCategories: Category[] = [];
+
+        for (const category of categories) {
+            // Validate specifiers and complements
             const specifiersValid = this.validateArguments(category.specifiers, constituent.specifiers);
             const complementsValid = this.validateArguments(category.complements, constituent.complements);
-    
-            specifiersValid.lastEmptyIds.forEach(id => lastEmptyIds.add(id));
-            complementsValid.lastEmptyIds.forEach(id => lastEmptyIds.add(id));
-    
-            if (ignoreAdjunct) {
-                return specifiersValid.isValid && complementsValid.isValid;
+
+            // Validate adjuncts if needed
+            let preAdjunctsValid = { isValid: true, lastEmptyIds: [] as string[] };
+            let postAdjunctsValid = { isValid: true, lastEmptyIds: [] as string[] };
+            if (!ignoreAdjunct) {
+                preAdjunctsValid = this.validateAdjuncts(constituent, constituent.preAdjuncts, "left");
+                postAdjunctsValid = this.validateAdjuncts(constituent, constituent.postAdjuncts, "right");
             }
-            const preAdjunctsValid = this.validateAdjuncts(constituent, constituent.preAdjuncts, "left");
-            const postAdjunctsValid = this.validateAdjuncts(constituent, constituent.postAdjuncts, "right");
-    
-            preAdjunctsValid.lastEmptyIds.forEach(id => lastEmptyIds.add(id));
-            postAdjunctsValid.lastEmptyIds.forEach(id => lastEmptyIds.add(id));
-    
-            return specifiersValid.isValid && complementsValid.isValid && preAdjunctsValid.isValid && postAdjunctsValid.isValid;
-        });
-    
-        return {
-            possibleCategories: possibleCategories,
-            lastEmptyIds: Array.from(lastEmptyIds), // ← Convert Set back to array
+
+            const isValid = ignoreAdjunct
+                ? specifiersValid.isValid && complementsValid.isValid
+                : specifiersValid.isValid && complementsValid.isValid && preAdjunctsValid.isValid && postAdjunctsValid.isValid;
+
+            // Only collect lastEmptyIds for categories that passed
+            if (isValid) {
+                possibleCategories.push(category);
+                specifiersValid.lastEmptyIds.forEach(id => lastEmptyIds.add(id));
+                complementsValid.lastEmptyIds.forEach(id => lastEmptyIds.add(id));
+                if (!ignoreAdjunct) {
+                    preAdjunctsValid.lastEmptyIds.forEach(id => lastEmptyIds.add(id));
+                    postAdjunctsValid.lastEmptyIds.forEach(id => lastEmptyIds.add(id));
+                }
+            }
         }
-    }    
+
+        return {
+            possibleCategories,
+            lastEmptyIds: Array.from(lastEmptyIds),
+        };
+    }
 
     translateConstituent(
         constituent: Constituent,
