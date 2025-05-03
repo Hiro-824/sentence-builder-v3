@@ -4,9 +4,9 @@ import { Furiously_Lexicon } from "../lexicons/adverbs";
 import { A_Lexicon, The_Lexicon } from "../lexicons/determiners";
 import { Sentence_Lexicon } from "../lexicons/sentences";
 import { Idea_Lexicon, Ideas_Lexicon, Book_Lexicon, Books_Lexicon } from "../lexicons/nouns";
-import { I_Lexicon, Me_Lexicon, Mine_Lexicon, My_Lexicon } from "../lexicons/pronouns";
 import { Relative_That_Lexicon, Relative_Which_Lexicon } from "../lexicons/relatives";
 import { Sleep_Lexicon, Sleeps_Lexicon, Have_Lexicon, Has_Lexicon } from "../lexicons/verbs";
+import { I_Block } from "../lexicons/pronouns";
 
 
 export const Sentence_Block: Block = {
@@ -81,43 +81,6 @@ export const Green_Block: Block = {
             hidden: false,
             keepEmpty: false,
         },
-    ]
-}
-
-export const I_Block: Block = {
-    id: "I",
-    lexicons: [
-        I_Lexicon,
-        My_Lexicon,
-        Me_Lexicon,
-        Mine_Lexicon,
-    ],
-    x: 0,
-    y: 0,
-    color: "dodgerblue",
-    isRound: true,
-    children: [
-        {
-            id: "head",
-            hidden: false,
-            keepEmpty: false,
-            type: "dropdown",
-            content: [
-                "I",
-                "my",
-                "me",
-                "mine",
-            ],
-            selected: 0
-        },
-        {
-            id: "complement",
-            hidden: true,
-            keepEmpty: false,
-            type: "placeholder",
-            content: null,
-            headIndex: [1]
-        }
     ]
 }
 

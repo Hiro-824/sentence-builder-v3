@@ -1,3 +1,4 @@
+import { Block } from "../block"
 import { Lexicon } from "../category"
 
 // 一人称単数
@@ -103,4 +104,41 @@ export const Mine_Lexicon: Lexicon = {
             },
         },
     ],
+}
+
+export const I_Block: Block = {
+    id: "I",
+    lexicons: [
+        I_Lexicon,
+        My_Lexicon,
+        Me_Lexicon,
+        Mine_Lexicon,
+    ],
+    x: 0,
+    y: 0,
+    color: "dodgerblue",
+    isRound: true,
+    children: [
+        {
+            id: "head",
+            hidden: false,
+            keepEmpty: false,
+            type: "dropdown",
+            content: [
+                "I",
+                "my",
+                "me",
+                "mine",
+            ],
+            selected: 0
+        },
+        {
+            id: "complement",
+            hidden: true,
+            keepEmpty: false,
+            type: "placeholder",
+            content: null,
+            headIndex: [1]
+        }
+    ]
 }

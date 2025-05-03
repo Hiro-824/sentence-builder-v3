@@ -268,6 +268,7 @@ export class Renderer {
                                 blockData.y += 30;
                                 this.moveBlockToTopLevel(blockData.id);
                             }
+                            this.onDataChanged();
                             this.render();
                             this.currentlyOpenedDropdownId = null;
                             let element = d3.select(`#${blockData.id}`);
