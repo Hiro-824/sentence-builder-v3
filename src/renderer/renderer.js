@@ -96,240 +96,256 @@ export class Renderer {
         for (let count = 0; count < children.length; count++) {
             const child = children[count];
             if (child.type === "placeholder") {
-                const content = child.content;
-                if (content) {
-                    //ブロックがはまっている場合
-                    const childWidth = this.calculateWidth(content);
-                    const childHeight = this.calculateHeight(content);
-                    content.x = x;
-                    content.y = (height - childHeight) / 2;
-                    this.renderBlock(content, blockGroup);
-                    x += (childWidth + horizontalPadding)
-                } else {
-                    //ブロックがはまっていない場合
-                    const y = (height - placeholderHeight) / 2;
-                    const inputColor = this.darkenColor(block.color, 30);
-                    blockGroup.append("rect")
-                        .attr("id", `placeholder-${count}-${block.id}-${child.id}`)
-                        .attr("x", x)
-                        .attr("y", y)
-                        .attr("width", placeholderWidth)
-                        .attr("height", placeholderHeight)
-                        .attr("rx", placeholderCornerRadius)
-                        .attr("ry", placeholderCornerRadius)
-                        .attr("fill", inputColor);
-                    x += (placeholderWidth + horizontalPadding);
-                }
+                x += this.renderPlaceholder(child, height, block, blockGroup, count, x);
             } else if (child.type === "text") {
-                const content = child.content;
-                const box = this.calculateTextHeightAndWidth(content);
-                const y = ((height - box.height) / 2) + box.height;
-                blockGroup.append("text")
-                    .text(content)
-                    .attr("x", x)
-                    .attr("y", y)
-                    .attr('fill', 'white')
-                    .attr('font-size', `${labelFontSize}pt`)
-                    .attr('font-weight', 'bold')
-                    .attr('dy', '-0.15em')
-                    .style('user-select', 'none');
-                x += (box.width + horizontalPadding);
+                x += this.renderText(child, height, blockGroup, x);
             } else if (child.type === "dropdown") {
-                const selected = child.selected;
-                const text = child.content[selected];
-                const box = this.calculateTextHeightAndWidth(text);
-                const dropdownWidth = this.calculateDropdownWidth(child);
+                x += this.renderDropdown(child, height, block, blockGroup, count, x);
+            } else if (child.type === "attachment") {
+                x += this.renderAttachment(child, height, blockGroup, x);
+            }
+        }
+    }
 
-                const inputColor = this.darkenColor(block.color, 30);
-                const y = (height - dropdownHeight) / 2;
+    renderPlaceholder(child, height, block, blockGroup, count, x) {
+        const content = child.content;
+        if (content) {
+            //ブロックがはまっている場合
+            const childWidth = this.calculateWidth(content);
+            const childHeight = this.calculateHeight(content);
+            content.x = x;
+            content.y = (height - childHeight) / 2;
+            this.renderBlock(content, blockGroup);
+            return (childWidth + horizontalPadding)
+        } else {
+            //ブロックがはまっていない場合
+            const y = (height - placeholderHeight) / 2;
+            const inputColor = this.darkenColor(block.color, 30);
+            blockGroup.append("rect")
+                .attr("id", `placeholder-${count}-${block.id}-${child.id}`)
+                .attr("x", x)
+                .attr("y", y)
+                .attr("width", placeholderWidth)
+                .attr("height", placeholderHeight)
+                .attr("rx", placeholderCornerRadius)
+                .attr("ry", placeholderCornerRadius)
+                .attr("fill", inputColor);
+            return (placeholderWidth + horizontalPadding);
+        }
+    }
 
-                const dropdownId = `dropdown-${count}-${block.id}`;
+    renderText(child, height, blockGroup, x) {
+        const content = child.content;
+        const box = this.calculateTextHeightAndWidth(content);
+        const y = ((height - box.height) / 2) + box.height;
+        blockGroup.append("text")
+            .text(content)
+            .attr("x", x)
+            .attr("y", y)
+            .attr('fill', 'white')
+            .attr('font-size', `${labelFontSize}pt`)
+            .attr('font-weight', 'bold')
+            .attr('dy', '-0.15em')
+            .style('user-select', 'none');
+        return (box.width + horizontalPadding);
+    }
 
-                const dropdownGroup = blockGroup.append("g")
-                    .classed("pointer", true)
-                    .on("mousedown", (event) => {
-                        if (this.currentlyOpenedDropdownId === dropdownId) {
-                            event.stopPropagation();
-                            event.preventDefault();
-                        }
-                    });
+    renderDropdown(child, height, block, blockGroup, count, x) {
+        const selected = child.selected;
+        const text = child.content[selected];
+        const box = this.calculateTextHeightAndWidth(text);
+        const dropdownWidth = this.calculateDropdownWidth(child);
 
-                dropdownGroup.append("rect")
-                    .attr("id", dropdownId)
-                    .attr("x", x)
-                    .attr("y", y)
-                    .attr("width", dropdownWidth)
-                    .attr("height", dropdownHeight)
-                    .attr("rx", blockCornerRadius)
-                    .attr("ry", blockCornerRadius)
-                    .attr("fill", inputColor);
+        const inputColor = this.darkenColor(block.color, 30);
+        const y = (height - dropdownHeight) / 2;
 
-                const textX = x + horizontalPadding;
-                const textY = ((height - box.height) / 2) + box.height;
-                dropdownGroup.append("text")
-                    .text(text)
-                    .attr("x", textX)
-                    .attr("y", textY)
-                    .attr('fill', 'white')
-                    .attr('font-size', `${labelFontSize}pt`)
-                    .attr('font-weight', 'bold')
-                    .attr('dy', '-0.15em')
-                    .style('user-select', 'none')
+        const dropdownId = `dropdown-${count}-${block.id}`;
 
-                dropdownGroup.append("text")
-                    .text("▼")
-                    .attr("x", textX + box.width + horizontalPadding)
-                    .attr("y", textY - 10)
-                    .attr('fill', 'white')
-                    .attr('font-size', `10pt`)
-                    .attr('font-weight', 'bold')
-                    .attr('dy', '-0.15em')
-                    .style('user-select', 'none');
-
-                const optionHeight = dropdownHeight;
-                const optionsWidth = Math.max(...child.content.map(option =>
-                    this.calculateTextHeightAndWidth(option).width)) + horizontalPadding * 2;
-
-                const optionsPosition = {
-                    x: x,
-                    y: y + dropdownHeight + padding,
-                    width: optionsWidth,
-                    height: (optionHeight * child.content.length + blockCornerRadius * 2)
-                };
-
-                const optionsGroup = dropdownGroup.append("g")
-                    .attr("display", "none")
-                    .classed("dropdown-options", true);
-
-                // Background for options
-                optionsGroup.append("rect")
-                    .attr("x", optionsPosition.x)
-                    .attr("y", optionsPosition.y)
-                    .attr("width", optionsWidth)
-                    .attr("height", optionHeight * child.content.length + blockCornerRadius * 2)
-                    .attr("fill", block.color)
-                    .attr("rx", blockCornerRadius)
-                    .attr("ry", blockCornerRadius)
-                    .attr("stroke", inputColor)
-                    .attr("stroke-width", 2);
-
-                // Render each option
-                child.content.forEach((option, index) => {
-                    const optionBox = this.calculateTextHeightAndWidth(option);
-                    const optionY = optionsPosition.y + blockCornerRadius + (optionHeight * index);
-
-                    const isSelected = (index === child.selected);
-
-                    const optionGroup = optionsGroup.append("g")
-                        .classed("pointer", true)
-                        .attr("id", `option-${index}-dropdown-${count}-${block.id}`)
-                        .on("click", (event) => {
-                            event.stopPropagation();
-                            event.preventDefault();
-                            child.selected = index;
-                            let resultingBlock = null;
-                            for (const block of this.data.blocks) {
-                                if (this.containsBlock(block, block.id)) {
-                                    resultingBlock = block;
-                                }
-                            }
-                            this.onDataChanged();
-                            const isValid = this.onValidateSelectionContextually(resultingBlock);
-                            if (!isValid) {
-                                block.x += 30;
-                                block.y += 30;
-                                this.moveBlockToTopLevel(block.id);
-                            }
-                            this.onDataChanged();
-                            this.render();
-                            this.currentlyOpenedDropdownId = null;
-                            let element = d3.select(`#${block.id}`);
-                            element.raise();
-                            // Traverse up until the immediate parent is the svg (whose id is "svg")
-                            while (element.node().parentNode && element.node().parentNode.id !== "svg") {
-                                element = d3.select(element.node().parentNode);
-                            }
-                            element.raise();
-                        });
-
-                    // Highlight rectangle
-                    optionGroup.append("rect")
-                        .attr("x", optionsPosition.x)
-                        .attr("y", optionY)
-                        .attr("width", optionsWidth)
-                        .attr("height", optionHeight)
-                        .attr("fill", "white")
-                        .attr("opacity", 0);
-
-                    // Option text
-                    optionGroup.append("text")
-                        .text(option)
-                        .attr("x", optionsPosition.x + horizontalPadding)
-                        .attr("y", optionY + (optionHeight * 0.5) + (optionBox.height * 0.5))
-                        .attr("fill", "white")
-                        .attr("font-size", `${labelFontSize}pt`)
-                        .attr("dy", "-0.15em")
-                        .attr('font-weight', isSelected ? 'bold' : 'normal')
-                        .style('user-select', 'none');
-
-                    // Hover effects remain the same
-                    optionGroup
-                        .on("mouseenter", function () {
-                            d3.select(this).select("rect")
-                                .attr("opacity", 0.2);
-                            this.currentlyHoveredOptionIndex = index;
-                        })
-                        .on("mouseleave", function () {
-                            d3.select(this).select("rect")
-                                .attr("opacity", 0);
-                            this.currentlyHoveredOptionIndex = null;
-                        });
-                });
-
-                dropdownGroup.on("click", (event) => {
+        const dropdownGroup = blockGroup.append("g")
+            .classed("pointer", true)
+            .on("mousedown", (event) => {
+                if (this.currentlyOpenedDropdownId === dropdownId) {
                     event.stopPropagation();
                     event.preventDefault();
-                    const currentDisplay = optionsGroup.attr("display");
-                    optionsGroup.attr("display", currentDisplay === "none" ? "block" : "none");
+                }
+            });
 
-                    // Raise the top-level parent block when opening dropdown
-                    if (currentDisplay === "none") {
-                        // currentlyOpenedDropdownIdを設定
-                        this.currentlyOpenedDropdownId = dropdownId;
-                        // Start with the element that has the block's id
-                        let element = d3.select(`#${block.id}`);
-                        element.raise();
-                        // Traverse up until the immediate parent is the svg (whose id is "svg")
-                        while (element.node().parentNode && element.node().parentNode.id !== "grid") {
-                            element = d3.select(element.node().parentNode);
+        dropdownGroup.append("rect")
+            .attr("id", dropdownId)
+            .attr("x", x)
+            .attr("y", y)
+            .attr("width", dropdownWidth)
+            .attr("height", dropdownHeight)
+            .attr("rx", blockCornerRadius)
+            .attr("ry", blockCornerRadius)
+            .attr("fill", inputColor);
+
+        const textX = x + horizontalPadding;
+        const textY = ((height - box.height) / 2) + box.height;
+        dropdownGroup.append("text")
+            .text(text)
+            .attr("x", textX)
+            .attr("y", textY)
+            .attr('fill', 'white')
+            .attr('font-size', `${labelFontSize}pt`)
+            .attr('font-weight', 'bold')
+            .attr('dy', '-0.15em')
+            .style('user-select', 'none')
+
+        dropdownGroup.append("text")
+            .text("▼")
+            .attr("x", textX + box.width + horizontalPadding)
+            .attr("y", textY - 10)
+            .attr('fill', 'white')
+            .attr('font-size', `10pt`)
+            .attr('font-weight', 'bold')
+            .attr('dy', '-0.15em')
+            .style('user-select', 'none');
+
+        const optionHeight = dropdownHeight;
+        const optionsWidth = Math.max(...child.content.map(option =>
+            this.calculateTextHeightAndWidth(option).width)) + horizontalPadding * 2;
+
+        const optionsPosition = {
+            x: x,
+            y: y + dropdownHeight + padding,
+            width: optionsWidth,
+            height: (optionHeight * child.content.length + blockCornerRadius * 2)
+        };
+
+        const optionsGroup = dropdownGroup.append("g")
+            .attr("display", "none")
+            .classed("dropdown-options", true);
+
+        // Background for options
+        optionsGroup.append("rect")
+            .attr("x", optionsPosition.x)
+            .attr("y", optionsPosition.y)
+            .attr("width", optionsWidth)
+            .attr("height", optionHeight * child.content.length + blockCornerRadius * 2)
+            .attr("fill", block.color)
+            .attr("rx", blockCornerRadius)
+            .attr("ry", blockCornerRadius)
+            .attr("stroke", inputColor)
+            .attr("stroke-width", 2);
+
+        // Render each option
+        child.content.forEach((option, index) => {
+            const optionBox = this.calculateTextHeightAndWidth(option);
+            const optionY = optionsPosition.y + blockCornerRadius + (optionHeight * index);
+
+            const isSelected = (index === child.selected);
+
+            const optionGroup = optionsGroup.append("g")
+                .classed("pointer", true)
+                .attr("id", `option-${index}-dropdown-${count}-${block.id}`)
+                .on("click", (event) => {
+                    event.stopPropagation();
+                    event.preventDefault();
+                    child.selected = index;
+                    let resultingBlock = null;
+                    for (const block of this.data.blocks) {
+                        if (this.containsBlock(block, block.id)) {
+                            resultingBlock = block;
                         }
-                        element.raise();
-                    } else {
-                        this.currentlyOpenedDropdownId = null;
                     }
+                    this.onDataChanged();
+                    const isValid = this.onValidateSelectionContextually(resultingBlock);
+                    if (!isValid) {
+                        block.x += 30;
+                        block.y += 30;
+                        this.moveBlockToTopLevel(block.id);
+                    }
+                    this.onDataChanged();
+                    this.render();
+                    this.currentlyOpenedDropdownId = null;
+                    let element = d3.select(`#${block.id}`);
+                    element.raise();
+                    // Traverse up until the immediate parent is the svg (whose id is "svg")
+                    while (element.node().parentNode && element.node().parentNode.id !== "svg") {
+                        element = d3.select(element.node().parentNode);
+                    }
+                    element.raise();
                 });
 
-                dropdownGroup.on("mouseenter", () => {
-                    this.currentlyHoveredDropdownId = `dropdown-${count}-${block.id}`;
-                })
+            // Highlight rectangle
+            optionGroup.append("rect")
+                .attr("x", optionsPosition.x)
+                .attr("y", optionY)
+                .attr("width", optionsWidth)
+                .attr("height", optionHeight)
+                .attr("fill", "white")
+                .attr("opacity", 0);
 
-                dropdownGroup.on("mouseleave", () => {
-                    this.currentlyHoveredDropdownId = null;
-                })
+            // Option text
+            optionGroup.append("text")
+                .text(option)
+                .attr("x", optionsPosition.x + horizontalPadding)
+                .attr("y", optionY + (optionHeight * 0.5) + (optionBox.height * 0.5))
+                .attr("fill", "white")
+                .attr("font-size", `${labelFontSize}pt`)
+                .attr("dy", "-0.15em")
+                .attr('font-weight', isSelected ? 'bold' : 'normal')
+                .style('user-select', 'none');
 
-                x += (dropdownWidth + horizontalPadding);
-            } else if (child.type === "attachment") {
-                const content = child.content;
-                if (content) {
-                    //ブロックがはまっている場合
-                    const childWidth = this.calculateWidth(content);
-                    const childHeight = this.calculateHeight(content);
-                    content.x = x;
-                    content.y = (height - childHeight) / 2;
-                    this.renderBlock(content, blockGroup);
-                    x += (childWidth + horizontalPadding)
+            // Hover effects remain the same
+            optionGroup
+                .on("mouseenter", function () {
+                    d3.select(this).select("rect")
+                        .attr("opacity", 0.2);
+                    this.currentlyHoveredOptionIndex = index;
+                })
+                .on("mouseleave", function () {
+                    d3.select(this).select("rect")
+                        .attr("opacity", 0);
+                    this.currentlyHoveredOptionIndex = null;
+                });
+        });
+
+        dropdownGroup.on("click", (event) => {
+            event.stopPropagation();
+            event.preventDefault();
+            const currentDisplay = optionsGroup.attr("display");
+            optionsGroup.attr("display", currentDisplay === "none" ? "block" : "none");
+
+            // Raise the top-level parent block when opening dropdown
+            if (currentDisplay === "none") {
+                // currentlyOpenedDropdownIdを設定
+                this.currentlyOpenedDropdownId = dropdownId;
+                // Start with the element that has the block's id
+                let element = d3.select(`#${block.id}`);
+                element.raise();
+                // Traverse up until the immediate parent is the svg (whose id is "svg")
+                while (element.node().parentNode && element.node().parentNode.id !== "grid") {
+                    element = d3.select(element.node().parentNode);
                 }
+                element.raise();
+            } else {
+                this.currentlyOpenedDropdownId = null;
             }
+        });
+
+        dropdownGroup.on("mouseenter", () => {
+            this.currentlyHoveredDropdownId = `dropdown-${count}-${block.id}`;
+        })
+
+        dropdownGroup.on("mouseleave", () => {
+            this.currentlyHoveredDropdownId = null;
+        })
+
+        return (dropdownWidth + horizontalPadding);
+    }
+
+    renderAttachment(child, height, blockGroup, x) {
+        const content = child.content;
+        if (content) {
+            //ブロックがはまっている場合
+            const childWidth = this.calculateWidth(content);
+            const childHeight = this.calculateHeight(content);
+            content.x = x;
+            content.y = (height - childHeight) / 2;
+            this.renderBlock(content, blockGroup);
+            x += (childWidth + horizontalPadding)
         }
     }
 
