@@ -352,7 +352,17 @@ export class Renderer {
     /*ドラッグ関係の処理***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
     dragStart(event, d) {
-        d3.select(event.sourceEvent.target).classed("grab", false).classed("grabbing", true);
+        const id = `#${d.id}`
+        d3.select(id)
+            .raise()
+            .classed("grab", false)
+            .classed("grabbing", true);
+
+        const frameId = `#frame-${d.id}`;
+        d3.select(frameId)
+            .attr("stroke", "yellow")
+            .attr("stroke-width", highlightStrokeWidth);
+
         this.dragStartX = event.x;
         this.dragStartY = event.y;
         this.dragStartBlockX = d.x;
@@ -368,7 +378,14 @@ export class Renderer {
     }
 
     dragEnd(event, d) {
-        d3.select(event.sourceEvent.target).classed("grab", true).classed("grabbing", false);
+        const id = `#${d.id}`
+        d3.select(id).classed("grab", true).classed("grabbing", false);
+
+        const frameId = `#frame-${d.id}`;
+        const strokeColor = this.darkenColor(d.color, 30);
+        d3.select(frameId)
+            .attr("stroke", strokeColor)
+            .attr("stroke-width", blockStrokeWidth);
     }
 
     /*幅・高さ・色の計算(できれば他に移動したい)***********************************************************************************************************************************************************************************************************************************************************************************************************************/
