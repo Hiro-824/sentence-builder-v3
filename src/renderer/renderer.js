@@ -351,16 +351,24 @@ export class Renderer {
 
     /*ドラッグ関係の処理***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
-    dragStart() {
-
+    dragStart(event, d) {
+        d3.select(event.sourceEvent.target).classed("grab", false).classed("grabbing", true);
+        this.dragStartX = event.x;
+        this.dragStartY = event.y;
+        this.dragStartBlockX = d.x;
+        this.dragStartBlockY = d.y;
     }
 
-    dragging() {
-
+    dragging(event, d) {
+        const dx = event.x - this.dragStartX;
+        const dy = event.y - this.dragStartY;
+        d.x = this.dragStartBlockX + dx;
+        d.y = this.dragStartBlockY + dy;
+        d3.select(`#${d.id}`).attr("transform", `translate(${d.x}, ${d.y})`);
     }
 
-    dragEnd() {
-
+    dragEnd(event, d) {
+        d3.select(event.sourceEvent.target).classed("grab", true).classed("grabbing", false);
     }
 
     /*幅・高さ・色の計算(できれば他に移動したい)***********************************************************************************************************************************************************************************************************************************************************************************************************************/
