@@ -183,6 +183,7 @@ const SentenceBuilder = () => {
                         const id = "b" + crypto.randomUUID().replaceAll(/-/g, '');
                         const blockToAdd = cloneBlock(selectedBlockDefinition, id);
                         addBlock(blockToAdd);
+                        console.log(data.blocks);
                     }
                 }
             />

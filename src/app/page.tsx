@@ -1,4 +1,4 @@
-import SentenceBuilder from "@/component/sentence-builder";
+import SentenceBuilder from "@/component/sentence-builder-new";
 
 export default function Home() {
 
