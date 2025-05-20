@@ -3,10 +3,11 @@ import { Colorless_Lexicon, Green_Lexicon } from "../lexicons/adjectives";
 import { Furiously_Lexicon } from "../lexicons/adverbs";
 import { A_Lexicon, The_Lexicon } from "../lexicons/determiners";
 import { Sentence_Lexicon } from "../lexicons/sentences";
-import { Idea_Lexicon, Ideas_Lexicon, Book_Lexicon, Books_Lexicon } from "../lexicons/nouns";
+import { Idea_Lexicon, Ideas_Lexicon, Book_Lexicon, Books_Lexicon, Letter_Block } from "../lexicons/nouns";
 import { Relative_That_Lexicon, Relative_Which_Lexicon } from "../lexicons/relatives";
-import { Sleep_Lexicon, Sleeps_Lexicon, Have_Lexicon, Has_Lexicon } from "../lexicons/verbs";
-import { I_Block } from "../lexicons/pronouns";
+import { Sleep_Lexicon, Sleeps_Lexicon, Have_Lexicon, Has_Lexicon, Read_Block, Be_Block, Send_Block } from "../lexicons/verbs";
+import { He_Block, I_Block, It_Block, She_Block, They_Block, We_Block, You_Block } from "../lexicons/pronouns";
+import { To_Block } from "../lexicons/prepositions";
 
 
 export const Sentence_Block: Block = {
@@ -50,7 +51,7 @@ export const Colorless_Block: Block = {
     x: 24,
     y: 24,
     color: "dodgerBlue",
-    isTransparent: true,
+    isTransparent: false,
     isRound: true,
     children: [
         {
@@ -72,7 +73,7 @@ export const Green_Block: Block = {
     y: 24,
     color: "dodgerBlue",
     isRound: true,
-    isTransparent: true,
+    isTransparent: false,
     children: [
         {
             id: "head",
@@ -198,7 +199,7 @@ export const Furiously_Block: Block = {
     y: 24,
     color: "tomato",
     isRound: true,
-    isTransparent: true,
+    isTransparent: false,
     children: [
         {
             id: "head",
@@ -273,7 +274,7 @@ export const That_Block: Block = {
     y: 0,
     color: "dodgerblue",
     isRound: true,
-    isTransparent: true,
+    isTransparent: false,
     children: [
         {
             id: "head",
@@ -301,7 +302,7 @@ export const Which_Block: Block = {
     y: 0,
     color: "dodgerblue",
     isRound: true,
-    isTransparent: true,
+    isTransparent: false,
     children: [
         {
             id: "head",
@@ -325,19 +326,32 @@ export const blocks = {
         Sentence_Block
     ],
     "代名詞": [
-        I_Block
+        I_Block,
+        We_Block,
+        You_Block,
+        He_Block,
+        She_Block,
+        It_Block,
+        They_Block,
     ],
     "冠詞": [
         A_Block,
         The_Block
     ],
     "名詞": [
-        Idea_Block,
+        Letter_Block,
         Book_Block,
+        Idea_Block,
     ],
     "動詞": [
+        Be_Block,
         Sleep_Block,
         Have_Block,
+        Read_Block,
+        Send_Block,
+    ],
+    "前置詞": [
+        To_Block,
     ],
     "形容詞": [
         Colorless_Block,
