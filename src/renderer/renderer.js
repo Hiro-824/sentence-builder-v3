@@ -23,14 +23,6 @@ export class Renderer {
         const height = 812;
 
         this.grid = this.svg.append("g").attr("id", "grid");
-        const spacing = 50;
-        const gridData = [];
-
-        for (let x = -width * 6; x <= width * 6; x += spacing) {
-            for (let y = -height * 6; y <= height * 6; y += spacing) {
-                gridData.push({ x, y });
-            }
-        }
 
         const zoom = d3.zoom()
             .scaleExtent(
@@ -396,6 +388,7 @@ export class Renderer {
         d.x = this.dragStartBlockX + dx;
         d.y = this.dragStartBlockY + dy;
         d3.select(`#${d.id}`).attr("transform", `translate(${d.x}, ${d.y})`);
+        this.detectOverlapAndHighlight(d);
     }
 
     dragEnd(event, d) {
@@ -409,9 +402,206 @@ export class Renderer {
             .attr("stroke-width", blockStrokeWidth);
     }
 
-    /*データ階層構造の変更***********************************************************************************************************************************************************************************************************************************************************************************************************************/
+    /*当たり判定***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
+    detectOverlapAndHighlight(d) {
+        const placeholderId = this.detectPlaceholderOverlap(d, d.x, d.y);
+        const overlapInfo = this.detectBlockOverlap(d, d.x, d.y);
 
+        if (placeholderId) {
+            this.deemphasizeAllBlock();
+            this.emphasizePlaceholder(placeholderId);
+        } else {
+            this.deemphasizeAllPlaceholder();
+            if (overlapInfo && !placeholderId) {
+                const targetBlockId = overlapInfo.id;
+                this.emphasizeBlock(targetBlockId);
+            } else {
+                this.deemphasizeAllBlock();
+            }
+        }
+    }
+
+    detectPlaceholderOverlap(blockData, mouseX, mouseY) {
+        const calculateOverlapArea = (rect1, rect2) => {
+            const rect1Bounds = rect1.node().getBoundingClientRect();
+            const rect2Bounds = rect2.node().getBoundingClientRect();
+            const xOverlap = Math.max(0, Math.min(rect1Bounds.right, rect2Bounds.right) - Math.max(rect1Bounds.left, rect2Bounds.left));
+            const yOverlap = Math.max(0, Math.min(rect1Bounds.bottom, rect2Bounds.bottom) - Math.max(rect1Bounds.top, rect2Bounds.top));
+            return xOverlap * yOverlap;
+        };
+
+        const calculateCursorDistance = (rect, mouseX, mouseY) => {
+            const rectBounds = rect.node().getBoundingClientRect();
+            // If the mouse is inside the placeholder, the distance is 0.
+            if (mouseX >= rectBounds.left && mouseX <= rectBounds.right &&
+                mouseY >= rectBounds.top && mouseY <= rectBounds.bottom) {
+                return 0;
+            }
+            // Otherwise, compute the distance to the center.
+            const rectCenterX = rectBounds.left + rectBounds.width / 2;
+            const rectCenterY = rectBounds.top + rectBounds.height / 2;
+            return Math.sqrt(Math.pow(mouseX - rectCenterX, 2) + Math.pow(mouseY - rectCenterY, 2));
+        };
+
+        const placeholders = d3.selectAll("rect")
+            .filter(function () {
+                const id = d3.select(this).attr("id");
+                return id && id.includes("placeholder");
+            })
+            .filter(function () {
+                const excludedParent = d3.select(`#${blockData.id}`).node();
+                return !excludedParent || !excludedParent.contains(this);
+            })
+            .nodes()
+            .map(rect => rect.id)
+            .reverse();
+
+        const block = d3.select(`#frame-${blockData.id}`);
+
+        let bestScore = Infinity;
+        let bestPlaceholderId = null;
+
+        placeholders.forEach(id => {
+            const placeholder = d3.select(`#${id}`);
+            const overlapArea = calculateOverlapArea(placeholder, block);
+            if (overlapArea === 0) {
+                // Skip placeholders that have no overlap.
+                return;
+            }
+            const distance = calculateCursorDistance(placeholder, mouseX, mouseY);
+            // Create a score that favors small distance and penalizes large overlap area.
+            const score = distance / (overlapArea + 1);  // +1 avoids division by zero
+
+            if (score < bestScore) {
+                bestScore = score;
+                bestPlaceholderId = id;
+            }
+        });
+
+        if (bestPlaceholderId) {
+            const info = bestPlaceholderId.split("-");
+            const parentId = info[2];
+            const index = info[1];
+            //const expectedBlock = this.predictMoveBlockToParent(blockData.id, parentId, index);
+            const isValid = true /*this.onValidateInsertion(expectedBlock)*/;
+            return isValid ? bestPlaceholderId : null;
+        }
+        return null;
+    }
+
+    detectBlockOverlap(blockData) {
+        const calculateOverlapArea = (rect1, rect2) => {
+            const rect1Bounds = rect1.node().getBoundingClientRect();
+            const rect2Bounds = rect2.node().getBoundingClientRect();
+            const xOverlap = Math.max(0, Math.min(rect1Bounds.right, rect2Bounds.right) - Math.max(rect1Bounds.left, rect2Bounds.left));
+            const yOverlap = Math.max(0, Math.min(rect1Bounds.bottom, rect2Bounds.bottom) - Math.max(rect1Bounds.top, rect2Bounds.top));
+            return xOverlap * yOverlap;
+        };
+
+        // Exclude descendants that are inserted as attachments or placeholders.
+        const collectDescendantFrameIds = (block) => {
+            let descendants = [];
+            if (block.children) {
+                block.children.forEach(child => {
+                    if ((child.type === "attachment" || child.type === "placeholder") && child.content) {
+                        descendants.push(`frame-${child.content.id}`);
+                        descendants = descendants.concat(collectDescendantFrameIds(child.content));
+                    }
+                });
+            }
+            return descendants;
+        };
+
+        const descendantFrameIds = collectDescendantFrameIds(blockData);
+
+        // Select all block frames except the dragged block's own frame and its descendant frames.
+        const blockFrameIds = d3.selectAll("rect")
+            .filter(function () {
+                const id = d3.select(this).attr("id");
+                return id && id.startsWith("frame-") &&
+                    id !== `frame-${blockData.id}` &&
+                    !descendantFrameIds.includes(id);
+            })
+            .nodes()
+            .map(node => node.id);
+
+        const draggedBlockRect = d3.select(`#frame-${blockData.id}`);
+
+        let bestOverlapBlockId = null;
+        let side = null;
+
+        blockFrameIds.forEach(id => {
+            const otherBlockRect = d3.select(`#${id}`);
+            const overlapArea = calculateOverlapArea(otherBlockRect, draggedBlockRect);
+            if (overlapArea > 0) {
+                // Calculate left/right side.
+                const overlappedBounds = otherBlockRect.node().getBoundingClientRect();
+                const overlappedCenterX = overlappedBounds.left + overlappedBounds.width / 2;
+
+                const draggedBounds = draggedBlockRect.node().getBoundingClientRect();
+                const draggedCenterX = draggedBounds.left + draggedBounds.width / 2;
+
+                const possibleSide = draggedCenterX >= overlappedCenterX ? "right" : "left";
+
+                // Extract candidate block id from frame id ("frame-<blockId>")
+                const info = id.split("-");
+                const parentId = info[1];
+
+                //const expectedBlock = this.predictAttachBlockToParent(blockData.id, parentId, possibleSide);
+                const isValid = true; /*this.onValidateAttachment(expectedBlock);*/
+
+                if (isValid) {
+                    bestOverlapBlockId = id;
+                    side = possibleSide;
+                }
+            }
+        });
+
+        if (bestOverlapBlockId && side) return { id: bestOverlapBlockId, side: side };
+        return null;
+    }
+
+    /*ハイライト表示***********************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+    deemphasizeAllPlaceholder() {
+        d3.selectAll("rect")
+            .filter(function () {
+                return this.id.includes("placeholder");
+            })
+            .attr("stroke-width", 0);
+    }
+
+    emphasizePlaceholder(id) {
+        this.deemphasizeAllPlaceholder();
+        d3.select(`#${id}`).attr("stroke-width", highlightStrokeWidth).attr("stroke", "yellow");
+    }
+
+    deemphasizeAllBlock() {
+        d3.selectAll("rect")
+            .filter(function () {
+                const id = d3.select(this).attr("id");
+                // Only consider frames, and exclude those whose parent group has class "grabbing"
+                const parentGroup = d3.select(this.parentNode);
+                return id && id.startsWith("frame-") && !parentGroup.classed("grabbing");
+            })
+            .each((d, i, nodes) => {
+                const rect = d3.select(nodes[i]);
+                // Retrieve the block data from the parent group which holds the block's datum
+                const parentGroup = d3.select(rect.node().parentNode);
+                const blockData = parentGroup.datum();
+                if (blockData) {
+                    const strokeColor = this.darkenColor(blockData.color, 30);
+                    rect.attr("stroke", strokeColor)
+                        .attr("stroke-width", blockStrokeWidth);
+                }
+            });
+    }
+
+    emphasizeBlock(id) {
+        this.deemphasizeAllBlock();
+        d3.select(`#${id}`).attr("stroke-width", highlightStrokeWidth).attr("stroke", "yellow");
+    }
 
     /*幅・高さ・色の計算(できれば他に移動したい)***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
