@@ -13,6 +13,8 @@ export class Renderer {
 
     render() {
         this.renderGrid();
+        this.renderSideBar();
+        this.renderDragboard();
         this.renderBlocks();
     }
 
@@ -37,6 +39,7 @@ export class Renderer {
             .translateExtent([[-width * 4, -height * 4], [width * 4, height * 4]])
             .on("zoom", (event) => {
                 this.grid.attr("transform", event.transform);
+                this.dragboard.attr("transform", event.transform);
             });
 
         this.svg.call(zoom).on("wheel", (event) => {
@@ -48,8 +51,26 @@ export class Renderer {
         d3.select("svg").transition().duration(300).call(zoom.transform, initialTransform);
     }
 
+    renderDragboard() {
+        this.dragboard = this.svg.append("g").attr("id", "dragboard");
+    }
+
+    renderSideBar() {
+        const width = 200; // Fixed sidebar width
+        const height = 812; // Same height as grid
+
+        this.sidebar = this.svg.append("g")
+            .attr("id", "sidebar")
+            .attr("transform", `translate(0, 0)`); // Position it to the left of the grid
+
+        // Add the sidebar background
+        this.sidebar.append("rect")
+            .attr("width", width)
+            .attr("height", height)
+            .attr("fill", "#f5f5f5")
+    }
+
     renderBlocks() {
-        console.log(this.blocks)
         this.blocks.forEach(block => {
             this.renderBlock(block, this.grid);
         });
@@ -387,6 +408,10 @@ export class Renderer {
             .attr("stroke", strokeColor)
             .attr("stroke-width", blockStrokeWidth);
     }
+
+    /*データ階層構造の変更***********************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+
 
     /*幅・高さ・色の計算(できれば他に移動したい)***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
