@@ -104,7 +104,7 @@ export class Grammar {
                 }
             );
 
-        return postAdj + preAdj + filled;
+        return ` ${postAdj + preAdj + filled} `;
     }
 
     findConstituent(

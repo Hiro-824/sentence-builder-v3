@@ -557,6 +557,29 @@ export const Am_Lexicon: Lexicon = {
             specifiers: [],
             complements: [
                 {
+                    base: "DP",
+                    features: {
+                        form: ["acc"],
+                        φ: ["3S", "1S", "2S"]
+                    },
+                    specifiers: [],
+                    complements: [],
+                    translation: {}
+                }
+            ],
+            translation: {
+                "base": "{C1}だ",
+                "imperfect": "{C1}では"
+            }
+        },
+        {
+            base: "TB",
+            features: {
+                form: ["am"]
+            },
+            specifiers: [],
+            complements: [
+                {
                     base: "VP",
                     features: {
                         form: ["ing"]
@@ -567,7 +590,7 @@ export const Am_Lexicon: Lexicon = {
                 }
             ],
             translation: {
-                "base": "{C1{imperfect}}いる",
+                "base": "{C1{imperfect}}いるところだ",
                 "imperfect": "{C1{imperfect}}い"
             }
         }
@@ -577,6 +600,28 @@ export const Am_Lexicon: Lexicon = {
 export const Are_Lexicon: Lexicon = {
     word: "are",
     categories: [
+        {
+            base: "TB",
+            features: {
+                form: ["are"]
+            },
+            specifiers: [],
+            complements: [
+                {
+                    base: "DP",
+                    features: {
+                        form: ["acc"],
+                    },
+                    specifiers: [],
+                    complements: [],
+                    translation: {}
+                }
+            ],
+            translation: {
+                "base": "{C1}だ",
+                "imperfect": "{C1}では"
+            }
+        },
         {
             base: "TB",
             features: {
@@ -595,7 +640,7 @@ export const Are_Lexicon: Lexicon = {
                 }
             ],
             translation: {
-                "base": "{C1{imperfect}}いる",
+                "base": "{C1{imperfect}}いるところだ",
                 "imperfect": "{C1{imperfect}}い"
             }
         }
@@ -605,6 +650,29 @@ export const Are_Lexicon: Lexicon = {
 export const Is_Lexicon: Lexicon = {
     word: "is",
     categories: [
+        {
+            base: "TB",
+            features: {
+                form: ["es"]
+            },
+            specifiers: [],
+            complements: [
+                {
+                    base: "DP",
+                    features: {
+                        form: ["acc"],
+                        φ: ["1S", "2S", "3S"]
+                    },
+                    specifiers: [],
+                    complements: [],
+                    translation: {}
+                }
+            ],
+            translation: {
+                "base": "{C1}だ",
+                "imperfect": "{C1{imperfect}}では"
+            }
+        },
         {
             base: "TB",
             features: {
@@ -623,7 +691,7 @@ export const Is_Lexicon: Lexicon = {
                 }
             ],
             translation: {
-                "base": "{C1{imperfect}}いる",
+                "base": "{C1{imperfect}}いるところだ",
                 "imperfect": "{C1{imperfect}}い"
             }
         }
@@ -633,6 +701,29 @@ export const Is_Lexicon: Lexicon = {
 export const Was_Lexicon: Lexicon = {
     word: "was",
     categories: [
+        {
+            base: "TB",
+            features: {
+                form: ["ed"]
+            },
+            specifiers: [],
+            complements: [
+                {
+                    base: "DP",
+                    features: {
+                        form: ["acc"],
+                        φ: ["1S", "2S", "3S"]
+                    },
+                    specifiers: [],
+                    complements: [],
+                    translation: {}
+                }
+            ],
+            translation: {
+                "base": "{C1}だ",
+                "imperfect": "{C1{imperfect}}では"
+            }
+        },
         {
             base: "TB",
             features: {
@@ -669,6 +760,28 @@ export const Were_Lexicon: Lexicon = {
             specifiers: [],
             complements: [
                 {
+                    base: "DP",
+                    features: {
+                        form: ["acc"],
+                    },
+                    specifiers: [],
+                    complements: [],
+                    translation: {}
+                }
+            ],
+            translation: {
+                "base": "{C1}だ",
+                "imperfect": "{C1{imperfect}}では"
+            }
+        },
+        {
+            base: "TB",
+            features: {
+                form: ["were"]
+            },
+            specifiers: [],
+            complements: [
+                {
                     base: "VP",
                     features: {
                         form: ["ing"]
@@ -688,54 +801,103 @@ export const Were_Lexicon: Lexicon = {
 
 export const Be_Lexicon: Lexicon = {
     word: "be",
-    categories: [{
-        base: "VP",
-        features: {
-            form: ["base"]
-        },
-        specifiers: [],
-        complements: [
-            {
-                base: "VP",
-                features: {
-                    form: ["ing"]
-                },
-                specifiers: [],
-                complements: [],
-                translation: {}
+    categories: [
+        {
+            base: "TB",
+            features: {
+                form: ["base"]
+            },
+            specifiers: [],
+            complements: [
+                {
+                    base: "DP",
+                    features: {
+                        form: ["acc"],
+                    },
+                    specifiers: [],
+                    complements: [],
+                    translation: {}
+                }
+            ],
+            translation: {
+                "base": "{C1}だ",
+                "imperfect": "{C1{imperfect}}では"
             }
-        ],
-        translation: {
-            "base": "{C1{imperfect}}いる",
-            "imperfect": "{C1{imperfect}}い"
+        },
+        {
+
+            base: "VP",
+            features: {
+                form: ["base"]
+            },
+            specifiers: [],
+            complements: [
+                {
+                    base: "VP",
+                    features: {
+                        form: ["ing"]
+                    },
+                    specifiers: [],
+                    complements: [],
+                    translation: {}
+                }
+            ],
+            translation: {
+                "base": "{C1{imperfect}}いるところだ",
+                "imperfect": "{C1{imperfect}}い"
+            }
         }
-    }]
+    ]
 }
 
 export const Been_Lexicon: Lexicon = {
     word: "been",
-    categories: [{
-        base: "VP",
-        features: {
-            form: ["perfect"]
-        },
-        specifiers: [],
-        complements: [
-            {
-                base: "VP",
-                features: {
-                    form: ["ing"]
-                },
-                specifiers: [],
-                complements: [],
-                translation: {}
+    categories: [
+        {
+            base: "TB",
+            features: {
+                form: ["perfect"]
+            },
+            specifiers: [],
+            complements: [
+                {
+                    base: "DP",
+                    features: {
+                        form: ["acc"],
+                    },
+                    specifiers: [],
+                    complements: [],
+                    translation: {}
+                }
+            ],
+            translation: {
+                "base": "{C1}だ",
+                "imperfect": "{C1{imperfect}}では"
             }
-        ],
-        translation: {
-            "base": "{C1{imperfect}}いる",
-            "imperfect": "{C1{imperfect}}い"
+        },
+        {
+            base: "VP",
+            features: {
+                form: ["perfect"]
+            },
+            specifiers: [],
+            complements: [
+                {
+                    base: "VP",
+                    features: {
+                        form: ["ing"]
+                    },
+                    specifiers: [],
+                    complements: [],
+                    translation: {}
+                }
+            ],
+            translation: {
+                "base": "{C1{imperfectいる",
+                "imperfect": "{C1{imperfect}}い"
+            }
         }
-    }]
+    ]
 }
 
 export const Be_Block: Block = {

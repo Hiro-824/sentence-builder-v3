@@ -22,7 +22,7 @@ export const A_Lexicon: Lexicon = {
                 }
             ],
             translation: {
-                "base": "ある1つの{C1}",
+                "base": "(ある1つの){C1}",
             },
         }
     ]
@@ -50,7 +50,7 @@ export const The_Lexicon: Lexicon = {
                 }
             ],
             translation: {
-                "base": "その{C1}"
+                "base": "(その){C1}"
             },
         },
         {
