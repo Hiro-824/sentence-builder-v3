@@ -87,6 +87,7 @@ export class Renderer {
     /*ブロックの画像の描画***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
     renderBlockImage(block, blockGroup) {
+        blockGroup.selectAll("*").remove();
         const width = this.calculateWidth(block);
         const height = this.calculateHeight(block);
         const strokeColor = this.darkenColor(block.color, 30);
@@ -666,7 +667,10 @@ export class Renderer {
         d3.select(blockUI).raise();
         this.grid.node().appendChild(blockUI);
 
-        const parentUI = d3.select(`#${foundResult.parentBlock.id}`).remove();
+        const parentUI = d3.select(`#${foundResult.parentBlock.id}`);
+        const parentContainer = d3.select(parentUI.node().parentNode);
+        parentUI.remove();
+        this.renderBlock(foundResult.parentBlock, parentContainer);
     }
 
     insertBlockToParent(id, targetParentId, index) {
