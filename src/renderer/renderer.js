@@ -370,19 +370,17 @@ export class Renderer {
         this.moveBlockToTopLevel(d.id);
         this.grabbingHighlight(d.id, true);
 
-        const draggedBlock = this.findBlock(d.id);
-        this.dragStartBlockX = draggedBlock.absoluteX;
-        this.dragStartBlockY = draggedBlock.absoluteY;
-        this.dragStartMouseX = d3.pointer(event.sourceEvent, this.svg.node())[0];
-        this.dragStartMouseY = d3.pointer(event.sourceEvent, this.svg.node())[1];
+        this.dragStartX = event.x;
+        this.dragStartY = event.y;
+        this.dragStartBlockX = d.x;
+        this.dragStartBlockY = d.y;
     }
 
     dragging(event, d) {
-        const transform = d3.zoomTransform(this.svg.node());
-        const mouseX = d3.pointer(event.sourceEvent, this.svg.node())[0];
-        const mouseY = d3.pointer(event.sourceEvent, this.svg.node())[1];
-        d.x = this.dragStartBlockX + (mouseX - this.dragStartMouseX) / transform.k;
-        d.y = this.dragStartBlockY + (mouseY - this.dragStartMouseY) / transform.k;
+        const dx = event.x - this.dragStartX;
+        const dy = event.y - this.dragStartY;
+        d.x = this.dragStartBlockX + dx;
+        d.y = this.dragStartBlockY + dy;
         d3.select(`#${d.id}`).attr("transform", `translate(${d.x}, ${d.y})`);
         this.detectOverlapAndHighlight(d);
     }
