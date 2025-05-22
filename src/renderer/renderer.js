@@ -76,6 +76,7 @@ export class Renderer {
             .classed("grab", true).classed("grabbing", false)
             .datum(block)
             .call(d3.drag()
+                .container(this.grid.node())
                 .on("start", this.dragStart.bind(this))
                 .on("drag", this.dragging.bind(this))
                 .on("end", this.dragEnd.bind(this))
