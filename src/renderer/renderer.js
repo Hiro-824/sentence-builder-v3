@@ -370,17 +370,19 @@ export class Renderer {
         this.moveBlockToTopLevel(d.id);
         this.grabbingHighlight(d.id, true);
 
-        this.dragStartX = event.x;
-        this.dragStartY = event.y;
-        this.dragStartBlockX = d.x;
-        this.dragStartBlockY = d.y;
+        const draggedBlock = this.findBlock(d.id);
+        this.dragStartBlockX = draggedBlock.absoluteX;
+        this.dragStartBlockY = draggedBlock.absoluteY;
+        this.dragStartMouseX = d3.pointer(event.sourceEvent, this.svg.node())[0];
+        this.dragStartMouseY = d3.pointer(event.sourceEvent, this.svg.node())[1];
     }
 
     dragging(event, d) {
-        const dx = event.x - this.dragStartX;
-        const dy = event.y - this.dragStartY;
-        d.x = this.dragStartBlockX + dx;
-        d.y = this.dragStartBlockY + dy;
+        const transform = d3.zoomTransform(this.svg.node());
+        const mouseX = d3.pointer(event.sourceEvent, this.svg.node())[0];
+        const mouseY = d3.pointer(event.sourceEvent, this.svg.node())[1];
+        d.x = this.dragStartBlockX + (mouseX - this.dragStartMouseX) / transform.k;
+        d.y = this.dragStartBlockY + (mouseY - this.dragStartMouseY) / transform.k;
         d3.select(`#${d.id}`).attr("transform", `translate(${d.x}, ${d.y})`);
         this.detectOverlapAndHighlight(d);
     }
@@ -576,33 +578,45 @@ export class Renderer {
         let childIndex = -1;
         let absoluteX = 0;
         let absoluteY = 0;
+        let rootParent = null;
 
-        function searchRecursively(blocks, offsetX = 0, offsetY = 0) {
+        function searchRecursively(blocks, offsetX = 0, offsetY = 0, candidateRoot = null) {
             for (let i = 0; i < blocks.length; i++) {
                 const block = blocks[i];
+                const currentRoot = candidateRoot === null ? block : candidateRoot;
+
                 if (block.id === id) {
                     foundBlock = block;
+                    rootParent = currentRoot;
                     absoluteX = offsetX + block.x;
                     absoluteY = offsetY + block.y;
                     return true;
                 }
+
                 if (block.children) {
                     for (let j = 0; j < block.children.length; j++) {
                         const child = block.children[j];
                         if (child.type === "placeholder" || child.type === "attachment") {
                             const content = child.content;
                             if (content) {
+                                // direct hit on the content node
                                 if (content.id === id) {
                                     foundBlock = content;
                                     parentBlock = block;
                                     childIndex = j;
+                                    rootParent = currentRoot;
                                     absoluteX = offsetX + block.x + content.x;
                                     absoluteY = offsetY + block.y + content.y;
                                     return true;
-                                } else {
-                                    if (searchRecursively([content], offsetX + block.x, offsetY + block.y)) {
-                                        return true;
-                                    }
+                                }
+                                // or keep recursing deeper
+                                if (searchRecursively(
+                                    [content],
+                                    offsetX + block.x,
+                                    offsetY + block.y,
+                                    currentRoot
+                                )) {
+                                    return true;
                                 }
                             }
                         }
@@ -612,8 +626,17 @@ export class Renderer {
             return false;
         }
 
-        searchRecursively(this.blocks);
-        return { foundBlock, parentBlock, childIndex, absoluteX, absoluteY };
+        // start from the top-level blocks, with no candidate root
+        searchRecursively(this.blocks, 0, 0, null);
+
+        return {
+            foundBlock,
+            parentBlock,
+            childIndex,
+            absoluteX,
+            absoluteY,
+            rootParent    // ← now returned
+        };
     }
 
     removeBlock(id) {
@@ -670,10 +693,10 @@ export class Renderer {
         d3.select(blockUI).raise();
         this.grid.node().appendChild(blockUI);
 
-        const parentUI = d3.select(`#${foundResult.parentBlock.id}`);
+        const parentUI = d3.select(`#${foundResult.rootParent.id}`);
         const parentContainer = d3.select(parentUI.node().parentNode);
         parentUI.remove();
-        this.renderBlock(foundResult.parentBlock, parentContainer);
+        this.renderBlock(foundResult.rootParent, parentContainer);
     }
 
     insertBlockToParent(id, targetParentId, index) {
