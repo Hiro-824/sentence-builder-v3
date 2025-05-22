@@ -640,7 +640,15 @@ export class Renderer {
     updateBlock(newBlock) {
         const foundResult = this.findBlock(newBlock.id);
         if (!foundResult.foundBlock) return;
-        this.blocks = this.blocks.map(b => b.id === newBlock.id ? newBlock : b);
+        
+        if (foundResult.parentBlock) {
+            foundResult.parentBlock.children[foundResult.childIndex].content = newBlock;
+        } else {
+            const blockIndex = this.blocks.findIndex(b => b.id === newBlock.id);
+            if (blockIndex !== -1) {
+                this.blocks[blockIndex] = newBlock;
+            }
+        }
     }
 
     insertBlockToParent(id, targetParentId, index) {
