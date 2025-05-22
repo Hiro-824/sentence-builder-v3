@@ -367,7 +367,6 @@ export class Renderer {
 
     dragStart(event, d) {
         const id = `#${d.id}`
-        d3.select(id).raise();
         this.grabbingHighlight(d.id, true);
 
         this.dragStartX = event.x;
@@ -662,6 +661,7 @@ export class Renderer {
 
     grabbingHighlight(blockId, isDragging) {
         const id = `#${blockId}`;
+        d3.select(id).raise();
         d3.select(id)
             .classed("grab", !isDragging)
             .classed("grabbing", isDragging);
