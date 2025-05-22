@@ -366,15 +366,13 @@ export class Renderer {
     /*ドラッグ関係の処理***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
     dragStart(event, d) {
-        const id = `#${d.id}`
+        this.moveBlockToTopLevel(d.id);
         this.grabbingHighlight(d.id, true);
 
         this.dragStartX = event.x;
         this.dragStartY = event.y;
         this.dragStartBlockX = d.x;
         this.dragStartBlockY = d.y;
-
-        console.log(this.findBlock(d.id));
     }
 
     dragging(event, d) {
@@ -649,6 +647,16 @@ export class Renderer {
                 this.blocks[blockIndex] = newBlock;
             }
         }
+    }
+
+    moveBlockToTopLevel(id) {
+        const foundResult = this.findBlock(id);
+        let block = foundResult.foundBlock;
+        block.x = foundResult.absoluteX;
+        block.y = foundResult.absoluteY;
+        this.removeBlock(id);
+        this.blocks.push(block);
+        this.renderBlocks();
     }
 
     insertBlockToParent(id, targetParentId, index) {
