@@ -70,6 +70,7 @@ export class Renderer {
     }
 
     renderBlock(block, parent) {
+        console.log("block to be rendered", block);
         const blockGroup = parent.append("g")
             .attr("transform", `translate(${block.x}, ${block.y})`)
             .attr("id", block.id)
@@ -361,7 +362,7 @@ export class Renderer {
             content.x = x;
             content.y = (height - childHeight) / 2;
             this.renderBlock(content, blockGroup);
-            x += (childWidth + horizontalPadding)
+            return (childWidth + horizontalPadding);
         }
     }
 
@@ -420,6 +421,12 @@ export class Renderer {
             const parentId = info[2];
             const index = info[1];
             const updatedParent = this.insertBlockToParent(d.id, parentId, index);
+            this.removeBlock(d.id);
+            this.updateBlock(updatedParent);
+            this.renderBlocks();
+        } else if (overlapInfo) {
+            const targetBlockId = overlapInfo.id.split("-")[1];
+            const updatedParent = this.attachBlockToParent(d.id, targetBlockId, overlapInfo.side);
             this.removeBlock(d.id);
             this.updateBlock(updatedParent);
             this.renderBlocks();
@@ -709,6 +716,30 @@ export class Renderer {
         const expectedParent = JSON.parse(JSON.stringify(targetParent));
         expectedParent.children[index].content = foundResult.foundBlock;
 
+        return expectedParent;
+    }
+
+    attachBlockToParent(id, targetParentId, side) {
+        const foundResult = this.findBlock(id);
+        if (!foundResult.foundBlock) return;
+
+        const targetParent = this.findBlock(targetParentId).foundBlock;
+        if (!targetParent) return;
+
+        const attachmentChild = {
+            id: "attachment",
+            type: "attachment",
+            side: side,
+            content: foundResult.foundBlock
+        };
+
+        // Create a deep copy of the target parent block
+        const expectedParent = JSON.parse(JSON.stringify(targetParent));
+        if (side === "left") {
+            expectedParent.children.unshift(attachmentChild);
+        } else {
+            expectedParent.children.push(attachmentChild);
+        }
         return expectedParent;
     }
 
