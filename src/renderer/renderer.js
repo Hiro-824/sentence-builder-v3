@@ -366,7 +366,7 @@ export class Renderer {
     /*ドラッグ関係の処理***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
     dragStart(event, d) {
-        //this.moveBlockToTopLevel(d.id);
+        this.moveBlockToTopLevel(d.id);
         this.grabbingHighlight(d.id, true);
 
         this.dragStartX = event.x;
@@ -651,6 +651,7 @@ export class Renderer {
 
     moveBlockToTopLevel(id) {
         const foundResult = this.findBlock(id);
+        if(!foundResult.parentBlock) return;
         let block = foundResult.foundBlock;
         block.x = foundResult.absoluteX;
         block.y = foundResult.absoluteY;
