@@ -638,7 +638,7 @@ export class Renderer {
     updateBlock(newBlock) {
         const foundResult = this.findBlock(newBlock.id);
         if (!foundResult.foundBlock) return;
-        
+
         if (foundResult.parentBlock) {
             foundResult.parentBlock.children[foundResult.childIndex].content = newBlock;
         } else {
@@ -651,13 +651,22 @@ export class Renderer {
 
     moveBlockToTopLevel(id) {
         const foundResult = this.findBlock(id);
-        if(!foundResult.parentBlock) return;
+        if (!foundResult.parentBlock) return;
+
+        // データの変更
         let block = foundResult.foundBlock;
         block.x = foundResult.absoluteX;
         block.y = foundResult.absoluteY;
         this.removeBlock(id);
         this.blocks.push(block);
-        this.renderBlocks();
+
+        // UI部分の移動
+        const blockUI = d3.select(`#${id}`).node();
+        d3.select(blockUI).attr("transform", `translate(${block.x}, ${block.y})`);
+        d3.select(blockUI).raise();
+        this.grid.node().appendChild(blockUI);
+
+        const parentUI = d3.select(`#${foundResult.parentBlock.id}`).remove();
     }
 
     insertBlockToParent(id, targetParentId, index) {
