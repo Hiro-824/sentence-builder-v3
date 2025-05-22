@@ -63,6 +63,7 @@ export class Renderer {
     }
 
     renderBlocks() {
+        d3.select("#grid").selectAll("*").remove();
         this.blocks.forEach(block => {
             this.renderBlock(block, this.grid);
         });
@@ -380,6 +381,8 @@ export class Renderer {
         this.dragStartY = event.y;
         this.dragStartBlockX = d.x;
         this.dragStartBlockY = d.y;
+
+        console.log(this.findBlock(d.id));
     }
 
     dragging(event, d) {
@@ -400,6 +403,8 @@ export class Renderer {
         d3.select(frameId)
             .attr("stroke", strokeColor)
             .attr("stroke-width", blockStrokeWidth);
+
+        this.detectOverlapAndInsert(d);
     }
 
     /*当たり判定***********************************************************************************************************************************************************************************************************************************************************************************************************************/
@@ -419,6 +424,21 @@ export class Renderer {
             } else {
                 this.deemphasizeAllBlock();
             }
+        }
+    }
+
+    detectOverlapAndInsert(d) {
+        const placeholderId = this.detectPlaceholderOverlap(d, d.x, d.y);
+        const overlapInfo = this.detectBlockOverlap(d, d.x, d.y);
+
+        if (placeholderId) {
+            const info = placeholderId.split("-");
+            const parentId = info[2];
+            const index = info[1];
+            const updatedParent = this.insertBlockToParent(d.id, parentId, index);
+            this.removeBlock(d.id);
+            this.updateBlock(updatedParent);
+            this.renderBlocks();
         }
     }
 
@@ -560,6 +580,97 @@ export class Renderer {
 
         if (bestOverlapBlockId && side) return { id: bestOverlapBlockId, side: side };
         return null;
+    }
+
+    /*階層構造に関する処理***********************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+    findBlock(id) {
+        let foundBlock = null;
+        let parentBlock = null;
+        let childIndex = -1;
+        let absoluteX = 0;
+        let absoluteY = 0;
+
+        function searchRecursively(blocks, offsetX = 0, offsetY = 0) {
+            for (let i = 0; i < blocks.length; i++) {
+                const block = blocks[i];
+                if (block.id === id) {
+                    foundBlock = block;
+                    absoluteX = offsetX + block.x;
+                    absoluteY = offsetY + block.y;
+                    return true;
+                }
+                if (block.children) {
+                    for (let j = 0; j < block.children.length; j++) {
+                        const child = block.children[j];
+                        if (child.type === "placeholder" || child.type === "attachment") {
+                            const content = child.content;
+                            if (content) {
+                                if (content.id === id) {
+                                    foundBlock = content;
+                                    parentBlock = block;
+                                    childIndex = j;
+                                    absoluteX = offsetX + block.x + content.x;
+                                    absoluteY = offsetY + block.y + content.y;
+                                    return true;
+                                } else {
+                                    if (searchRecursively([content], offsetX + block.x, offsetY + block.y)) {
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        searchRecursively(this.blocks);
+        return { foundBlock, parentBlock, childIndex, absoluteX, absoluteY };
+    }
+
+    removeBlock(id) {
+        const foundResult = this.findBlock(id);
+        if(!foundResult.foundBlock) return;
+        if(foundResult.parentBlock) {
+            this.removeBlockFromParent(foundResult.parentBlock, foundResult.childIndex);
+        } else {
+            this.removeBlockFromTopLevel(id);
+        }
+    }
+
+    removeBlockFromParent(parent, index) {
+        const child = parent.children[index];
+        if (child.type === "placeholder") {
+            parent.children[index].content = null;
+        } else if (child.type === "attachment") {
+            parent.children.splice(index, 1);
+        }
+    }
+
+    removeBlockFromTopLevel(id) {
+        this.blocks = this.blocks.filter(b => b.id !== id);
+    }
+
+    updateBlock(newBlock) {
+        const foundResult = this.findBlock(newBlock.id);
+        if (!foundResult.foundBlock) return;
+        this.blocks = this.blocks.map(b => b.id === newBlock.id ? newBlock : b);
+    }
+
+    insertBlockToParent(id, targetParentId, index) {
+        const foundResult = this.findBlock(id);
+        if (!foundResult.foundBlock) return;
+
+        const targetParent = this.findBlock(targetParentId).foundBlock;
+        if (!targetParent || !targetParent.children[index] || targetParent.children[index].type !== "placeholder") return;
+
+        // Create a deep copy of the target parent block
+        const expectedParent = JSON.parse(JSON.stringify(targetParent));
+        expectedParent.children[index].content = foundResult.foundBlock;
+
+        return expectedParent;
     }
 
     /*ハイライト表示***********************************************************************************************************************************************************************************************************************************************************************************************************************/
