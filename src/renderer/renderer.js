@@ -367,15 +367,8 @@ export class Renderer {
 
     dragStart(event, d) {
         const id = `#${d.id}`
-        d3.select(id)
-            .raise()
-            .classed("grab", false)
-            .classed("grabbing", true);
-
-        const frameId = `#frame-${d.id}`;
-        d3.select(frameId)
-            .attr("stroke", "yellow")
-            .attr("stroke-width", highlightStrokeWidth);
+        d3.select(id).raise();
+        this.grabbingHighlight(d.id, true);
 
         this.dragStartX = event.x;
         this.dragStartY = event.y;
@@ -395,15 +388,7 @@ export class Renderer {
     }
 
     dragEnd(event, d) {
-        const id = `#${d.id}`
-        d3.select(id).classed("grab", true).classed("grabbing", false);
-
-        const frameId = `#frame-${d.id}`;
-        const strokeColor = this.darkenColor(d.color, 30);
-        d3.select(frameId)
-            .attr("stroke", strokeColor)
-            .attr("stroke-width", blockStrokeWidth);
-
+        this.grabbingHighlight(d.id, false);
         this.detectOverlapAndInsert(d);
     }
 
@@ -632,8 +617,8 @@ export class Renderer {
 
     removeBlock(id) {
         const foundResult = this.findBlock(id);
-        if(!foundResult.foundBlock) return;
-        if(foundResult.parentBlock) {
+        if (!foundResult.foundBlock) return;
+        if (foundResult.parentBlock) {
             this.removeBlockFromParent(foundResult.parentBlock, foundResult.childIndex);
         } else {
             this.removeBlockFromTopLevel(id);
@@ -674,6 +659,24 @@ export class Renderer {
     }
 
     /*ハイライト表示***********************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+    grabbingHighlight(blockId, isDragging) {
+        const id = `#${blockId}`;
+        d3.select(id)
+            .classed("grab", !isDragging)
+            .classed("grabbing", isDragging);
+
+        const frameId = `#frame-${blockId}`;
+        const block = this.findBlock(blockId).foundBlock;
+        if (!block) return;
+
+        const strokeColor = isDragging ? "yellow" : this.darkenColor(block.color, 30);
+        const strokeWidth = isDragging ? highlightStrokeWidth : blockStrokeWidth;
+
+        d3.select(frameId)
+            .attr("stroke", strokeColor)
+            .attr("stroke-width", strokeWidth);
+    }
 
     deemphasizeAllPlaceholder() {
         d3.selectAll("rect")
