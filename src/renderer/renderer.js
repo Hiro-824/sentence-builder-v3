@@ -687,21 +687,16 @@ export class Renderer {
         this.removeBlock(id);
         this.blocks.push(block);
 
-        // UI部分の移動 - よりスムーズな更新のために変更
-        const blockUI = d3.select(`#${id}`);
-        if (blockUI.node()) {
-            // まず親からブロックを移動
-            const parentUI = d3.select(`#${foundResult.rootParent.id}`);
-            if (parentUI.node()) {
-                const parentContainer = d3.select(parentUI.node().parentNode);
-                // ブロックを親から移動
-                blockUI.attr("transform", `translate(${block.x}, ${block.y})`);
-                this.grid.node().appendChild(blockUI.node());
-                // 親を再レンダリング
-                parentUI.remove();
-                this.renderBlock(foundResult.rootParent, parentContainer);
-            }
-        }
+        // UI部分の移動
+        const blockUI = d3.select(`#${id}`).node();
+        d3.select(blockUI).attr("transform", `translate(${block.x}, ${block.y})`);
+        d3.select(blockUI).raise();
+        this.grid.node().appendChild(blockUI);
+
+        const parentUI = d3.select(`#${foundResult.rootParent.id}`);
+        const parentContainer = d3.select(parentUI.node().parentNode);
+        parentUI.remove();
+        this.renderBlock(foundResult.rootParent, parentContainer);
     }
 
     insertBlockToParent(id, targetParentId, index) {
