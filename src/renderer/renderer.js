@@ -85,6 +85,19 @@ export class Renderer {
         this.renderBlockImage(block, blockGroup);
     }
 
+    updateBlock(id) {
+        const foundResult = this.findBlock(id);
+        const parentUI = d3.select(`#${id}`);
+        const parentContainer = d3.select(parentUI.node().parentNode);
+        parentUI.remove();
+        this.renderBlock(foundResult.foundBlock, parentContainer);
+    }
+
+    raiseBlock(id) {
+        const element = d3.select(`#${this.findBlock(id).rootParent.id}`);
+        element.raise();
+    }
+
     /*ブロックの画像の描画***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
     renderBlockImage(block, blockGroup) {
@@ -650,7 +663,7 @@ export class Renderer {
         this.blocks = this.blocks.filter(b => b.id !== id);
     }
 
-    updateBlock(newBlock) {
+    updateBlockInData(newBlock) {
         const foundResult = this.findBlock(newBlock.id);
         if (!foundResult.foundBlock) return;
 
@@ -665,19 +678,6 @@ export class Renderer {
     }
 
     // UIを変更する
-    updateBlockUI(id) {
-        const foundResult = this.findBlock(id);
-        const parentUI = d3.select(`#${id}`);
-        const parentContainer = d3.select(parentUI.node().parentNode);
-        parentUI.remove();
-        this.renderBlock(foundResult.foundBlock, parentContainer);
-    }
-
-    raiseBlock(id) {
-        const element = d3.select(`#${this.findBlock(id).rootParent.id}`);
-        element.raise();
-    }
-
     moveBlockToTopLevel(id) {
         const foundResult = this.findBlock(id);
         if (!foundResult.parentBlock) return;
@@ -694,21 +694,21 @@ export class Renderer {
         d3.select(blockUI).attr("transform", `translate(${block.x}, ${block.y})`);
         d3.select(blockUI).raise();
         this.grid.node().appendChild(blockUI);
-        this.updateBlockUI(foundResult.rootParent.id);
+        this.updateBlock(foundResult.rootParent.id);
         d3.select(`#${id}`).raise();
     }
 
     insertBlock(id, targetParentId, index) {
         const updatedParent = this.previewInsertion(id, targetParentId, index);
         this.removeBlock(id);
-        this.updateBlock(updatedParent);
+        this.updateBlockInData(updatedParent);
         this.renderBlocks();
     }
 
     attachBlock(id, targetParentId, side) {
         const updatedParent = this.previewAttachment(id, targetParentId, side);
         this.removeBlock(id);
-        this.updateBlock(updatedParent);
+        this.updateBlockInData(updatedParent);
         this.renderBlocks();
     }
 
