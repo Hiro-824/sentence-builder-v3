@@ -70,7 +70,6 @@ export class Renderer {
     }
 
     renderBlock(block, parent) {
-        console.log("block to be rendered", block);
         const blockGroup = parent.append("g")
             .attr("transform", `translate(${block.x}, ${block.y})`)
             .attr("id", block.id)
