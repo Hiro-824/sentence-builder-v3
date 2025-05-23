@@ -250,7 +250,7 @@ export class Renderer {
                     event.preventDefault();
                     child.selected = index;
                     this.renderBlocks();
-                    const element = d3.select(`#${this.findBlock(id).rootParent.id}`);
+                    const element = d3.select(`#${this.findBlock(block.id).rootParent.id}`);
                     element.raise();
                 });
 
@@ -286,6 +286,16 @@ export class Renderer {
                         .attr("opacity", 0);
                     this.currentlyHoveredOptionIndex = null;
                 });
+
+            dropdownGroup.on("click", (event) => {
+                event.stopPropagation();
+                event.preventDefault();
+                const currentDisplay = optionsGroup.attr("display");
+                optionsGroup.attr("display", currentDisplay === "none" ? "block" : "none");
+                if (currentDisplay === "none") {
+                    this.raiseBlock(block.id);
+                }
+            });
         });
 
         return (dropdownWidth + horizontalPadding);
@@ -311,7 +321,7 @@ export class Renderer {
     }
 
     dragging(event, d) {
-        if(!this.dragStarted) {
+        if (!this.dragStarted) {
             this.moveBlockToTopLevel(d.id);
             this.grabbingHighlight(d.id, true);
             this.dragStartX = event.x;
@@ -331,7 +341,7 @@ export class Renderer {
     }
 
     dragEnd(event, d) {
-        if(!this.dragStarted) return;
+        if (!this.dragStarted) return;
         this.grabbingHighlight(d.id, false);
 
         const placeholderId = this.detectPlaceholderOverlap(d, d.x, d.y);
@@ -661,6 +671,11 @@ export class Renderer {
         const parentContainer = d3.select(parentUI.node().parentNode);
         parentUI.remove();
         this.renderBlock(foundResult.foundBlock, parentContainer);
+    }
+
+    raiseBlock(id) {
+        const element = d3.select(`#${this.findBlock(id).rootParent.id}`);
+        element.raise();
     }
 
     moveBlockToTopLevel(id) {
