@@ -354,6 +354,7 @@ export class Renderer {
 
     dragEnd(event, d) {
         if (!this.dragStarted) return;
+        this.dragStarted = false;
         this.grabbingHighlight(d.id, false);
 
         const placeholderId = this.detectPlaceholderOverlap(d, d.x, d.y);
