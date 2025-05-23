@@ -388,7 +388,19 @@ export class Renderer {
 
     dragEnd(event, d) {
         this.grabbingHighlight(d.id, false);
-        this.detectOverlapAndInsert(d);
+
+        const placeholderId = this.detectPlaceholderOverlap(d, d.x, d.y);
+        const overlapInfo = this.detectBlockOverlap(d, d.x, d.y);
+
+        if (placeholderId) {
+            const info = placeholderId.split("-");
+            const parentId = info[2];
+            const index = info[1];
+            this.insertBlock(d.id, parentId, index);
+        } else if (overlapInfo) {
+            const targetBlockId = overlapInfo.id.split("-")[1];
+            this.attachBlock(d.id, targetBlockId, overlapInfo.side)
+        }
     }
 
     /*当たり判定***********************************************************************************************************************************************************************************************************************************************************************************************************************/
@@ -408,21 +420,6 @@ export class Renderer {
             } else {
                 this.deemphasizeAllBlock();
             }
-        }
-    }
-
-    detectOverlapAndInsert(d) {
-        const placeholderId = this.detectPlaceholderOverlap(d, d.x, d.y);
-        const overlapInfo = this.detectBlockOverlap(d, d.x, d.y);
-
-        if (placeholderId) {
-            const info = placeholderId.split("-");
-            const parentId = info[2];
-            const index = info[1];
-            this.insertBlock(d.id, parentId, index);
-        } else if (overlapInfo) {
-            const targetBlockId = overlapInfo.id.split("-")[1];
-            this.attachBlock(d.id, targetBlockId, overlapInfo.side)
         }
     }
 
