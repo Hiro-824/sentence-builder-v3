@@ -308,25 +308,30 @@ export class Renderer {
 
     dragStart(event, d) {
         this.dragStarted = false;
-        this.moveBlockToTopLevel(d.id);
-        this.grabbingHighlight(d.id, true);
-
-        this.dragStartX = event.x;
-        this.dragStartY = event.y;
-        this.dragStartBlockX = d.x;
-        this.dragStartBlockY = d.y;
     }
 
     dragging(event, d) {
-        const dx = event.x - this.dragStartX;
-        const dy = event.y - this.dragStartY;
-        d.x = this.dragStartBlockX + dx;
-        d.y = this.dragStartBlockY + dy;
-        d3.select(`#${d.id}`).attr("transform", `translate(${d.x}, ${d.y})`);
-        this.detectOverlapAndHighlight(d);
+        if(!this.dragStarted) {
+            this.moveBlockToTopLevel(d.id);
+            this.grabbingHighlight(d.id, true);
+            this.dragStartX = event.x;
+            this.dragStartY = event.y;
+            this.dragStartBlockX = d.x;
+            this.dragStartBlockY = d.y;
+
+            this.dragStarted = true;
+        } else {
+            const dx = event.x - this.dragStartX;
+            const dy = event.y - this.dragStartY;
+            d.x = this.dragStartBlockX + dx;
+            d.y = this.dragStartBlockY + dy;
+            d3.select(`#${d.id}`).attr("transform", `translate(${d.x}, ${d.y})`);
+            this.detectOverlapAndHighlight(d);
+        }
     }
 
     dragEnd(event, d) {
+        if(!this.dragStarted) return;
         this.grabbingHighlight(d.id, false);
 
         const placeholderId = this.detectPlaceholderOverlap(d, d.x, d.y);
@@ -674,8 +679,8 @@ export class Renderer {
         d3.select(blockUI).attr("transform", `translate(${block.x}, ${block.y})`);
         d3.select(blockUI).raise();
         this.grid.node().appendChild(blockUI);
-
         this.updateBlockUI(foundResult.rootParent.id);
+        d3.select(`#${id}`).raise();
     }
 
     insertBlock(id, targetParentId, index) {
