@@ -171,21 +171,11 @@ export class Renderer {
         const text = child.content[selected];
         const box = this.calculateTextHeightAndWidth(text);
         const dropdownWidth = this.calculateDropdownWidth(child);
-
         const inputColor = this.darkenColor(block.color, 30);
         const y = (height - dropdownHeight) / 2;
-
         const dropdownId = `dropdown-${count}-${block.id}`;
 
-        const dropdownGroup = blockGroup.append("g")
-            .classed("pointer", true)
-            .on("mousedown", (event) => {
-                if (this.currentlyOpenedDropdownId === dropdownId) {
-                    event.stopPropagation();
-                    event.preventDefault();
-                }
-            });
-
+        const dropdownGroup = blockGroup.append("g").classed("pointer", true);
         dropdownGroup.append("rect")
             .attr("id", dropdownId)
             .attr("x", x)
@@ -259,28 +249,8 @@ export class Renderer {
                     event.stopPropagation();
                     event.preventDefault();
                     child.selected = index;
-                    let resultingBlock = null;
-                    for (const block of this.data.blocks) {
-                        if (this.containsBlock(block, block.id)) {
-                            resultingBlock = block;
-                        }
-                    }
-                    this.onDataChanged();
-                    const isValid = this.onValidateSelectionContextually(resultingBlock);
-                    if (!isValid) {
-                        block.x += 30;
-                        block.y += 30;
-                        this.moveBlockToTopLevel(block.id);
-                    }
-                    this.onDataChanged();
-                    this.render();
-                    this.currentlyOpenedDropdownId = null;
-                    let element = d3.select(`#${block.id}`);
-                    element.raise();
-                    // Traverse up until the immediate parent is the svg (whose id is "svg")
-                    while (element.node().parentNode && element.node().parentNode.id !== "svg") {
-                        element = d3.select(element.node().parentNode);
-                    }
+                    this.renderBlocks();
+                    const element = d3.select(`#${this.findBlock(id).rootParent.id}`);
                     element.raise();
                 });
 
@@ -318,37 +288,6 @@ export class Renderer {
                 });
         });
 
-        dropdownGroup.on("click", (event) => {
-            event.stopPropagation();
-            event.preventDefault();
-            const currentDisplay = optionsGroup.attr("display");
-            optionsGroup.attr("display", currentDisplay === "none" ? "block" : "none");
-
-            // Raise the top-level parent block when opening dropdown
-            if (currentDisplay === "none") {
-                // currentlyOpenedDropdownIdを設定
-                this.currentlyOpenedDropdownId = dropdownId;
-                // Start with the element that has the block's id
-                let element = d3.select(`#${block.id}`);
-                element.raise();
-                // Traverse up until the immediate parent is the svg (whose id is "svg")
-                while (element.node().parentNode && element.node().parentNode.id !== "grid") {
-                    element = d3.select(element.node().parentNode);
-                }
-                element.raise();
-            } else {
-                this.currentlyOpenedDropdownId = null;
-            }
-        });
-
-        dropdownGroup.on("mouseenter", () => {
-            this.currentlyHoveredDropdownId = `dropdown-${count}-${block.id}`;
-        })
-
-        dropdownGroup.on("mouseleave", () => {
-            this.currentlyHoveredDropdownId = null;
-        })
-
         return (dropdownWidth + horizontalPadding);
     }
 
@@ -368,6 +307,7 @@ export class Renderer {
     /*ドラッグ関係の処理***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
     dragStart(event, d) {
+        this.dragStarted = false;
         this.moveBlockToTopLevel(d.id);
         this.grabbingHighlight(d.id, true);
 
