@@ -24,6 +24,10 @@ export class Renderer {
 
         this.grid = this.svg.append("g").attr("id", "grid");
 
+        this.svg.on("mousedown", () => {
+            this.closeAllDropdowns();
+        });
+
         const zoom = d3.zoom()
             .scaleExtent(
                 [0.2, 1.5],
@@ -87,10 +91,10 @@ export class Renderer {
 
     updateBlock(id) {
         const foundResult = this.findBlock(id);
-        const parentUI = d3.select(`#${id}`);
+        const parentUI = d3.select(`#${foundResult.rootParent.id}`);
         const parentContainer = d3.select(parentUI.node().parentNode);
         parentUI.remove();
-        this.renderBlock(foundResult.foundBlock, parentContainer);
+        this.renderBlock(foundResult.rootParent, parentContainer);
     }
 
     raiseBlock(id) {
@@ -98,6 +102,12 @@ export class Renderer {
         block.raise();
         const parent = d3.select(`#${this.findBlock(id).rootParent.id}`);
         parent.raise();
+    }
+
+    closeAllDropdowns() {
+        d3.selectAll(".dropdown-options").attr("display", "none");
+        this.currentlyOpenedDropdownId = null;
+        this.currentlyHoveredOptionIndex = null;
     }
 
     /*ブロックの画像の描画***********************************************************************************************************************************************************************************************************************************************************************************************************************/
@@ -260,9 +270,9 @@ export class Renderer {
             const optionGroup = optionsGroup.append("g")
                 .classed("pointer", true)
                 .attr("id", `option-${index}-dropdown-${count}-${block.id}`)
-                .on("mousedown", (event) => {
+                .on("mousedown", () => {
                     child.selected = index;
-                    this.renderBlocks();
+                    this.updateBlock(block.id);
                     this.raiseBlock(block.id);
                 });
 
@@ -299,8 +309,11 @@ export class Renderer {
                     this.currentlyHoveredOptionIndex = null;
                 });
 
-            dropdownGroup.on("click", (event) => {
+            dropdownGroup.on("click", () => {
                 const currentDisplay = optionsGroup.attr("display");
+                if (currentDisplay === "none") {
+                    this.closeAllDropdowns();
+                }
                 optionsGroup.attr("display", currentDisplay === "none" ? "block" : "none");
                 this.raiseBlock(block.id);
             });
