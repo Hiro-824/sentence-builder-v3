@@ -94,8 +94,10 @@ export class Renderer {
     }
 
     raiseBlock(id) {
-        const element = d3.select(`#${this.findBlock(id).rootParent.id}`);
-        element.raise();
+        const block = d3.select(`#${id}`);
+        block.raise();
+        const parent = d3.select(`#${this.findBlock(id).rootParent.id}`);
+        parent.raise();
     }
 
     /*ブロックの画像の描画***********************************************************************************************************************************************************************************************************************************************************************************************************************/
@@ -263,8 +265,7 @@ export class Renderer {
                     event.preventDefault();
                     child.selected = index;
                     this.renderBlocks();
-                    const element = d3.select(`#${this.findBlock(block.id).rootParent.id}`);
-                    element.raise();
+                    this.raiseBlock(block.id);
                 });
 
             // Highlight rectangle
@@ -305,9 +306,7 @@ export class Renderer {
                 event.preventDefault();
                 const currentDisplay = optionsGroup.attr("display");
                 optionsGroup.attr("display", currentDisplay === "none" ? "block" : "none");
-                if (currentDisplay === "none") {
-                    this.raiseBlock(block.id);
-                }
+                this.raiseBlock(block.id);
             });
         });
 
