@@ -420,16 +420,10 @@ export class Renderer {
             const info = placeholderId.split("-");
             const parentId = info[2];
             const index = info[1];
-            const updatedParent = this.insertBlockToParent(d.id, parentId, index);
-            this.removeBlock(d.id);
-            this.updateBlock(updatedParent);
-            this.renderBlocks();
+            this.insertBlock(d.id, parentId, index);
         } else if (overlapInfo) {
             const targetBlockId = overlapInfo.id.split("-")[1];
-            const updatedParent = this.attachBlockToParent(d.id, targetBlockId, overlapInfo.side);
-            this.removeBlock(d.id);
-            this.updateBlock(updatedParent);
-            this.renderBlocks();
+            this.attachBlock(d.id, targetBlockId, overlapInfo.side)
         }
     }
 
@@ -575,9 +569,7 @@ export class Renderer {
 
     /*階層構造に関する処理***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
-    // 階層構造データを直接に変更するもの、
-    // 変更結果を予測するだけのもの、DOMを直接に変更するものが混在しており、修正が望まれる
-
+    // 変更しない
     findBlock(id) {
         let foundBlock = null;
         let parentBlock = null;
@@ -645,6 +637,45 @@ export class Renderer {
         };
     }
 
+    previewInsertion(id, targetParentId, index) {
+        const foundResult = this.findBlock(id);
+        if (!foundResult.foundBlock) return;
+
+        const targetParent = this.findBlock(targetParentId).foundBlock;
+        if (!targetParent || !targetParent.children[index] || targetParent.children[index].type !== "placeholder") return;
+
+        // Create a deep copy of the target parent block
+        const expectedParent = JSON.parse(JSON.stringify(targetParent));
+        expectedParent.children[index].content = foundResult.foundBlock;
+
+        return expectedParent;
+    }
+
+    previewAttachment(id, targetParentId, side) {
+        const foundResult = this.findBlock(id);
+        if (!foundResult.foundBlock) return;
+
+        const targetParent = this.findBlock(targetParentId).foundBlock;
+        if (!targetParent) return;
+
+        const attachmentChild = {
+            id: "attachment",
+            type: "attachment",
+            side: side,
+            content: foundResult.foundBlock
+        };
+
+        // Create a deep copy of the target parent block
+        const expectedParent = JSON.parse(JSON.stringify(targetParent));
+        if (side === "left") {
+            expectedParent.children.unshift(attachmentChild);
+        } else {
+            expectedParent.children.push(attachmentChild);
+        }
+        return expectedParent;
+    }
+
+    // データを変更する
     removeBlock(id) {
         const foundResult = this.findBlock(id);
         if (!foundResult.foundBlock) return;
@@ -682,6 +713,15 @@ export class Renderer {
         }
     }
 
+    // UIを変更する
+    updateBlockUI(id) {
+        const foundResult = this.findBlock(id);
+        const parentUI = d3.select(`#${id}`);
+        const parentContainer = d3.select(parentUI.node().parentNode);
+        parentUI.remove();
+        this.renderBlock(foundResult.foundBlock, parentContainer);
+    }
+
     moveBlockToTopLevel(id) {
         const foundResult = this.findBlock(id);
         if (!foundResult.parentBlock) return;
@@ -699,48 +739,21 @@ export class Renderer {
         d3.select(blockUI).raise();
         this.grid.node().appendChild(blockUI);
 
-        const parentUI = d3.select(`#${foundResult.rootParent.id}`);
-        const parentContainer = d3.select(parentUI.node().parentNode);
-        parentUI.remove();
-        this.renderBlock(foundResult.rootParent, parentContainer);
+        this.updateBlockUI(foundResult.rootParent.id);
     }
 
-    insertBlockToParent(id, targetParentId, index) {
-        const foundResult = this.findBlock(id);
-        if (!foundResult.foundBlock) return;
-
-        const targetParent = this.findBlock(targetParentId).foundBlock;
-        if (!targetParent || !targetParent.children[index] || targetParent.children[index].type !== "placeholder") return;
-
-        // Create a deep copy of the target parent block
-        const expectedParent = JSON.parse(JSON.stringify(targetParent));
-        expectedParent.children[index].content = foundResult.foundBlock;
-
-        return expectedParent;
+    insertBlock(id, targetParentId, index) {
+        const updatedParent = this.previewInsertion(id, targetParentId, index);
+        this.removeBlock(id);
+        this.updateBlock(updatedParent);
+        this.renderBlocks();
     }
 
-    attachBlockToParent(id, targetParentId, side) {
-        const foundResult = this.findBlock(id);
-        if (!foundResult.foundBlock) return;
-
-        const targetParent = this.findBlock(targetParentId).foundBlock;
-        if (!targetParent) return;
-
-        const attachmentChild = {
-            id: "attachment",
-            type: "attachment",
-            side: side,
-            content: foundResult.foundBlock
-        };
-
-        // Create a deep copy of the target parent block
-        const expectedParent = JSON.parse(JSON.stringify(targetParent));
-        if (side === "left") {
-            expectedParent.children.unshift(attachmentChild);
-        } else {
-            expectedParent.children.push(attachmentChild);
-        }
-        return expectedParent;
+    attachBlock(id, targetParentId, side) {
+        const updatedParent = this.previewAttachment(id, targetParentId, side);
+        this.removeBlock(id);
+        this.updateBlock(updatedParent);
+        this.renderBlocks();
     }
 
     /*ハイライト表示***********************************************************************************************************************************************************************************************************************************************************************************************************************/
