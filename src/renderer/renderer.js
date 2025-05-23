@@ -261,8 +261,6 @@ export class Renderer {
                 .classed("pointer", true)
                 .attr("id", `option-${index}-dropdown-${count}-${block.id}`)
                 .on("mousedown", (event) => {
-                    event.stopPropagation();
-                    event.preventDefault();
                     child.selected = index;
                     this.renderBlocks();
                     this.raiseBlock(block.id);
@@ -302,8 +300,6 @@ export class Renderer {
                 });
 
             dropdownGroup.on("click", (event) => {
-                event.stopPropagation();
-                event.preventDefault();
                 const currentDisplay = optionsGroup.attr("display");
                 optionsGroup.attr("display", currentDisplay === "none" ? "block" : "none");
                 this.raiseBlock(block.id);
