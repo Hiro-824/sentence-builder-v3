@@ -260,7 +260,7 @@ export class Renderer {
             const optionGroup = optionsGroup.append("g")
                 .classed("pointer", true)
                 .attr("id", `option-${index}-dropdown-${count}-${block.id}`)
-                .on("click", (event) => {
+                .on("mousedown", (event) => {
                     event.stopPropagation();
                     event.preventDefault();
                     child.selected = index;
