@@ -3,8 +3,9 @@ import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, pla
 import * as d3 from "d3";
 
 export class Renderer {
-    constructor(blocks, svg) {
+    constructor(blocks, blockList, svg) {
         this.blocks = blocks;
+        this.blockList = blockList;
         this.svg = svg;
         this.render();
     }
@@ -52,18 +53,51 @@ export class Renderer {
     }
 
     renderSideBar() {
-        const width = 200; // Fixed sidebar width
-        const height = 812; // Same height as grid
+        const width = 300;
+        const height = 812;
 
         this.sidebar = this.svg.append("g")
             .attr("id", "sidebar")
-            .attr("transform", `translate(0, 0)`); // Position it to the left of the grid
+            .attr("transform", `translate(0, 0)`);
 
         // Add the sidebar background
         this.sidebar.append("rect")
             .attr("width", width)
             .attr("height", height)
-            .attr("fill", "#f5f5f5")
+            .attr("fill", "#f5f5f5");
+
+        let y = 0;
+
+        Object.entries(this.blockList).forEach(([sectionName, blocks]) => {
+            y += this.renderSideBarSection(y, sectionName, blocks);
+        })
+    }
+
+    renderSideBarSection(startY, sectionName, blocks) {
+        const sectionSpacing = 30;
+        const blockSpacing = 10;
+        const scaleExtent = 0.5;
+
+        let y = blockSpacing;
+
+        const sectionGroup = this.sidebar.append("g")
+            .attr("transform", `translate(20, ${startY + sectionSpacing})`)
+
+        sectionGroup.append("text")
+            .text(sectionName)
+            .style("font-weight", "bold")
+            .style("margin-bottom", "0.5rem")
+            .style("fill", "#444444");
+
+        blocks.forEach((block) => {
+            block.x = 0;
+            block.y = 0;
+            const blockGroup = sectionGroup.append("g")
+                .attr("transform", `translate(0, ${y}), scale(${scaleExtent})`);
+            y += blockSpacing + this.renderBlockImage(block, blockGroup).height * scaleExtent;
+        });
+
+        return y + sectionSpacing;
     }
 
     renderBlocks() {
@@ -147,6 +181,8 @@ export class Renderer {
                 x += this.renderAttachment(child, height, blockGroup, x);
             }
         }
+
+        return { width: width, height: height };
     }
 
     renderPlaceholder(child, height, block, blockGroup, count, x) {
@@ -713,14 +749,14 @@ export class Renderer {
 
     moveBlockToDragboard(id) {
         const foundResult = this.findBlock(id);
-        if(foundResult.parentBlock) this.moveBlockToTopLevel(id);
+        if (foundResult.parentBlock) this.moveBlockToTopLevel(id);
         const blockUI = d3.select(`#${id}`).node();
         this.dragboard.node().appendChild(blockUI);
     }
 
     moveBlockToGrid(id) {
         const foundResult = this.findBlock(id);
-        if(foundResult.parentBlock) this.moveBlockToTopLevel(id);
+        if (foundResult.parentBlock) this.moveBlockToTopLevel(id);
         const blockUI = d3.select(`#${id}`).node();
         this.grid.node().appendChild(blockUI);
     }
