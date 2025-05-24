@@ -321,7 +321,7 @@ export const Which_Block: Block = {
     ]
 }
 
-export const blocks = {
+export const blockList = {
     "文": [
         Sentence_Block
     ],

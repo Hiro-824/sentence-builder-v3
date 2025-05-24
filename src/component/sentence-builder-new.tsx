@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import * as d3 from "d3";
 import { Renderer } from "@/renderer/renderer";
+import { blockList } from "@/grammar/blocks/blocks";
 
 const blocks = [
     {
@@ -586,7 +587,7 @@ const SentenceBuilder = () => {
         window.addEventListener("resize", updateSvgSize);
 
         // Create a new Renderer instance with the data and svg element
-        new Renderer(blocks, svg);
+        new Renderer(blocks, blockList, svg);
 
         // Cleanup listener on unmount
         return () => {
