@@ -68,6 +68,7 @@ export class Renderer {
 
     renderBlocks() {
         d3.select("#grid").selectAll("*").remove();
+        d3.select("#dragboard").selectAll("*").remove();
         this.blocks.forEach(block => {
             this.renderBlock(block, this.grid);
         });
@@ -344,6 +345,7 @@ export class Renderer {
     dragging(event, d) {
         if (!this.dragStarted) {
             this.moveBlockToTopLevel(d.id);
+            this.moveBlockToDragboard(d.id);
             this.grabbingHighlight(d.id, true);
             this.dragStartX = event.x;
             this.dragStartY = event.y;
@@ -377,6 +379,8 @@ export class Renderer {
         } else if (overlapInfo) {
             const targetBlockId = overlapInfo.id.split("-")[1];
             this.attachBlock(d.id, targetBlockId, overlapInfo.side)
+        } else {
+            this.moveBlockToGrid(d.id);
         }
     }
 
@@ -705,6 +709,20 @@ export class Renderer {
         this.grid.node().appendChild(blockUI);
         this.updateBlock(foundResult.rootParent.id);
         d3.select(`#${id}`).raise();
+    }
+
+    moveBlockToDragboard(id) {
+        const foundResult = this.findBlock(id);
+        if(foundResult.parentBlock) this.moveBlockToTopLevel(id);
+        const blockUI = d3.select(`#${id}`).node();
+        this.dragboard.node().appendChild(blockUI);
+    }
+
+    moveBlockToGrid(id) {
+        const foundResult = this.findBlock(id);
+        if(foundResult.parentBlock) this.moveBlockToTopLevel(id);
+        const blockUI = d3.select(`#${id}`).node();
+        this.grid.node().appendChild(blockUI);
     }
 
     insertBlock(id, targetParentId, index) {
