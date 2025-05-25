@@ -1,3 +1,4 @@
+/*
 "use client";
 
 import React, { useEffect, useRef } from "react";
@@ -192,3 +193,4 @@ const SentenceBuilder = () => {
 };
 
 export default SentenceBuilder;
+*/
