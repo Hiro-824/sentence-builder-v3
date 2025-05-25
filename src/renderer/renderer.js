@@ -66,38 +66,125 @@ export class Renderer {
             .attr("height", height)
             .attr("fill", "#f5f5f5");
 
-        let y = 0;
+        const block = {
+            "id": "b5ji2m",
+            "lexicons": [
+                {
+                    "word": "have",
+                    "categories": [
+                        {
+                            "base": "TB",
+                            "features": {
+                                "form": [
+                                    "base"
+                                ]
+                            },
+                            "specifiers": [],
+                            "complements": [
+                                {
+                                    "base": "DP",
+                                    "features": {
+                                        "case": [
+                                            "acc"
+                                        ]
+                                    },
+                                    "specifiers": [],
+                                    "complements": [],
+                                    "translation": {}
+                                }
+                            ],
+                            "translation": {
+                                "base": "{C1[を]}持っている",
+                                "imperfect": "{C1[を]}持ってい"
+                            }
+                        },
+                        {
+                            "base": "VP",
+                            "features": {
+                                "form": [
+                                    "base"
+                                ]
+                            },
+                            "specifiers": [],
+                            "complements": [
+                                {
+                                    "base": "DP",
+                                    "features": {
+                                        "case": [
+                                            "acc"
+                                        ]
+                                    },
+                                    "specifiers": [],
+                                    "complements": [],
+                                    "translation": {}
+                                }
+                            ],
+                            "translation": {
+                                "base": "{C1[を]}持っている",
+                                "imperfect": "{C1[を]}持ってい"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "word": "has",
+                    "categories": [
+                        {
+                            "base": "TB",
+                            "features": {
+                                "form": [
+                                    "es"
+                                ]
+                            },
+                            "specifiers": [],
+                            "complements": [
+                                {
+                                    "base": "DP",
+                                    "features": {
+                                        "case": [
+                                            "acc"
+                                        ]
+                                    },
+                                    "specifiers": [],
+                                    "complements": [],
+                                    "translation": {}
+                                }
+                            ],
+                            "translation": {
+                                "base": "{C1[を]}持っている",
+                                "imperfect": "{C1[を]}持ってい"
+                            }
+                        }
+                    ]
+                }
+            ],
+            "x": 0,
+            "y": 0,
+            "color": "tomato",
+            "children": [
+                {
+                    "id": "head",
+                    "type": "dropdown",
+                    "content": [
+                        "have",
+                        "has"
+                    ],
+                    "selected": 0,
+                    "hidden": false,
+                    "keepEmpty": false
+                },
+                {
+                    "id": "complement",
+                    "type": "placeholder",
+                    "content": null,
+                    "hidden": false,
+                    "keepEmpty": false
+                }
+            ],
+            "translation": " ＿＿を持っている "
+        };
 
-        Object.entries(this.blockList).forEach(([sectionName, blocks]) => {
-            y += this.renderSideBarSection(y, sectionName, blocks);
-        })
-    }
-
-    renderSideBarSection(startY, sectionName, blocks) {
-        const sectionSpacing = 30;
-        const blockSpacing = 10;
-        const scaleExtent = 0.5;
-
-        let y = blockSpacing;
-
-        const sectionGroup = this.sidebar.append("g")
-            .attr("transform", `translate(20, ${startY + sectionSpacing})`)
-
-        sectionGroup.append("text")
-            .text(sectionName)
-            .style("font-weight", "bold")
-            .style("margin-bottom", "0.5rem")
-            .style("fill", "#444444");
-
-        blocks.forEach((block) => {
-            block.x = 0;
-            block.y = 0;
-            const blockGroup = sectionGroup.append("g")
-                .attr("transform", `translate(0, ${y}), scale(${scaleExtent})`);
-            y += blockSpacing + this.renderBlockImage(block, blockGroup).height * scaleExtent;
-        });
-
-        return y + sectionSpacing;
+        this.renderBlock(block, this.sidebar, true);
     }
 
     renderBlocks() {
@@ -108,7 +195,7 @@ export class Renderer {
         });
     }
 
-    renderBlock(block, parent) {
+    renderBlock(block, parent, fromSideBar = false) {
         const blockGroup = parent.append("g")
             .attr("transform", `translate(${block.x}, ${block.y})`)
             .attr("id", block.id)
@@ -116,8 +203,8 @@ export class Renderer {
             .datum(block)
             .call(d3.drag()
                 .container(this.grid.node())
-                .on("start", this.dragStart.bind(this))
-                .on("drag", this.dragging.bind(this))
+                .on("start", (event, d) => this.dragStart(event, d, fromSideBar))
+                .on("drag", (event, d) => this.dragging(event, d, fromSideBar))
                 .on("end", this.dragEnd.bind(this))
             );
 
@@ -374,12 +461,27 @@ export class Renderer {
 
     /*ドラッグ関係の処理***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
-    dragStart(event, d) {
+    dragStart(event, d, fromSideBar = false) {
+        console.log(`今ドラッグされているのは、${fromSideBar ? "サイドバーから取り出された" : "普通の"}ブロックです`);
         this.dragStarted = false;
     }
 
-    dragging(event, d) {
+    dragging(event, d, fromSideBar = false) {
         if (!this.dragStarted) {
+
+            const transform = d3.zoomTransform(this.grid.node());
+
+            // サイドバーからブロックをドラッグして取り出した時の問題点として、位置のズレがある。
+            // 位置はd(ブロックデータ)のx, yをもとに決まるが、サイドバー内のものはdが(0, 0)で
+            // gridとの相対位置と一致していない
+            // そこで、d.x、d.yを変更する必要がある
+
+            if(fromSideBar) {
+                d.x = (d.x - transform.x) / transform.k;
+                d.y = (d.y - transform.y) / transform.k;
+            }
+
+            if(fromSideBar) this.blocks.push(d);
             this.moveBlockToTopLevel(d.id);
             this.moveBlockToDragboard(d.id);
             this.grabbingHighlight(d.id, true);
@@ -387,6 +489,8 @@ export class Renderer {
             this.dragStartY = event.y;
             this.dragStartBlockX = d.x;
             this.dragStartBlockY = d.y;
+
+            d3.select(`#${d.id}`).attr("transform", `translate(${d.x}, ${d.y})`);
 
             this.dragStarted = true;
         } else {
@@ -418,6 +522,8 @@ export class Renderer {
         } else {
             this.moveBlockToGrid(d.id);
         }
+
+        this.updateBlock(d.id);
     }
 
     /*当たり判定***********************************************************************************************************************************************************************************************************************************************************************************************************************/
