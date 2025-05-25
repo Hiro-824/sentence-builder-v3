@@ -37,6 +37,10 @@ export class Renderer {
             .on("zoom", (event) => {
                 this.grid.attr("transform", event.transform);
                 this.dragboard.attr("transform", event.transform);
+                // Update blockBoard scale when zoom changes
+                if (this.blockBoard) {
+                    this.blockBoard.attr("transform", `scale(${event.transform.k})`);
+                }
             });
 
         this.svg.call(zoom).on("wheel", (event) => {
@@ -65,6 +69,10 @@ export class Renderer {
             .attr("width", width)
             .attr("height", height)
             .attr("fill", "#f5f5f5");
+
+        // Store blockBoard reference and set initial scale to match grid's zoom
+        this.blockBoard = this.sidebar.append("g")
+            .attr("transform", `scale(${d3.zoomTransform(this.grid.node()).k})`);
 
         const block = {
             "id": "b5ji2m",
@@ -184,7 +192,7 @@ export class Renderer {
             "translation": " ＿＿を持っている "
         };
 
-        this.renderBlock(block, this.sidebar, true);
+        this.renderBlock(block, this.blockBoard, true);
     }
 
     renderBlocks() {
@@ -476,12 +484,12 @@ export class Renderer {
             // gridとの相対位置と一致していない
             // そこで、d.x、d.yを変更する必要がある
 
-            if(fromSideBar) {
+            if (fromSideBar) {
                 d.x = (d.x - transform.x) / transform.k;
                 d.y = (d.y - transform.y) / transform.k;
             }
 
-            if(fromSideBar) this.blocks.push(d);
+            if (fromSideBar) this.blocks.push(d);
             this.moveBlockToTopLevel(d.id);
             this.moveBlockToDragboard(d.id);
             this.grabbingHighlight(d.id, true);
