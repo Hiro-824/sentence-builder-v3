@@ -10,6 +10,10 @@ export class Renderer {
         this.render();
     }
 
+    generateRandomId() {
+        return "b" + crypto.randomUUID().replaceAll(/-/g, '');
+    }
+
     /*レンダリング処理***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
     render() {
@@ -59,7 +63,7 @@ export class Renderer {
     renderSideBar() {
         // Clear existing sidebar content
         d3.select("#sidebar").selectAll("*").remove();
-        
+
         const width = 300;
         const height = 812;
 
@@ -195,16 +199,36 @@ export class Renderer {
             "translation": " ＿＿を持っている "
         };
 
-        this.renderPreviewBlock(block);
+        this.renderPreviewBlock(block, "test-preview-block-id");
     }
 
-    renderPreviewBlock(block) {
+    renderPreviewBlock(block, id) {
+        // グループを作る
+        const previewBlockGroup = this.blockBoard
+            .append("g")
+            .attr("id", id)
+            .datum(block);
+
+        // ダミー用に、idを変えたデータを用意
         const dummyData = JSON.parse(JSON.stringify(block));
         dummyData.id = "dummy-" + block.id;
 
-        const dummy = this.blockBoard.append("g");
+        // 実際のブロックデータを用意
+        const realData = JSON.parse(JSON.stringify(block));
+        realData.id = this.generateRandomId();
+
+        const dummy = previewBlockGroup.append("g");
         this.renderBlockImage(dummyData, dummy); // インタラクティブでないダミー(画像だけ)をレンダリング
-        this.renderBlock(block, this.blockBoard, true);
+        this.renderBlock(realData, previewBlockGroup, true, id);
+    }
+
+    updatePreviewBlock(id) {
+        const previewBlockGroup = d3.select(`#${id}`);
+        console.log(previewBlockGroup);
+        const block = previewBlockGroup.datum();
+        const realData = JSON.parse(JSON.stringify(block));
+        realData.id = this.generateRandomId();
+        this.renderBlock(realData, previewBlockGroup, true, id);
     }
 
     renderBlocks() {
@@ -215,7 +239,7 @@ export class Renderer {
         });
     }
 
-    renderBlock(block, parent, fromSideBar = false) {
+    renderBlock(block, parent, fromSideBar = false, sideBarId = undefined) {
         const blockGroup = parent.append("g")
             .attr("transform", `translate(${block.x}, ${block.y})`)
             .attr("id", block.id)
@@ -223,8 +247,8 @@ export class Renderer {
             .datum(block)
             .call(d3.drag()
                 .container(this.grid.node())
-                .on("start", (event, d) => this.dragStart(event, d, fromSideBar))
-                .on("drag", (event, d) => this.dragging(event, d, fromSideBar))
+                .on("start", (event, d) => this.dragStart(event, d, fromSideBar, sideBarId))
+                .on("drag", (event, d) => this.dragging(event, d, fromSideBar, sideBarId))
                 .on("end", this.dragEnd.bind(this))
             );
 
@@ -481,8 +505,11 @@ export class Renderer {
 
     /*ドラッグ関係の処理***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
-    dragStart(event, d, fromSideBar = false) {
+    dragStart(event, d, fromSideBar = false, sideBarId = undefined) {
         console.log(`今ドラッグされているのは、${fromSideBar ? "サイドバーから取り出された" : "普通の"}ブロックです`);
+        if (fromSideBar) {
+            this.updatePreviewBlock(sideBarId);
+        }
         this.dragStarted = false;
     }
 
