@@ -85,12 +85,12 @@ export class Renderer {
 
         Object.entries(this.blockList).map(([groupName, blockArray], groupIndex) => (
             blockArray.forEach((block) => {
-                y += blockListSpacing + this.renderPreviewBlock(block, this.generateRandomId(), y);
+                y += blockListSpacing + this.renderSideBarBlock(block, this.generateRandomId(), y);
             })
         ));
     }
 
-    renderPreviewBlock(block, id, y) {
+    renderSideBarBlock(block, id, y) {
         // グループを作る
         const previewBlockGroup = this.blockBoard
             .append("g")
@@ -107,12 +107,12 @@ export class Renderer {
         this.renderBlockImage(dummyData, dummy); // インタラクティブでないダミー(画像だけ)をレンダリング
 
         // 実際のブロックデータを用意
-        this.updatePreviewBlock(id);
+        this.renderPreviewBlock(id);
 
         return this.calculateHeight(block);
     }
 
-    updatePreviewBlock(id) {
+    renderPreviewBlock(id) {
         const previewBlockGroup = d3.select(`#${id}`);
         const block = previewBlockGroup.datum();
         const realData = JSON.parse(JSON.stringify(block));
@@ -399,7 +399,7 @@ export class Renderer {
     dragStart(event, d, fromSideBar = false, sideBarId = undefined) {
         console.log(`今ドラッグされているのは、${fromSideBar ? "サイドバーから取り出された" : "普通の"}ブロックです`);
         if (fromSideBar) {
-            this.updatePreviewBlock(sideBarId);
+            this.renderPreviewBlock(sideBarId);
         }
         this.dragStarted = false;
     }
