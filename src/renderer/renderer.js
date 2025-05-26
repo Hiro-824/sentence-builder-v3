@@ -75,7 +75,13 @@ export class Renderer {
         this.sidebar.append("rect")
             .attr("width", width)
             .attr("height", height)
-            .attr("fill", "#f5f5f5");
+            .attr("fill", "#f5f5f5")
+            .on("mousedown", (event) => {
+                event.stopPropagation();
+            })
+            .on("wheel", (event) => {
+                event.stopPropagation();
+            });
 
         // Store blockBoard reference and set initial scale to match grid's zoom
         this.blockBoard = this.sidebar.append("g")
