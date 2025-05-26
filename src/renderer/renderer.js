@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor } from "./const.js";
+import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing } from "./const.js";
 import * as d3 from "d3";
 
 export class Renderer {
@@ -199,35 +199,44 @@ export class Renderer {
             "translation": " ＿＿を持っている "
         };
 
-        this.renderPreviewBlock(block, "test-preview-block-id");
+        let y = 0;
+
+        Object.entries(this.blockList).map(([groupName, blockArray], groupIndex) => (
+            blockArray.forEach((block) => {
+                y += blockListSpacing + this.renderPreviewBlock(block, this.generateRandomId(), y);
+            })
+        ));
     }
 
-    renderPreviewBlock(block, id) {
+    renderPreviewBlock(block, id, y) {
         // グループを作る
         const previewBlockGroup = this.blockBoard
             .append("g")
+            .attr("transform", `translate(0, ${y})`)
             .attr("id", id)
             .datum(block);
 
         // ダミー用に、idを変えたデータを用意
         const dummyData = JSON.parse(JSON.stringify(block));
         dummyData.id = "dummy-" + block.id;
-
-        // 実際のブロックデータを用意
-        const realData = JSON.parse(JSON.stringify(block));
-        realData.id = this.generateRandomId();
-
+        dummyData.x = 0;
+        dummyData.y = 0;
         const dummy = previewBlockGroup.append("g");
         this.renderBlockImage(dummyData, dummy); // インタラクティブでないダミー(画像だけ)をレンダリング
-        this.renderBlock(realData, previewBlockGroup, true, id);
+
+        // 実際のブロックデータを用意
+        this.updatePreviewBlock(id);
+
+        return this.calculateHeight(block);
     }
 
     updatePreviewBlock(id) {
         const previewBlockGroup = d3.select(`#${id}`);
-        console.log(previewBlockGroup);
         const block = previewBlockGroup.datum();
         const realData = JSON.parse(JSON.stringify(block));
         realData.id = this.generateRandomId();
+        realData.x = 0;
+        realData.y = 0;
         this.renderBlock(realData, previewBlockGroup, true, id);
     }
 
@@ -521,7 +530,7 @@ export class Renderer {
             // サイドバーからブロックをドラッグして取り出した時の問題点として、位置のズレがある。
             // 位置はd(ブロックデータ)のx, yをもとに決まるが、サイドバー内のものはdが(0, 0)で
             // gridとの相対位置と一致していない
-            // そこで、d.x、d.yを変更する必要がある
+            // そこで、d.x、d.yを適切に変更する必要がある
 
             if (fromSideBar) {
                 this.blocks.push(d);
