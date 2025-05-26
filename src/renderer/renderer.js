@@ -57,6 +57,9 @@ export class Renderer {
     }
 
     renderSideBar() {
+        // Clear existing sidebar content
+        d3.select("#sidebar").selectAll("*").remove();
+        
         const width = 300;
         const height = 812;
 
@@ -192,6 +195,15 @@ export class Renderer {
             "translation": " ＿＿を持っている "
         };
 
+        this.renderPreviewBlock(block);
+    }
+
+    renderPreviewBlock(block) {
+        const dummyData = JSON.parse(JSON.stringify(block));
+        dummyData.id = "dummy-" + block.id;
+
+        const dummy = this.blockBoard.append("g");
+        this.renderBlockImage(dummyData, dummy); // インタラクティブでないダミー(画像だけ)をレンダリング
         this.renderBlock(block, this.blockBoard, true);
     }
 
@@ -485,14 +497,15 @@ export class Renderer {
             // そこで、d.x、d.yを変更する必要がある
 
             if (fromSideBar) {
+                this.blocks.push(d);
                 d.x = (d.x - transform.x) / transform.k;
                 d.y = (d.y - transform.y) / transform.k;
             }
 
-            if (fromSideBar) this.blocks.push(d);
             this.moveBlockToTopLevel(d.id);
             this.moveBlockToDragboard(d.id);
             this.grabbingHighlight(d.id, true);
+
             this.dragStartX = event.x;
             this.dragStartY = event.y;
             this.dragStartBlockX = d.x;
@@ -517,7 +530,7 @@ export class Renderer {
         this.grabbingHighlight(d.id, false);
 
         const placeholderId = this.detectPlaceholderOverlap(d, d.x, d.y);
-        const overlapInfo = this.detectBlockOverlap(d, d.x, d.y);
+        const overlapInfo = this.detectBlockOverlap(d);
 
         if (placeholderId) {
             const info = placeholderId.split("-");
@@ -538,7 +551,7 @@ export class Renderer {
 
     detectOverlapAndHighlight(d) {
         const placeholderId = this.detectPlaceholderOverlap(d, d.x, d.y);
-        const overlapInfo = this.detectBlockOverlap(d, d.x, d.y);
+        const overlapInfo = this.detectBlockOverlap(d);
 
         if (placeholderId) {
             this.deemphasizeAllBlock();
@@ -584,6 +597,11 @@ export class Renderer {
             .filter(function () {
                 const excludedParent = d3.select(`#${blockData.id}`).node();
                 return !excludedParent || !excludedParent.contains(this);
+            })
+            .filter(function () {
+                // Exclude placeholders in the sidebar
+                const parentGroup = d3.select(this.parentNode);
+                return !parentGroup.node().closest("#sidebar");
             })
             .nodes()
             .map(rect => rect.id)
@@ -654,6 +672,11 @@ export class Renderer {
                 return id && id.startsWith("frame-") &&
                     id !== `frame-${blockData.id}` &&
                     !descendantFrameIds.includes(id);
+            })
+            .filter(function () {
+                // Exclude blocks in the sidebar
+                const parentGroup = d3.select(this.parentNode);
+                return !parentGroup.node().closest("#sidebar");
             })
             .nodes()
             .map(node => node.id);
