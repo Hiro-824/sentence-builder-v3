@@ -514,21 +514,15 @@ export class Renderer {
 
             if (fromSideBar) {
                 this.blocks.push(d);
-                let x, y;
-                if (event.sourceEvent.touches) {
-                    // Touch event
-                    const touch = event.sourceEvent.touches[0];
-                    const rect = this.grid.node().getBoundingClientRect();
-                    x = (touch.clientX - rect.left) / d3.zoomTransform(this.grid.node()).k;
-                    y = (touch.clientY - rect.top) / d3.zoomTransform(this.grid.node()).k;
-                } else {
-                    // Mouse event
-                    const gridPoint = d3.pointer(event, this.grid.node());
-                    x = gridPoint[0];
-                    y = gridPoint[1];
-                }
-                d.x = x;
-                d.y = y;
+                const sidebarRect = this.sidebar.node().getBoundingClientRect();
+                const blockRect = d3.select(`#${d.id}`).node().getBoundingClientRect();
+                const sideBarX = blockRect.left - sidebarRect.left;
+                const sideBarY = blockRect.top - sidebarRect.top;
+                const transform = d3.zoomTransform(this.grid.node());
+                const gridX = (sideBarX - transform.x) / transform.k;
+                const gridY = (sideBarY - transform.y) / transform.k;
+                d.x = gridX;
+                d.y = gridY;
             }
 
             this.moveBlockToTopLevel(d.id);
