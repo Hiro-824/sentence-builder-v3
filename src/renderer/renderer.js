@@ -156,10 +156,34 @@ export class Renderer {
         // Mobile
         let touchStartY = 0;
         let isScrolling = false;
+        let lastTouchY = 0;
+        let lastTouchTime = 0;
+        let velocity = 0;
+        let animationFrameId = null;
+
+        const applyMomentum = () => {
+            if (Math.abs(velocity) < 0.1) {
+                velocity = 0;
+                cancelAnimationFrame(animationFrameId);
+                return;
+            }
+
+            this.sideBarScrollExtent -= velocity;
+            this.setBlockBoardTransform();
+            
+            // Apply deceleration
+            velocity *= 0.95;
+            
+            animationFrameId = requestAnimationFrame(applyMomentum);
+        };
 
         this.sidebar.node().addEventListener('touchstart', (event) => {
             touchStartY = event.touches[0].clientY;
+            lastTouchY = touchStartY;
+            lastTouchTime = Date.now();
             isScrolling = true;
+            velocity = 0;
+            cancelAnimationFrame(animationFrameId);
             event.preventDefault();
             event.stopPropagation();
         }, { passive: false });
@@ -168,8 +192,18 @@ export class Renderer {
             if (!isScrolling) return;
 
             const touchY = event.touches[0].clientY;
+            const currentTime = Date.now();
+            const deltaTime = currentTime - lastTouchTime;
+            
+            if (deltaTime > 0) {
+                // Calculate velocity (pixels per millisecond)
+                velocity = (lastTouchY - touchY) / deltaTime;
+            }
+            
             const deltaY = touchStartY - touchY;
             touchStartY = touchY;
+            lastTouchY = touchY;
+            lastTouchTime = currentTime;
 
             this.sideBarScrollExtent -= deltaY;
             this.setBlockBoardTransform();
@@ -179,6 +213,10 @@ export class Renderer {
 
         this.sidebar.node().addEventListener('touchend', (event) => {
             isScrolling = false;
+            // Start momentum scrolling if there's significant velocity
+            if (Math.abs(velocity) > 0.1) {
+                animationFrameId = requestAnimationFrame(applyMomentum);
+            }
             event.preventDefault();
             event.stopPropagation();
         }, { passive: false });
