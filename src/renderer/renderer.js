@@ -514,9 +514,21 @@ export class Renderer {
 
             if (fromSideBar) {
                 this.blocks.push(d);
-                const gridPoint = d3.pointer(event, this.grid.node());
-                d.x = gridPoint[0];
-                d.y = gridPoint[1];
+                let x, y;
+                if (event.sourceEvent.touches) {
+                    // Touch event
+                    const touch = event.sourceEvent.touches[0];
+                    const rect = this.grid.node().getBoundingClientRect();
+                    x = (touch.clientX - rect.left) / d3.zoomTransform(this.grid.node()).k;
+                    y = (touch.clientY - rect.top) / d3.zoomTransform(this.grid.node()).k;
+                } else {
+                    // Mouse event
+                    const gridPoint = d3.pointer(event, this.grid.node());
+                    x = gridPoint[0];
+                    y = gridPoint[1];
+                }
+                d.x = x;
+                d.y = y;
             }
 
             this.moveBlockToTopLevel(d.id);
