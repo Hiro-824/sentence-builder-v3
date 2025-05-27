@@ -12,3 +12,4 @@ export const bubbleColor = "#121212";
 
 export const blockListSpacing = 16;
 export const blockListFontSize = 24;
+export const scrollMomentumExtent = 20;

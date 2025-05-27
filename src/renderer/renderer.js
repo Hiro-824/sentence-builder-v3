@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize } from "./const.js";
+import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize, scrollMomentumExtent } from "./const.js";
 import * as d3 from "d3";
 
 export class Renderer {
@@ -209,7 +209,7 @@ export class Renderer {
 
             if (deltaTime > 0) {
                 // Calculate velocity (pixels per millisecond)
-                velocity = 10 * (lastTouchY - touchY) / deltaTime;
+                velocity = scrollMomentumExtent * (lastTouchY - touchY) / deltaTime;
             }
 
             const deltaY = touchStartY - touchY;
