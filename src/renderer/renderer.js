@@ -7,6 +7,7 @@ export class Renderer {
         this.blocks = blocks;
         this.blockList = blockList;
         this.svg = svg;
+        this.sideBarScrollExtent = 0;
         this.render();
     }
 
@@ -41,10 +42,7 @@ export class Renderer {
             .on("zoom", (event) => {
                 this.grid.attr("transform", event.transform);
                 this.dragboard.attr("transform", event.transform);
-                // Update blockBoard scale when zoom changes
-                if (this.blockBoard) {
-                    this.blockBoard.attr("transform", `scale(${event.transform.k})`);
-                }
+                this.updateBlockBoardTransform();
             });
 
         this.svg.call(zoom).on("wheel", (event) => {
@@ -58,74 +56,6 @@ export class Renderer {
 
     renderDragboard() {
         this.dragboard = this.svg.append("g").attr("id", "dragboard");
-    }
-
-    renderSideBar() {
-        // Clear existing sidebar content
-        d3.select("#sidebar").selectAll("*").remove();
-
-        const width = 300;
-        const height = 812;
-
-        this.sidebar = this.svg.append("g")
-            .attr("id", "sidebar")
-            .attr("transform", `translate(0, 0)`);
-
-        // Add the sidebar background
-        this.sidebar.append("rect")
-            .attr("width", width)
-            .attr("height", height)
-            .attr("fill", "#f5f5f5")
-            .on("mousedown", (event) => {
-                event.stopPropagation();
-            })
-            .on("wheel", (event) => {
-                event.stopPropagation();
-            });
-
-        // Store blockBoard reference and set initial scale to match grid's zoom
-        this.blockBoard = this.sidebar.append("g")
-            .attr("transform", `scale(${d3.zoomTransform(this.grid.node()).k})`);
-
-        let y = 0;
-
-        Object.entries(this.blockList).map(([groupName, blockArray], groupIndex) => (
-            blockArray.forEach((block) => {
-                y += blockListSpacing + this.renderSideBarBlock(block, this.generateRandomId(), y);
-            })
-        ));
-    }
-
-    renderSideBarBlock(block, id, y) {
-        // グループを作る
-        const previewBlockGroup = this.blockBoard
-            .append("g")
-            .attr("transform", `translate(0, ${y})`)
-            .attr("id", id)
-            .datum(block);
-
-        // ダミー用に、idを変えたデータを用意
-        const dummyData = JSON.parse(JSON.stringify(block));
-        dummyData.id = "dummy-" + block.id;
-        dummyData.x = 0;
-        dummyData.y = 0;
-        const dummy = previewBlockGroup.append("g");
-        this.renderBlockImage(dummyData, dummy); // インタラクティブでないダミー(画像だけ)をレンダリング
-
-        // 実際のブロックデータを用意
-        this.renderPreviewBlock(id);
-
-        return this.calculateHeight(block);
-    }
-
-    renderPreviewBlock(id) {
-        const previewBlockGroup = d3.select(`#${id}`);
-        const block = previewBlockGroup.datum();
-        const realData = JSON.parse(JSON.stringify(block));
-        realData.id = this.generateRandomId();
-        realData.x = 0;
-        realData.y = 0;
-        this.renderBlock(realData, previewBlockGroup, true, id);
     }
 
     renderBlocks() {
@@ -171,6 +101,90 @@ export class Renderer {
         d3.selectAll(".dropdown-options").attr("display", "none");
         this.currentlyOpenedDropdownId = null;
         this.currentlyHoveredOptionIndex = null;
+    }
+
+    /*サイドバーの描画***********************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+    renderSideBar() {
+        // Clear existing sidebar content
+        d3.select("#sidebar").selectAll("*").remove();
+
+        const width = 300;
+        const height = 812;
+
+        this.sidebar = this.svg.append("g")
+            .attr("id", "sidebar")
+            .attr("transform", `translate(0, 0)`);
+
+        // Add the sidebar background
+        this.sidebar.append("rect")
+            .attr("width", width)
+            .attr("height", height)
+            .attr("fill", "#f5f5f5")
+            .on("mousedown", (event) => {
+                event.stopPropagation();
+            });
+
+        // Store blockBoard reference and set initial scale to match grid's zoom
+        this.blockBoard = this.sidebar.append("g");
+        this.updateBlockBoardTransform();
+
+        this.sidebar.node().addEventListener(
+            'wheel',
+            (event) => {
+                event.stopPropagation();
+                this.sideBarScrollExtent -= event.deltaY;
+                this.updateBlockBoardTransform();
+                console.log('scroll detected', event.deltaY);
+            },
+            { passive: false, capture: true }
+        );
+
+        let y = 0;
+
+        Object.entries(this.blockList).map(([groupName, blockArray], groupIndex) => (
+            blockArray.forEach((block) => {
+                y += blockListSpacing + this.renderSideBarBlock(block, this.generateRandomId(), y);
+            })
+        ));
+    }
+
+    updateBlockBoardTransform() {
+        if (this.blockBoard) {
+            this.blockBoard.attr("transform", `translate(0, ${this.sideBarScrollExtent}), scale(${d3.zoomTransform(this.grid.node()).k})`);
+        }
+    }
+
+    renderSideBarBlock(block, id, y) {
+        // グループを作る
+        const previewBlockGroup = this.blockBoard
+            .append("g")
+            .attr("transform", `translate(0, ${y})`)
+            .attr("id", id)
+            .datum(block);
+
+        // ダミー用に、idを変えたデータを用意
+        const dummyData = JSON.parse(JSON.stringify(block));
+        dummyData.id = "dummy-" + block.id;
+        dummyData.x = 0;
+        dummyData.y = 0;
+        const dummy = previewBlockGroup.append("g");
+        this.renderBlockImage(dummyData, dummy); // インタラクティブでないダミー(画像だけ)をレンダリング
+
+        // 実際のブロックデータを用意
+        this.renderPreviewBlock(id);
+
+        return this.calculateHeight(block);
+    }
+
+    renderPreviewBlock(id) {
+        const previewBlockGroup = d3.select(`#${id}`);
+        const block = previewBlockGroup.datum();
+        const realData = JSON.parse(JSON.stringify(block));
+        realData.id = this.generateRandomId();
+        realData.x = 0;
+        realData.y = 0;
+        this.renderBlock(realData, previewBlockGroup, true, id);
     }
 
     /*ブロックの画像の描画***********************************************************************************************************************************************************************************************************************************************************************************************************************/
