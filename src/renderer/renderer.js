@@ -197,7 +197,7 @@ export class Renderer {
             
             if (deltaTime > 0) {
                 // Calculate velocity (pixels per millisecond)
-                velocity = (lastTouchY - touchY) / deltaTime;
+                velocity = 10 * (lastTouchY - touchY) / deltaTime;
             }
             
             const deltaY = touchStartY - touchY;
