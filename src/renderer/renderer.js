@@ -124,11 +124,24 @@ export class Renderer {
             .on("mousedown", (event) => {
                 event.stopPropagation();
             });
+        
+        this.renderSideBarContent();
+        this.enableSideBarScroll();
+    }
 
-        // Store blockBoard reference and set initial scale to match grid's zoom
+    renderSideBarContent() {
         this.blockBoard = this.sidebar.append("g");
         this.setBlockBoardTransform();
+        let y = 0;
+        Object.entries(this.blockList).map(([groupName, blockArray], groupIndex) => (
+            blockArray.forEach((block) => {
+                y += blockListSpacing + this.renderSideBarBlock(block, this.generateRandomId(), y);
+            })
+        ));
+    }
 
+    enableSideBarScroll() {
+        // PC
         this.sidebar.node().addEventListener(
             'wheel',
             (event) => {
@@ -140,7 +153,7 @@ export class Renderer {
             { passive: false, capture: true }
         );
 
-        // Add touch event handling for mobile scrolling
+        // Mobile
         let touchStartY = 0;
         let isScrolling = false;
 
@@ -153,11 +166,11 @@ export class Renderer {
 
         this.sidebar.node().addEventListener('touchmove', (event) => {
             if (!isScrolling) return;
-            
+
             const touchY = event.touches[0].clientY;
             const deltaY = touchStartY - touchY;
             touchStartY = touchY;
-            
+
             this.sideBarScrollExtent -= deltaY;
             this.setBlockBoardTransform();
             event.preventDefault();
@@ -169,14 +182,6 @@ export class Renderer {
             event.preventDefault();
             event.stopPropagation();
         }, { passive: false });
-
-        let y = 0;
-
-        Object.entries(this.blockList).map(([groupName, blockArray], groupIndex) => (
-            blockArray.forEach((block) => {
-                y += blockListSpacing + this.renderSideBarBlock(block, this.generateRandomId(), y);
-            })
-        ));
     }
 
     setBlockBoardTransform() {
