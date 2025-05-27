@@ -42,7 +42,7 @@ export class Renderer {
             .on("zoom", (event) => {
                 this.grid.attr("transform", event.transform);
                 this.dragboard.attr("transform", event.transform);
-                this.updateBlockBoardTransform();
+                this.setBlockBoardTransform();
             });
 
         this.svg.call(zoom).on("wheel", (event) => {
@@ -127,14 +127,14 @@ export class Renderer {
 
         // Store blockBoard reference and set initial scale to match grid's zoom
         this.blockBoard = this.sidebar.append("g");
-        this.updateBlockBoardTransform();
+        this.setBlockBoardTransform();
 
         this.sidebar.node().addEventListener(
             'wheel',
             (event) => {
                 event.stopPropagation();
                 this.sideBarScrollExtent -= event.deltaY;
-                this.updateBlockBoardTransform();
+                this.setBlockBoardTransform();
                 console.log('scroll detected', event.deltaY);
             },
             { passive: false, capture: true }
@@ -159,7 +159,7 @@ export class Renderer {
             touchStartY = touchY;
             
             this.sideBarScrollExtent -= deltaY;
-            this.updateBlockBoardTransform();
+            this.setBlockBoardTransform();
             event.preventDefault();
             event.stopPropagation();
         }, { passive: false });
@@ -179,7 +179,7 @@ export class Renderer {
         ));
     }
 
-    updateBlockBoardTransform() {
+    setBlockBoardTransform() {
         if (this.blockBoard) {
             this.blockBoard.attr("transform", `translate(0, ${this.sideBarScrollExtent}), scale(${d3.zoomTransform(this.grid.node()).k})`);
         }
