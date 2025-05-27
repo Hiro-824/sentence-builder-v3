@@ -147,6 +147,7 @@ export class Renderer {
         this.sidebar.node().addEventListener('touchstart', (event) => {
             touchStartY = event.touches[0].clientY;
             isScrolling = true;
+            event.preventDefault();
             event.stopPropagation();
         }, { passive: false });
 
@@ -159,11 +160,14 @@ export class Renderer {
             
             this.sideBarScrollExtent -= deltaY;
             this.updateBlockBoardTransform();
+            event.preventDefault();
             event.stopPropagation();
         }, { passive: false });
 
-        this.sidebar.node().addEventListener('touchend', () => {
+        this.sidebar.node().addEventListener('touchend', (event) => {
             isScrolling = false;
+            event.preventDefault();
+            event.stopPropagation();
         }, { passive: false });
 
         let y = 0;
