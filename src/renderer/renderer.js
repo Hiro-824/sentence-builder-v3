@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing } from "./const.js";
+import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize } from "./const.js";
 import * as d3 from "d3";
 
 export class Renderer {
@@ -124,7 +124,7 @@ export class Renderer {
             .on("mousedown", (event) => {
                 event.stopPropagation();
             });
-        
+
         this.renderSideBarContent();
         this.enableSideBarScroll();
     }
@@ -132,12 +132,24 @@ export class Renderer {
     renderSideBarContent() {
         this.blockBoard = this.sidebar.append("g");
         this.setBlockBoardTransform();
-        let y = 0;
-        Object.entries(this.blockList).map(([groupName, blockArray], groupIndex) => (
+        let y = 40;
+        Object.entries(this.blockList).forEach(([groupName, blockArray], groupIndex) => {
+            this.blockBoard.append("text")
+                .text(groupName)
+                .attr("y", y)
+                .attr('font-size', `${blockListFontSize}pt`)
+                .style('user-select', 'none')
+                .style("font-weight", "bold")
+                .style("margin-bottom", "0.5rem");
+
+            y += 40;
+
             blockArray.forEach((block) => {
                 y += blockListSpacing + this.renderSideBarBlock(block, this.generateRandomId(), y);
-            })
-        ));
+            });
+
+            y += 80;
+        });
     }
 
     enableSideBarScroll() {
@@ -170,10 +182,10 @@ export class Renderer {
 
             this.sideBarScrollExtent -= velocity;
             this.setBlockBoardTransform();
-            
+
             // Apply deceleration
             velocity *= 0.95;
-            
+
             animationFrameId = requestAnimationFrame(applyMomentum);
         };
 
@@ -194,12 +206,12 @@ export class Renderer {
             const touchY = event.touches[0].clientY;
             const currentTime = Date.now();
             const deltaTime = currentTime - lastTouchTime;
-            
+
             if (deltaTime > 0) {
                 // Calculate velocity (pixels per millisecond)
                 velocity = 10 * (lastTouchY - touchY) / deltaTime;
             }
-            
+
             const deltaY = touchStartY - touchY;
             touchStartY = touchY;
             lastTouchY = touchY;

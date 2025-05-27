@@ -11,3 +11,4 @@ export const dropdownHeight = 60;
 export const bubbleColor = "#121212";
 
 export const blockListSpacing = 16;
+export const blockListFontSize = 24;
