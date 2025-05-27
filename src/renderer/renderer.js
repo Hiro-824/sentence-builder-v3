@@ -140,6 +140,32 @@ export class Renderer {
             { passive: false, capture: true }
         );
 
+        // Add touch event handling for mobile scrolling
+        let touchStartY = 0;
+        let isScrolling = false;
+
+        this.sidebar.node().addEventListener('touchstart', (event) => {
+            touchStartY = event.touches[0].clientY;
+            isScrolling = true;
+            event.stopPropagation();
+        }, { passive: false, capture: true });
+
+        this.sidebar.node().addEventListener('touchmove', (event) => {
+            if (!isScrolling) return;
+            
+            const touchY = event.touches[0].clientY;
+            const deltaY = touchStartY - touchY;
+            touchStartY = touchY;
+            
+            this.sideBarScrollExtent -= deltaY;
+            this.updateBlockBoardTransform();
+            event.stopPropagation();
+        }, { passive: false, capture: true });
+
+        this.sidebar.node().addEventListener('touchend', () => {
+            isScrolling = false;
+        }, { passive: false, capture: true });
+
         let y = 0;
 
         Object.entries(this.blockList).map(([groupName, blockArray], groupIndex) => (
