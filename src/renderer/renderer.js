@@ -512,17 +512,11 @@ export class Renderer {
     dragging(event, d, fromSideBar = false) {
         if (!this.dragStarted) {
 
-            const transform = d3.zoomTransform(this.grid.node());
-
-            // サイドバーからブロックをドラッグして取り出した時の問題点として、位置のズレがある。
-            // 位置はd(ブロックデータ)のx, yをもとに決まるが、サイドバー内のものはdが(0, 0)で
-            // gridとの相対位置と一致していない
-            // そこで、d.x、d.yを適切に変更する必要がある
-
             if (fromSideBar) {
                 this.blocks.push(d);
-                d.x = (d.x - transform.x) / transform.k;
-                d.y = (d.y - transform.y) / transform.k;
+                const gridPoint = d3.pointer(event, this.grid.node());
+                d.x = gridPoint[0];
+                d.y = gridPoint[1];
             }
 
             this.moveBlockToTopLevel(d.id);
