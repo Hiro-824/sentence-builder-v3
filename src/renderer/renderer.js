@@ -514,10 +514,9 @@ export class Renderer {
 
             if (fromSideBar) {
                 this.blocks.push(d);
-                const sidebarRect = this.sidebar.node().getBoundingClientRect();
                 const blockRect = d3.select(`#${d.id}`).node().getBoundingClientRect();
-                const sideBarX = blockRect.left - sidebarRect.left;
-                const sideBarY = blockRect.top - sidebarRect.top;
+                const sideBarX = blockRect.left;
+                const sideBarY = blockRect.top;
                 const transform = d3.zoomTransform(this.grid.node());
                 const gridX = (sideBarX - transform.x) / transform.k;
                 const gridY = (sideBarY - transform.y) / transform.k;
