@@ -148,7 +148,7 @@ export class Renderer {
             touchStartY = event.touches[0].clientY;
             isScrolling = true;
             event.stopPropagation();
-        }, { passive: false, capture: true });
+        }, { passive: false });
 
         this.sidebar.node().addEventListener('touchmove', (event) => {
             if (!isScrolling) return;
@@ -160,11 +160,11 @@ export class Renderer {
             this.sideBarScrollExtent -= deltaY;
             this.updateBlockBoardTransform();
             event.stopPropagation();
-        }, { passive: false, capture: true });
+        }, { passive: false });
 
         this.sidebar.node().addEventListener('touchend', () => {
             isScrolling = false;
-        }, { passive: false, capture: true });
+        }, { passive: false });
 
         let y = 0;
 
