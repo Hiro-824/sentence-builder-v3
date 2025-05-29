@@ -110,7 +110,7 @@ export class Renderer {
         // Clear existing sidebar content
         d3.select("#sidebar").selectAll("*").remove();
 
-        const width = 300;
+        const width = this.calculateSideBarWidth();
         const height = this.viewportHeight;
 
         this.sidebar = this.svg.append("g")
@@ -128,6 +128,18 @@ export class Renderer {
 
         this.renderSideBarContent();
         this.enableSideBarScroll();
+    }
+
+    calculateSideBarWidth() {
+        let maxWidth = 0;
+        Object.values(this.blockList).forEach(blockArray => {
+            blockArray.forEach(block => {
+                const width = this.calculateWidth(block);
+                maxWidth = Math.max(maxWidth, width);
+            });
+        });
+        // Add padding for the sidebar
+        return maxWidth + horizontalPadding * 2;
     }
 
     renderSideBarContent() {
@@ -240,8 +252,17 @@ export class Renderer {
         this.sideBarScrollExtent = Math.max(-(this.sideBarContentHeight * zoomExtent - this.viewportHeight), this.sideBarScrollExtent);
         this.sideBarScrollExtent = Math.min(0, this.sideBarScrollExtent);
         if (this.blockBoard) {
+            // Adjust scroll extent based on zoom change
+            if (this.previousZoomExtent) {
+                const zoomRatio = zoomExtent / this.previousZoomExtent;
+                this.sideBarScrollExtent *= zoomRatio;
+            }
             this.blockBoard.attr("transform", `translate(0, ${this.sideBarScrollExtent}), scale(${zoomExtent})`);
         }
+        // Update sidebar width when zooming
+        const newWidth = this.calculateSideBarWidth() * zoomExtent;
+        d3.select("#sidebar rect").attr("width", newWidth);
+        this.previousZoomExtent = zoomExtent;
     }
 
     renderSideBarBlock(block, id, y) {
