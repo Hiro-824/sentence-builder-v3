@@ -506,6 +506,7 @@ export class Renderer {
         if (fromSideBar) {
             this.renderPreviewBlock(sideBarId);
         }
+        this.grabbingCursor(d.id, true);
         this.dragStarted = false;
     }
 
@@ -936,12 +937,17 @@ export class Renderer {
 
     /*ハイライト表示***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
-    grabbingHighlight(blockId, isDragging) {
+    grabbingCursor(blockId, isDragging) {
         const id = `#${blockId}`;
         d3.select(id).raise();
         d3.select(id)
             .classed("grab", !isDragging)
             .classed("grabbing", isDragging);
+    }
+
+    grabbingHighlight(blockId, isDragging) {
+        const id = `#${blockId}`;
+        this.grabbingCursor(blockId, isDragging)
 
         const frameId = `#frame-${blockId}`;
         const block = this.findBlock(blockId).foundBlock;
