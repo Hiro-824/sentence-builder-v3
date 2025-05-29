@@ -237,8 +237,8 @@ export class Renderer {
 
     setBlockBoardTransform() {
         const zoomExtent = d3.zoomTransform(this.grid.node()).k;
-        this.sideBarScrollExtent = Math.min(0, this.sideBarScrollExtent);
         this.sideBarScrollExtent = Math.max(-(this.sideBarContentHeight * zoomExtent - this.viewportHeight), this.sideBarScrollExtent);
+        this.sideBarScrollExtent = Math.min(0, this.sideBarScrollExtent);
         if (this.blockBoard) {
             this.blockBoard.attr("transform", `translate(0, ${this.sideBarScrollExtent}), scale(${zoomExtent})`);
         }
