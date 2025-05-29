@@ -160,7 +160,6 @@ export class Renderer {
                 event.stopPropagation();
                 this.sideBarScrollExtent -= event.deltaY;
                 this.setBlockBoardTransform();
-                console.log('scroll detected', event.deltaY);
             },
             { passive: false, capture: true }
         );
@@ -502,7 +501,6 @@ export class Renderer {
     /*ドラッグ関係の処理***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
     dragStart(event, d, fromSideBar = false, sideBarId = undefined) {
-        console.log(`今ドラッグされているのは、${fromSideBar ? "サイドバーから取り出された" : "普通の"}ブロックです`);
         if (fromSideBar) {
             this.renderPreviewBlock(sideBarId);
         }
