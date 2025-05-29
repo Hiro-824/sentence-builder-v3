@@ -10,6 +10,7 @@ export const labelFontSize = 32;
 export const dropdownHeight = 60;
 export const bubbleColor = "#121212";
 
+export const sidebarPadding = { top: 80, bottom: 80, right: 80, left: 8 };
 export const blockListSpacing = 16;
 export const blockListFontSize = 24;
 export const scrollMomentumExtent = 20;

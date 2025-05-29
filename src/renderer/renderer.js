@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize, scrollMomentumExtent } from "./const.js";
+import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding } from "./const.js";
 import * as d3 from "d3";
 
 export class Renderer {
@@ -140,12 +140,13 @@ export class Renderer {
             });
         });
         // Add padding for the sidebar
-        return maxWidth + horizontalPadding * 2;
+        return maxWidth + sidebarPadding.right + sidebarPadding.left * 2;
     }
 
     renderSideBarContent() {
-        this.blockBoard = this.sidebar.append("g");
-        let y = 40;
+        this.sidebarContent = this.sidebar.append("g").attr("transform",`translate(${sidebarPadding.left}, 0)`)
+        this.blockBoard = this.sidebarContent.append("g");
+        let y = sidebarPadding.top;
         Object.entries(this.blockList).forEach(([groupName, blockArray], groupIndex) => {
             this.blockBoard.append("text")
                 .text(groupName)
@@ -161,7 +162,7 @@ export class Renderer {
                 y += blockListSpacing + this.renderSideBarBlock(block, this.generateRandomId(), y);
             });
 
-            y += 80;
+            y += sidebarPadding.bottom;
         });
         this.sideBarContentHeight = y;
         this.setBlockBoardTransform();
