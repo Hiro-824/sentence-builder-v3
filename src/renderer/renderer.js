@@ -8,6 +8,7 @@ export class Renderer {
         this.blockList = blockList;
         this.svg = svg;
         this.sideBarScrollExtent = 0;
+        this.viewportHeight = window.innerHeight;
         this.render();
     }
 
@@ -26,7 +27,7 @@ export class Renderer {
 
     renderGrid() {
         const width = 1440;
-        const height = 812;
+        const height = this.viewportHeight;
 
         this.grid = this.svg.append("g").attr("id", "grid");
 
@@ -110,7 +111,7 @@ export class Renderer {
         d3.select("#sidebar").selectAll("*").remove();
 
         const width = 300;
-        const height = 812;
+        const height = this.viewportHeight;
 
         this.sidebar = this.svg.append("g")
             .attr("id", "sidebar")
@@ -131,7 +132,6 @@ export class Renderer {
 
     renderSideBarContent() {
         this.blockBoard = this.sidebar.append("g");
-        this.setBlockBoardTransform();
         let y = 40;
         Object.entries(this.blockList).forEach(([groupName, blockArray], groupIndex) => {
             this.blockBoard.append("text")
@@ -150,6 +150,8 @@ export class Renderer {
 
             y += 80;
         });
+        this.sideBarContentHeight = y;
+        this.setBlockBoardTransform();
     }
 
     enableSideBarScroll() {
@@ -234,8 +236,11 @@ export class Renderer {
     }
 
     setBlockBoardTransform() {
+        const zoomExtent = d3.zoomTransform(this.grid.node()).k;
+        this.sideBarScrollExtent = Math.min(0, this.sideBarScrollExtent);
+        this.sideBarScrollExtent = Math.max(-(this.sideBarContentHeight * zoomExtent - this.viewportHeight), this.sideBarScrollExtent);
         if (this.blockBoard) {
-            this.blockBoard.attr("transform", `translate(0, ${this.sideBarScrollExtent}), scale(${d3.zoomTransform(this.grid.node()).k})`);
+            this.blockBoard.attr("transform", `translate(0, ${this.sideBarScrollExtent}), scale(${zoomExtent})`);
         }
     }
 
