@@ -574,6 +574,7 @@ export class Renderer {
     }
 
     dragEnd(event, d) {
+        this.grabbingCursor(d.id, false);
         if (!this.dragStarted) return;
         this.dragStarted = false;
         this.grabbingHighlight(d.id, false);
