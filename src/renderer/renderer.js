@@ -44,7 +44,8 @@ export class Renderer {
                 this.grid.attr("transform", event.transform);
                 this.dragboard.attr("transform", event.transform);
                 this.setBlockBoardTransform();
-            });
+            })
+            .filter(event => !event.type.includes('dblclick'));
 
         this.svg.call(zoom).on("wheel", (event) => {
             event.preventDefault();
