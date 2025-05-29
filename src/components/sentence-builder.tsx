@@ -3,11 +3,12 @@
 import { useEffect, useRef } from "react";
 import * as d3 from "d3";
 import { Renderer } from "@/renderer/renderer";
-import { blockList } from "@/grammar/blocks/blocks";
-
-const blocks = [];
+import { blockList } from "@/data/blocks";
+import { Block } from "@/models/block";
 
 const SentenceBuilder = () => {
+
+    const blocks: Block[] = [];
 
     const svgContainerRef = useRef(null);
 
