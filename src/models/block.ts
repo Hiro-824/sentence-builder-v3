@@ -5,7 +5,6 @@ export interface Block {
     x: number;
     y: number;
     color: string;
-    isTransparent?: boolean;
     isRound?: boolean;
     children: BlockChild[];
     translation?: string;

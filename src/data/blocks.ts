@@ -35,7 +35,6 @@ export const Colorless_Block: Block = {
     x: 24,
     y: 24,
     color: "dodgerBlue",
-    isTransparent: false,
     isRound: true,
     children: [
         {
@@ -54,7 +53,6 @@ export const Green_Block: Block = {
     y: 24,
     color: "dodgerBlue",
     isRound: true,
-    isTransparent: false,
     children: [
         {
             id: "head",
@@ -161,7 +159,6 @@ export const Furiously_Block: Block = {
     y: 24,
     color: "tomato",
     isRound: true,
-    isTransparent: false,
     children: [
         {
             id: "head",
@@ -227,7 +224,6 @@ export const That_Block: Block = {
     y: 0,
     color: "dodgerblue",
     isRound: true,
-    isTransparent: false,
     children: [
         {
             id: "head",
@@ -252,7 +248,6 @@ export const Which_Block: Block = {
     y: 0,
     color: "dodgerblue",
     isRound: true,
-    isTransparent: false,
     children: [
         {
             id: "head",
