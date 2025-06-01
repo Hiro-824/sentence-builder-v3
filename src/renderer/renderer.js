@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { Converter } from "@/grammar/converter";
 import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding } from "./const.js";
 import * as d3 from "d3";
 
@@ -9,6 +10,7 @@ export class Renderer {
         this.svg = svg;
         this.sideBarScrollExtent = 0;
         this.viewportHeight = window.innerHeight;
+        this.converter = new Converter();
         this.render();
     }
 
@@ -683,7 +685,9 @@ export class Renderer {
             const info = bestPlaceholderId.split("-");
             const parentId = info[2];
             const index = info[1];
-            //const expectedBlock = this.predictMoveBlockToParent(blockData.id, parentId, index);
+            const expectedBlock = this.previewInsertion(blockData.id, parentId, index);
+            console.log("BLOCK", expectedBlock);
+            console.log("PHRASE", this.converter.convertBlock(expectedBlock));
             const isValid = true /*this.onValidateInsertion(expectedBlock)*/;
             return isValid ? bestPlaceholderId : null;
         }
@@ -841,13 +845,32 @@ export class Renderer {
         const foundResult = this.findBlock(id);
         if (!foundResult.foundBlock) return;
 
-        const targetParent = this.findBlock(targetParentId).foundBlock;
+        const targetParentResult = this.findBlock(targetParentId);
+        const targetParent = targetParentResult.foundBlock;
         if (!targetParent || !targetParent.children[index] || targetParent.children[index].type !== "placeholder") return;
 
-        // Create a deep copy of the target parent block
-        const expectedParent = JSON.parse(JSON.stringify(targetParent));
-        expectedParent.children[index].content = foundResult.foundBlock;
-
+        // Create a deep copy of the root parent block
+        const expectedParent = JSON.parse(JSON.stringify(targetParentResult.rootParent));
+        
+        // Find the target parent in the copied structure and update its children
+        const updateParentInCopy = (block) => {
+            if (block.id === targetParent.id) {
+                block.children[index].content = foundResult.foundBlock;
+                return true;
+            }
+            if (block.children) {
+                for (const child of block.children) {
+                    if (child.type === "placeholder" || child.type === "attachment") {
+                        if (child.content && updateParentInCopy(child.content)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        };
+        
+        updateParentInCopy(expectedParent);
         return expectedParent;
     }
 
@@ -855,7 +878,8 @@ export class Renderer {
         const foundResult = this.findBlock(id);
         if (!foundResult.foundBlock) return;
 
-        const targetParent = this.findBlock(targetParentId).foundBlock;
+        const targetParentResult = this.findBlock(targetParentId);
+        const targetParent = targetParentResult.foundBlock;
         if (!targetParent) return;
 
         const attachmentChild = {
@@ -865,13 +889,32 @@ export class Renderer {
             content: foundResult.foundBlock
         };
 
-        // Create a deep copy of the target parent block
-        const expectedParent = JSON.parse(JSON.stringify(targetParent));
-        if (side === "left") {
-            expectedParent.children.unshift(attachmentChild);
-        } else {
-            expectedParent.children.push(attachmentChild);
-        }
+        // Create a deep copy of the root parent block
+        const expectedParent = JSON.parse(JSON.stringify(targetParentResult.rootParent));
+        
+        // Find the target parent in the copied structure and update its children
+        const updateParentInCopy = (block) => {
+            if (block.id === targetParent.id) {
+                if (side === "left") {
+                    block.children.unshift(attachmentChild);
+                } else {
+                    block.children.push(attachmentChild);
+                }
+                return true;
+            }
+            if (block.children) {
+                for (const child of block.children) {
+                    if (child.type === "placeholder" || child.type === "attachment") {
+                        if (child.content && updateParentInCopy(child.content)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        };
+        
+        updateParentInCopy(expectedParent);
         return expectedParent;
     }
 

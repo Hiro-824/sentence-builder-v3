@@ -1,4 +1,4 @@
-import { Block } from "@/models/block"
+import { Block } from "@/models/block";
 
 export const Sentence_Block: Block = {
     id: "sentence",
@@ -27,7 +27,8 @@ export const Sentence_Block: Block = {
             hidden: false,
             keepEmpty: false,
         }
-    ]
+    ],
+    lexicons: []
 }
 
 export const Colorless_Block: Block = {
@@ -44,6 +45,12 @@ export const Colorless_Block: Block = {
             hidden: false,
             keepEmpty: false,
         },
+    ],
+    lexicons: [
+        {
+            PHON: "colorless",
+            CAT: []
+        }
     ]
 }
 
@@ -61,6 +68,12 @@ export const Green_Block: Block = {
             hidden: false,
             keepEmpty: false,
         },
+    ],
+    lexicons: [
+        {
+            PHON: "colorless",
+            CAT: []
+        }
     ]
 }
 
@@ -81,6 +94,12 @@ export const Idea_Block: Block = {
             selected: 0,
             hidden: false,
             keepEmpty: false,
+        }
+    ],
+    lexicons: [
+        {
+            PHON: "colorless",
+            CAT: []
         }
     ]
 }
@@ -103,6 +122,24 @@ export const Book_Block: Block = {
             hidden: false,
             keepEmpty: false,
         }
+    ],
+    lexicons: [
+        {
+            PHON: "book",
+            CAT: [
+                {
+                    HEAD: {
+                        type: "noun",
+                        agr: {
+                            type: "3sing"
+                        }
+                    },
+                    SUBJ: [],
+                    COMPS: [],
+                    SEM: undefined
+                }
+            ]
+        }
     ]
 }
 
@@ -122,6 +159,12 @@ export const Sleep_Block: Block = {
             selected: 0,
             hidden: false,
             keepEmpty: false,
+        }
+    ],
+    lexicons: [
+        {
+            PHON: "colorless",
+            CAT: []
         }
     ]
 }
@@ -150,6 +193,44 @@ export const Have_Block: Block = {
             hidden: false,
             keepEmpty: false,
         }
+    ],
+    lexicons: [
+        {
+            PHON: "have",
+            CAT: [
+                {
+                    HEAD: {
+                        type: "verb"
+                    },
+                    SUBJ: [
+                        {
+                            HEAD: {
+                                type: "det",
+                                case: "nom",
+                                agr: {
+                                    type: "non-3sing"
+                                }
+                            },
+                            SUBJ: [],
+                            COMPS: [],
+                            SEM: undefined
+                        }
+                    ],
+                    COMPS: [
+                        {
+                            HEAD: {
+                                "type": "det",
+                                "case": "acc",
+                            },
+                            SUBJ: [],
+                            COMPS: [],
+                            SEM: undefined
+                        }
+                    ],
+                    SEM: undefined
+                }
+            ]
+        }
     ]
 }
 
@@ -166,6 +247,12 @@ export const Furiously_Block: Block = {
             content: "furiously",
             hidden: false,
             keepEmpty: false,
+        }
+    ],
+    lexicons: [
+        {
+            PHON: "colorless",
+            CAT: []
         }
     ]
 }
@@ -191,6 +278,37 @@ export const A_Block: Block = {
             hidden: false,
             keepEmpty: false,
         }
+    ],
+    lexicons: [
+        {
+            PHON: "a",
+            CAT: [
+                {
+                    HEAD: {
+                        type: "det",
+                        agr: {
+                            type: "3sing"
+                        }
+                    },
+                    SUBJ: [],
+                    COMPS: [
+                        {
+                            HEAD: {
+                                type: "noun",
+                                agr: {
+                                    type: "3sing"
+                                },
+                                count: true
+                            },
+                            SUBJ: [],
+                            COMPS: [],
+                            SEM: undefined
+                        }
+                    ],
+                    SEM: undefined
+                }
+            ]
+        }
     ]
 }
 
@@ -214,6 +332,12 @@ export const The_Block: Block = {
             content: null,
             hidden: false,
             keepEmpty: false,
+        }
+    ],
+    lexicons: [
+        {
+            PHON: "colorless",
+            CAT: []
         }
     ]
 }
@@ -239,6 +363,12 @@ export const That_Block: Block = {
             hidden: false,
             keepEmpty: false,
         }
+    ],
+    lexicons: [
+        {
+            PHON: "colorless",
+            CAT: []
+        }
     ]
 }
 
@@ -262,6 +392,12 @@ export const Which_Block: Block = {
             content: null,
             hidden: false,
             keepEmpty: false,
+        }
+    ],
+    lexicons: [
+        {
+            PHON: "colorless",
+            CAT: []
         }
     ]
 }
@@ -295,6 +431,12 @@ export const I_Block: Block = {
             content: null,
             headIndex: [1]
         }
+    ],
+    lexicons: [
+        {
+            PHON: "colorless",
+            CAT: []
+        }
     ]
 }
 
@@ -326,6 +468,12 @@ export const We_Block: Block = {
             type: "placeholder",
             content: null,
             headIndex: [1]
+        }
+    ],
+    lexicons: [
+        {
+            PHON: "colorless",
+            CAT: []
         }
     ]
 }
@@ -359,6 +507,12 @@ export const You_Block: Block = {
             content: null,
             headIndex: [1]
         }
+    ],
+    lexicons: [
+        {
+            PHON: "colorless",
+            CAT: []
+        }
     ]
 }
 
@@ -389,6 +543,12 @@ export const He_Block: Block = {
             type: "placeholder",
             content: null,
             headIndex: [1]
+        }
+    ],
+    lexicons: [
+        {
+            PHON: "colorless",
+            CAT: []
         }
     ]
 }
@@ -421,6 +581,12 @@ export const She_Block: Block = {
             content: null,
             headIndex: [1]
         }
+    ],
+    lexicons: [
+        {
+            PHON: "colorless",
+            CAT: []
+        }
     ]
 }
 
@@ -450,6 +616,12 @@ export const It_Block: Block = {
             type: "placeholder",
             content: null,
             headIndex: [1]
+        }
+    ],
+    lexicons: [
+        {
+            PHON: "colorless",
+            CAT: []
         }
     ]
 }
@@ -482,6 +654,12 @@ export const They_Block: Block = {
             type: "placeholder",
             content: null,
             headIndex: [1]
+        }
+    ],
+    lexicons: [
+        {
+            PHON: "colorless",
+            CAT: []
         }
     ]
 }
@@ -516,6 +694,12 @@ export const Be_Block: Block = {
             type: "placeholder",
             content: null
         }
+    ],
+    lexicons: [
+        {
+            PHON: "colorless",
+            CAT: []
+        }
     ]
 }
 
@@ -544,6 +728,12 @@ export const Read_Block: Block = {
             keepEmpty: false,
             type: "placeholder",
             content: null
+        }
+    ],
+    lexicons: [
+        {
+            PHON: "colorless",
+            CAT: []
         }
     ]
 }
@@ -574,6 +764,12 @@ export const Send_Block: Block = {
             type: "placeholder",
             content: null
         }
+    ],
+    lexicons: [
+        {
+            PHON: "colorless",
+            CAT: []
+        }
     ]
 }
 
@@ -598,6 +794,12 @@ export const To_Block: Block = {
             type: "placeholder",
             content: null
         }
+    ],
+    lexicons: [
+        {
+            PHON: "colorless",
+            CAT: []
+        }
     ]
 }
 
@@ -618,6 +820,12 @@ export const Letter_Block: Block = {
             selected: 0,
             hidden: false,
             keepEmpty: false,
+        }
+    ],
+    lexicons: [
+        {
+            PHON: "colorless",
+            CAT: []
         }
     ]
 }

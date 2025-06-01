@@ -1,9 +1,12 @@
+import { Lexicon } from "./lexicon";
+
 export type blockChildType = "text" | "dropdown" | "placeholder" | "attachment";
 
 export interface Block {
     id: string;
     x: number;
     y: number;
+    lexicons: Lexicon[];
     color: string;
     isRound?: boolean;
     children: BlockChild[];
