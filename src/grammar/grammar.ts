@@ -162,7 +162,7 @@ function parsePhrase(phrase: Phrase): SyntacticCategory[] {
                     // Check if modifier's target is compatible with the head's current features
                     if (unify(modifierCategory.mod.target, currentUnifiedFeatures) !== null) {
                         // If compatible, unify the modifier's *own* features into the head's features
-                        const newHeadFeatures = unify(currentUnifiedFeatures, modifierCategory.features);
+                        const newHeadFeatures = unify(currentUnifiedFeatures, modifierCategory.mod.target);
                         if (newHeadFeatures !== null) {
                             featuresAfterThisModifier = newHeadFeatures; // This category of modifier works
                             thisModifierWordApplied = true;
@@ -191,7 +191,7 @@ function parsePhrase(phrase: Phrase): SyntacticCategory[] {
             for (const modifierCategory of modifierWord.categories) {
                 if (modifierCategory.mod && modifierCategory.mod.side === "right") {
                     if (unify(modifierCategory.mod.target, currentUnifiedFeatures) !== null) {
-                        const newHeadFeatures = unify(currentUnifiedFeatures, modifierCategory.features);
+                        const newHeadFeatures = unify(currentUnifiedFeatures, modifierCategory.mod.target);
                         if (newHeadFeatures !== null) {
                             featuresAfterThisModifier = newHeadFeatures;
                             thisModifierWordApplied = true;
@@ -383,12 +383,42 @@ const books: Word = {
     ]
 };
 
-const sheReadBooks: Phrase = {
+const quickly: Word = {
+    token: "quickly",
+    categories: [
+        {
+            categoryName: "quickly",
+            features: {
+                type: "adv",
+            },
+            mod: {
+                side: "left",
+                target: {
+                    type: "verb"
+                }
+            }
+        },
+        {
+            categoryName: "quickly",
+            features: {
+                type: "adv",
+            },
+            mod: {
+                side: "right",
+                target: {
+                    type: "verb"
+                }
+            }
+        },
+    ]
+};
+
+const readBooksQuicly: Phrase = {
     leftModifiers: [],
     leftArguments: [I],
     head: read,
     rightArguments: [books],
-    rightModifiers: []
+    rightModifiers: [quickly]
 }
 
-console.log(JSON.stringify(parsePhrase(sheReadBooks), null, 2))
+console.log(JSON.stringify(parsePhrase(readBooksQuicly), null, 2))
