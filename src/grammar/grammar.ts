@@ -1,4 +1,19 @@
-// GAP機能(遅れて上位の構成素で埋めるを作りたい)
+// GAPS機能(「遅れて上位の構成素で埋める」を作りたい)
+/*
+方針
+Syntactic Category は gaps?: FeatureStructure[] というプロパティを持つ(こともある)
+Syntactic Category は filler?: FillerSpec というプロパティを持つ(こともある)
+
+argument が Gap (Wordの特殊形、もしくは新しい型を作る)なら、対応する argument の FS と unify することなく適格とされ、
+代わりにその FS が gaps に 追加される(要は unification が延期される)
+
+通常であれば、子の gaps は親の gaps にどんどん受け継がれていく
+もしある語が filler?: FillerSpec を持っているなら、そこでgapsが解消される可能性がある。
+FillerSpecでは、どの argument が filler になるかが指定される(例えば、関係代名詞 that なら、左のargument/modのtarget)
+同時に、どの argument が filled になるか(i.e. gapを持っていなければならないか)も指定される
+fillされるとき、その argument と gap と 実際の単語の FS の３つが unify する必要がある
+他の関係ない gap は親に受け継がれる
+ */
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 // --- Basic Types (Updated) ---
