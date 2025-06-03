@@ -1,3 +1,5 @@
+// GAP機能(遅れて上位の構成素で埋めるを作りたい)
+
 /* eslint-disable @typescript-eslint/no-unused-vars */
 // --- Basic Types (Updated) ---
 
@@ -29,16 +31,26 @@ interface Word {
     categories: SyntacticCategory[];
 }
 
-// New Phrase structure: more explicit about roles.
-interface Phrase {
-    leftModifiers: Word[];
-    leftArguments: Word[];
-    head: Word;
-    rightArguments: Word[];
-    rightModifiers: Word[];
+// --- New Types for Recursive Parsing ---
+type RecursiveParseElement = Word | SubPhraseInput;
+
+interface SubPhraseInput {
+    elements: RecursiveParseElement[];
+    headIndex: number;
+    phraseName?: string; // Optional: for naming the synthetic word from the subphrase
 }
 
-// --- Unification Logic (Mostly Unchanged) ---
+// Type guard to check if an item is a Word
+function isWord(item: RecursiveParseElement): item is Word {
+    return typeof (item as Word).token === 'string' && Array.isArray((item as Word).categories);
+}
+
+// Type guard to check if an item is a SubPhraseInput
+function isSubPhraseInput(item: RecursiveParseElement): item is SubPhraseInput {
+    return typeof (item as SubPhraseInput).headIndex === 'number' && Array.isArray((item as SubPhraseInput).elements);
+}
+
+// --- Unification Logic (Unchanged) ---
 
 /**
  * Unifies two feature structures.
@@ -55,24 +67,18 @@ function unify(fs1: FeatureStructure, fs2: FeatureStructure): FeatureStructure |
         const val2Exists = fs2.hasOwnProperty(key);
 
         if (val1Exists && val2Exists) {
-            // Check if both are non-null, non-array objects for recursive unification
             const v1IsObject = typeof val1 === 'object' && val1 !== null && !Array.isArray(val1);
             const v2IsObject = typeof val2 === 'object' && val2 !== null && !Array.isArray(val2);
 
             if (v1IsObject && v2IsObject) {
                 const subUnification = unify(val1 as FeatureStructure, val2 as FeatureStructure);
-                if (subUnification === null) {
-                    return null; // Conflict in nested structure
-                }
+                if (subUnification === null) return null;
                 result[key] = subUnification;
             } else if (v1IsObject || v2IsObject) {
-                // Type mismatch: one is an object, the other is a primitive/literal. Conflict.
                 return null;
             } else if (val1 !== val2) {
-                // Both are primitives but have different values. Conflict.
                 return null;
             } else {
-                // Both are primitives and have the same value.
                 result[key] = val1;
             }
         } else if (val1Exists) {
@@ -84,37 +90,63 @@ function unify(fs1: FeatureStructure, fs2: FeatureStructure): FeatureStructure |
     return result;
 }
 
-// --- Parser Implementation (Updated) ---
+// --- Parser Implementation (Updated `parsePhrase`) ---
 
 /**
- * Parses a phrase and returns a list of compatible, unified head categories.
- * Arguments are checked first. Then, modifiers are applied sequentially,
- * augmenting the head's features if compatible.
- * Each word provided in a modifier slot MUST successfully modify the head.
+ * Parses a sequence of words with a designated head.
+ * Arguments are checked first based on the head's expectations.
+ * Then, modifiers are applied sequentially.
+ * The number of available words must match the head's argument expectations for a parse to be considered.
+ * Returns a list of compatible, unified head categories.
  */
-function parsePhrase(phrase: Phrase): SyntacticCategory[] {
+function parsePhrase(words: Word[], headIndex: number): SyntacticCategory[] {
+    if (headIndex < 0 || headIndex >= words.length) {
+        // console.error(`Error: Head index ${headIndex} is out of bounds for word list of length ${words.length}.`);
+        return [];
+    }
+    const headWord = words[headIndex];
+    if (!headWord || !headWord.categories || headWord.categories.length === 0) {
+        // console.error(`Error: Head word at index ${headIndex} ("${headWord?.token}") is invalid or has no categories.`);
+        return [];
+    }
+
     const compatibleResults: SyntacticCategory[] = [];
 
-    for (const initialHeadCategory of phrase.head.categories) {
-        // Start with a deep copy of the initial head category's features.
-        // This will be the base for augmentation by modifiers.
+    for (const initialHeadCategory of headWord.categories) {
+        const expectedLeftArgsFSArray = initialHeadCategory.expectsLeft || [];
+        const numExpectedLeft = expectedLeftArgsFSArray.length;
+        const expectedRightArgsFSArray = initialHeadCategory.expectsRight || [];
+        const numExpectedRight = expectedRightArgsFSArray.length;
+
+        // Determine argument and modifier slices based on current head category's expectations
+        // Left side: Modifiers ... Arguments | Head
+        if (headIndex < numExpectedLeft) {
+            continue; // Not enough words to the left for the expected number of left arguments
+        }
+        const leftArgStartIndex = headIndex - numExpectedLeft;
+        const actualLeftArguments = words.slice(leftArgStartIndex, headIndex);
+        const actualLeftModifiers = words.slice(0, leftArgStartIndex);
+
+        // Right side: Head | Arguments ... Modifiers
+        if (headIndex + 1 + numExpectedRight > words.length) {
+            continue; // Not enough words to the right for the expected number of right arguments
+        }
+        const rightArgEndIndex = headIndex + 1 + numExpectedRight;
+        const actualRightArguments = words.slice(headIndex + 1, rightArgEndIndex);
+        const actualRightModifiers = words.slice(rightArgEndIndex, words.length);
+
+        // --- Argument and Modifier Checking (core logic preserved) ---
         let currentUnifiedFeatures = JSON.parse(JSON.stringify(initialHeadCategory.features));
         let argumentsCompatible = true;
 
         // 1. Check Left Arguments
-        const expectedLeftArgs = initialHeadCategory.expectsLeft || [];
-        if (phrase.leftArguments.length !== expectedLeftArgs.length) {
-            continue; // Arity mismatch for left arguments
-        }
-        for (let i = 0; i < expectedLeftArgs.length; i++) {
-            const expectedArgFS = expectedLeftArgs[i];
-            const actualArgWord = phrase.leftArguments[i];
+        for (let i = 0; i < numExpectedLeft; i++) {
+            const expectedArgFS = expectedLeftArgsFSArray[i];
+            const actualArgWord = actualLeftArguments[i];
             let argSatisfied = false;
             for (const actualArgCategory of actualArgWord.categories) {
                 if (unify(actualArgCategory.features, expectedArgFS) !== null) {
                     argSatisfied = true;
-                    // Argument features are NOT merged into the head's features here.
-                    // They just need to satisfy the head's expectation.
                     break;
                 }
             }
@@ -123,16 +155,12 @@ function parsePhrase(phrase: Phrase): SyntacticCategory[] {
                 break;
             }
         }
-        if (!argumentsCompatible) continue; // Try next head category
+        if (!argumentsCompatible) continue;
 
         // 2. Check Right Arguments
-        const expectedRightArgs = initialHeadCategory.expectsRight || [];
-        if (phrase.rightArguments.length !== expectedRightArgs.length) {
-            continue; // Arity mismatch for right arguments
-        }
-        for (let i = 0; i < expectedRightArgs.length; i++) {
-            const expectedArgFS = expectedRightArgs[i];
-            const actualArgWord = phrase.rightArguments[i];
+        for (let i = 0; i < numExpectedRight; i++) {
+            const expectedArgFS = expectedRightArgsFSArray[i];
+            const actualArgWord = actualRightArguments[i];
             let argSatisfied = false;
             for (const actualArgCategory of actualArgWord.categories) {
                 if (unify(actualArgCategory.features, expectedArgFS) !== null) {
@@ -145,49 +173,39 @@ function parsePhrase(phrase: Phrase): SyntacticCategory[] {
                 break;
             }
         }
-        if (!argumentsCompatible) continue; // Try next head category
+        if (!argumentsCompatible) continue;
 
-        // If arguments are compatible, `currentUnifiedFeatures` is still effectively the head's original features.
-        // Now, try to apply modifiers. Each successful modification updates `currentUnifiedFeatures`.
         let modifiersCompatible = true;
 
         // 3. Process Left Modifiers
-        // Modifiers in the list are applied sequentially to the (potentially already modified) head.
-        for (const modifierWord of phrase.leftModifiers) {
+        for (const modifierWord of actualLeftModifiers) {
             let thisModifierWordApplied = false;
-            let featuresAfterThisModifier = currentUnifiedFeatures; // Store best result for this modifier word
-
+            let featuresAfterThisModifier = currentUnifiedFeatures;
             for (const modifierCategory of modifierWord.categories) {
                 if (modifierCategory.mod && modifierCategory.mod.side === "left") {
-                    // Check if modifier's target is compatible with the head's current features
                     if (unify(modifierCategory.mod.target, currentUnifiedFeatures) !== null) {
-                        // If compatible, unify the modifier's *own* features into the head's features
                         const newHeadFeatures = unify(currentUnifiedFeatures, modifierCategory.mod.target);
                         if (newHeadFeatures !== null) {
-                            featuresAfterThisModifier = newHeadFeatures; // This category of modifier works
+                            featuresAfterThisModifier = newHeadFeatures;
                             thisModifierWordApplied = true;
-                            break; // This modifier word found a compatible category
+                            break;
                         }
                     }
                 }
             }
-
             if (thisModifierWordApplied) {
-                currentUnifiedFeatures = featuresAfterThisModifier; // Commit the update
+                currentUnifiedFeatures = featuresAfterThisModifier;
             } else {
-                // This modifier word could not be applied with any of its categories.
-                // As per assumption, all declared modifiers must attach.
                 modifiersCompatible = false;
                 break;
             }
         }
-        if (!modifiersCompatible) continue; // Try next head category
+        if (!modifiersCompatible) continue;
 
-        // 4. Process Right Modifiers (similar logic)
-        for (const modifierWord of phrase.rightModifiers) {
+        // 4. Process Right Modifiers
+        for (const modifierWord of actualRightModifiers) {
             let thisModifierWordApplied = false;
             let featuresAfterThisModifier = currentUnifiedFeatures;
-
             for (const modifierCategory of modifierWord.categories) {
                 if (modifierCategory.mod && modifierCategory.mod.side === "right") {
                     if (unify(modifierCategory.mod.target, currentUnifiedFeatures) !== null) {
@@ -207,179 +225,151 @@ function parsePhrase(phrase: Phrase): SyntacticCategory[] {
                 break;
             }
         }
-        if (!modifiersCompatible) continue; // Try next head category
+        if (!modifiersCompatible) continue;
 
         // If all arguments and modifiers were successfully processed:
         const finalUnifiedCategory: SyntacticCategory = {
             categoryName: initialHeadCategory.categoryName ? `Unified(${initialHeadCategory.categoryName})` : 'UnifiedHead',
             features: currentUnifiedFeatures,
-            // Preserve the head's own modifier specification, if it had one (it's not part of 'features')
             ...(initialHeadCategory.mod && { mod: initialHeadCategory.mod }),
-            // Original 'expectsLeft' and 'expectsRight' are considered 'consumed'
-            // and are not part of the resulting category's explicit expectations.
         };
         compatibleResults.push(finalUnifiedCategory);
     }
-
     return compatibleResults;
 }
 
+// --- Recursive Parsing Function ---
+
+/**
+ * Recursively parses a structure of words and subphrases into a single Word.
+ * Each subphrase (defined by SubPhraseInput) is parsed first, its result
+ * becoming a Word in the context of its parent phrase.
+ * The final result is a single Word representing the parsed input structure.
+ */
+function parseNestedPhrase(input: SubPhraseInput): Word {
+    const { elements, headIndex, phraseName } = input;
+    const flatWordList: Word[] = [];
+
+    for (const item of elements) {
+        if (isWord(item)) {
+            flatWordList.push(item);
+        } else if (isSubPhraseInput(item)) { // It's a SubPhraseInput, parse recursively
+            const subPhraseAsWord = parseNestedPhrase(item);
+            flatWordList.push(subPhraseAsWord);
+        } else {
+            // This case should ideally not be reached if input conforms to RecursiveParseElement
+            console.error("Unexpected item type in parseNestedPhrase elements:", item);
+            // Create a dummy word to signify error, or could throw
+            flatWordList.push({ token: "[[ERROR_UNKNOWN_ITEM]]", categories: [] });
+        }
+    }
+
+    // Now flatWordList contains only Word objects (original or synthetic from subphrases)
+    // Parse this flat list using parsePhrase
+    const parsedCategories = parsePhrase(flatWordList, headIndex);
+
+    let syntheticToken: string;
+    if (phraseName) {
+        syntheticToken = phraseName;
+    } else if (flatWordList.length > 0) {
+        syntheticToken = flatWordList.map(w => w.token).join(" ");
+    } else {
+        syntheticToken = "[[empty_phrase]]"; // Fallback token for empty or unnamable phrases
+    }
+
+    const resultWord: Word = {
+        token: syntheticToken,
+        categories: parsedCategories,
+    };
+    return resultWord;
+}
 
 // --- Example Usage and Verification ---
 
 const I: Word = {
     token: "I",
-    categories: [
-        {
-            categoryName: "I",
-            features: {
-                type: "det",
-                case: "nom",
-                agr: {
-                    type: "non-3sing",
-                    number: "sing",
-                    person: "1",
-                }
-            },
-        }
-    ]
+    categories: [{ categoryName: "I_pron", features: { type: "det", case: "nom", agr: { type: "non-3sing", number: "sing", person: "1" } } }]
 };
 
 const She: Word = {
     token: "she",
+    categories: [{ categoryName: "she_pron", features: { type: "det", case: "nom", agr: { type: "3sing", gender: "fem" } } }]
+};
+
+const read_verb: Word = {
+    token: "read",
     categories: [
         {
-            categoryName: "she",
-            features: {
-                type: "det",
-                case: "nom",
-                agr: {
-                    type: "3sing",
-                    gender: "fem",
-                }
-            },
+            categoryName: "read_past",
+            features: { type: "verb", tense: "past" },
+            expectsLeft: [{ type: "det", case: "nom" }],
+            expectsRight: [{ type: "det", case: "acc" }]
+        },
+        {
+            categoryName: "read_pres_non3sg",
+            features: { type: "verb", tense: "present" },
+            expectsLeft: [{ type: "det", case: "nom", agr: { type: "non-3sing" } }],
+            expectsRight: [{ type: "det", case: "acc" }]
         }
     ]
 };
 
-const read: Word = {
-    token: "read",
-    categories: [
-        {
-            categoryName: "read",
-            features: {
-                type: "verb",
-            },
-            expectsLeft: [
-                {
-                    type: "det",
-                    case: "nom",
-                    agr: {
-                        type: "non-3sing"
-                    }
-                }
-            ],
-            expectsRight: [
-                {
-                    type: "det",
-                    case: "acc",
-                }
-            ]
-        },
-    ]
-};
-
-const reads: Word = {
+const reads_verb: Word = {
     token: "reads",
-    categories: [
-        {
-            categoryName: "reads",
-            features: {
-                type: "verb",
-            },
-            expectsLeft: [
-                {
-                    type: "det",
-                    case: "nom",
-                    agr: {
-                        type: "3sing"
-                    }
-                }
-            ],
-            expectsRight: [
-                {
-                    type: "det",
-                    case: "acc",
-                }
-            ]
-        },
-    ]
+    categories: [{
+        categoryName: "reads_pres_3sg",
+        features: { type: "verb", tense: "present" },
+        expectsLeft: [{ type: "det", case: "nom", agr: { type: "3sing" } }],
+        expectsRight: [{ type: "det" }]
+    }]
 };
 
-const a: Word = {
+const a_determiner: Word = {
     token: "a",
-    categories: [
-        {
-            categoryName: "a",
-            features: {
-                type: "det",
-            },
-            expectsRight: [
-                {
-                    type: "noun",
-                    count: true,
-                    agr: {
-                        type: "3sing",
-                        number: "sing",
-                    }
-                }
-            ]
-        },
-    ]
+    categories: [{
+        categoryName: "a_determiner",
+        features: { type: "det" },
+        expectsRight: [{
+            type: "noun",
+            count: true,
+            agr: {
+                type: "3sing"
+            }
+        }]
+    }]
 };
 
-const book: Word = {
+const book_noun: Word = {
     token: "book",
-    categories: [
-        {
-            categoryName: "book",
-            features: {
-                type: "noun",
-                count: true,
-                agr: {
-                    type: "3sing",
-                    number: "sing",
-                }
-            },
-        },
-    ]
+    categories: [{
+        categoryName: "book_noun",
+        features: {
+            type: "noun",
+            count: true,
+            agr: { type: "3sing", number: "sing" }
+        }
+    }]
 };
 
-const books: Word = {
+const books_noun: Word = {
     token: "books",
     categories: [
         {
-            categoryName: "books",
+            categoryName: "books_noun",
             features: {
                 type: "noun",
                 count: true,
-                agr: {
-                    type: "non-3sing",
-                    number: "pl",
-                }
-            },
+                agr: { type: "non-3sing", number: "pl" }
+            }
         },
         {
-            categoryName: "books",
+            categoryName: "books_det",
             features: {
                 type: "det",
                 count: true,
-                agr: {
-                    type: "non-3sing",
-                    number: "pl",
-                }
-            },
-        },
+                agr: { type: "non-3sing", number: "pl" }
+            }
+        }
     ]
 };
 
@@ -413,12 +403,20 @@ const quickly: Word = {
     ]
 };
 
-const readBooksQuicly: Phrase = {
-    leftModifiers: [],
-    leftArguments: [I],
-    head: read,
-    rightArguments: [books],
-    rightModifiers: [quickly]
+const phrase: SubPhraseInput = {
+    elements: [
+        I,
+        read_verb,
+        {
+            elements: [
+                a_determiner,
+                book_noun
+            ],
+            headIndex: 0
+        },
+        quickly,
+    ],
+    headIndex: 1
 }
 
-console.log(JSON.stringify(parsePhrase(readBooksQuicly), null, 2))
+console.log(JSON.stringify(parseNestedPhrase(phrase), null, 2));
