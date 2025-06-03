@@ -9,6 +9,7 @@ argument が Gap (Wordの特殊形、もしくは新しい型を作る)なら、
 
 通常であれば、子の gaps は親の gaps にどんどん受け継がれていく
 もしある語が filler?: FillerSpec を持っているなら、そこでgapsが解消される可能性がある。
+→ 子の gap を収集するときに、fillerで解消できないか検証する
 FillerSpecでは、どの argument が filler になるかが指定される(例えば、関係代名詞 that なら、左のargument/modのtarget)
 同時に、どの argument が filled になるか(i.e. gapを持っていなければならないか)も指定される
 fillされるとき、その argument と gap と 実際の単語の FS の３つが unify する必要がある
