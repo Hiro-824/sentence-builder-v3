@@ -18,6 +18,7 @@ interface ModifierSpec {
 
 // --- NEW: Specification for an argument ---
 interface ArgumentSpec {
+    tag?: string;
     features: FeatureStructure;
     expectsGap?: ArgumentSpec; // CHANGED: Now an ArgumentSpec
 }
@@ -480,12 +481,12 @@ const that_rel_pron: Word = {
         features: { type: "rel_clause" },
         expectsRight: [{
             features: { type: "verb" },
-            expectsGap: { features: { type: "det" } }
+            expectsGap: { features: { type: "det" }, tag: "A" }
         }],
         mod: {
             side: "right",
             // CHANGED: targets are now a list of ArgumentSpec
-            targets: [{ features: { type: "det" } }]
+            targets: [{ features: { type: "det" }, tag: "A" }]
         }
     }]
 };
