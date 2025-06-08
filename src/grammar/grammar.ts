@@ -1,3 +1,5 @@
+// ArgumentSpecとSyntacticCategoryを統一できないかな？
+
 /* eslint-disable @typescript-eslint/no-unused-vars */
 // --- Basic Types ---
 
