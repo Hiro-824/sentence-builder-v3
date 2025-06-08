@@ -128,7 +128,8 @@ function parsePhrase(words: Word[], headIndex: number): SyntacticCategory[] {
     const compatibleResults: SyntacticCategory[] = [];
 
     for (const initialHeadCategory of headWord.categories) {
-        const missingArgsFound: FeatureStructure[] = [];
+        const directGapsFound: FeatureStructure[] = [];
+        const inheritedGaps: FeatureStructure[] = []; // <-- NEW: To collect gaps from arguments
         const expectedLeftArgsFSArray = initialHeadCategory.expectsLeft || [];
         const numExpectedLeft = expectedLeftArgsFSArray.length;
         const expectedRightArgsFSArray = initialHeadCategory.expectsRight || [];
@@ -153,18 +154,19 @@ function parsePhrase(words: Word[], headIndex: number): SyntacticCategory[] {
             const actualArgWord = actualLeftArguments[i];
 
             if (actualArgWord.token === MissingArgument.token) {
-                missingArgsFound.push(expectedArgFS);
+                directGapsFound.push(expectedArgFS);
                 continue;
             }
 
-            let argSatisfied = false;
-            for (const actualArgCategory of actualArgWord.categories) {
-                if (unify(actualArgCategory.features, expectedArgFS) !== null) {
-                    argSatisfied = true;
-                    break;
+            const satisfyingCategory = actualArgWord.categories.find(
+                cat => unify(cat.features, expectedArgFS) !== null
+            );
+
+            if (satisfyingCategory) {
+                if (satisfyingCategory.gaps) {
+                    inheritedGaps.push(...satisfyingCategory.gaps);
                 }
-            }
-            if (!argSatisfied) {
+            } else {
                 argumentsCompatible = false;
                 break;
             }
@@ -177,18 +179,19 @@ function parsePhrase(words: Word[], headIndex: number): SyntacticCategory[] {
             const actualArgWord = actualRightArguments[i];
 
             if (actualArgWord.token === MissingArgument.token) {
-                missingArgsFound.push(expectedArgFS);
+                directGapsFound.push(expectedArgFS);
                 continue;
             }
 
-            let argSatisfied = false;
-            for (const actualArgCategory of actualArgWord.categories) {
-                if (unify(actualArgCategory.features, expectedArgFS) !== null) {
-                    argSatisfied = true;
-                    break;
+            const satisfyingCategory = actualArgWord.categories.find(
+                cat => unify(cat.features, expectedArgFS) !== null
+            );
+
+            if (satisfyingCategory) {
+                if (satisfyingCategory.gaps) {
+                    inheritedGaps.push(...satisfyingCategory.gaps);
                 }
-            }
-            if (!argSatisfied) {
+            } else {
                 argumentsCompatible = false;
                 break;
             }
@@ -257,11 +260,12 @@ function parsePhrase(words: Word[], headIndex: number): SyntacticCategory[] {
         }
         if (!modifiersCompatible) continue;
 
+        const allGaps = [...directGapsFound, ...inheritedGaps]; // <-- NEW: Combine both gap sources
         const finalUnifiedCategory: SyntacticCategory = {
             categoryName: initialHeadCategory.categoryName ? `Unified(${initialHeadCategory.categoryName})` : 'UnifiedHead',
             features: currentUnifiedFeatures,
             ...(initialHeadCategory.mod && { mod: initialHeadCategory.mod }),
-            ...(missingArgsFound.length > 0 && { gaps: missingArgsFound }),
+            ...(allGaps.length > 0 && { gaps: allGaps }), // <-- NEW: Use combined list
         };
         compatibleResults.push(finalUnifiedCategory);
     }
@@ -309,6 +313,18 @@ const I: Word = {
 const She: Word = {
     token: "she",
     categories: [{ categoryName: "she_pron", features: { type: "det", case: "nom", agr: { type: "3sing", gender: "fem" } } }]
+};
+
+const think_verb: Word = {
+    token: "think",
+    categories: [
+        {
+            categoryName: "think_pres_non3sg",
+            features: { type: "verb", tense: "present" },
+            expectsLeft: [{ type: "det", case: "nom", agr: { type: "non-3sing" } }],
+            expectsRight: [{ type: "verb" }]
+        }
+    ]
 };
 
 const read_verb: Word = {
@@ -466,16 +482,27 @@ const phrase: SubPhraseInput = {
 // --- New example to demonstrate missing arguments ---
 const phraseWithMissingObject: SubPhraseInput = {
     elements: [
-        She,
+        MissingArgument,
         reads_verb,
         MissingArgument // The object is missing
     ],
     headIndex: 1,
-    phraseName: "She reads [something]"
+    phraseName: "[someone] reads [something]"
+}
+
+// --- Another new example to demonstrate missing arguments ---
+const phraseWithMissingObjectInNested: SubPhraseInput = {
+    elements: [
+        I,
+        think_verb,
+        phraseWithMissingObject // The object is missing
+    ],
+    headIndex: 1,
+    phraseName: "I think [someone] reads [something]"
 }
 
 console.log("--- Original Phrase ---");
 console.log(JSON.stringify(parseNestedPhrase(phrase), null, 2));
 
 console.log("\n--- Phrase With Missing Argument ---");
-console.log(JSON.stringify(parseNestedPhrase(phraseWithMissingObject), null, 2));
+console.log(JSON.stringify(parseNestedPhrase(phraseWithMissingObjectInNested), null, 2));
