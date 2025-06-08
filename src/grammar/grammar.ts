@@ -17,7 +17,7 @@ fillされるとき、その argument と gap と 実際の単語の FS の３�
  */
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
-// --- Basic Types (Updated) ---
+// --- Basic Types ---
 
 type FeatureValue = string | number | boolean | FeatureStructure;
 
@@ -26,7 +26,7 @@ interface FeatureStructure {
     [key: string]: FeatureValue;
 }
 
-// Specification for how a category can modify another. (REVISED)
+// Specification for how a category can modify another.
 interface ModifierSpec {
     side: "left" | "right" | "both";
     targets: FeatureStructure[]; // Expected features of the word to be modified (list)
@@ -106,7 +106,7 @@ function unify(fs1: FeatureStructure, fs2: FeatureStructure): FeatureStructure |
     return result;
 }
 
-// --- Parser Implementation (Updated `parsePhrase` for new ModifierSpec) ---
+// --- Parser Implementation ---
 
 function parsePhrase(words: Word[], headIndex: number): SyntacticCategory[] {
     if (headIndex < 0 || headIndex >= words.length) {
@@ -246,7 +246,7 @@ function parsePhrase(words: Word[], headIndex: number): SyntacticCategory[] {
     return compatibleResults;
 }
 
-// --- Recursive Parsing Function (Unchanged) ---
+// --- Recursive Parsing Function ---
 
 function parseNestedPhrase(input: SubPhraseInput): Word {
     const { elements, headIndex, phraseName } = input;
