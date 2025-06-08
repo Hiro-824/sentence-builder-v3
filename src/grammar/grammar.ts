@@ -291,6 +291,7 @@ function parseNestedPhrase(input: SubPhraseInput): Word {
 
 // --- Example Usage and Verification ---
 
+
 const I: Word = {
     token: "I",
     categories: [{ categoryName: "I_pron", features: { type: "det", case: "nom", agr: { type: "non-3sing", number: "sing", person: "1" } } }]
@@ -392,6 +393,42 @@ const books_noun: Word = {
     ]
 };
 
+const man: Word = {
+    token: "man",
+    categories: [
+        {
+            categoryName: "man",
+            features: {
+                type: "noun",
+                count: true,
+                agr: { type: "3sing", number: "sing" }
+            }
+        }
+    ]
+}
+
+const men: Word = {
+    token: "men",
+    categories: [
+        {
+            categoryName: "men_noun",
+            features: {
+                type: "noun",
+                count: true,
+                agr: { type: "non-3sing", number: "pl" }
+            }
+        },
+        {
+            categoryName: "men_det",
+            features: {
+                type: "det",
+                count: true,
+                agr: { type: "non-3sing", number: "pl" }
+            }
+        }
+    ]
+}
+
 const quickly: Word = {
     token: "quickly",
     categories: [
@@ -443,7 +480,6 @@ const that_rel_pron: Word = {
         features: { type: "rel_clause" },
         expectsRight: [{
             features: { type: "verb" },
-            // CHANGED: expectsGap is now an ArgumentSpec
             expectsGap: { features: { type: "det" } }
         }],
         mod: {
@@ -528,6 +564,50 @@ const relativeClause: SubPhraseInput = {
     phraseName: "books that she reads"
 }
 
+const AManThatReadsBooks: SubPhraseInput = {
+    elements: [
+        a_determiner,
+        man,
+        {
+            elements: [
+                that_rel_pron,
+                {
+                    elements: [
+                        MissingArgument,
+                        reads_verb,
+                        books_noun
+                    ],
+                    headIndex: 1
+                }
+            ],
+            headIndex: 0
+        }
+    ],
+    headIndex: 0
+}
+
+const MenThatReadsBooks: SubPhraseInput = {
+    elements: [
+        men,
+        {
+            elements: [
+                that_rel_pron,
+                {
+                    elements: [
+                        MissingArgument,
+                        reads_verb,
+                        books_noun
+                    ],
+                    headIndex: 1
+                }
+            ],
+            headIndex: 0
+        }
+    ],
+    headIndex: 0
+}
+
+
 console.log("--- Original Phrase ---");
 console.log(JSON.stringify(parseNestedPhrase(phrase), null, 2));
 
@@ -536,3 +616,9 @@ console.log(JSON.stringify(parseNestedPhrase(phraseWithMissingObjectInNested), n
 
 console.log("\n--- that I read ---");
 console.log(JSON.stringify(parseNestedPhrase(relativeClause), null, 2));
+
+console.log("\n--- a man that reads books ---");
+console.log(JSON.stringify(parseNestedPhrase(AManThatReadsBooks), null, 2));
+
+console.log("\n--- *men that reads books ---");
+console.log(JSON.stringify(parseNestedPhrase(MenThatReadsBooks), null, 2));
