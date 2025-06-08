@@ -39,6 +39,7 @@ interface SyntacticCategory {
     expectsLeft?: FeatureStructure[];  // Expected features of left arguments/dependents
     expectsRight?: FeatureStructure[]; // Expected features of right arguments/dependents
     mod?: ModifierSpec;          // How this category itself can modify another (uses REVISED ModifierSpec)
+    gaps?: FeatureStructure[]; // Records features of arguments that were missing.
 }
 
 // Represents a word with one or more possible syntactic categories.
@@ -46,6 +47,13 @@ interface Word {
     token: string;
     categories: SyntacticCategory[];
 }
+
+// A special Word object to represent a missing argument in a phrase structure.
+const MissingArgument: Word = {
+    token: "[[MISSING_ARGUMENT]]",
+    categories: []
+};
+
 
 // --- New Types for Recursive Parsing ---
 type RecursiveParseElement = Word | SubPhraseInput;
@@ -120,6 +128,7 @@ function parsePhrase(words: Word[], headIndex: number): SyntacticCategory[] {
     const compatibleResults: SyntacticCategory[] = [];
 
     for (const initialHeadCategory of headWord.categories) {
+        const missingArgsFound: FeatureStructure[] = [];
         const expectedLeftArgsFSArray = initialHeadCategory.expectsLeft || [];
         const numExpectedLeft = expectedLeftArgsFSArray.length;
         const expectedRightArgsFSArray = initialHeadCategory.expectsRight || [];
@@ -142,6 +151,12 @@ function parsePhrase(words: Word[], headIndex: number): SyntacticCategory[] {
         for (let i = 0; i < numExpectedLeft; i++) {
             const expectedArgFS = expectedLeftArgsFSArray[i];
             const actualArgWord = actualLeftArguments[i];
+
+            if (actualArgWord.token === MissingArgument.token) {
+                missingArgsFound.push(expectedArgFS);
+                continue;
+            }
+
             let argSatisfied = false;
             for (const actualArgCategory of actualArgWord.categories) {
                 if (unify(actualArgCategory.features, expectedArgFS) !== null) {
@@ -160,6 +175,12 @@ function parsePhrase(words: Word[], headIndex: number): SyntacticCategory[] {
         for (let i = 0; i < numExpectedRight; i++) {
             const expectedArgFS = expectedRightArgsFSArray[i];
             const actualArgWord = actualRightArguments[i];
+
+            if (actualArgWord.token === MissingArgument.token) {
+                missingArgsFound.push(expectedArgFS);
+                continue;
+            }
+
             let argSatisfied = false;
             for (const actualArgCategory of actualArgWord.categories) {
                 if (unify(actualArgCategory.features, expectedArgFS) !== null) {
@@ -240,6 +261,7 @@ function parsePhrase(words: Word[], headIndex: number): SyntacticCategory[] {
             categoryName: initialHeadCategory.categoryName ? `Unified(${initialHeadCategory.categoryName})` : 'UnifiedHead',
             features: currentUnifiedFeatures,
             ...(initialHeadCategory.mod && { mod: initialHeadCategory.mod }),
+            ...(missingArgsFound.length > 0 && { gaps: missingArgsFound }),
         };
         compatibleResults.push(finalUnifiedCategory);
     }
@@ -441,4 +463,19 @@ const phrase: SubPhraseInput = {
     headIndex: 1
 }
 
+// --- New example to demonstrate missing arguments ---
+const phraseWithMissingObject: SubPhraseInput = {
+    elements: [
+        She,
+        reads_verb,
+        MissingArgument // The object is missing
+    ],
+    headIndex: 1,
+    phraseName: "She reads [something]"
+}
+
+console.log("--- Original Phrase ---");
 console.log(JSON.stringify(parseNestedPhrase(phrase), null, 2));
+
+console.log("\n--- Phrase With Missing Argument ---");
+console.log(JSON.stringify(parseNestedPhrase(phraseWithMissingObject), null, 2));
