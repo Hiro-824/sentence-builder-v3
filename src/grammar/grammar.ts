@@ -119,6 +119,7 @@ function parsePhrase(words: Word[], headIndex: number): SyntacticCategory[] {
     const compatibleResults: SyntacticCategory[] = [];
 
     for (const initialHeadCategory of headWord.categories) {
+        const taggedFeatures = new Map<string, FeatureStructure[]>(); // Collect features by tag for co-indexation.
         const directGapsFound: FeatureStructure[] = [];
         const inheritedGaps: FeatureStructure[] = [];
         const expectedLeftArgsSpecs = initialHeadCategory.expectsLeft || [];
@@ -151,13 +152,27 @@ function parsePhrase(words: Word[], headIndex: number): SyntacticCategory[] {
                 }
 
                 for (const cat of actualArgWord.categories) {
-                    if (unify(cat.features, spec.features) === null) continue;
+                    const unifiedArgFeatures = unify(cat.features, spec.features);
+                    if (unifiedArgFeatures === null) continue;
+
+                    if (spec.tag) {
+                        if (!taggedFeatures.has(spec.tag)) taggedFeatures.set(spec.tag, []);
+                        taggedFeatures.get(spec.tag)!.push(unifiedArgFeatures);
+                    }
 
                     if (spec.expectsGap) {
                         const availableGaps = cat.gaps || [];
                         // CHANGED: Unify against the .features property of the expectsGap ArgumentSpec
                         const resolvedGapIndex = availableGaps.findIndex(g => unify(g, spec.expectsGap!.features) !== null);
                         if (resolvedGapIndex > -1) {
+                            const gapSpec = spec.expectsGap;
+                            if (gapSpec.tag) {
+                                const unifiedGapFeatures = unify(availableGaps[resolvedGapIndex], gapSpec.features);
+                                if (unifiedGapFeatures) {
+                                    if (!taggedFeatures.has(gapSpec.tag)) taggedFeatures.set(gapSpec.tag, []);
+                                    taggedFeatures.get(gapSpec.tag)!.push(unifiedGapFeatures);
+                                }
+                            }
                             const remainingGaps = availableGaps.filter((_, idx) => idx !== resolvedGapIndex);
                             if (remainingGaps.length > 0) inheritedGaps.push(...remainingGaps);
                             argSatisfied = true;
@@ -191,13 +206,15 @@ function parsePhrase(words: Word[], headIndex: number): SyntacticCategory[] {
                     // CHANGED: Iterate over ArgumentSpec, not FeatureStructure
                     for (const targetSpec of modifierCategory.mod.targets) {
                         // CHANGED: Unify against the .features property of the targetSpec
-                        if (unify(targetSpec.features, currentUnifiedFeatures) !== null) {
-                            const unified = unify(currentUnifiedFeatures, targetSpec.features);
-                            if (unified !== null) {
-                                headFeaturesAfterThisModifierWord = unified;
-                                thisModifierWordAppliedSuccessfully = true;
-                                break; // Found working targetSpec
+                        const unified = unify(currentUnifiedFeatures, targetSpec.features);
+                        if (unified !== null) {
+                            if (targetSpec.tag) {
+                                if (!taggedFeatures.has(targetSpec.tag)) taggedFeatures.set(targetSpec.tag, []);
+                                taggedFeatures.get(targetSpec.tag)!.push(unified);
                             }
+                            headFeaturesAfterThisModifierWord = unified;
+                            thisModifierWordAppliedSuccessfully = true;
+                            break; // Found working targetSpec
                         }
                     }
                 }
@@ -218,20 +235,20 @@ function parsePhrase(words: Word[], headIndex: number): SyntacticCategory[] {
             let thisModifierWordAppliedSuccessfully = false;
             let headFeaturesAfterThisModifierWord: FeatureStructure | null = null;
 
-
-
             for (const modifierCategory of modifierWord.categories) {
                 if (modifierCategory.mod && (modifierCategory.mod.side === "right" || modifierCategory.mod.side === "both")) {
                     // CHANGED: Iterate over ArgumentSpec, not FeatureStructure
                     for (const targetSpec of modifierCategory.mod.targets) {
                         // CHANGED: Unify against the .features property of the targetSpec
-                        if (unify(targetSpec.features, currentUnifiedFeatures) !== null) {
-                            const unified = unify(currentUnifiedFeatures, targetSpec.features);
-                            if (unified !== null) {
-                                headFeaturesAfterThisModifierWord = unified;
-                                thisModifierWordAppliedSuccessfully = true;
-                                break; // Found working targetSpec
+                        const unified = unify(currentUnifiedFeatures, targetSpec.features);
+                        if (unified !== null) {
+                            if (targetSpec.tag) {
+                                if (!taggedFeatures.has(targetSpec.tag)) taggedFeatures.set(targetSpec.tag, []);
+                                taggedFeatures.get(targetSpec.tag)!.push(unified);
                             }
+                            headFeaturesAfterThisModifierWord = unified;
+                            thisModifierWordAppliedSuccessfully = true;
+                            break; // Found working targetSpec
                         }
                     }
                 }
@@ -247,11 +264,68 @@ function parsePhrase(words: Word[], headIndex: number): SyntacticCategory[] {
         }
         if (!modifiersCompatible) continue;
 
+        // NEW: Unify all collected features for each tag and check for conflicts.
+        const finalTagFeatures = new Map<string, FeatureStructure>();
+        let tagsAreConsistent = true;
+        for (const [tag, featuresToUnify] of taggedFeatures.entries()) {
+            // Also include the original spec features in the unification
+            const allInitialSpecs = [
+                ...(initialHeadCategory.expectsLeft || []),
+                ...(initialHeadCategory.expectsRight || []),
+                ...(initialHeadCategory.mod?.targets || [])
+            ];
+            let cumulative: FeatureStructure = {};
+            // Start with the initial features from the category definition
+            for(const spec of allInitialSpecs) {
+                if(spec.tag === tag) {
+                     const result = unify(cumulative, spec.features);
+                     if (result === null) { tagsAreConsistent = false; break; }
+                     cumulative = result;
+                }
+                if(spec.expectsGap && spec.expectsGap.tag === tag) {
+                     const result = unify(cumulative, spec.expectsGap.features);
+                     if (result === null) { tagsAreConsistent = false; break; }
+                     cumulative = result;
+                }
+            }
+            if(!tagsAreConsistent) break;
+
+            // Now unify with features gathered during parsing
+            for (const feature of featuresToUnify) {
+                const result = unify(cumulative, feature);
+                if (result === null) {
+                    tagsAreConsistent = false;
+                    break;
+                }
+                cumulative = result;
+            }
+            if (!tagsAreConsistent) break;
+            finalTagFeatures.set(tag, cumulative);
+        }
+
+        if (!tagsAreConsistent) {
+            continue; // This parse fails due to a co-indexation conflict.
+        }
+
+        // NEW: Construct the final mod spec using the unified tag information.
+        let finalModSpec: ModifierSpec | undefined = undefined;
+        if (initialHeadCategory.mod) {
+            const newTargets: ArgumentSpec[] = initialHeadCategory.mod.targets.map(targetSpec => {
+                if (targetSpec.tag && finalTagFeatures.has(targetSpec.tag)) {
+                    // Create a new spec with the fully unified features for this tag
+                    return { ...targetSpec, features: finalTagFeatures.get(targetSpec.tag)! };
+                }
+                return targetSpec;
+            });
+            finalModSpec = { ...initialHeadCategory.mod, targets: newTargets };
+        }
+
+
         const allGaps = [...directGapsFound, ...inheritedGaps];
         const finalUnifiedCategory: SyntacticCategory = {
             categoryName: initialHeadCategory.categoryName ? `Unified(${initialHeadCategory.categoryName})` : 'UnifiedHead',
             features: currentUnifiedFeatures,
-            ...(initialHeadCategory.mod && { mod: initialHeadCategory.mod }),
+            ...(finalModSpec && { mod: finalModSpec }), // Use the newly constructed mod spec
             ...(allGaps.length > 0 && { gaps: allGaps }),
         };
         compatibleResults.push(finalUnifiedCategory);
@@ -608,6 +682,20 @@ const MenThatReadsBooks: SubPhraseInput = {
     headIndex: 0
 }
 
+const thatReadsBooks: SubPhraseInput = {
+    elements: [
+        that_rel_pron,
+        {
+            elements: [
+                MissingArgument,
+                reads_verb,
+                books_noun
+            ],
+            headIndex: 1
+        }
+    ],
+    headIndex: 0
+}
 
 console.log("--- Original Phrase ---");
 console.log(JSON.stringify(parseNestedPhrase(phrase), null, 2));
@@ -623,3 +711,6 @@ console.log(JSON.stringify(parseNestedPhrase(AManThatReadsBooks), null, 2));
 
 console.log("\n--- *men that reads books ---");
 console.log(JSON.stringify(parseNestedPhrase(MenThatReadsBooks), null, 2));
+
+console.log("\n--- that reads books ---");
+console.log(JSON.stringify(parseNestedPhrase(thatReadsBooks), null, 2));
