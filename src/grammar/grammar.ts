@@ -13,13 +13,13 @@ interface FeatureStructure {
 // Specification for how a category can modify another.
 interface ModifierSpec {
     side: "left" | "right" | "both";
-    targets: FeatureStructure[]; // Expected features of the word to be modified (list)
+    targets: ArgumentSpec[]; // CHANGED: Now a list of ArgumentSpec
 }
 
 // --- NEW: Specification for an argument ---
 interface ArgumentSpec {
     features: FeatureStructure;
-    expectsGap?: FeatureStructure; // Optional: Features of a gap this argument must contain
+    expectsGap?: ArgumentSpec; // CHANGED: Now an ArgumentSpec
 }
 
 // Describes a syntactic category, its features, expectations, and modifier capabilities.
@@ -154,7 +154,8 @@ function parsePhrase(words: Word[], headIndex: number): SyntacticCategory[] {
 
                     if (spec.expectsGap) {
                         const availableGaps = cat.gaps || [];
-                        const resolvedGapIndex = availableGaps.findIndex(g => unify(g, spec.expectsGap!) !== null);
+                        // CHANGED: Unify against the .features property of the expectsGap ArgumentSpec
+                        const resolvedGapIndex = availableGaps.findIndex(g => unify(g, spec.expectsGap!.features) !== null);
                         if (resolvedGapIndex > -1) {
                             const remainingGaps = availableGaps.filter((_, idx) => idx !== resolvedGapIndex);
                             if (remainingGaps.length > 0) inheritedGaps.push(...remainingGaps);
@@ -186,13 +187,15 @@ function parsePhrase(words: Word[], headIndex: number): SyntacticCategory[] {
 
             for (const modifierCategory of modifierWord.categories) {
                 if (modifierCategory.mod && (modifierCategory.mod.side === "left" || modifierCategory.mod.side === "both")) {
-                    for (const targetFS of modifierCategory.mod.targets) {
-                        if (unify(targetFS, currentUnifiedFeatures) !== null) {
-                            const unified = unify(currentUnifiedFeatures, targetFS);
+                    // CHANGED: Iterate over ArgumentSpec, not FeatureStructure
+                    for (const targetSpec of modifierCategory.mod.targets) {
+                        // CHANGED: Unify against the .features property of the targetSpec
+                        if (unify(targetSpec.features, currentUnifiedFeatures) !== null) {
+                            const unified = unify(currentUnifiedFeatures, targetSpec.features);
                             if (unified !== null) {
                                 headFeaturesAfterThisModifierWord = unified;
                                 thisModifierWordAppliedSuccessfully = true;
-                                break; // Found working targetFS
+                                break; // Found working targetSpec
                             }
                         }
                     }
@@ -214,15 +217,19 @@ function parsePhrase(words: Word[], headIndex: number): SyntacticCategory[] {
             let thisModifierWordAppliedSuccessfully = false;
             let headFeaturesAfterThisModifierWord: FeatureStructure | null = null;
 
+
+
             for (const modifierCategory of modifierWord.categories) {
                 if (modifierCategory.mod && (modifierCategory.mod.side === "right" || modifierCategory.mod.side === "both")) {
-                    for (const targetFS of modifierCategory.mod.targets) {
-                        if (unify(targetFS, currentUnifiedFeatures) !== null) {
-                            const unified = unify(currentUnifiedFeatures, targetFS);
+                    // CHANGED: Iterate over ArgumentSpec, not FeatureStructure
+                    for (const targetSpec of modifierCategory.mod.targets) {
+                        // CHANGED: Unify against the .features property of the targetSpec
+                        if (unify(targetSpec.features, currentUnifiedFeatures) !== null) {
+                            const unified = unify(currentUnifiedFeatures, targetSpec.features);
                             if (unified !== null) {
                                 headFeaturesAfterThisModifierWord = unified;
                                 thisModifierWordAppliedSuccessfully = true;
-                                break; // Found working targetFS
+                                break; // Found working targetSpec
                             }
                         }
                     }
@@ -395,8 +402,9 @@ const quickly: Word = {
             },
             mod: {
                 side: "both",
+                // CHANGED: targets are now a list of ArgumentSpec
                 targets: [{
-                    type: "verb"
+                    features: { type: "verb" }
                 }]
             }
         },
@@ -417,16 +425,11 @@ const of: Word = {
             }],
             mod: {
                 side: "right",
+                // CHANGED: targets are now a list of ArgumentSpec
                 targets: [
-                    {
-                        type: "verb"
-                    },
-                    {
-                        type: "noun"
-                    },
-                    {
-                        type: "det",
-                    },
+                    { features: { type: "verb" } },
+                    { features: { type: "noun" } },
+                    { features: { type: "det" } },
                 ]
             }
         }
@@ -440,11 +443,13 @@ const that_rel_pron: Word = {
         features: { type: "rel_clause" },
         expectsRight: [{
             features: { type: "verb" },
-            expectsGap: { type: "det" }
+            // CHANGED: expectsGap is now an ArgumentSpec
+            expectsGap: { features: { type: "det" } }
         }],
         mod: {
             side: "right",
-            targets: [{ type: "det" }]
+            // CHANGED: targets are now a list of ArgumentSpec
+            targets: [{ features: { type: "det" } }]
         }
     }]
 };
