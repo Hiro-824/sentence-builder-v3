@@ -519,18 +519,24 @@ const phraseWithMissingObjectInNested: SubPhraseInput = {
 // --- Gap Resolution ---
 const relativeClause: SubPhraseInput = {
     elements: [
-        that_rel_pron,
+        books_noun,
         {
             elements: [
-                MissingArgument,
-                reads_verb,
-                MissingArgument,
+                that_rel_pron,
+                {
+                    elements: [
+                        She,
+                        reads_verb,
+                        MissingArgument
+                    ],
+                    headIndex: 1,
+                }
             ],
-            headIndex: 1,
-        }, // The object is missing
+            headIndex: 0
+        }
     ],
     headIndex: 0,
-    phraseName: "that [someone] reads [something]"
+    phraseName: "books that she reads"
 }
 
 console.log("--- Original Phrase ---");
