@@ -2,11 +2,8 @@
 const ENABLE_LOGGING = true;
 
 function logState(stepName: string, phrase: Phrase | null): void {
-    if (!ENABLE_LOGGING) return;
-
-    console.log(`\n--- ${stepName} ---`);
+    if (!ENABLE_LOGGING) return; console.log(`\n--- ${stepName} ---`);
     if (phrase) {
-        // Pretty-print the JSON object for readability
         console.log(JSON.stringify(phrase, null, 2));
     } else {
         console.log("STATE: null (Parse failed at this step)");
@@ -15,25 +12,21 @@ function logState(stepName: string, phrase: Phrase | null): void {
 
 type FeatureValue = string | number | boolean | FeatureStructure;
 interface FeatureStructure { [key: string]: FeatureValue; }
+
 interface Phrase {
     head: FeatureStructure;
-    mod?: ModifierSpec;
     left?: Phrase[];
     right?: Phrase[];
     gaps?: Phrase[];
     categoryName?: string;
+    leftModTargets?: Phrase[];
+    rightModTargets?: Phrase[];
 }
-interface ModifierSpec { side: "left" | "right" | "both"; targets: Phrase[]; }
+
 interface Word { token: string; categories: Phrase[]; }
 const MissingArgument: Word = { token: "[[MISSING_ARGUMENT]]", categories: [] };
 
-type RecursiveParseElement = Word | SubPhraseInput;
-interface SubPhraseInput { elements: RecursiveParseElement[]; headIndex: number; phraseName?: string; }
-function isWord(item: RecursiveParseElement): item is Word { return typeof (item as Word).token === 'string' && Array.isArray((item as Word).categories); }
-function isSubPhraseInput(item: RecursiveParseElement): item is SubPhraseInput { return typeof (item as SubPhraseInput).headIndex === 'number' && Array.isArray((item as SubPhraseInput).elements); }
-
 function unify(fs1: FeatureStructure, fs2: FeatureStructure): FeatureStructure | null {
-    // ... (implementation is identical)
     const result: FeatureStructure = {};
     const allKeys = new Set([...Object.keys(fs1), ...Object.keys(fs2)]);
     for (const key of allKeys) {
@@ -64,48 +57,28 @@ function unify(fs1: FeatureStructure, fs2: FeatureStructure): FeatureStructure |
     return result;
 }
 
-function deepCopy<T>(obj: T): T {
-    return JSON.parse(JSON.stringify(obj));
-}
+function deepCopy<T>(obj: T): T { return JSON.parse(JSON.stringify(obj)); }
 
 function processArguments(currentPhrase: Phrase, actualArgs: Word[], expectedPhrases: Phrase[]): Phrase | null {
     const newPhrase = deepCopy(currentPhrase);
     if (!newPhrase.gaps) newPhrase.gaps = [];
-
     for (let i = 0; i < expectedPhrases.length; i++) {
         const expected = expectedPhrases[i];
         const actualWord = actualArgs[i];
         let argSatisfied = false;
-
-        if (actualWord.token === MissingArgument.token) {
-            newPhrase.gaps.push(expected);
-            continue;
-        }
-
+        if (actualWord.token === MissingArgument.token) { newPhrase.gaps.push(expected); continue; }
         for (const cat of actualWord.categories) {
             const unifiedHead = unify(cat.head, expected.head);
             if (unifiedHead === null) continue;
-
             const requiredGaps = expected.gaps || [];
             const availableGaps = deepCopy(cat.gaps || []);
             let allRequiredGapsMet = true;
-
             for (const reqGap of requiredGaps) {
-                const foundIndex = availableGaps.findIndex(
-                    availGap => unify(availGap.head, reqGap.head) !== null
-                );
-                if (foundIndex > -1) {
-                    availableGaps.splice(foundIndex, 1);
-                } else {
-                    allRequiredGapsMet = false;
-                    break;
-                }
+                const foundIndex = availableGaps.findIndex(availGap => unify(availGap.head, reqGap.head) !== null);
+                if (foundIndex > -1) { availableGaps.splice(foundIndex, 1); }
+                else { allRequiredGapsMet = false; break; }
             }
-            if (allRequiredGapsMet) {
-                newPhrase.gaps.push(...availableGaps);
-                argSatisfied = true;
-                break;
-            }
+            if (allRequiredGapsMet) { newPhrase.gaps.push(...availableGaps); argSatisfied = true; break; }
         }
         if (!argSatisfied) return null;
     }
@@ -114,11 +87,17 @@ function processArguments(currentPhrase: Phrase, actualArgs: Word[], expectedPhr
 
 function processModifiers(currentPhrase: Phrase, modifierWords: Word[], side: "left" | "right"): Phrase | null {
     const phrase = deepCopy(currentPhrase);
+
     for (const modifierWord of modifierWords) {
         let wordApplied = false;
         for (const modCat of modifierWord.categories) {
-            if (modCat.mod && (modCat.mod.side === side || modCat.mod.side === "both")) {
-                for (const target of modCat.mod.targets) {
+            // Determine which set of targets to use based on the modifier's position.
+            // A modifier on the left targets a head to its right.
+            // A modifier on the right targets a head to its left.
+            const targets = (side === 'left') ? modCat.rightModTargets : modCat.leftModTargets;
+
+            if (targets) {
+                for (const target of targets) {
                     const unifiedHead = unify(phrase.head, target.head);
                     if (unifiedHead !== null) {
                         phrase.head = unifiedHead;
@@ -137,55 +116,44 @@ function processModifiers(currentPhrase: Phrase, modifierWords: Word[], side: "l
 function attemptParseForPhrase(words: Word[], headIndex: number, initialPhrase: Phrase): Phrase | null {
     const expectedLeft = initialPhrase.left || [];
     const expectedRight = initialPhrase.right || [];
-    if (headIndex < expectedLeft.length || headIndex + 1 + expectedRight.length > words.length) {
-        return null;
-    }
-
-    // --- LOGGING: Start of a new parse attempt ---
-    if (ENABLE_LOGGING) {
-        console.log(`\n\n=================================================`);
-        console.log(`NEW ATTEMPT: Head is "${words[headIndex].token}", Category is "${initialPhrase.categoryName || 'Unnamed'}"`);
-        console.log(`=================================================`);
-    }
-
+    if (headIndex < expectedLeft.length || headIndex + 1 + expectedRight.length > words.length) { return null; }
+    if (ENABLE_LOGGING) { console.log(`\n\n=================================================`); console.log(`NEW ATTEMPT: Head is "${words[headIndex].token}", Category is "${initialPhrase.categoryName || 'Unnamed'}"`); console.log(`=================================================`); }
     const leftArgStart = headIndex - expectedLeft.length;
     const rightArgEnd = headIndex + 1 + expectedRight.length;
     const leftArgs = words.slice(leftArgStart, headIndex);
     const rightArgs = words.slice(headIndex + 1, rightArgEnd);
     const leftMods = words.slice(0, leftArgStart);
     const rightMods = words.slice(rightArgEnd);
-
     const initialState: Phrase = { ...deepCopy(initialPhrase), gaps: [] };
     logState("1. Initial State", initialState);
-
-    // --- Pipeline Step 1: Left Arguments ---
     let currentPhrase: Phrase | null = processArguments(initialState, leftArgs, expectedLeft);
     logState("2. After Processing Left Arguments", currentPhrase);
     if (!currentPhrase) return null;
-
-    // --- Pipeline Step 2: Right Arguments ---
     currentPhrase = processArguments(currentPhrase, rightArgs, expectedRight);
     logState("3. After Processing Right Arguments", currentPhrase);
     if (!currentPhrase) return null;
-
-    // --- Pipeline Step 3: Left Modifiers ---
     currentPhrase = processModifiers(currentPhrase, leftMods, "left");
     logState("4. After Processing Left Modifiers", currentPhrase);
     if (!currentPhrase) return null;
-
-    // --- Pipeline Step 4: Right Modifiers ---
     currentPhrase = processModifiers(currentPhrase, rightMods, "right");
     logState("5. After Processing Right Modifiers", currentPhrase);
     if (!currentPhrase) return null;
 
+    // Create the final result, carrying over any modifier capabilities from the original head phrase.
     const finalResult: Phrase = {
         head: currentPhrase.head,
-        mod: currentPhrase.mod,
-        ...(currentPhrase.gaps && currentPhrase.gaps.length > 0 && { gaps: currentPhrase.gaps }),
+        gaps: currentPhrase.gaps,
+        leftModTargets: currentPhrase.leftModTargets,
+        rightModTargets: currentPhrase.rightModTargets,
         categoryName: initialPhrase.categoryName ? `Unified(${initialPhrase.categoryName})` : 'UnifiedPhrase',
     };
-    logState("6. Final Synthesized Result (SUCCESS)", finalResult);
 
+    // Clean up empty/undefined properties for a tidier final object.
+    if (!finalResult.gaps || finalResult.gaps.length === 0) delete finalResult.gaps;
+    if (!finalResult.leftModTargets) delete finalResult.leftModTargets;
+    if (!finalResult.rightModTargets) delete finalResult.rightModTargets;
+
+    logState("6. Final Synthesized Result (SUCCESS)", finalResult);
     return finalResult;
 }
 
@@ -193,18 +161,19 @@ function parsePhrase(words: Word[], headIndex: number): Phrase[] {
     if (headIndex < 0 || headIndex >= words.length) return [];
     const headWord = words[headIndex];
     if (!headWord || !headWord.categories) return [];
-
     const compatibleResults: Phrase[] = [];
     for (const initialPhrase of headWord.categories) {
         const result = attemptParseForPhrase(words, headIndex, initialPhrase);
-        if (result) {
-            compatibleResults.push(result);
-        }
+        if (result) { compatibleResults.push(result); }
     }
     return compatibleResults;
 }
 
-// --- Recursive Parsing Function (Unchanged) ---
+type RecursiveParseElement = Word | SubPhraseInput;
+interface SubPhraseInput { elements: RecursiveParseElement[]; headIndex: number; phraseName?: string; }
+function isWord(item: RecursiveParseElement): item is Word { return typeof (item as Word).token === 'string' && Array.isArray((item as Word).categories); }
+function isSubPhraseInput(item: RecursiveParseElement): item is SubPhraseInput { return typeof (item as SubPhraseInput).headIndex === 'number' && Array.isArray((item as SubPhraseInput).elements); }
+
 function parseNestedPhrase(input: SubPhraseInput): Word {
     const { elements, headIndex, phraseName } = input;
     const flatWordList: Word[] = [];
@@ -235,33 +204,13 @@ const wordI: Word = {
         head: { type: 'det', agr: { type: "non-3sing", num: "sing", per: 1 }, case: "nom" }
     }]
 };
-
 const wordRead: Word = {
     token: "read",
     categories: [
-        {
-            categoryName: "Verb(read)-Present", // Renamed for clarity in logs
-            head: { type: 'verb', tense: "present" },
-            left: [
-                { head: { case: 'nom', agr: { type: "non-3sing" } } }
-            ],
-            right: [
-                { head: { type: 'det' } }
-            ]
-        },
-        {
-            categoryName: "Verb(read)-Past", // Renamed for clarity in logs
-            head: { type: 'verb', tense: "past" },
-            left: [
-                { head: { case: 'nom' } }
-            ],
-            right: [
-                { head: { type: 'det' } }
-            ]
-        }
+        { categoryName: "Verb(read)-Present", head: { type: 'verb', tense: "present" }, left: [ { head: { case: 'nom', agr: { type: "non-3sing" } } } ], right: [ { head: { type: 'det' } } ] },
+        { categoryName: "Verb(read)-Past", head: { type: 'verb', tense: "past" }, left: [ { head: { case: 'nom' } } ], right: [ { head: { type: 'det' } } ] }
     ]
 };
-
 const wordBooks: Word = {
     token: "books",
     categories: [{
@@ -275,25 +224,23 @@ const wordQuickly: Word = {
     categories: [{
         categoryName: "Adverb(quickly)",
         head: { type: 'adverb' },
-        mod: {
-            side: "both",
-            targets: [
-                { head: { type: 'verb' } }
-            ]
-        }
+        // This specifies that "quickly" can modify a verb on its LEFT.
+        leftModTargets: [
+            { head: { type: 'verb' } }
+        ],
+        // This specifies that "quickly" can modify a verb on its RIGHT.
+        rightModTargets: [
+            { head: { type: 'verb' } }
+        ]
     }]
 };
 
-const sentence: Word[] = [wordI, wordRead, MissingArgument, wordQuickly];
+// --- Execution ---
+const sentence: Word[] = [wordI, wordRead, wordBooks, wordQuickly];
 const headIndex = 1;
 
 console.log("--- STARTING PARSE ---");
 const finalParses = parsePhrase(sentence, headIndex);
 console.log("\n--- FINAL PARSE RESULTS ---");
-
-if (finalParses.length > 0) {
-    console.log(`Success! Found ${finalParses.length} valid parse(s).`);
-    console.log(JSON.stringify(finalParses, null, 2));
-} else {
-    console.log("Parse failed. No valid interpretations found.");
-}
+if (finalParses.length > 0) { console.log(`Success! Found ${finalParses.length} valid parse(s).`); console.log(JSON.stringify(finalParses, null, 2)); }
+else { console.log("Parse failed. No valid interpretations found."); }
