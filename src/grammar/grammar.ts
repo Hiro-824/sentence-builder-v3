@@ -1,90 +1,49 @@
-// ArgumentSpecとSyntacticCategoryを統一できないかな？
-
 /* eslint-disable @typescript-eslint/no-unused-vars */
-// --- Basic Types ---
+const ENABLE_LOGGING = true;
+
+function logState(stepName: string, phrase: Phrase | null): void {
+    if (!ENABLE_LOGGING) return;
+
+    console.log(`\n--- ${stepName} ---`);
+    if (phrase) {
+        // Pretty-print the JSON object for readability
+        console.log(JSON.stringify(phrase, null, 2));
+    } else {
+        console.log("STATE: null (Parse failed at this step)");
+    }
+}
 
 type FeatureValue = string | number | boolean | FeatureStructure;
-
-// A hierarchical key-value structure for features.
-interface FeatureStructure {
-    [key: string]: FeatureValue;
+interface FeatureStructure { [key: string]: FeatureValue; }
+interface Phrase {
+    head: FeatureStructure;
+    mod?: ModifierSpec;
+    left?: Phrase[];
+    right?: Phrase[];
+    gaps?: Phrase[];
+    categoryName?: string;
 }
+interface ModifierSpec { side: "left" | "right" | "both"; targets: Phrase[]; }
+interface Word { token: string; categories: Phrase[]; }
+const MissingArgument: Word = { token: "[[MISSING_ARGUMENT]]", categories: [] };
 
-// Specification for how a category can modify another.
-interface ModifierSpec {
-    side: "left" | "right" | "both";
-    targets: ArgumentSpec[]; // CHANGED: Now a list of ArgumentSpec
-}
-
-// --- NEW: Specification for an argument ---
-interface ArgumentSpec {
-    tag?: string;
-    features: FeatureStructure;
-    expectsGap?: ArgumentSpec; // CHANGED: Now an ArgumentSpec
-}
-
-// Describes a syntactic category, its features, expectations, and modifier capabilities.
-interface SyntacticCategory {
-    categoryName?: string; // Optional: for easier debugging/identification
-    features: FeatureStructure;
-    expectsLeft?: ArgumentSpec[];  // Expected features of left arguments/dependents
-    expectsRight?: ArgumentSpec[]; // Expected features of right arguments/dependents
-    mod?: ModifierSpec;          // How this category itself can modify another (uses REVISED ModifierSpec)
-    gaps?: FeatureStructure[]; // Records features of arguments that were missing.
-}
-
-// Represents a word with one or more possible syntactic categories.
-interface Word {
-    token: string;
-    categories: SyntacticCategory[];
-}
-
-// A special Word object to represent a missing argument in a phrase structure.
-const MissingArgument: Word = {
-    token: "[[MISSING_ARGUMENT]]",
-    categories: []
-};
-
-
-// --- New Types for Recursive Parsing ---
 type RecursiveParseElement = Word | SubPhraseInput;
+interface SubPhraseInput { elements: RecursiveParseElement[]; headIndex: number; phraseName?: string; }
+function isWord(item: RecursiveParseElement): item is Word { return typeof (item as Word).token === 'string' && Array.isArray((item as Word).categories); }
+function isSubPhraseInput(item: RecursiveParseElement): item is SubPhraseInput { return typeof (item as SubPhraseInput).headIndex === 'number' && Array.isArray((item as SubPhraseInput).elements); }
 
-interface SubPhraseInput {
-    elements: RecursiveParseElement[];
-    headIndex: number;
-    phraseName?: string; // Optional: for naming the synthetic word from the subphrase
-}
-
-// Type guard to check if an item is a Word
-function isWord(item: RecursiveParseElement): item is Word {
-    return typeof (item as Word).token === 'string' && Array.isArray((item as Word).categories);
-}
-
-// Type guard to check if an item is a SubPhraseInput
-function isSubPhraseInput(item: RecursiveParseElement): item is SubPhraseInput {
-    return typeof (item as SubPhraseInput).headIndex === 'number' && Array.isArray((item as SubPhraseInput).elements);
-}
-
-// --- Unification Logic (Unchanged) ---
-
-/**
- * Unifies two feature structures.
- * Returns a new merged feature structure if they are compatible, or null if they conflict.
- */
 function unify(fs1: FeatureStructure, fs2: FeatureStructure): FeatureStructure | null {
+    // ... (implementation is identical)
     const result: FeatureStructure = {};
     const allKeys = new Set([...Object.keys(fs1), ...Object.keys(fs2)]);
-
     for (const key of allKeys) {
         const val1 = fs1[key];
         const val2 = fs2[key];
         const val1Exists = fs1.hasOwnProperty(key);
         const val2Exists = fs2.hasOwnProperty(key);
-
         if (val1Exists && val2Exists) {
             const v1IsObject = typeof val1 === 'object' && val1 !== null && !Array.isArray(val1);
             const v2IsObject = typeof val2 === 'object' && val2 !== null && !Array.isArray(val2);
-
             if (v1IsObject && v2IsObject) {
                 const subUnification = unify(val1 as FeatureStructure, val2 as FeatureStructure);
                 if (subUnification === null) return null;
@@ -105,253 +64,159 @@ function unify(fs1: FeatureStructure, fs2: FeatureStructure): FeatureStructure |
     return result;
 }
 
-// --- Parser Implementation ---
+function deepCopy<T>(obj: T): T {
+    return JSON.parse(JSON.stringify(obj));
+}
 
-function parsePhrase(words: Word[], headIndex: number): SyntacticCategory[] {
-    if (headIndex < 0 || headIndex >= words.length) {
-        return [];
-    }
-    const headWord = words[headIndex];
-    if (!headWord || !headWord.categories || headWord.categories.length === 0) {
-        return [];
-    }
+function processArguments(currentPhrase: Phrase, actualArgs: Word[], expectedPhrases: Phrase[]): Phrase | null {
+    const newPhrase = deepCopy(currentPhrase);
+    if (!newPhrase.gaps) newPhrase.gaps = [];
 
-    const compatibleResults: SyntacticCategory[] = [];
+    for (let i = 0; i < expectedPhrases.length; i++) {
+        const expected = expectedPhrases[i];
+        const actualWord = actualArgs[i];
+        let argSatisfied = false;
 
-    for (const initialHeadCategory of headWord.categories) {
-        const taggedFeatures = new Map<string, FeatureStructure[]>(); // Collect features by tag for co-indexation.
-        const directGapsFound: FeatureStructure[] = [];
-        const inheritedGaps: FeatureStructure[] = [];
-        const expectedLeftArgsSpecs = initialHeadCategory.expectsLeft || [];
-        const numExpectedLeft = expectedLeftArgsSpecs.length;
-        const expectedRightArgsSpecs = initialHeadCategory.expectsRight || [];
-        const numExpectedRight = expectedRightArgsSpecs.length;
-
-        if (headIndex < numExpectedLeft || headIndex + 1 + numExpectedRight > words.length) {
-            continue; // Not enough words for arguments
-        }
-        const leftArgStartIndex = headIndex - numExpectedLeft;
-        const actualLeftArguments = words.slice(leftArgStartIndex, headIndex);
-        const actualLeftModifiers = words.slice(0, leftArgStartIndex);
-        const rightArgEndIndex = headIndex + 1 + numExpectedRight;
-        const actualRightArguments = words.slice(headIndex + 1, rightArgEndIndex);
-        const actualRightModifiers = words.slice(rightArgEndIndex, words.length);
-
-        let currentUnifiedFeatures = JSON.parse(JSON.stringify(initialHeadCategory.features));
-
-        const checkArguments = (actualArgs: Word[], expectedSpecs: ArgumentSpec[]) => {
-            for (let i = 0; i < expectedSpecs.length; i++) {
-                const spec = expectedSpecs[i];
-                const actualArgWord = actualArgs[i];
-                let argSatisfied = false;
-
-                if (actualArgWord.token === MissingArgument.token) {
-                    if (spec.expectsGap) return false; // Cannot expect a gap from a missing argument
-                    directGapsFound.push(spec.features);
-                    continue;
-                }
-
-                for (const cat of actualArgWord.categories) {
-                    const unifiedArgFeatures = unify(cat.features, spec.features);
-                    if (unifiedArgFeatures === null) continue;
-
-                    if (spec.tag) {
-                        if (!taggedFeatures.has(spec.tag)) taggedFeatures.set(spec.tag, []);
-                        taggedFeatures.get(spec.tag)!.push(unifiedArgFeatures);
-                    }
-
-                    if (spec.expectsGap) {
-                        const availableGaps = cat.gaps || [];
-                        // CHANGED: Unify against the .features property of the expectsGap ArgumentSpec
-                        const resolvedGapIndex = availableGaps.findIndex(g => unify(g, spec.expectsGap!.features) !== null);
-                        if (resolvedGapIndex > -1) {
-                            const gapSpec = spec.expectsGap;
-                            if (gapSpec.tag) {
-                                const unifiedGapFeatures = unify(availableGaps[resolvedGapIndex], gapSpec.features);
-                                if (unifiedGapFeatures) {
-                                    if (!taggedFeatures.has(gapSpec.tag)) taggedFeatures.set(gapSpec.tag, []);
-                                    taggedFeatures.get(gapSpec.tag)!.push(unifiedGapFeatures);
-                                }
-                            }
-                            const remainingGaps = availableGaps.filter((_, idx) => idx !== resolvedGapIndex);
-                            if (remainingGaps.length > 0) inheritedGaps.push(...remainingGaps);
-                            argSatisfied = true;
-                            break;
-                        }
-                    } else {
-                        if (cat.gaps) inheritedGaps.push(...cat.gaps);
-                        argSatisfied = true;
-                        break;
-                    }
-                }
-                if (!argSatisfied) return false;
-            }
-            return true;
-        }
-
-
-        if (!checkArguments(actualLeftArguments, expectedLeftArgsSpecs) || !checkArguments(actualRightArguments, expectedRightArgsSpecs)) {
+        if (actualWord.token === MissingArgument.token) {
+            newPhrase.gaps.push(expected);
             continue;
         }
 
-        let modifiersCompatible = true;
+        for (const cat of actualWord.categories) {
+            const unifiedHead = unify(cat.head, expected.head);
+            if (unifiedHead === null) continue;
 
-        // 3. Process Left Modifiers (Updated for new ModifierSpec)
-        for (const modifierWord of actualLeftModifiers) {
-            let thisModifierWordAppliedSuccessfully = false;
-            let headFeaturesAfterThisModifierWord: FeatureStructure | null = null;
+            const requiredGaps = expected.gaps || [];
+            const availableGaps = deepCopy(cat.gaps || []);
+            let allRequiredGapsMet = true;
 
-            for (const modifierCategory of modifierWord.categories) {
-                if (modifierCategory.mod && (modifierCategory.mod.side === "left" || modifierCategory.mod.side === "both")) {
-                    // CHANGED: Iterate over ArgumentSpec, not FeatureStructure
-                    for (const targetSpec of modifierCategory.mod.targets) {
-                        // CHANGED: Unify against the .features property of the targetSpec
-                        const unified = unify(currentUnifiedFeatures, targetSpec.features);
-                        if (unified !== null) {
-                            if (targetSpec.tag) {
-                                if (!taggedFeatures.has(targetSpec.tag)) taggedFeatures.set(targetSpec.tag, []);
-                                taggedFeatures.get(targetSpec.tag)!.push(unified);
-                            }
-                            headFeaturesAfterThisModifierWord = unified;
-                            thisModifierWordAppliedSuccessfully = true;
-                            break; // Found working targetSpec
-                        }
-                    }
-                }
-                if (thisModifierWordAppliedSuccessfully) break; // Found working modifierCategory
-            }
-
-            if (thisModifierWordAppliedSuccessfully && headFeaturesAfterThisModifierWord) {
-                currentUnifiedFeatures = headFeaturesAfterThisModifierWord;
-            } else {
-                modifiersCompatible = false;
-                break;
-            }
-        }
-        if (!modifiersCompatible) continue;
-
-        // 4. Process Right Modifiers (Updated for new ModifierSpec)
-        for (const modifierWord of actualRightModifiers) {
-            let thisModifierWordAppliedSuccessfully = false;
-            let headFeaturesAfterThisModifierWord: FeatureStructure | null = null;
-
-            for (const modifierCategory of modifierWord.categories) {
-                if (modifierCategory.mod && (modifierCategory.mod.side === "right" || modifierCategory.mod.side === "both")) {
-                    // CHANGED: Iterate over ArgumentSpec, not FeatureStructure
-                    for (const targetSpec of modifierCategory.mod.targets) {
-                        // CHANGED: Unify against the .features property of the targetSpec
-                        const unified = unify(currentUnifiedFeatures, targetSpec.features);
-                        if (unified !== null) {
-                            if (targetSpec.tag) {
-                                if (!taggedFeatures.has(targetSpec.tag)) taggedFeatures.set(targetSpec.tag, []);
-                                taggedFeatures.get(targetSpec.tag)!.push(unified);
-                            }
-                            headFeaturesAfterThisModifierWord = unified;
-                            thisModifierWordAppliedSuccessfully = true;
-                            break; // Found working targetSpec
-                        }
-                    }
-                }
-                if (thisModifierWordAppliedSuccessfully) break; // Found working modifierCategory
-            }
-
-            if (thisModifierWordAppliedSuccessfully && headFeaturesAfterThisModifierWord) {
-                currentUnifiedFeatures = headFeaturesAfterThisModifierWord;
-            } else {
-                modifiersCompatible = false;
-                break;
-            }
-        }
-        if (!modifiersCompatible) continue;
-
-        // NEW: Unify all collected features for each tag and check for conflicts.
-        const finalTagFeatures = new Map<string, FeatureStructure>();
-        let tagsAreConsistent = true;
-        for (const [tag, featuresToUnify] of taggedFeatures.entries()) {
-            // Also include the original spec features in the unification
-            const allInitialSpecs = [
-                ...(initialHeadCategory.expectsLeft || []),
-                ...(initialHeadCategory.expectsRight || []),
-                ...(initialHeadCategory.mod?.targets || [])
-            ];
-            let cumulative: FeatureStructure = {};
-            // Start with the initial features from the category definition
-            for(const spec of allInitialSpecs) {
-                if(spec.tag === tag) {
-                     const result = unify(cumulative, spec.features);
-                     if (result === null) { tagsAreConsistent = false; break; }
-                     cumulative = result;
-                }
-                if(spec.expectsGap && spec.expectsGap.tag === tag) {
-                     const result = unify(cumulative, spec.expectsGap.features);
-                     if (result === null) { tagsAreConsistent = false; break; }
-                     cumulative = result;
-                }
-            }
-            if(!tagsAreConsistent) break;
-
-            // Now unify with features gathered during parsing
-            for (const feature of featuresToUnify) {
-                const result = unify(cumulative, feature);
-                if (result === null) {
-                    tagsAreConsistent = false;
+            for (const reqGap of requiredGaps) {
+                const foundIndex = availableGaps.findIndex(
+                    availGap => unify(availGap.head, reqGap.head) !== null
+                );
+                if (foundIndex > -1) {
+                    availableGaps.splice(foundIndex, 1);
+                } else {
+                    allRequiredGapsMet = false;
                     break;
                 }
-                cumulative = result;
             }
-            if (!tagsAreConsistent) break;
-            finalTagFeatures.set(tag, cumulative);
+            if (allRequiredGapsMet) {
+                newPhrase.gaps.push(...availableGaps);
+                argSatisfied = true;
+                break;
+            }
         }
+        if (!argSatisfied) return null;
+    }
+    return newPhrase;
+}
 
-        if (!tagsAreConsistent) {
-            continue; // This parse fails due to a co-indexation conflict.
-        }
-
-        // NEW: Construct the final mod spec using the unified tag information.
-        let finalModSpec: ModifierSpec | undefined = undefined;
-        if (initialHeadCategory.mod) {
-            const newTargets: ArgumentSpec[] = initialHeadCategory.mod.targets.map(targetSpec => {
-                if (targetSpec.tag && finalTagFeatures.has(targetSpec.tag)) {
-                    // Create a new spec with the fully unified features for this tag
-                    return { ...targetSpec, features: finalTagFeatures.get(targetSpec.tag)! };
+function processModifiers(currentPhrase: Phrase, modifierWords: Word[], side: "left" | "right"): Phrase | null {
+    const phrase = deepCopy(currentPhrase);
+    for (const modifierWord of modifierWords) {
+        let wordApplied = false;
+        for (const modCat of modifierWord.categories) {
+            if (modCat.mod && (modCat.mod.side === side || modCat.mod.side === "both")) {
+                for (const target of modCat.mod.targets) {
+                    const unifiedHead = unify(phrase.head, target.head);
+                    if (unifiedHead !== null) {
+                        phrase.head = unifiedHead;
+                        wordApplied = true;
+                        break;
+                    }
                 }
-                return targetSpec;
-            });
-            finalModSpec = { ...initialHeadCategory.mod, targets: newTargets };
+            }
+            if (wordApplied) break;
         }
+        if (!wordApplied) return null;
+    }
+    return phrase;
+}
 
+function attemptParseForPhrase(words: Word[], headIndex: number, initialPhrase: Phrase): Phrase | null {
+    const expectedLeft = initialPhrase.left || [];
+    const expectedRight = initialPhrase.right || [];
+    if (headIndex < expectedLeft.length || headIndex + 1 + expectedRight.length > words.length) {
+        return null;
+    }
 
-        const allGaps = [...directGapsFound, ...inheritedGaps];
-        const finalUnifiedCategory: SyntacticCategory = {
-            categoryName: initialHeadCategory.categoryName ? `Unified(${initialHeadCategory.categoryName})` : 'UnifiedHead',
-            features: currentUnifiedFeatures,
-            ...(finalModSpec && { mod: finalModSpec }), // Use the newly constructed mod spec
-            ...(allGaps.length > 0 && { gaps: allGaps }),
-        };
-        compatibleResults.push(finalUnifiedCategory);
+    // --- LOGGING: Start of a new parse attempt ---
+    if (ENABLE_LOGGING) {
+        console.log(`\n\n=================================================`);
+        console.log(`NEW ATTEMPT: Head is "${words[headIndex].token}", Category is "${initialPhrase.categoryName || 'Unnamed'}"`);
+        console.log(`=================================================`);
+    }
+
+    const leftArgStart = headIndex - expectedLeft.length;
+    const rightArgEnd = headIndex + 1 + expectedRight.length;
+    const leftArgs = words.slice(leftArgStart, headIndex);
+    const rightArgs = words.slice(headIndex + 1, rightArgEnd);
+    const leftMods = words.slice(0, leftArgStart);
+    const rightMods = words.slice(rightArgEnd);
+
+    const initialState: Phrase = { ...deepCopy(initialPhrase), gaps: [] };
+    logState("1. Initial State", initialState);
+
+    // --- Pipeline Step 1: Left Arguments ---
+    let currentPhrase: Phrase | null = processArguments(initialState, leftArgs, expectedLeft);
+    logState("2. After Processing Left Arguments", currentPhrase);
+    if (!currentPhrase) return null;
+
+    // --- Pipeline Step 2: Right Arguments ---
+    currentPhrase = processArguments(currentPhrase, rightArgs, expectedRight);
+    logState("3. After Processing Right Arguments", currentPhrase);
+    if (!currentPhrase) return null;
+
+    // --- Pipeline Step 3: Left Modifiers ---
+    currentPhrase = processModifiers(currentPhrase, leftMods, "left");
+    logState("4. After Processing Left Modifiers", currentPhrase);
+    if (!currentPhrase) return null;
+
+    // --- Pipeline Step 4: Right Modifiers ---
+    currentPhrase = processModifiers(currentPhrase, rightMods, "right");
+    logState("5. After Processing Right Modifiers", currentPhrase);
+    if (!currentPhrase) return null;
+
+    const finalResult: Phrase = {
+        head: currentPhrase.head,
+        mod: currentPhrase.mod,
+        ...(currentPhrase.gaps && currentPhrase.gaps.length > 0 && { gaps: currentPhrase.gaps }),
+        categoryName: initialPhrase.categoryName ? `Unified(${initialPhrase.categoryName})` : 'UnifiedPhrase',
+    };
+    logState("6. Final Synthesized Result (SUCCESS)", finalResult);
+
+    return finalResult;
+}
+
+function parsePhrase(words: Word[], headIndex: number): Phrase[] {
+    if (headIndex < 0 || headIndex >= words.length) return [];
+    const headWord = words[headIndex];
+    if (!headWord || !headWord.categories) return [];
+
+    const compatibleResults: Phrase[] = [];
+    for (const initialPhrase of headWord.categories) {
+        const result = attemptParseForPhrase(words, headIndex, initialPhrase);
+        if (result) {
+            compatibleResults.push(result);
+        }
     }
     return compatibleResults;
 }
 
-// --- Recursive Parsing Function ---
-
+// --- Recursive Parsing Function (Unchanged) ---
 function parseNestedPhrase(input: SubPhraseInput): Word {
     const { elements, headIndex, phraseName } = input;
     const flatWordList: Word[] = [];
-
     for (const item of elements) {
         if (isWord(item)) {
             flatWordList.push(item);
         } else if (isSubPhraseInput(item)) {
             const subPhraseAsWord = parseNestedPhrase(item);
             flatWordList.push(subPhraseAsWord);
-        } else {
-            console.error("Unexpected item type in parseNestedPhrase elements:", item);
-            flatWordList.push({ token: "[[ERROR_UNKNOWN_ITEM]]", categories: [] });
         }
     }
-
-    const parsedCategories = parsePhrase(flatWordList, headIndex);
+    const parsedPhrases = parsePhrase(flatWordList, headIndex);
     let syntheticToken: string;
     if (phraseName) {
         syntheticToken = phraseName;
@@ -360,357 +225,75 @@ function parseNestedPhrase(input: SubPhraseInput): Word {
     } else {
         syntheticToken = "[[empty_phrase]]";
     }
-
-    return { token: syntheticToken, categories: parsedCategories };
+    return { token: syntheticToken, categories: parsedPhrases };
 }
 
-// --- Example Usage and Verification ---
-
-
-const I: Word = {
+const wordI: Word = {
     token: "I",
-    categories: [{ categoryName: "I_pron", features: { type: "det", case: "nom", agr: { type: "non-3sing", number: "sing", person: "1" } } }]
+    categories: [{
+        categoryName: "Pronoun(I)",
+        head: { type: 'det', agr: { type: "non-3sing", num: "sing", per: 1 }, case: "nom" }
+    }]
 };
 
-const She: Word = {
-    token: "she",
-    categories: [{ categoryName: "she_pron", features: { type: "det", case: "nom", agr: { type: "3sing", gender: "fem" } } }]
-};
-
-const think_verb: Word = {
-    token: "think",
-    categories: [
-        {
-            categoryName: "think_pres_non3sg",
-            features: { type: "verb", tense: "present" },
-            expectsLeft: [{ features: { type: "det", case: "nom", agr: { type: "non-3sing" } } }],
-            expectsRight: [{ features: { type: "verb" } }]
-        }
-    ]
-};
-
-const read_verb: Word = {
+const wordRead: Word = {
     token: "read",
     categories: [
         {
-            categoryName: "read_past",
-            features: { type: "verb", tense: "past" },
-            expectsLeft: [{ features: { type: "det", case: "nom" } }],
-            expectsRight: [{ features: { type: "det", case: "acc" } }]
+            categoryName: "Verb(read)-Present", // Renamed for clarity in logs
+            head: { type: 'verb', tense: "present" },
+            left: [
+                { head: { case: 'nom', agr: { type: "non-3sing" } } }
+            ],
+            right: [
+                { head: { type: 'det' } }
+            ]
         },
         {
-            categoryName: "read_pres_non3sg",
-            features: { type: "verb", tense: "present" },
-            expectsLeft: [{ features: { type: "det", case: "nom", agr: { type: "non-3sing" } } }],
-            expectsRight: [{ features: { type: "det", case: "acc" } }]
+            categoryName: "Verb(read)-Past", // Renamed for clarity in logs
+            head: { type: 'verb', tense: "past" },
+            left: [
+                { head: { case: 'nom' } }
+            ],
+            right: [
+                { head: { type: 'det' } }
+            ]
         }
     ]
 };
 
-const reads_verb: Word = {
-    token: "reads",
-    categories: [{
-        categoryName: "reads_pres_3sg",
-        features: { type: "verb", tense: "present" },
-        expectsLeft: [{ features: { type: "det", case: "nom", agr: { type: "3sing" } } }],
-        expectsRight: [{ features: { type: "det" } }]
-    }]
-};
-
-const a_determiner: Word = {
-    token: "a",
-    categories: [{
-        categoryName: "a_determiner",
-        features: { type: "det" },
-        expectsRight: [{
-            features: {
-                type: "noun",
-                count: true,
-                agr: {
-                    type: "3sing"
-                }
-            }
-        }]
-    }]
-};
-
-const book_noun: Word = {
-    token: "book",
-    categories: [{
-        categoryName: "book_noun",
-        features: {
-            type: "noun",
-            count: true,
-            agr: { type: "3sing", number: "sing" }
-        }
-    }]
-};
-
-const books_noun: Word = {
+const wordBooks: Word = {
     token: "books",
-    categories: [
-        {
-            categoryName: "books_noun",
-            features: {
-                type: "noun",
-                count: true,
-                agr: { type: "non-3sing", number: "pl" }
-            }
-        },
-        {
-            categoryName: "books_det",
-            features: {
-                type: "det",
-                count: true,
-                agr: { type: "non-3sing", number: "pl" }
-            }
-        }
-    ]
-};
-
-const man: Word = {
-    token: "man",
-    categories: [
-        {
-            categoryName: "man",
-            features: {
-                type: "noun",
-                count: true,
-                agr: { type: "3sing", number: "sing" }
-            }
-        }
-    ]
-}
-
-const men: Word = {
-    token: "men",
-    categories: [
-        {
-            categoryName: "men_noun",
-            features: {
-                type: "noun",
-                count: true,
-                agr: { type: "non-3sing", number: "pl" }
-            }
-        },
-        {
-            categoryName: "men_det",
-            features: {
-                type: "det",
-                count: true,
-                agr: { type: "non-3sing", number: "pl" }
-            }
-        }
-    ]
-}
-
-const quickly: Word = {
-    token: "quickly",
-    categories: [
-        {
-            categoryName: "quickly",
-            features: {
-                type: "adv",
-            },
-            mod: {
-                side: "both",
-                // CHANGED: targets are now a list of ArgumentSpec
-                targets: [{
-                    features: { type: "verb" }
-                }]
-            }
-        },
-    ]
-};
-
-const of: Word = {
-    token: "of",
-    categories: [
-        {
-            features: {
-                type: "preposition"
-            },
-            expectsRight: [{
-                features: {
-                    type: "det"
-                }
-            }],
-            mod: {
-                side: "right",
-                // CHANGED: targets are now a list of ArgumentSpec
-                targets: [
-                    { features: { type: "verb" } },
-                    { features: { type: "noun" } },
-                    { features: { type: "det" } },
-                ]
-            }
-        }
-    ]
-}
-
-const that_rel_pron: Word = {
-    token: "that",
     categories: [{
-        categoryName: "that_rel_pron",
-        features: { type: "rel_clause" },
-        expectsRight: [{
-            features: { type: "verb" },
-            expectsGap: { features: { type: "det" }, tag: "A" }
-        }],
+        categoryName: "Noun(books)",
+        head: { type: 'det', agr: { type: "non-3sing", num: "pl" } }
+    }]
+};
+
+const wordQuickly: Word = {
+    token: "quickly",
+    categories: [{
+        categoryName: "Adverb(quickly)",
+        head: { type: 'adverb' },
         mod: {
-            side: "right",
-            // CHANGED: targets are now a list of ArgumentSpec
-            targets: [{ features: { type: "det" }, tag: "A" }]
+            side: "both",
+            targets: [
+                { head: { type: 'verb' } }
+            ]
         }
     }]
 };
 
-const phrase: SubPhraseInput = {
-    elements: [
-        I,
-        read_verb,
-        {
-            elements: [
-                books_noun,
-                {
-                    elements: [
-                        of,
-                        books_noun,
-                    ],
-                    headIndex: 0
-                }
-            ],
-            headIndex: 0
-        },
-        quickly,
-        {
-            elements: [
-                of,
-                books_noun,
-            ],
-            headIndex: 0
-        }
-    ],
-    headIndex: 1
+const sentence: Word[] = [wordI, wordRead, MissingArgument, wordQuickly];
+const headIndex = 1;
+
+console.log("--- STARTING PARSE ---");
+const finalParses = parsePhrase(sentence, headIndex);
+console.log("\n--- FINAL PARSE RESULTS ---");
+
+if (finalParses.length > 0) {
+    console.log(`Success! Found ${finalParses.length} valid parse(s).`);
+    console.log(JSON.stringify(finalParses, null, 2));
+} else {
+    console.log("Parse failed. No valid interpretations found.");
 }
-
-// --- New example to demonstrate missing arguments ---
-const phraseWithMissingObject: SubPhraseInput = {
-    elements: [
-        MissingArgument,
-        reads_verb,
-        MissingArgument // The object is missing
-    ],
-    headIndex: 1,
-    phraseName: "[someone] reads [something]"
-}
-
-// --- Another new example to demonstrate missing arguments ---
-const phraseWithMissingObjectInNested: SubPhraseInput = {
-    elements: [
-        I,
-        think_verb,
-        phraseWithMissingObject // The object is missing
-    ],
-    headIndex: 1,
-    phraseName: "I think [someone] reads [something]"
-}
-
-// --- Gap Resolution ---
-const relativeClause: SubPhraseInput = {
-    elements: [
-        books_noun,
-        {
-            elements: [
-                that_rel_pron,
-                {
-                    elements: [
-                        She,
-                        reads_verb,
-                        MissingArgument
-                    ],
-                    headIndex: 1,
-                }
-            ],
-            headIndex: 0
-        }
-    ],
-    headIndex: 0,
-    phraseName: "books that she reads"
-}
-
-const AManThatReadsBooks: SubPhraseInput = {
-    elements: [
-        a_determiner,
-        man,
-        {
-            elements: [
-                that_rel_pron,
-                {
-                    elements: [
-                        MissingArgument,
-                        reads_verb,
-                        books_noun
-                    ],
-                    headIndex: 1
-                }
-            ],
-            headIndex: 0
-        }
-    ],
-    headIndex: 0
-}
-
-const MenThatReadsBooks: SubPhraseInput = {
-    elements: [
-        men,
-        {
-            elements: [
-                that_rel_pron,
-                {
-                    elements: [
-                        MissingArgument,
-                        reads_verb,
-                        books_noun
-                    ],
-                    headIndex: 1
-                }
-            ],
-            headIndex: 0
-        }
-    ],
-    headIndex: 0
-}
-
-const thatReadsBooks: SubPhraseInput = {
-    elements: [
-        that_rel_pron,
-        {
-            elements: [
-                MissingArgument,
-                reads_verb,
-                books_noun
-            ],
-            headIndex: 1
-        }
-    ],
-    headIndex: 0
-}
-
-console.log("--- Original Phrase ---");
-console.log(JSON.stringify(parseNestedPhrase(phrase), null, 2));
-
-console.log("\n--- Phrase With Missing Argument ---");
-console.log(JSON.stringify(parseNestedPhrase(phraseWithMissingObjectInNested), null, 2));
-
-console.log("\n--- that I read ---");
-console.log(JSON.stringify(parseNestedPhrase(relativeClause), null, 2));
-
-console.log("\n--- a man that reads books ---");
-console.log(JSON.stringify(parseNestedPhrase(AManThatReadsBooks), null, 2));
-
-console.log("\n--- *men that reads books ---");
-console.log(JSON.stringify(parseNestedPhrase(MenThatReadsBooks), null, 2));
-
-console.log("\n--- that reads books ---");
-console.log(JSON.stringify(parseNestedPhrase(thatReadsBooks), null, 2));
