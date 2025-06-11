@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Converter } from "@/grammar/converter";
 import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding } from "./const.js";
 import * as d3 from "d3";
 
@@ -10,7 +9,6 @@ export class Renderer {
         this.svg = svg;
         this.sideBarScrollExtent = 0;
         this.viewportHeight = window.innerHeight;
-        this.converter = new Converter();
         this.render();
     }
 
@@ -687,7 +685,6 @@ export class Renderer {
             const index = info[1];
             const expectedBlock = this.previewInsertion(blockData.id, parentId, index);
             console.log("BLOCK", expectedBlock);
-            console.log("PHRASE", this.converter.convertBlock(expectedBlock));
             const isValid = true /*this.onValidateInsertion(expectedBlock)*/;
             return isValid ? bestPlaceholderId : null;
         }
