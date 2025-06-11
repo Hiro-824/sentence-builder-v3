@@ -319,7 +319,7 @@ export class Renderer {
             .attr("stroke", strokeColor)
             .attr("stroke-width", blockStrokeWidth);
 
-        const children = block.children.filter(c => !c.hidden && !c.keepEmpty);
+        const children = block.children.filter(c => !c.hidden);
         let x = horizontalPadding + (block.isRound ? horizontalPadding : 0);
 
         // 内部の各種アイテムの描画
@@ -463,6 +463,7 @@ export class Renderer {
                 .attr("id", `option-${index}-dropdown-${count}-${block.id}`)
                 .on("mousedown", () => {
                     child.selected = index;
+                    this.setChildVisibility(block.id);
                     this.updateBlock(block.id);
                     this.raiseBlock(block.id);
                 });
@@ -1002,6 +1003,32 @@ export class Renderer {
         this.renderBlocks();
     }
 
+    setChildVisibility(id) {
+        const foundResult = this.findBlock(id);
+        if (!foundResult.foundBlock) return;
+
+        const block = foundResult.foundBlock;
+        
+        // Find the head child (first text or dropdown)
+        const headChild = block.children.find(child => child.id === "head" && (child.type === "text" || child.type === "dropdown"));
+        if (!headChild) return;
+
+        // Determine the selected head index
+        const selectedHeadIndex = headChild.type === "text" ? 0 : headChild.selected;
+
+        // Update visibility for each child
+        block.children.forEach(child => {
+            if (child.headIndex !== undefined) {
+                child.hidden = !child.headIndex.includes(selectedHeadIndex);
+            } else {
+                child.hidden = false;
+            }
+        });
+
+        // Update the block in the UI
+        this.updateBlock(id);
+    }
+
     /*ハイライト表示***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
     grabbingCursor(blockId, isDragging) {
@@ -1088,7 +1115,7 @@ export class Renderer {
     }
 
     calculateWidth(block) {
-        const children = block.children.filter((child) => !child.hidden && !child.keepEmpty);
+        const children = block.children.filter((child) => !child.hidden);
         const paddingNumber = children.length + 1;
         let width = 0;
         if (block.isRound && block.isRound === true) {
@@ -1123,7 +1150,7 @@ export class Renderer {
     }
 
     calculateHeight(block) {
-        const children = block.children.filter((child) => !child.hidden && !child.keepEmpty);
+        const children = block.children.filter((child) => !child.hidden);
         let heights = [placeholderHeight - padding * 2];
         children.forEach(child => {
             if (child.type === "placeholder") {
