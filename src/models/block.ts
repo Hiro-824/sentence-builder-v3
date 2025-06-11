@@ -1,4 +1,4 @@
-import { Lexicon } from "./lexicon";
+import { Word } from "./grammar-entities";
 
 export type blockChildType = "text" | "dropdown" | "placeholder" | "attachment";
 
@@ -6,7 +6,7 @@ export interface Block {
     id: string;
     x: number;
     y: number;
-    lexicons: Lexicon[];
+    words: Word[];
     color: string;
     isRound?: boolean;
     children: BlockChild[];
@@ -16,7 +16,6 @@ export interface Block {
 export interface BlockChild {
     id: string;
     hidden: boolean;
-    keepEmpty: boolean;
     headIndex?: number[];
     type: blockChildType;
     selected?: number;
