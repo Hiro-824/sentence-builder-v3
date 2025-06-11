@@ -1,6 +1,6 @@
 import { Block } from "@/models/block";
 
-export const Sentence_Block: Block = {
+/*export const Sentence_Block: Block = {
     id: "sentence",
     x: 24,
     y: 24,
@@ -828,49 +828,153 @@ export const Letter_Block: Block = {
             CAT: []
         }
     ]
+} */
+
+export const blockI: Block = {
+    id: "",
+    x: 0,
+    y: 0,
+    color: "dodgerblue",
+    isRound: true,
+    words: [
+        {
+            token: "I",
+            categories: [
+                {
+                    head: {
+                        type: "det",
+                        agr: {
+                            type: "non-3sing",
+                            per: 1,
+                            num: "sing",
+                        },
+                        case: "nom"
+                    }
+                }
+            ]
+        },
+        {
+            token: "my",
+            categories: [
+                {
+                    head: {
+                        type: "det",
+                        agr: {
+                            type: "3sing",
+                        },
+                    },
+                    right: [
+                        {
+                            head: {
+                                type: "noun",
+                                agr: {
+                                    type: "3sing",
+                                },
+                            }
+                        }
+                    ]
+                },
+                {
+                    head: {
+                        type: "det",
+                        agr: {
+                            type: "non-3sing",
+                        },
+                    },
+                    right: [
+                        {
+                            head: {
+                                type: "noun",
+                                agr: {
+                                    type: "non-3sing",
+                                    num: "pl",
+                                    per: 3
+                                },
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            token: "me",
+            categories: [
+                {
+                    head: {
+                        type: "det",
+                        agr: {
+                            type: "non-3sing",
+                            num: "sing",
+                            per: 1
+                        },
+                    },
+                }
+            ]
+        },
+        {
+            token: "mine",
+            categories: [
+                {
+                    head: {
+                        type: "det",
+                        agr: {
+                            type: "3sing",
+                        },
+                    },
+                }
+            ]
+        },
+        {
+            token: "myself",
+            categories: [
+                {
+                    head: {
+                        type: "det",
+                        agr: {
+                            type: "non-3sing",
+                            num: "sing",
+                            per: 1
+                        },
+                        refl: true
+                    },
+                }
+            ]
+        }
+    ],
+    children: [
+        {
+            id: "head",
+            hidden: false,
+            type: "dropdown",
+            content: [
+                "I",
+                "my",
+                "me",
+                "mine",
+                "myself",
+            ],
+            selected: 0
+        },
+        {
+            id: "complement",
+            hidden: true,
+            type: "placeholder",
+            content: null,
+            headIndex: [1]
+        }
+    ]
 }
 
 export const blockList = {
-    "文": [
-        Sentence_Block
-    ],
+    "文": [],
     "代名詞": [
-        I_Block,
-        We_Block,
-        You_Block,
-        He_Block,
-        She_Block,
-        It_Block,
-        They_Block,
+        blockI
     ],
-    "冠詞": [
-        A_Block,
-        The_Block
-    ],
-    "名詞": [
-        Letter_Block,
-        Book_Block,
-        Idea_Block,
-    ],
-    "動詞": [
-        Be_Block,
-        Sleep_Block,
-        Have_Block,
-        Read_Block,
-        Send_Block,
-    ],
-    "前置詞": [
-        To_Block,
-    ],
-    "形容詞": [
-        Colorless_Block,
-        Green_Block,
-    ],
-    "副詞": [
-        Furiously_Block,
-    ],
-    "関係詞": [
-        That_Block,
-        Which_Block,
-    ]
+    "冠詞": [],
+    "名詞": [],
+    "動詞": [],
+    "前置詞": [],
+    "形容詞": [],
+    "副詞": [],
+    "関係詞": []
 }
