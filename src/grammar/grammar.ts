@@ -1,21 +1,4 @@
-type FeatureValue = string | number | boolean | FeatureStructure;
-interface FeatureStructure { [key: string]: FeatureValue; }
-
-export interface Phrase {
-    head: FeatureStructure;
-    left?: Phrase[];
-    right?: Phrase[];
-    gaps?: Phrase[];
-    categoryName?: string;
-    leftModTargets?: Phrase[];
-    rightModTargets?: Phrase[];
-}
-
-export interface Word { token: string; categories: Phrase[]; }
-const MissingArgument: Word = { token: "[[MISSING_ARGUMENT]]", categories: [] };
-
-type RecursiveParseElement = Word | SubPhraseInput;
-export interface SubPhraseInput { elements: RecursiveParseElement[]; headIndex: number; phraseName?: string; }
+import { FeatureStructure, MissingArgument, Phrase, RecursiveParseElement, SubPhraseInput, Word } from "@/models/grammar-entities";
 
 export class Grammar {
     enableLogging: boolean;
