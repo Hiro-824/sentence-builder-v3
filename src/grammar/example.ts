@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Grammar, SubPhraseInput, Word } from "./grammar";
+import { Word, SubPhraseInput } from "@/models/grammar-entities";
+import { Grammar } from "./grammar";
 
 const wordI: Word = { token: "I", categories: [{ categoryName: "Pronoun(I)", head: { type: 'det', agr: { type: "non-3sing", num: "sing", per: 1 }, case: "nom" } }] };
 const wordShe: Word = { token: "she", categories: [{ categoryName: "Pronoun(she)", head: { type: 'det', agr: { type: "3sing", gender: "female" }, case: "nom" } }] };
