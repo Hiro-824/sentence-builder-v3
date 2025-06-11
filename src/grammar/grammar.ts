@@ -24,6 +24,17 @@ export class Grammar {
         this.enableLogging = enableLogging;
     }
 
+    logState(stepName: string, phrase: Phrase | null): void {
+        if (!this.enableLogging) return; console.log(`\n--- ${stepName} ---`);
+        if (phrase) {
+            console.log(JSON.stringify(phrase, null, 2));
+        } else {
+            console.log("STATE: null (Parse failed at this step)");
+        }
+    }
+
+    deepCopy<T>(obj: T): T { return JSON.parse(JSON.stringify(obj)); }
+
     unify(fs1: FeatureStructure, fs2: FeatureStructure): FeatureStructure | null {
         const result: FeatureStructure = {};
         const allKeys = new Set([...Object.keys(fs1), ...Object.keys(fs2)]);
@@ -54,17 +65,6 @@ export class Grammar {
         }
         return result;
     }
-
-    logState(stepName: string, phrase: Phrase | null): void {
-        if (!this.enableLogging) return; console.log(`\n--- ${stepName} ---`);
-        if (phrase) {
-            console.log(JSON.stringify(phrase, null, 2));
-        } else {
-            console.log("STATE: null (Parse failed at this step)");
-        }
-    }
-
-    deepCopy<T>(obj: T): T { return JSON.parse(JSON.stringify(obj)); }
 
     processArguments(currentPhrase: Phrase, actualArgs: Word[], expectedPhrases: Phrase[]): Phrase | null {
         const newPhrase = this.deepCopy(currentPhrase);
