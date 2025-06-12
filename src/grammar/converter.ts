@@ -3,6 +3,8 @@ import { MissingArgument, Phrase, RecursiveParseElement, SubPhraseInput } from "
 
 export class Converter {
     convert(block: Block): SubPhraseInput | undefined {
+        if (!block) return;
+
         const headChild = block.children.find(c => c.id === "head");
         if (!headChild) return;
 
@@ -21,29 +23,32 @@ export class Converter {
         const potentialChildren = block.children.filter(c =>
             c.id !== "head" &&
             !c.hidden &&
-            c.content &&
             (c.type === 'placeholder' || c.type === 'attachment')
         );
 
         const potentialLeftChildren = potentialChildren
             .filter(c => block.children.indexOf(c) < headChildIndexInParent)
             .map(c => this.convert(c.content as Block))
-            .filter(c => c !== undefined);
 
         const potentialRightChildren = potentialChildren
             .filter(c => block.children.indexOf(c) > headChildIndexInParent)
             .map(c => this.convert(c.content as Block))
-            .filter(c => c !== undefined);
 
         for (let i = 0; i < Math.min(expectedLeftCount, potentialLeftChildren.length); i++) {
-            leftArgs[i] = potentialLeftChildren.shift()!;
+            const convertedChild = potentialLeftChildren.shift();
+            if (convertedChild !== undefined) {
+                leftArgs[i] = convertedChild;
+            }
         }
         for (let i = 0; i < Math.min(expectedRightCount, potentialRightChildren.length); i++) {
-            rightArgs[i] = potentialRightChildren.shift()!;
+            const convertedChild = potentialRightChildren.shift();
+            if (convertedChild !== undefined) {
+                rightArgs[i] = convertedChild;
+            }
         }
 
-        const leftModifiers = potentialLeftChildren;
-        const rightModifiers = potentialRightChildren;
+        const leftModifiers = potentialLeftChildren.filter(c => c !== undefined);
+        const rightModifiers = potentialRightChildren.filter(c => c !== undefined);
 
         const elements: RecursiveParseElement[] = [
             ...leftModifiers,
@@ -52,7 +57,7 @@ export class Converter {
             ...rightArgs,
             ...rightModifiers
         ];
-        
+
         const finalHeadIndex = leftModifiers.length + leftArgs.length;
 
         return {
