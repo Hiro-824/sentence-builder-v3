@@ -761,8 +761,6 @@ export class Renderer {
                 const parentId = info[1];
 
                 const expectedBlock = this.previewAttachment(blockData.id, parentId, side);
-                /*console.log("BLOCK", expectedBlock);
-                console.log("SUB-PHRASE-INPUT", this.converter.convert(expectedBlock));*/
                 const isValid = this.validate(expectedBlock);
 
                 if (isValid) {
