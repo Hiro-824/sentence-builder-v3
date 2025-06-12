@@ -830,6 +830,68 @@ export const Letter_Block: Block = {
     ]
 } */
 
+export const blockSentence: Block = {
+    id: "",
+    x: 0,
+    y: 0,
+    color: "lightBlue",
+    words: [
+        {
+            token: "",
+            categories: [
+                {
+                    head: {
+                        type: "verb"
+                    },
+                    left: [
+                        {
+                            head: {
+                                type: "det",
+                                case: "nom"
+                            }
+                        }
+                    ],
+                    right: [
+                        {
+                            head: {
+                                type: "verb",
+                            },
+                            gaps: [
+                                {
+                                    head: {
+                                        type: "det",
+                                        case: "nom"
+                                    }
+                                }
+                            ]
+                        } 
+                    ]
+                }
+            ]
+        }
+    ],
+    children: [
+        {
+            id: "specifier",
+            type: "placeholder",
+            content: null,
+            hidden: false,
+        },
+        {
+            id: "head",
+            type: "text",
+            content: "",
+            hidden: false,
+        },
+        {
+            id: "complement",
+            type: "placeholder",
+            content: null,
+            hidden: false,
+        }
+    ],
+}
+
 export const blockI: Block = {
     id: "",
     x: 0,
@@ -907,6 +969,7 @@ export const blockI: Block = {
                             num: "sing",
                             per: 1
                         },
+                        case: "acc"
                     },
                 }
             ]
@@ -965,14 +1028,168 @@ export const blockI: Block = {
     ]
 }
 
+export const blockRead: Block = {
+    id: "",
+    x: 0,
+    y: 0,
+    words: [
+        {
+            token: "read(base)",
+            categories: [
+                {
+                    head: {
+                        type: "verb"
+                    },
+                    left: [
+                        {
+                            head: {
+                                type: "det",
+                                agr: {
+                                    type: "non-3sing",
+                                }
+                            },
+                        }
+                    ],
+                    right: [
+                        {
+                            head: {
+                                type: "det",
+                            },
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            token: "reads",
+            categories: [
+                {
+                    head: {
+                        type: "verb"
+                    },
+                    left: [
+                        {
+                            head: {
+                                type: "det",
+                                agr: {
+                                    type: "3sing",
+                                },
+                                case: "nom"
+                            },
+                        }
+                    ],
+                    right: [
+                        {
+                            head: {
+                                type: "det",
+                            },
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    color: "tomato",
+    children: [
+        {
+            id: "head",
+            type: "dropdown",
+            content: [
+                "read",
+                "reads",
+                "read",
+                "reading",
+                "read",
+            ],
+            selected: 0,
+            hidden: false,
+        },
+        {
+            id: "complement",
+            type: "placeholder",
+            content: null,
+            hidden: false,
+            headIndex: [
+                0, 1, 2, 3
+            ]
+        }
+    ]
+}
+
+export const blockBook: Block = {
+    id: "",
+    x: 0,
+    y: 0,
+    words: [
+        {
+            token: "",
+            categories: [
+                {
+                    head: {
+                        type: "noun",
+                        agr: {
+                            type: "3sing"
+                        },
+                    }
+                }
+            ]
+        },
+        {
+            token: "",
+            categories: [
+                {
+                    head: {
+                        type: "noun",
+                        agr: {
+                            type: "non-3sing",
+                            num: "pl",
+                            per: 3
+                        },
+                    }
+                },
+                {
+                    head: {
+                        type: "det",
+                        agr: {
+                            type: "non-3sing",
+                            num: "pl",
+                            per: 3
+                        },
+                    }
+                }
+            ]
+        }
+    ],
+    color: "dodgerblue",
+    isRound: true,
+    children: [
+        {
+            id: "head",
+            hidden: false,
+            type: "dropdown",
+            content: [
+                "book",
+                "books"
+            ],
+            selected: 0
+        }
+    ]
+}
+
 export const blockList = {
-    "文": [],
+    "文": [
+        blockSentence,
+    ],
     "代名詞": [
-        blockI
+        blockI,
     ],
     "冠詞": [],
-    "名詞": [],
-    "動詞": [],
+    "名詞": [
+        blockBook
+    ],
+    "動詞": [
+        blockRead,
+    ],
     "前置詞": [],
     "形容詞": [],
     "副詞": [],

@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { Converter } from "@/grammar/converter";
+import { Grammar } from "@/grammar/grammar";
 import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding } from "./const.js";
 import * as d3 from "d3";
 
@@ -9,6 +11,8 @@ export class Renderer {
         this.svg = svg;
         this.sideBarScrollExtent = 0;
         this.viewportHeight = window.innerHeight;
+        this.converter = new Converter;
+        this.grammar = new Grammar;
         this.render();
     }
 
@@ -144,7 +148,7 @@ export class Renderer {
     }
 
     renderSideBarContent() {
-        this.sidebarContent = this.sidebar.append("g").attr("transform",`translate(${sidebarPadding.left}, 0)`)
+        this.sidebarContent = this.sidebar.append("g").attr("transform", `translate(${sidebarPadding.left}, 0)`)
         this.blockBoard = this.sidebarContent.append("g");
         let y = sidebarPadding.top;
         Object.entries(this.blockList).forEach(([groupName, blockArray], groupIndex) => {
@@ -685,8 +689,9 @@ export class Renderer {
             const parentId = info[2];
             const index = info[1];
             const expectedBlock = this.previewInsertion(blockData.id, parentId, index);
-            console.log("BLOCK", expectedBlock);
-            const isValid = true /*this.onValidateInsertion(expectedBlock)*/;
+            /*console.log("BLOCK", expectedBlock);
+            console.log("SUB-PHRASE-INPUT", this.converter.convert(expectedBlock));*/
+            const isValid = this.validate(expectedBlock);
             return isValid ? bestPlaceholderId : null;
         }
         return null;
@@ -755,8 +760,10 @@ export class Renderer {
                 const info = id.split("-");
                 const parentId = info[1];
 
-                //const expectedBlock = this.predictAttachBlockToParent(blockData.id, parentId, possibleSide);
-                const isValid = true; /*this.onValidateAttachment(expectedBlock);*/
+                const expectedBlock = this.previewAttachment(blockData.id, parentId, side);
+                /*console.log("BLOCK", expectedBlock);
+                console.log("SUB-PHRASE-INPUT", this.converter.convert(expectedBlock));*/
+                const isValid = this.validate(expectedBlock);
 
                 if (isValid) {
                     bestOverlapBlockId = id;
@@ -849,7 +856,7 @@ export class Renderer {
 
         // Create a deep copy of the root parent block
         const expectedParent = JSON.parse(JSON.stringify(targetParentResult.rootParent));
-        
+
         // Find the target parent in the copied structure and update its children
         const updateParentInCopy = (block) => {
             if (block.id === targetParent.id) {
@@ -867,7 +874,7 @@ export class Renderer {
             }
             return false;
         };
-        
+
         updateParentInCopy(expectedParent);
         return expectedParent;
     }
@@ -889,7 +896,7 @@ export class Renderer {
 
         // Create a deep copy of the root parent block
         const expectedParent = JSON.parse(JSON.stringify(targetParentResult.rootParent));
-        
+
         // Find the target parent in the copied structure and update its children
         const updateParentInCopy = (block) => {
             if (block.id === targetParent.id) {
@@ -911,7 +918,7 @@ export class Renderer {
             }
             return false;
         };
-        
+
         updateParentInCopy(expectedParent);
         return expectedParent;
     }
@@ -1008,7 +1015,7 @@ export class Renderer {
         if (!foundResult.foundBlock) return;
 
         const block = foundResult.foundBlock;
-        
+
         // Find the head child (first text or dropdown)
         const headChild = block.children.find(child => child.id === "head" && (child.type === "text" || child.type === "dropdown"));
         if (!headChild) return;
@@ -1092,6 +1099,15 @@ export class Renderer {
     emphasizeBlock(id) {
         this.deemphasizeAllBlock();
         d3.select(`#${id}`).attr("stroke-width", highlightStrokeWidth).attr("stroke", "yellow");
+    }
+
+    /*文法(できれば他に移動したい)***********************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+    validate(block) {
+        const phraseInput = this.converter.convert(block);
+        if(!phraseInput) return false;
+        const validationResult = this.grammar.parseNestedPhrase(phraseInput);
+        return (validationResult.categories.length > 0);
     }
 
     /*幅・高さ・色の計算(できれば他に移動したい)***********************************************************************************************************************************************************************************************************************************************************************************************************************/
