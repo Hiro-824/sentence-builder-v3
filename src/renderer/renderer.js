@@ -1105,6 +1105,7 @@ export class Renderer {
 
     validate(block) {
         const phraseInput = this.converter.convert(block);
+        console.log(phraseInput);
         if(!phraseInput) return false;
         const validationResult = this.grammar.parseNestedPhrase(phraseInput);
         return (validationResult.categories.length > 0);
