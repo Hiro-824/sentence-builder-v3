@@ -1106,6 +1106,7 @@ export class Renderer {
         console.log(phraseInput);
         if(!phraseInput) return false;
         const validationResult = this.grammar.parseNestedPhrase(phraseInput);
+        console.log(validationResult);
         return (validationResult.categories.length > 0);
     }
 
