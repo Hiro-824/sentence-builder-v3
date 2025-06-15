@@ -49,9 +49,10 @@ export class Grammar {
         return result;
     }
 
-    processArguments(currentPhrase: Phrase, actualArgs: Word[], expectedPhrases: Phrase[]): Phrase | null {
+    processArguments(currentPhrase: Phrase, actualArgs: Word[], expectedPhrases: Phrase[], side: "left" | "right"): Phrase | null {
         const newPhrase = this.deepCopy(currentPhrase);
         if (!newPhrase.gaps) newPhrase.gaps = [];
+        const unifiedArgs: Phrase[] = [];
         for (let i = 0; i < expectedPhrases.length; i++) {
             const expected = expectedPhrases[i];
             const actualWord = actualArgs[i];
@@ -68,10 +69,28 @@ export class Grammar {
                     if (foundIndex > -1) { availableGaps.splice(foundIndex, 1); }
                     else { allRequiredGapsMet = false; break; }
                 }
-                if (allRequiredGapsMet) { newPhrase.gaps.push(...availableGaps); argSatisfied = true; break; }
+                if (allRequiredGapsMet) {
+                    newPhrase.gaps.push(...availableGaps);
+                    const unifiedArg = this.deepCopy(cat);
+                    unifiedArg.head = unifiedHead;
+                    if (availableGaps.length > 0) {
+                        unifiedArg.gaps = availableGaps;
+                    } else {
+                        delete unifiedArg.gaps;
+                    }
+                    unifiedArgs.push(unifiedArg);
+                    argSatisfied = true; break;
+                }
             }
             if (!argSatisfied) return null;
         }
+
+        if (side === "left") {
+            newPhrase.left = unifiedArgs;
+        } else {
+            newPhrase.right = unifiedArgs;
+        }
+
         return newPhrase;
     }
 
@@ -116,10 +135,10 @@ export class Grammar {
         const rightMods = words.slice(rightArgEnd);
         const initialState: Phrase = { ...this.deepCopy(initialPhrase), gaps: [] };
         this.logState("1. Initial State", initialState);
-        let currentPhrase: Phrase | null = this.processArguments(initialState, leftArgs, expectedLeft);
+        let currentPhrase: Phrase | null = this.processArguments(initialState, leftArgs, expectedLeft, "left");
         this.logState("2. After Processing Left Arguments", currentPhrase);
         if (!currentPhrase) return null;
-        currentPhrase = this.processArguments(currentPhrase, rightArgs, expectedRight);
+        currentPhrase = this.processArguments(currentPhrase, rightArgs, expectedRight, "right");
         this.logState("3. After Processing Right Arguments", currentPhrase);
         if (!currentPhrase) return null;
         currentPhrase = this.processModifiers(currentPhrase, leftMods, "left");
