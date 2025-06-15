@@ -133,6 +133,8 @@ export class Grammar {
         const finalResult: Phrase = {
             head: currentPhrase.head,
             gaps: currentPhrase.gaps,
+            left: currentPhrase.left,
+            right: currentPhrase.right,
             leftModTargets: currentPhrase.leftModTargets,
             rightModTargets: currentPhrase.rightModTargets,
             categoryName: initialPhrase.categoryName ? `Unified(${initialPhrase.categoryName})` : 'UnifiedPhrase',
