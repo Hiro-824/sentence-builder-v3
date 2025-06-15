@@ -835,66 +835,55 @@ export const blockSentence: Block = {
     x: 0,
     y: 0,
     color: "lightBlue",
-    words: [
-        {
-            token: "",
-            categories: [
-                {
-                    head: {
-                        type: "verb"
-                    },
-                    left: [
-                        {
-                            head: {
-                                type: "det",
-                                case: "nom"
-                            }
-                        }
-                    ],
-                    right: [
-                        {
-                            head: {
-                                type: "verb",
-                            },
-                            gaps: [
-                                {
-                                    head: {
-                                        type: "det",
-                                        case: "nom"
-                                    }
-                                }
-                            ]
-                        }
-                    ],
-                    customUnification: [
-                        [
-                            ['left', 0, 'head'],
-                            ['right', 0, 'gaps', 0, 'head']
-                        ]
-                    ]
+    words: [{
+        token: "",
+        categories: [{
+            head: {
+                type: "verb"
+            },
+            left: [{
+                head: {
+                    type: "det",
+                    case: "nom"
                 }
+            }],
+            right: [{
+                head: {
+                    type: "verb",
+                },
+                gaps: [{
+                    head: {
+                        type: "det",
+                        case: "nom"
+                    }
+                }]
+            }],
+            customUnification: [
+                [
+                    ['left', 0, 'head'],
+                    ['right', 0, 'gaps', 0, 'head']
+                ]
             ]
-        }
-    ],
-    children: [
-        {
-            id: "specifier",
-            type: "placeholder",
-            content: null,
-            hidden: false,
-        },
-        {
-            id: "head",
-            type: "text",
-            content: "",
-            hidden: false,
-        },
-        {
-            id: "complement",
-            type: "placeholder",
-            content: null,
-            hidden: false,
-        }
+        }]
+    }],
+    children: [{
+        id: "specifier",
+        type: "placeholder",
+        content: null,
+        hidden: false,
+    },
+    {
+        id: "head",
+        type: "text",
+        content: "",
+        hidden: false,
+    },
+    {
+        id: "complement",
+        type: "placeholder",
+        content: null,
+        hidden: false,
+    }
     ],
 }
 
@@ -904,133 +893,118 @@ export const blockI: Block = {
     y: 0,
     color: "dodgerblue",
     isRound: true,
-    words: [
-        {
-            token: "I",
-            categories: [
-                {
-                    head: {
-                        type: "det",
-                        agr: {
-                            type: "non-3sing",
-                            per: 1,
-                            num: "sing",
-                        },
-                        case: "nom"
-                    }
-                }
-            ]
-        },
-        {
-            token: "my",
-            categories: [
-                {
-                    head: {
-                        type: "det",
-                        agr: {
-                            type: "3sing",
-                        },
-                    },
-                    right: [
-                        {
-                            head: {
-                                type: "noun",
-                                agr: {
-                                    type: "3sing",
-                                },
-                            }
-                        }
-                    ]
+    words: [{
+        token: "I",
+        categories: [{
+            head: {
+                type: "det",
+                agr: {
+                    type: "non-3sing",
+                    per: 1,
+                    num: "sing",
                 },
-                {
-                    head: {
-                        type: "det",
-                        agr: {
-                            type: "non-3sing",
-                        },
+                case: "nom"
+            }
+        }]
+    },
+    {
+        token: "my",
+        categories: [{
+            head: {
+                type: "det",
+                agr: {
+                    type: "3sing",
+                },
+            },
+            right: [{
+                head: {
+                    type: "noun",
+                    agr: {
+                        type: "3sing",
                     },
-                    right: [
-                        {
-                            head: {
-                                type: "noun",
-                                agr: {
-                                    type: "non-3sing",
-                                    num: "pl",
-                                    per: 3
-                                },
-                            }
-                        }
-                    ]
                 }
-            ]
+            }]
         },
         {
-            token: "me",
-            categories: [
-                {
-                    head: {
-                        type: "det",
-                        agr: {
-                            type: "non-3sing",
-                            num: "sing",
-                            per: 1
-                        },
-                        case: "acc"
+            head: {
+                type: "det",
+                agr: {
+                    type: "non-3sing",
+                },
+            },
+            right: [{
+                head: {
+                    type: "noun",
+                    agr: {
+                        type: "non-3sing",
+                        num: "pl",
+                        per: 3
                     },
                 }
-            ]
-        },
-        {
-            token: "mine",
-            categories: [
-                {
-                    head: {
-                        type: "det",
-                        agr: {
-                            type: "3sing",
-                        },
-                    },
-                }
-            ]
-        },
-        {
-            token: "myself",
-            categories: [
-                {
-                    head: {
-                        type: "det",
-                        agr: {
-                            type: "non-3sing",
-                            num: "sing",
-                            per: 1
-                        },
-                        refl: true
-                    },
-                }
-            ]
+            }]
         }
+        ]
+    },
+    {
+        token: "me",
+        categories: [{
+            head: {
+                type: "det",
+                agr: {
+                    type: "non-3sing",
+                    num: "sing",
+                    per: 1
+                },
+                case: "acc"
+            },
+        }]
+    },
+    {
+        token: "mine",
+        categories: [{
+            head: {
+                type: "det",
+                agr: {
+                    type: "3sing",
+                },
+            },
+        }]
+    },
+    {
+        token: "myself",
+        categories: [{
+            head: {
+                type: "det",
+                agr: {
+                    type: "non-3sing",
+                    num: "sing",
+                    per: 1
+                },
+                refl: true
+            },
+        }]
+    }
     ],
-    children: [
-        {
-            id: "head",
-            hidden: false,
-            type: "dropdown",
-            content: [
-                "I",
-                "my",
-                "me",
-                "mine",
-                "myself",
-            ],
-            selected: 0
-        },
-        {
-            id: "complement",
-            hidden: true,
-            type: "placeholder",
-            content: null,
-            headIndex: [1]
-        }
+    children: [{
+        id: "head",
+        hidden: false,
+        type: "dropdown",
+        content: [
+            "I",
+            "my",
+            "me",
+            "mine",
+            "myself",
+        ],
+        selected: 0
+    },
+    {
+        id: "complement",
+        hidden: true,
+        type: "placeholder",
+        content: null,
+        headIndex: [1]
+    }
     ]
 }
 
@@ -1038,87 +1012,73 @@ export const blockRead: Block = {
     id: "",
     x: 0,
     y: 0,
-    words: [
-        {
-            token: "read(base)",
-            categories: [
-                {
-                    head: {
-                        type: "verb"
+    words: [{
+        token: "read(base)",
+        categories: [{
+            head: {
+                type: "verb"
+            },
+            left: [{
+                head: {
+                    type: "det",
+                    agr: {
+                        type: "non-3sing",
+                    }
+                },
+            }],
+            right: [{
+                head: {
+                    type: "det",
+                },
+            }]
+        }]
+    },
+    {
+        token: "reads",
+        categories: [{
+            head: {
+                type: "verb"
+            },
+            left: [{
+                head: {
+                    type: "det",
+                    agr: {
+                        type: "3sing",
                     },
-                    left: [
-                        {
-                            head: {
-                                type: "det",
-                                agr: {
-                                    type: "non-3sing",
-                                }
-                            },
-                        }
-                    ],
-                    right: [
-                        {
-                            head: {
-                                type: "det",
-                            },
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            token: "reads",
-            categories: [
-                {
-                    head: {
-                        type: "verb"
-                    },
-                    left: [
-                        {
-                            head: {
-                                type: "det",
-                                agr: {
-                                    type: "3sing",
-                                },
-                                case: "nom"
-                            },
-                        }
-                    ],
-                    right: [
-                        {
-                            head: {
-                                type: "det",
-                            },
-                        }
-                    ]
-                }
-            ]
-        }
+                    case: "nom"
+                },
+            }],
+            right: [{
+                head: {
+                    type: "det",
+                },
+            }]
+        }]
+    }
     ],
     color: "tomato",
-    children: [
-        {
-            id: "head",
-            type: "dropdown",
-            content: [
-                "read",
-                "reads",
-                "read",
-                "reading",
-                "read",
-            ],
-            selected: 0,
-            hidden: false,
-        },
-        {
-            id: "complement",
-            type: "placeholder",
-            content: null,
-            hidden: false,
-            headIndex: [
-                0, 1, 2, 3
-            ]
-        }
+    children: [{
+        id: "head",
+        type: "dropdown",
+        content: [
+            "read",
+            "reads",
+            "read",
+            "reading",
+            "read",
+        ],
+        selected: 0,
+        hidden: false,
+    },
+    {
+        id: "complement",
+        type: "placeholder",
+        content: null,
+        hidden: false,
+        headIndex: [
+            0, 1, 2, 3
+        ]
+    }
     ]
 }
 
@@ -1126,60 +1086,54 @@ export const blockBook: Block = {
     id: "",
     x: 0,
     y: 0,
-    words: [
-        {
-            token: "",
-            categories: [
-                {
-                    head: {
-                        type: "noun",
-                        agr: {
-                            type: "3sing"
-                        },
-                    }
-                }
-            ]
+    words: [{
+        token: "",
+        categories: [{
+            head: {
+                type: "noun",
+                agr: {
+                    type: "3sing"
+                },
+            }
+        }]
+    },
+    {
+        token: "",
+        categories: [{
+            head: {
+                type: "noun",
+                agr: {
+                    type: "non-3sing",
+                    num: "pl",
+                    per: 3
+                },
+            }
         },
         {
-            token: "",
-            categories: [
-                {
-                    head: {
-                        type: "noun",
-                        agr: {
-                            type: "non-3sing",
-                            num: "pl",
-                            per: 3
-                        },
-                    }
+            head: {
+                type: "det",
+                agr: {
+                    type: "non-3sing",
+                    num: "pl",
+                    per: 3
                 },
-                {
-                    head: {
-                        type: "det",
-                        agr: {
-                            type: "non-3sing",
-                            num: "pl",
-                            per: 3
-                        },
-                    }
-                }
-            ]
+            }
         }
+        ]
+    }
     ],
     color: "dodgerblue",
     isRound: true,
-    children: [
-        {
-            id: "head",
-            hidden: false,
-            type: "dropdown",
-            content: [
-                "book",
-                "books"
-            ],
-            selected: 0
-        }
-    ]
+    children: [{
+        id: "head",
+        hidden: false,
+        type: "dropdown",
+        content: [
+            "book",
+            "books"
+        ],
+        selected: 0
+    }]
 }
 
 export const blockList = {
