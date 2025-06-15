@@ -80,11 +80,7 @@ export class Grammar {
             if (!argSatisfied) return null;
         }
 
-        if (side === "left") {
-            newPhrase.left = unifiedArgs;
-        } else {
-            newPhrase.right = unifiedArgs;
-        }
+        if (side === "left") { newPhrase.left = unifiedArgs; } else { newPhrase.right = unifiedArgs; }
 
         return newPhrase;
     }
