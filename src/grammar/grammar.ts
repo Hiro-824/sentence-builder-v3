@@ -16,7 +16,7 @@ export class Grammar {
         }
     }
 
-    deepCopy<T>(obj: T): T { return JSON.parse(JSON.stringify(obj)); }
+    deepCopy<T>(obj: T): T { return structuredClone(obj); }
 
     unify(fs1: FeatureStructure, fs2: FeatureStructure): FeatureStructure | null {
         const result: FeatureStructure = {};
