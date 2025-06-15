@@ -19,47 +19,27 @@ export class Grammar {
     deepCopy<T>(obj: T): T { return structuredClone(obj); }
 
     findValueByPath(phrase: Phrase, path: CustomUnificationPath): FeatureValue | undefined {
-        // Start our traversal at the top-level phrase.
-        // We use `unknown` to force type-checking at each step.
         let currentValue: unknown = phrase;
 
         for (const segment of path) {
-            // If at any point our path leads to a null/undefined value, we can't
-            // continue, so the path is invalid.
-            if (currentValue === null || typeof currentValue !== 'object') {
-                return undefined;
-            }
+            if (currentValue === null || typeof currentValue !== 'object') return undefined;
 
             if (typeof segment === 'number') {
-                // If the segment is a number, we expect the current value to be an array.
-                if (!Array.isArray(currentValue)) {
-                    return undefined; // Path mismatch: expected array, got object.
-                }
+                if (!Array.isArray(currentValue)) return undefined;
                 currentValue = currentValue[segment];
             } else {
-                // If the segment is a string, we expect an object.
-                // Using a type assertion to a generic record is safe here because
-                // we've already checked that it's an object and not null.
                 currentValue = (currentValue as Record<string, unknown>)[segment];
             }
         }
 
-        // After the loop, `currentValue` holds our final value.
-        // The caller expects a FeatureValue, so we return it.
-        // Note: A final check could be added here to ensure the result is a valid
-        // primitive or FeatureStructure, but we trust the grammar's structure.
         return currentValue as FeatureValue;
     }
 
     updateValueByPath(phrase: Phrase, path: CustomUnificationPath, updatedValue: FeatureValue): Phrase {
-        // We use a recursive helper function to handle the deep cloning.
-        // The helper function rebuilds the object/array structure along the path.
         const recursiveUpdate = (
             current: unknown,
             remainingPath: CustomUnificationPath
         ): unknown => {
-            // Base case: If the path is empty, we've reached our destination.
-            // Return the new value to be placed here.
             if (remainingPath.length === 0) {
                 return updatedValue;
             }
@@ -74,25 +54,18 @@ export class Grammar {
                 if (!Array.isArray(current)) {
                     throw new Error(`Path mismatch: Expected an array to access index ${segment}, but found an object.`);
                 }
-                // Create a shallow copy of the array to maintain immutability.
                 const newArray = [...current];
-                // Recursively update the element at the target index.
                 newArray[segment] = recursiveUpdate(newArray[segment], restOfPath);
                 return newArray;
-            } else { // segment is a string
+            } else {
                 if (Array.isArray(current)) {
                     throw new Error(`Path mismatch: Expected an object to access key "${segment}", but found an array.`);
                 }
-                // Create a shallow copy of the object.
                 const newObject = { ...current } as Record<string, unknown>;
-                // Recursively update the property at the target key.
                 newObject[segment] = recursiveUpdate(newObject[segment], restOfPath);
                 return newObject;
             }
         };
-
-        // Start the recursive update from the root of the phrase.
-        // The final result must be cast back to a Phrase, as the helper returns `unknown`.
         return recursiveUpdate(phrase, path) as Phrase;
     }
 
@@ -199,19 +172,14 @@ export class Grammar {
         let currentPhraseState = phrase;
 
         for (const group of unificationGroups) {
-            // 1. Find all values, keeping them paired with their original paths.
-            //    Then, filter out any pairs where the path was invalid (value is undefined).
-            //    This is the key change to handle missing arguments.
             const resolvedPaths = group
                 .map(path => ({ path, value: this.findValueByPath(currentPhraseState, path) }))
                 .filter((pv): pv is { path: CustomUnificationPath; value: FeatureValue } => pv.value !== undefined);
 
-            // If there are fewer than 2 resolved paths, there's nothing to unify in this group.
             if (resolvedPaths.length < 2) {
                 continue;
             }
 
-            // 2. Unify all the collected values together.
             let unifiedResult: FeatureValue = this.deepCopy(resolvedPaths[0].value);
 
             for (let i = 1; i < resolvedPaths.length; i++) {
@@ -234,7 +202,6 @@ export class Grammar {
                 }
             }
 
-            // 3. Update the phrase at each of the successfully resolved paths.
             for (const { path } of resolvedPaths) {
                 currentPhraseState = this.updateValueByPath(currentPhraseState, path, unifiedResult);
             }
