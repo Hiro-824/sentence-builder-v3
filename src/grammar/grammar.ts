@@ -73,11 +73,6 @@ export class Grammar {
                     newPhrase.gaps.push(...availableGaps);
                     const unifiedArg = this.deepCopy(cat);
                     unifiedArg.head = unifiedHead;
-                    if (availableGaps.length > 0) {
-                        unifiedArg.gaps = availableGaps;
-                    } else {
-                        delete unifiedArg.gaps;
-                    }
                     unifiedArgs.push(unifiedArg);
                     argSatisfied = true; break;
                 }
