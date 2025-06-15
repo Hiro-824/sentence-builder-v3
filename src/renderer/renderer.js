@@ -512,6 +512,7 @@ export class Renderer {
                 }
                 optionsGroup.attr("display", currentDisplay === "none" ? "block" : "none");
                 this.raiseBlock(block.id);
+                dropdownGroup.raise();
             });
         });
 
