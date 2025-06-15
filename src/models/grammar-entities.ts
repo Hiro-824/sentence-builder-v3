@@ -9,8 +9,10 @@ export interface Phrase {
     categoryName?: string;
     leftModTargets?: Phrase[];
     rightModTargets?: Phrase[];
+    customUnification?: CustomUnificationPath[][];
 }
 
+export type CustomUnificationPath = (string | number)[];
 export interface Word { token: string; categories: Phrase[]; }
 export const MissingArgument: Word = { token: "[[MISSING_ARGUMENT]]", categories: [] };
 

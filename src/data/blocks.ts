@@ -864,7 +864,13 @@ export const blockSentence: Block = {
                                     }
                                 }
                             ]
-                        } 
+                        }
+                    ],
+                    customUnification: [
+                        [
+                            ['left', 0, 'head'],
+                            ['right', 0, 'gaps', 0, 'head']
+                        ]
                     ]
                 }
             ]
