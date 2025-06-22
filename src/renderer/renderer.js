@@ -10,7 +10,7 @@ export class Renderer {
         this.blockList = blockList;
         this.svg = svg;
         this.sideBarScrollExtent = 0;
-        this.viewportHeight = window.innerHeight;
+        this.viewportHeight = Math.min(window.innerHeight, window.innerWidth);
         this.converter = new Converter;
         this.grammar = new Grammar;
         this.render();
