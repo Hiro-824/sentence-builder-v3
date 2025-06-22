@@ -312,6 +312,11 @@ export class Renderer {
         const strokeColor = this.darkenColor(block.color, 30);
         const actualCornerRadius = block.isRound ? height / 2 : blockCornerRadius;
 
+        // Render translation bubble if this is a top-level block (parent is grid)
+        if (blockGroup.node().parentNode && blockGroup.node().parentNode.id === "grid") {
+            this.renderTranslationBubble(block, blockGroup, width, height);
+        }
+
         // フレーム描画
         blockGroup.append("rect")
             .attr("id", `frame-${block.id}`)
@@ -530,6 +535,45 @@ export class Renderer {
             this.renderBlock(content, blockGroup);
             return (childWidth + horizontalPadding);
         }
+    }
+
+    renderTranslationBubble(block, blockGroup, width, height) {
+        // Only render if translation exists
+        if (!block.translation) return;
+
+        // Calculate text box
+        const box = this.calculateTextHeightAndWidth(block.translation);
+        const bubbleWidth = box.width + padding * 10;
+        const bubbleHeight = box.height + padding * 10;
+        const bubbleY = -(bubbleHeight + 10);
+
+        const blockCenterX = width / 2;
+        const bubbleX = blockCenterX - (bubbleWidth / 2);
+
+        // Bubble background
+        blockGroup.append("rect")
+            .attr("id", `bubble-${block.id}`)
+            .attr("opacity", 0.5)
+            .attr("width", bubbleWidth)
+            .attr("height", bubbleHeight)
+            .attr("x", bubbleX)
+            .attr("y", bubbleY)
+            .attr("fill", bubbleColor)
+            .attr("rx", blockCornerRadius)
+            .attr("ry", blockCornerRadius)
+            .attr("pointer-events", "none");
+
+        // Bubble text
+        blockGroup.append("text")
+            .text(block.translation)
+            .attr("x", blockCenterX)
+            .attr("y", bubbleY + (bubbleHeight / 2))
+            .attr('fill', 'white')
+            .attr('font-size', `${labelFontSize}pt`)
+            .attr('font-weight', 'bold')
+            .attr('dy', '0.35em')
+            .attr('text-anchor', 'middle')
+            .style('user-select', 'none');
     }
 
     /*ドラッグ関係の処理***********************************************************************************************************************************************************************************************************************************************************************************************************************/

@@ -886,6 +886,7 @@ export const blockSentence: Block = {
         hidden: false,
     }
     ],
+    translation: "＿が＿"
 }
 
 export const blockI: Block = {
