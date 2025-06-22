@@ -886,7 +886,6 @@ export const blockSentence: Block = {
         hidden: false,
     }
     ],
-    translation: "＿が＿"
 }
 
 export const blockI: Block = {
@@ -914,38 +913,21 @@ export const blockI: Block = {
         categories: [{
             head: {
                 type: "det",
-                agr: {
-                    type: "3sing",
-                },
+                agr: {}
             },
             right: [{
                 head: {
                     type: "noun",
-                    agr: {
-                        type: "3sing",
-                    },
+                    agr: {},
                 }
-            }]
-        },
-        {
-            head: {
-                type: "det",
-                agr: {
-                    type: "non-3sing",
-                },
-            },
-            right: [{
-                head: {
-                    type: "noun",
-                    agr: {
-                        type: "non-3sing",
-                        num: "pl",
-                        per: 3
-                    },
-                }
-            }]
-        }
-        ]
+            }],
+            customUnification: [
+                [
+                    ["head", "agr"],
+                    ["right", 0, "head", "agr"]
+                ]
+            ]
+        }]
     },
     {
         token: "me",

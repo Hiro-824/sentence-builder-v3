@@ -10,6 +10,7 @@ export interface Phrase {
     leftModTargets?: Phrase[];
     rightModTargets?: Phrase[];
     customUnification?: CustomUnificationPath[][];
+    translation?: FeatureStructure;
 }
 
 export type CustomUnificationPath = (string | number)[];
