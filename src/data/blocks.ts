@@ -850,6 +850,7 @@ export const blockSentence: Block = {
             right: [{
                 head: {
                     type: "verb",
+                    finite: true,
                 },
                 gaps: [{
                     head: {
@@ -1012,49 +1013,120 @@ export const blockRead: Block = {
     id: "",
     x: 0,
     y: 0,
-    words: [{
-        token: "read(base)",
-        categories: [{
-            head: {
-                type: "verb"
-            },
-            left: [{
+    words: [
+        {
+            token: "read(base)",
+            categories: [{
                 head: {
-                    type: "det",
-                    agr: {
-                        type: "non-3sing",
-                    }
+                    type: "verb",
+                    tense: "present"
                 },
-            }],
-            right: [{
-                head: {
-                    type: "det",
-                },
-            }]
-        }]
-    },
-    {
-        token: "reads",
-        categories: [{
-            head: {
-                type: "verb"
-            },
-            left: [{
-                head: {
-                    type: "det",
-                    agr: {
-                        type: "3sing",
+                left: [{
+                    head: {
+                        type: "det",
+                        agr: {
+                            type: "non-3sing",
+                        }
                     },
-                    case: "nom"
-                },
-            }],
-            right: [{
-                head: {
-                    type: "det",
-                },
+                }],
+                right: [{
+                    head: {
+                        type: "det",
+                    },
+                }]
             }]
-        }]
-    }
+        },
+        {
+            token: "reads",
+            categories: [{
+                head: {
+                    type: "verb",
+                    tense: "present"
+                },
+                left: [{
+                    head: {
+                        type: "det",
+                        agr: {
+                            type: "3sing",
+                        },
+                        case: "nom"
+                    },
+                }],
+                right: [{
+                    head: {
+                        type: "det",
+                    },
+                }]
+            }]
+        },
+        {
+            token: "read(past)",
+            categories: [{
+                head: {
+                    type: "verb",
+                    tense: "past"
+                },
+                left: [{
+                    head: {
+                        type: "det",
+                        agr: {
+                            type: "non-3sing",
+                        }
+                    },
+                }],
+                right: [{
+                    head: {
+                        type: "det",
+                    },
+                }]
+            }]
+        },
+        {
+            token: "reading",
+            categories: [{
+                head: {
+                    type: "verb",
+                    finite: false
+                },
+                left: [{
+                    head: {
+                        type: "det",
+                        agr: {
+                            type: "3sing",
+                        },
+                        case: "nom"
+                    },
+                }],
+                right: [{
+                    head: {
+                        type: "det",
+                    },
+                }]
+            }]
+        },
+        {
+            token: "read",
+            categories: [{
+                head: {
+                    type: "verb",
+                    finite: false
+                },
+                left: [{
+                    head: {
+                        type: "det",
+                        agr: {
+                            type: "3sing",
+                        },
+                        case: "nom"
+                    },
+                }],
+                right: [{
+                    head: {
+                        type: "det",
+                    },
+                }]
+            }]
+        },
     ],
     color: "tomato",
     children: [{
