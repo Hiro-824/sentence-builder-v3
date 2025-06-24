@@ -839,7 +839,7 @@ export const blockSentence: Block = {
         token: "",
         categories: [{
             head: {
-                type: "verb"
+                type: "sentence"
             },
             left: [{
                 head: {
