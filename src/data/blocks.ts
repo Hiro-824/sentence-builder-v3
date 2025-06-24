@@ -864,7 +864,12 @@ export const blockSentence: Block = {
                     ['left', 0, 'head'],
                     ['right', 0, 'gaps', 0, 'head']
                 ]
-            ]
+            ],
+            // This block's role is to take the fully formed translation from its
+            // right-hand child (the verb phrase) and select the 'default' version.
+            translation: {
+                default: "{left[0].default}が{right[0].default}"
+            }
         }]
     }],
     children: [{
@@ -899,34 +904,24 @@ export const blockI: Block = {
         categories: [{
             head: {
                 type: "det",
-                agr: {
-                    type: "non-3sing",
-                    per: 1,
-                    num: "sing",
-                },
+                agr: { type: "non-3sing", per: 1, num: "sing" },
                 case: "nom"
-            }
+            },
+            translation: { default: "私" }
         }]
     },
     {
         token: "my",
         categories: [{
-            head: {
-                type: "det",
-                agr: {}
-            },
+            head: { type: "det", agr: {} },
             right: [{
-                head: {
-                    type: "noun",
-                    agr: {},
-                }
+                head: { type: "noun", agr: {} }
             }],
             customUnification: [
-                [
-                    ["head", "agr"],
-                    ["right", 0, "head", "agr"]
-                ]
-            ]
+                [["head", "agr"], ["right", 0, "head", "agr"]]
+            ],
+            // "my" is a possessive determiner. Its translation combines with the noun.
+            translation: { default: "私の{right[0].default}" }
         }]
     },
     {
@@ -934,13 +929,10 @@ export const blockI: Block = {
         categories: [{
             head: {
                 type: "det",
-                agr: {
-                    type: "non-3sing",
-                    num: "sing",
-                    per: 1
-                },
+                agr: { type: "non-3sing", num: "sing", per: 1 },
                 case: "acc"
             },
+            translation: { default: "私" }
         }]
     },
     {
@@ -948,10 +940,9 @@ export const blockI: Block = {
         categories: [{
             head: {
                 type: "det",
-                agr: {
-                    type: "3sing",
-                },
+                agr: { type: "3sing" },
             },
+            translation: { default: "私のもの" }
         }]
     },
     {
@@ -959,13 +950,10 @@ export const blockI: Block = {
         categories: [{
             head: {
                 type: "det",
-                agr: {
-                    type: "non-3sing",
-                    num: "sing",
-                    per: 1
-                },
+                agr: { type: "non-3sing", num: "sing", per: 1 },
                 refl: true
             },
+            translation: { default: "私自身" }
         }]
     }
     ],
@@ -973,13 +961,7 @@ export const blockI: Block = {
         id: "head",
         hidden: false,
         type: "dropdown",
-        content: [
-            "I",
-            "my",
-            "me",
-            "mine",
-            "myself",
-        ],
+        content: ["I", "my", "me", "mine", "myself"],
         selected: 0
     },
     {
@@ -1000,114 +982,61 @@ export const blockRead: Block = {
         {
             token: "read(base)",
             categories: [{
-                head: {
-                    type: "verb",
-                    tense: "present"
-                },
-                left: [{
-                    head: {
-                        type: "det",
-                        agr: {
-                            type: "non-3sing",
-                        }
-                    },
-                }],
-                right: [{
-                    head: {
-                        type: "det",
-                    },
-                }]
+                head: { type: "verb", tense: "present" },
+                left: [{ head: { type: "det", agr: { type: "non-3sing" } } }],
+                right: [{ head: { type: "det" } }],
+                translation: {
+                    default: "{left[0].default}は{right[0].default}を読む。",
+                    progressive: "{left[0].default}は{right[0].default}を読んでいる。",
+                    imperfective: "{left[0].default}は{right[0].default}を読ま", // Stem for negation, e.g., ...読まない
+                    imperative: "{right[0].default}を読め。"
+                }
             }]
         },
         {
             token: "reads",
             categories: [{
-                head: {
-                    type: "verb",
-                    tense: "present"
-                },
-                left: [{
-                    head: {
-                        type: "det",
-                        agr: {
-                            type: "3sing",
-                        },
-                        case: "nom"
-                    },
-                }],
-                right: [{
-                    head: {
-                        type: "det",
-                    },
-                }]
+                head: { type: "verb", tense: "present" },
+                left: [{ head: { type: "det", agr: { type: "3sing" }, case: "nom" } }],
+                right: [{ head: { type: "det" } }],
+                translation: {
+                    default: "{left[0].default}は{right[0].default}を読む。",
+                    progressive: "{left[0].default}は{right[0].default}を読んでいる。",
+                    imperfective: "{left[0].default}は{right[0].default}を読ま",
+                    imperative: "{right[0].default}を読め。"
+                }
             }]
         },
         {
             token: "read(past)",
             categories: [{
-                head: {
-                    type: "verb",
-                    tense: "past"
-                },
-                left: [{
-                    head: {
-                        type: "det",
-                        agr: {
-                            type: "non-3sing",
-                        }
-                    },
-                }],
-                right: [{
-                    head: {
-                        type: "det",
-                    },
-                }]
+                head: { type: "verb", tense: "past" },
+                left: [{ head: { type: "det", agr: { type: "non-3sing" } } }],
+                right: [{ head: { type: "det" } }],
+                translation: {
+                    default: "{left[0].default}は{right[0].default}を読んだ。",
+                    progressive: "{left[0].default}は{right[0].default}を読んでいた。",
+                    imperfective: "{left[0].default}は{right[0].default}を読ま",
+                    imperative: "{right[0].default}を読め。"
+                }
             }]
         },
         {
             token: "reading",
             categories: [{
-                head: {
-                    type: "verb",
-                    finite: false
-                },
-                left: [{
-                    head: {
-                        type: "det",
-                        agr: {
-                            type: "3sing",
-                        },
-                        case: "nom"
-                    },
-                }],
-                right: [{
-                    head: {
-                        type: "det",
-                    },
-                }]
+                head: { type: "verb", finite: false },
+                left: [{ head: { type: "det", agr: { type: "3sing" }, case: "nom" } }],
+                right: [{ head: { type: "det" } }],
+                translation: { default: "読むこと" } // The act of reading
             }]
         },
         {
             token: "read",
             categories: [{
-                head: {
-                    type: "verb",
-                    finite: false
-                },
-                left: [{
-                    head: {
-                        type: "det",
-                        agr: {
-                            type: "3sing",
-                        },
-                        case: "nom"
-                    },
-                }],
-                right: [{
-                    head: {
-                        type: "det",
-                    },
-                }]
+                head: { type: "verb", finite: false },
+                left: [{ head: { type: "det", agr: { type: "3sing" }, case: "nom" } }],
+                right: [{ head: { type: "det" } }],
+                translation: { default: "読むこと" } // The act of reading (e.g., in "to read")
             }]
         },
     ],
@@ -1115,13 +1044,7 @@ export const blockRead: Block = {
     children: [{
         id: "head",
         type: "dropdown",
-        content: [
-            "read",
-            "reads",
-            "read",
-            "reading",
-            "read",
-        ],
+        content: ["read", "reads", "read", "reading", "read"],
         selected: 0,
         hidden: false,
     },
@@ -1130,9 +1053,7 @@ export const blockRead: Block = {
         type: "placeholder",
         content: null,
         hidden: false,
-        headIndex: [
-            0, 1, 2, 3
-        ]
+        headIndex: [0, 1, 2, 3, 4]
     }
     ]
 }
@@ -1144,35 +1065,19 @@ export const blockBook: Block = {
     words: [{
         token: "",
         categories: [{
-            head: {
-                type: "noun",
-                agr: {
-                    type: "3sing"
-                },
-            }
+            head: { type: "noun", agr: { type: "3sing" } },
+            translation: { default: "本" }
         }]
     },
     {
         token: "",
         categories: [{
-            head: {
-                type: "noun",
-                agr: {
-                    type: "non-3sing",
-                    num: "pl",
-                    per: 3
-                },
-            }
+            head: { type: "noun", agr: { type: "non-3sing", num: "pl", per: 3 } },
+            translation: { default: "本" }
         },
         {
-            head: {
-                type: "det",
-                agr: {
-                    type: "non-3sing",
-                    num: "pl",
-                    per: 3
-                },
-            }
+            head: { type: "det", agr: { type: "non-3sing", num: "pl", per: 3 } },
+            translation: { default: "本" }
         }
         ]
     }
@@ -1183,10 +1088,7 @@ export const blockBook: Block = {
         id: "head",
         hidden: false,
         type: "dropdown",
-        content: [
-            "book",
-            "books"
-        ],
+        content: ["book", "books"],
         selected: 0
     }]
 }
