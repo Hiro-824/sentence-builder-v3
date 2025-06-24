@@ -1069,7 +1069,12 @@ export class Renderer {
         // Update visibility for each child
         block.children.forEach(child => {
             if (child.headIndex !== undefined) {
-                child.hidden = !child.headIndex.includes(selectedHeadIndex);
+                const shouldBeVisible = child.headIndex.includes(selectedHeadIndex);
+                if (!shouldBeVisible && child.type === "placeholder" && child.content) {
+                    // Move the child block to top level before hiding
+                    this.moveBlockToTopLevel(child.content.id);
+                }
+                child.hidden = !shouldBeVisible;
             } else {
                 child.hidden = false;
             }

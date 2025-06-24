@@ -986,9 +986,9 @@ export const blockRead: Block = {
                 left: [{ head: { type: "det", agr: { type: "non-3sing" } } }],
                 right: [{ head: { type: "det" } }],
                 translation: {
-                    default: "{left[0].default}は{right[0].default}を読む。",
-                    progressive: "{left[0].default}は{right[0].default}を読んでいる。",
-                    imperfective: "{left[0].default}は{right[0].default}を読ま", // Stem for negation, e.g., ...読まない
+                    default: "{right[0].default}を読む。",
+                    progressive: "{right[0].default}を読んでいる。",
+                    imperfective: "{right[0].default}を読ま", // Stem for negation, e.g., ...読まない
                     imperative: "{right[0].default}を読め。"
                 }
             }]
@@ -1000,9 +1000,9 @@ export const blockRead: Block = {
                 left: [{ head: { type: "det", agr: { type: "3sing" }, case: "nom" } }],
                 right: [{ head: { type: "det" } }],
                 translation: {
-                    default: "{left[0].default}は{right[0].default}を読む。",
-                    progressive: "{left[0].default}は{right[0].default}を読んでいる。",
-                    imperfective: "{left[0].default}は{right[0].default}を読ま",
+                    default: "{right[0].default}を読む。",
+                    progressive: "{right[0].default}を読んでいる。",
+                    imperfective: "{right[0].default}を読ま",
                     imperative: "{right[0].default}を読め。"
                 }
             }]
@@ -1014,9 +1014,9 @@ export const blockRead: Block = {
                 left: [{ head: { type: "det", agr: { type: "non-3sing" } } }],
                 right: [{ head: { type: "det" } }],
                 translation: {
-                    default: "{left[0].default}は{right[0].default}を読んだ。",
-                    progressive: "{left[0].default}は{right[0].default}を読んでいた。",
-                    imperfective: "{left[0].default}は{right[0].default}を読ま",
+                    default: "{right[0].default}を読んだ。",
+                    progressive: "{right[0].default}を読んでいた。",
+                    imperfective: "{right[0].default}を読ま",
                     imperative: "{right[0].default}を読め。"
                 }
             }]
@@ -1027,7 +1027,7 @@ export const blockRead: Block = {
                 head: { type: "verb", finite: false },
                 left: [{ head: { type: "det", agr: { type: "3sing" }, case: "nom" } }],
                 right: [{ head: { type: "det" } }],
-                translation: { default: "読むこと" } // The act of reading
+                translation: { default: "読んでいる" }
             }]
         },
         {
@@ -1036,7 +1036,7 @@ export const blockRead: Block = {
                 head: { type: "verb", finite: false },
                 left: [{ head: { type: "det", agr: { type: "3sing" }, case: "nom" } }],
                 right: [{ head: { type: "det" } }],
-                translation: { default: "読むこと" } // The act of reading (e.g., in "to read")
+                translation: { default: "読まれ" }
             }]
         },
     ],
