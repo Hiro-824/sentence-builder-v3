@@ -475,6 +475,12 @@ export class Renderer {
                     this.setChildVisibility(block.id);
                     this.updateBlock(block.id);
                     this.raiseBlock(block.id);
+                    // After updating, validate the block
+                    const parentBlock = this.findBlock(block.id).parentBlock;
+                    const isValid = this.validate(parentBlock);
+                    if (!isValid) {
+                        this.moveBlockToTopLevel(block.id);
+                    }
                 });
 
             // Highlight rectangle
