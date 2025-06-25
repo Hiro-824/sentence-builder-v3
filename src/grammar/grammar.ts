@@ -1,4 +1,4 @@
-import { CustomUnificationPath, FeatureStructure, FeatureValue, MissingArgument, Phrase, RecursiveParseElement, SubPhraseInput, Word } from "@/models/grammar-entities";
+import { CustomUnificationPath, FeatureStructure, FeatureValue, MissingArgument, Phrase, RecursiveParseElement, SubPhraseInput, TranslationElement, TranslationTemplates, Word } from "@/models/grammar-entities";
 
 export class Grammar {
     enableLogging: boolean;
@@ -100,6 +100,7 @@ export class Grammar {
         return result;
     }
 
+    /*
     resolveTranslationTemplate(template: string, phrase: Phrase): string {
         return template.replace(/\{([^}]+)\}/g, (match, placeholder) => {
             const parts = placeholder.split('.');
@@ -167,6 +168,56 @@ export class Grammar {
 
             return `[[UNRESOLVED: ${placeholder}]]`;
         });
+    }
+    */
+
+    translate(template: TranslationElement[], phrase: Phrase): string {
+        // Helper to resolve a sub-phrase by path
+        function resolveByPath(obj: unknown, path: (string | number)[]): unknown {
+            let current: unknown = obj;
+            for (const segment of path) {
+                if (current == null || (typeof current !== 'object' && !Array.isArray(current))) return undefined;
+                current = (current as Record<string, unknown>)[segment as keyof typeof current];
+            }
+            return current;
+        }
+
+        const parts: string[] = template.map((element) => {
+            if (typeof element === "string") {
+                return element;
+            } else if (
+                typeof element === "object" &&
+                element !== null &&
+                Array.isArray(element.path) &&
+                typeof element.key === "string"
+            ) {
+                const subPhrase = resolveByPath(phrase, element.path);
+                const particle = (typeof element.particle === "string") ? element.particle : undefined;
+                if (
+                    subPhrase &&
+                    typeof subPhrase === "object" &&
+                    'translation' in subPhrase &&
+                    typeof (subPhrase as Phrase).translation === "object" &&
+                    (subPhrase as Phrase).translation !== null
+                ) {
+                    const translation = (subPhrase as Phrase).translation;
+                    if (translation && translation[element.key]) {
+                        // Recursively translate the sub-phrase
+                        const subKey = translation[element.key];
+                        const subResult = Array.isArray(subKey)
+                            ? this.translate(subKey, subPhrase as Phrase)
+                            : String(subKey);
+                        return particle ? `${subResult} ${particle}` : subResult;
+                    }
+                }
+                // Unresolved: create a regex-friendly placeholder
+                const pathStr = element.path?.join(".") ?? "";
+                return `[[UNRESOLVED:${pathStr}:${element.key}]]` + (particle ? ` ${particle}` : "");
+            } else {
+                return "[[UNRESOLVED:INVALID_ELEMENT]]";
+            }
+        });
+        return parts.join(" ").replace(/ +/g, " ").trim();
     }
 
     processArguments(currentPhrase: Phrase, actualArgs: Word[], expectedPhrases: Phrase[], side: "left" | "right"): Phrase | null {
@@ -279,6 +330,7 @@ export class Grammar {
         return currentPhraseState;
     }
 
+    /*
     processTranslation(assembledPhrase: Phrase, templates: FeatureStructure): FeatureStructure {
         const result: FeatureStructure = {};
         for (const key in templates) {
@@ -288,6 +340,15 @@ export class Grammar {
                 // Potentially handle nested translation structures if needed in the future
                 result[key] = this.deepCopy(templates[key]);
             }
+        }
+        return result;
+    }
+    */
+
+    processTranslation(phrase: Phrase, templates: TranslationTemplates): FeatureStructure {
+        const result: FeatureStructure = {};
+        for (const key in templates) {
+            result[key] = this.translate(templates[key], phrase);
         }
         return result;
     }
@@ -325,8 +386,8 @@ export class Grammar {
         }
 
         let finalTranslation: FeatureStructure | undefined = undefined;
-        if (initialPhrase.translation) {
-            finalTranslation = this.processTranslation(currentPhrase, initialPhrase.translation);
+        if (initialPhrase.translationTemplates) {
+            finalTranslation = this.processTranslation(currentPhrase, initialPhrase.translationTemplates);
             // We create a temporary phrase object with the final translation for the log
             const phraseForLog = { ...currentPhrase, translation: finalTranslation };
             this.logState("7. After Translation", phraseForLog);

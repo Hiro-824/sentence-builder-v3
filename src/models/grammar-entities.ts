@@ -1,5 +1,11 @@
 export type FeatureValue = string | number | boolean | FeatureStructure;
 export interface FeatureStructure { [key: string]: FeatureValue; }
+export type TranslationElement = string | {
+    path: (string | number)[];
+    key: string;
+    particle?: string;
+};
+export interface TranslationTemplates { [key: string]: TranslationElement[] }
 
 export interface Phrase {
     head: FeatureStructure;
@@ -11,6 +17,7 @@ export interface Phrase {
     rightModTargets?: Phrase[];
     customUnification?: CustomUnificationPath[][];
     translation?: FeatureStructure;
+    translationTemplates?: TranslationTemplates;
 }
 
 export type CustomUnificationPath = (string | number)[];

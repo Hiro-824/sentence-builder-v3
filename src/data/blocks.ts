@@ -865,10 +865,18 @@ export const blockSentence: Block = {
                     ['right', 0, 'gaps', 0, 'head']
                 ]
             ],
-            // This block's role is to take the fully formed translation from its
-            // right-hand child (the verb phrase) and select the 'default' version.
-            translation: {
-                default: "{left[0].default}が{right[0].default}"
+            translationTemplates: {
+                default: [
+                    {
+                        path: ["left", 0],
+                        key: "default",
+                        particle: "が",
+                    },
+                    {
+                        path: ["right", 0],
+                        key: "default",
+                    }
+                ]
             }
         }]
     }],
@@ -907,7 +915,9 @@ export const blockI: Block = {
                 agr: { type: "non-3sing", per: 1, num: "sing" },
                 case: "nom"
             },
-            translation: { default: "私" }
+            translationTemplates: {
+                default: ["私"]
+            }
         }]
     },
     {
@@ -990,6 +1000,16 @@ export const blockRead: Block = {
                     progressive: "{right[0].default}を読んでいる。",
                     imperfective: "{right[0].default}を読ま", // Stem for negation, e.g., ...読まない
                     imperative: "{right[0].default}を読め。"
+                },
+                translationTemplates: {
+                    default: [
+                        {
+                            path: ["right", 0],
+                            key: "default",
+                            particle: "を"
+                        },
+                        "読む"
+                    ]
                 }
             }]
         },
@@ -1066,18 +1086,24 @@ export const blockBook: Block = {
         token: "",
         categories: [{
             head: { type: "noun", agr: { type: "3sing" } },
-            translation: { default: "本" }
+            translationTemplates: {
+                default: ["本"]
+            }
         }]
     },
     {
         token: "",
         categories: [{
             head: { type: "noun", agr: { type: "non-3sing", num: "pl", per: 3 } },
-            translation: { default: "本" }
+            translationTemplates: {
+                default: ["本"]
+            }
         },
         {
             head: { type: "det", agr: { type: "non-3sing", num: "pl", per: 3 } },
-            translation: { default: "本" }
+            translationTemplates: {
+                default: ["本"]
+            }
         }
         ]
     }
