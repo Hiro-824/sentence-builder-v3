@@ -1126,9 +1126,18 @@ export const blockInteresting: Block = {
     words: [{
         token: "",
         categories: [{
-            head: { type: "noun", agr: { type: "3sing" } },
+            head: { type: "adj" },
             rightModTargets: [{
                 head: { type: "noun" }
+            }],
+            translationTemplates: {
+                default: ["面白い"]
+            }
+        },
+        {
+            head: { type: "adj" },
+            rightModTargets: [{
+                head: { type: "det", agr: { type: "non-3sing", num: "pl", per: 3 } }
             }],
             translationTemplates: {
                 default: ["面白い"]
