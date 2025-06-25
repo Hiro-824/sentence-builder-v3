@@ -100,77 +100,6 @@ export class Grammar {
         return result;
     }
 
-    /*
-    resolveTranslationTemplate(template: string, phrase: Phrase): string {
-        return template.replace(/\{([^}]+)\}/g, (match, placeholder) => {
-            const parts = placeholder.split('.');
-            const transKey = parts.pop();
-            const pathStr = parts.join('.');
-
-            if (!transKey) return `[[INVALID_PLACEHOLDER: ${placeholder}]]`;
-
-            let current: unknown = phrase; // Use 'unknown' for type safety
-            const pathSegments = pathStr.match(/(\w+)(\[\d+\])?/g);
-
-            if (!pathSegments) return `[[INVALID_PATH: ${pathStr}]]`;
-
-            for (const segment of pathSegments) {
-                // Type guard: We can only traverse into non-null objects.
-                if (typeof current !== 'object' || current === null) {
-                    current = undefined;
-                    break;
-                }
-
-                const arrayMatch = segment.match(/(\w+)\[(\d+)\]/);
-                if (arrayMatch) {
-                    const [, key, indexStr] = arrayMatch;
-                    const index = parseInt(indexStr, 10);
-                    
-                    // Check if the key exists on the current object.
-                    if (key in current) {
-                        const prop = (current as Record<string, unknown>)[key];
-                        // Check if the property is an array and the index is valid.
-                        if (Array.isArray(prop) && index < prop.length) {
-                            current = prop[index]; // The new current is the element from the array.
-                        } else {
-                            current = undefined;
-                            break;
-                        }
-                    } else {
-                        current = undefined;
-                        break;
-                    }
-                } else {
-                     // Direct property access.
-                     if (segment in current) {
-                        current = (current as Record<string, unknown>)[segment];
-                    } else {
-                        current = undefined;
-                        break;
-                    }
-                }
-            }
-            
-            // Type guard: The final resolved value must be a Phrase-like object
-            // with a `translation` property which is also an object.
-            if (
-                typeof current === 'object' &&
-                current !== null &&
-                'translation' in current &&
-                typeof (current as Phrase).translation === 'object' &&
-                (current as Phrase).translation !== null
-            ) {
-                const translationObject = (current as Phrase).translation as FeatureStructure;
-                if (typeof translationObject[transKey] === 'string') {
-                    return translationObject[transKey] as string;
-                }
-            }
-
-            return `[[UNRESOLVED: ${placeholder}]]`;
-        });
-    }
-    */
-
     translate(template: TranslationElement[], phrase: Phrase): string {
         // Helper to resolve a sub-phrase by path
         function resolveByPath(obj: unknown, path: (string | number)[]): unknown {
@@ -329,21 +258,6 @@ export class Grammar {
 
         return currentPhraseState;
     }
-
-    /*
-    processTranslation(assembledPhrase: Phrase, templates: FeatureStructure): FeatureStructure {
-        const result: FeatureStructure = {};
-        for (const key in templates) {
-            if (typeof templates[key] === 'string') {
-                result[key] = this.resolveTranslationTemplate(templates[key] as string, assembledPhrase);
-            } else {
-                // Potentially handle nested translation structures if needed in the future
-                result[key] = this.deepCopy(templates[key]);
-            }
-        }
-        return result;
-    }
-    */
 
     processTranslation(phrase: Phrase, templates: TranslationTemplates): FeatureStructure {
         const result: FeatureStructure = {};
