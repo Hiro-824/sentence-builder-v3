@@ -978,7 +978,7 @@ export const blockI: Block = {
         id: "head",
         hidden: false,
         type: "dropdown",
-        content: ["I", "my", "me", "mine", "myself"],
+        content: ["I", "my", "me", "mine"],
         selected: 0
     },
     {
