@@ -11,6 +11,8 @@ export interface Phrase {
     head: FeatureStructure;
     left?: Phrase[];
     right?: Phrase[];
+    leftModifiers?: Phrase[];
+    rightModifiers?: Phrase[];
     gaps?: Phrase[];
     categoryName?: string;
     leftModTargets?: Phrase[];

@@ -187,28 +187,46 @@ export class Grammar {
 
     processModifiers(currentPhrase: Phrase, modifierWords: Word[], side: "left" | "right"): Phrase | null {
         const phrase = this.deepCopy(currentPhrase);
-
+    
+        // Initialize modifier arrays if they don't exist
+        if (side === "left" && !phrase.leftModifiers) {
+            phrase.leftModifiers = [];
+        }
+        if (side === "right" && !phrase.rightModifiers) {
+            phrase.rightModifiers = [];
+        }
+    
         for (const modifierWord of modifierWords) {
             let wordApplied = false;
             for (const modCat of modifierWord.categories) {
-                // Determine which set of targets to use based on the modifier's position.
-                // A modifier on the left targets a head to its right.
-                // A modifier on the right targets a head to its left.
+                // Determine which set of targets to use
                 const targets = (side === 'left') ? modCat.rightModTargets : modCat.leftModTargets;
-
+    
                 if (targets) {
                     for (const target of targets) {
                         const unifiedHead = this.unify(phrase.head, target.head);
                         if (unifiedHead !== null) {
+                            // On success, update the head AND store the modifier
                             phrase.head = unifiedHead;
+                            const modifierPhrase = this.deepCopy(modCat);
+    
+                            if (side === 'left') {
+                                phrase.leftModifiers!.push(modifierPhrase);
+                            } else {
+                                phrase.rightModifiers!.push(modifierPhrase);
+                            }
+    
                             wordApplied = true;
-                            break;
+                            break; // Move to the next modifier word
                         }
                     }
                 }
-                if (wordApplied) break;
+                if (wordApplied) break; // Found a valid category for this word
             }
-            if (!wordApplied) return null;
+            if (!wordApplied) {
+                // If any modifier word cannot be applied, the parse fails
+                return null;
+            }
         }
         return phrase;
     }
@@ -313,6 +331,8 @@ export class Grammar {
             gaps: currentPhrase.gaps,
             left: currentPhrase.left,
             right: currentPhrase.right,
+            leftModifiers: currentPhrase.leftModifiers,
+            rightModifiers: currentPhrase.rightModifiers,
             leftModTargets: currentPhrase.leftModTargets,
             rightModTargets: currentPhrase.rightModTargets,
             categoryName: initialPhrase.categoryName ? `Unified(${initialPhrase.categoryName})` : 'UnifiedPhrase',
