@@ -930,8 +930,9 @@ export const blockI: Block = {
             customUnification: [
                 [["head", "agr"], ["right", 0, "head", "agr"]]
             ],
-            // "my" is a possessive determiner. Its translation combines with the noun.
-            translation: { default: "私の{right[0].default}" }
+            translationTemplates: {
+                default: ["私の", { path: ["right", 0], key: "default" }]
+            }
         }]
     },
     {
@@ -942,7 +943,9 @@ export const blockI: Block = {
                 agr: { type: "non-3sing", num: "sing", per: 1 },
                 case: "acc"
             },
-            translation: { default: "私" }
+            translationTemplates: {
+                default: ["私"]
+            }
         }]
     },
     {
@@ -952,7 +955,9 @@ export const blockI: Block = {
                 type: "det",
                 agr: { type: "3sing" },
             },
-            translation: { default: "私のもの" }
+            translationTemplates: {
+                default: ["私のもの"]
+            }
         }]
     },
     {
@@ -963,7 +968,9 @@ export const blockI: Block = {
                 agr: { type: "non-3sing", num: "sing", per: 1 },
                 refl: true
             },
-            translation: { default: "私自身" }
+            translationTemplates: {
+                default: ["私自身"]
+            }
         }]
     }
     ],
