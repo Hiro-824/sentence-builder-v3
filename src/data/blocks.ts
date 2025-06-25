@@ -1002,12 +1002,6 @@ export const blockRead: Block = {
                 head: { type: "verb", tense: "present" },
                 left: [{ head: { type: "det", agr: { type: "non-3sing" } } }],
                 right: [{ head: { type: "det" } }],
-                translation: {
-                    default: "{right[0].default}を読む。",
-                    progressive: "{right[0].default}を読んでいる。",
-                    imperfective: "{right[0].default}を読ま", // Stem for negation, e.g., ...読まない
-                    imperative: "{right[0].default}を読め。"
-                },
                 translationTemplates: {
                     default: [
                         {
@@ -1026,11 +1020,15 @@ export const blockRead: Block = {
                 head: { type: "verb", tense: "present" },
                 left: [{ head: { type: "det", agr: { type: "3sing" }, case: "nom" } }],
                 right: [{ head: { type: "det" } }],
-                translation: {
-                    default: "{right[0].default}を読む。",
-                    progressive: "{right[0].default}を読んでいる。",
-                    imperfective: "{right[0].default}を読ま",
-                    imperative: "{right[0].default}を読め。"
+                translationTemplates: {
+                    default: [
+                        {
+                            path: ["right", 0],
+                            key: "default",
+                            particle: "を"
+                        },
+                        "読む"
+                    ]
                 }
             }]
         },
@@ -1040,11 +1038,15 @@ export const blockRead: Block = {
                 head: { type: "verb", tense: "past" },
                 left: [{ head: { type: "det", agr: { type: "non-3sing" } } }],
                 right: [{ head: { type: "det" } }],
-                translation: {
-                    default: "{right[0].default}を読んだ。",
-                    progressive: "{right[0].default}を読んでいた。",
-                    imperfective: "{right[0].default}を読ま",
-                    imperative: "{right[0].default}を読め。"
+                translationTemplates: {
+                    default: [
+                        {
+                            path: ["right", 0],
+                            key: "default",
+                            particle: "を"
+                        },
+                        "読んだ"
+                    ]
                 }
             }]
         },
@@ -1054,7 +1056,16 @@ export const blockRead: Block = {
                 head: { type: "verb", finite: false },
                 left: [{ head: { type: "det", agr: { type: "3sing" }, case: "nom" } }],
                 right: [{ head: { type: "det" } }],
-                translation: { default: "読んでいる" }
+                translationTemplates: {
+                    default: [
+                        {
+                            path: ["right", 0],
+                            key: "default",
+                            particle: "を"
+                        },
+                        "読んでいる"
+                    ]
+                }
             }]
         },
         {
@@ -1062,8 +1073,11 @@ export const blockRead: Block = {
             categories: [{
                 head: { type: "verb", finite: false },
                 left: [{ head: { type: "det", agr: { type: "3sing" }, case: "nom" } }],
-                right: [{ head: { type: "det" } }],
-                translation: { default: "読まれ" }
+                translationTemplates: {
+                    default: [
+                        "読まれた"
+                    ]
+                }
             }]
         },
     ],
@@ -1080,7 +1094,7 @@ export const blockRead: Block = {
         type: "placeholder",
         content: null,
         hidden: false,
-        headIndex: [0, 1, 2, 3, 4]
+        headIndex: [0, 1, 2, 3]
     }
     ]
 }
