@@ -13,6 +13,8 @@ export class Renderer {
         this.viewportHeight = window.innerHeight
         this.converter = new Converter;
         this.grammar = new Grammar;
+        // Update translation for all initial blocks
+        this.blocks.forEach(block => this.updateBlockTranslation(block));
         this.render();
     }
 
@@ -73,6 +75,8 @@ export class Renderer {
     }
 
     renderBlock(block, parent, fromSideBar = false, sideBarId = undefined) {
+        // Update translation before rendering
+        this.updateBlockTranslation(block);
         const blockGroup = parent.append("g")
             .attr("transform", `translate(${block.x}, ${block.y})`)
             .attr("id", block.id)
@@ -90,6 +94,8 @@ export class Renderer {
 
     updateBlock(id) {
         const foundResult = this.findBlock(id);
+        // Update translation for the root parent before rendering
+        this.updateBlockTranslation(foundResult.rootParent);
         const parentUI = d3.select(`#${foundResult.rootParent.id}`);
         const parentContainer = d3.select(parentUI.node().parentNode);
         parentUI.remove();
@@ -1049,6 +1055,8 @@ export class Renderer {
         const updatedParent = this.previewInsertion(id, targetParentId, index);
         this.removeBlock(id);
         this.updateBlockInData(updatedParent);
+        // Update translation for the updated parent/root
+        this.updateBlockTranslation(updatedParent);
         this.renderBlocks();
     }
 
@@ -1056,6 +1064,8 @@ export class Renderer {
         const updatedParent = this.previewAttachment(id, targetParentId, side);
         this.removeBlock(id);
         this.updateBlockInData(updatedParent);
+        // Update translation for the updated parent/root
+        this.updateBlockTranslation(updatedParent);
         this.renderBlocks();
     }
 
@@ -1164,6 +1174,39 @@ export class Renderer {
         const validationResult = this.grammar.parseNestedPhrase(phraseInput);
         console.log(validationResult);
         return (validationResult.categories.length > 0);
+    }
+
+    updateBlockTranslation(block) {
+        if (!block) return;
+        // Recursively update children
+        if (Array.isArray(block.children)) {
+            block.children.forEach(child => {
+                if ((child.type === "placeholder" || child.type === "attachment") && child.content) {
+                    this.updateBlockTranslation(child.content);
+                }
+            });
+        }
+        // Set translation for this block
+        const phraseInput = this.converter.convert(block);
+        if (phraseInput) {
+            const result = this.grammar.parseNestedPhrase(phraseInput);
+            if (result && result.categories && result.categories.length > 0) {
+                // Use the first parse result's translation if available
+                const translationObj = result.categories[0].translation;
+                if (translationObj && typeof translationObj === 'object') {
+                    // Use the first key's value as the translation string
+                    const firstKey = Object.keys(translationObj)[0];
+                    const rawTranslation = translationObj[firstKey] || '';
+                    block.translation = this.converter.formatTranslation(rawTranslation);
+                } else {
+                    block.translation = '';
+                }
+            } else {
+                block.translation = '';
+            }
+        } else {
+            block.translation = '';
+        }
     }
 
     /*幅・高さ・色の計算(できれば他に移動したい)***********************************************************************************************************************************************************************************************************************************************************************************************************************/

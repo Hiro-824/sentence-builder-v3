@@ -66,4 +66,12 @@ export class Converter {
             phraseName: block.id,
         };
     }
+
+    formatTranslation(translation: string) {
+        // Remove all spaces
+        let result = translation.replace(/\s+/g, "");
+        // Replace [[UNRESOLVED...]] patterns with '＿'
+        result = result.replace(/\[\[UNRESOLVED[^\]]*\]\]/g, "＿");
+        return result;
+    }
 }
