@@ -100,6 +100,7 @@ export class Grammar {
         return result;
     }
 
+    // Replace the entire existing `translate` method with this one.
     translate(template: TranslationElement[], phrase: Phrase): string {
         // Helper to resolve a sub-phrase by path
         function resolveByPath(obj: unknown, path: (string | number)[]): unknown {
@@ -111,7 +112,34 @@ export class Grammar {
             return current;
         }
 
-        const parts: string[] = template.map((element) => {
+        // --- NEW: Helper function to translate an array of modifiers ---
+        const translateModifiers = (modifiers: Phrase[] | undefined): string => {
+            if (!modifiers || modifiers.length === 0) {
+                return "";
+            }
+            return modifiers.map(mod => {
+                // A modifier is itself a Phrase. We need to find its own translation
+                // for the same key we are currently processing.
+                const modTranslation = mod.translation?.["default"];
+                if (Array.isArray(modTranslation)) {
+                    // If the modifier's translation is complex (i.e., a template),
+                    // we recursively call `translate`. This correctly handles
+                    // modifiers that have their own modifiers (e.g., "very big").
+                    return this.translate(modTranslation, mod);
+                } else if (typeof modTranslation === 'string') {
+                    // If it's a simple string, just return it.
+                    return modTranslation;
+                }
+                // If the modifier has no translation for this key, return an empty string.
+                return "";
+            }).join(" ");
+        };
+
+        // --- STAGE 1: Translate Left Modifiers ---
+        const leftModsTranslation = translateModifiers(phrase.leftModifiers);
+
+        // --- STAGE 2: Translate the main template (Original Logic) ---
+        const mainParts = template.map((element) => {
             if (typeof element === "string") {
                 return element;
             } else if (
@@ -131,22 +159,34 @@ export class Grammar {
                 ) {
                     const translation = (subPhrase as Phrase).translation;
                     if (translation && translation[element.key]) {
-                        // Recursively translate the sub-phrase
-                        const subKey = translation[element.key];
-                        const subResult = Array.isArray(subKey)
-                            ? this.translate(subKey, subPhrase as Phrase)
-                            : String(subKey);
+                        const subTemplate = translation[element.key];
+                        // IMPORTANT: The recursive call now passes the key from the template element.
+                        const subResult = Array.isArray(subTemplate)
+                            ? this.translate(subTemplate, subPhrase as Phrase)
+                            : String(subTemplate);
                         return particle ? `${subResult} ${particle}` : subResult;
                     }
                 }
-                // Unresolved: create a regex-friendly placeholder
                 const pathStr = element.path?.join(".") ?? "";
                 return `[[UNRESOLVED:${pathStr}:${element.key}]]` + (particle ? ` ${particle}` : "");
             } else {
                 return "[[UNRESOLVED:INVALID_ELEMENT]]";
             }
         });
-        return parts.join(" ").replace(/ +/g, " ").trim();
+        const mainTranslation = mainParts.join(" ");
+
+        // --- STAGE 3: Translate Right Modifiers ---
+        const rightModsTranslation = translateModifiers(phrase.rightModifiers);
+
+        // --- FINAL ASSEMBLY ---
+        // Combine all parts, filtering out empty strings to avoid extra spaces.
+        const finalResult = [
+            leftModsTranslation,
+            mainTranslation,
+            rightModsTranslation
+        ].filter(Boolean).join(" "); // filter(Boolean) is a concise way to remove empty strings
+
+        return finalResult.replace(/ +/g, " ").trim();
     }
 
     processArguments(currentPhrase: Phrase, actualArgs: Word[], expectedPhrases: Phrase[], side: "left" | "right"): Phrase | null {
@@ -187,7 +227,7 @@ export class Grammar {
 
     processModifiers(currentPhrase: Phrase, modifierWords: Word[], side: "left" | "right"): Phrase | null {
         const phrase = this.deepCopy(currentPhrase);
-    
+
         // Initialize modifier arrays if they don't exist
         if (side === "left" && !phrase.leftModifiers) {
             phrase.leftModifiers = [];
@@ -195,13 +235,13 @@ export class Grammar {
         if (side === "right" && !phrase.rightModifiers) {
             phrase.rightModifiers = [];
         }
-    
+
         for (const modifierWord of modifierWords) {
             let wordApplied = false;
             for (const modCat of modifierWord.categories) {
                 // Determine which set of targets to use
                 const targets = (side === 'left') ? modCat.rightModTargets : modCat.leftModTargets;
-    
+
                 if (targets) {
                     for (const target of targets) {
                         const unifiedHead = this.unify(phrase.head, target.head);
@@ -209,13 +249,13 @@ export class Grammar {
                             // On success, update the head AND store the modifier
                             phrase.head = unifiedHead;
                             const modifierPhrase = this.deepCopy(modCat);
-    
+
                             if (side === 'left') {
                                 phrase.leftModifiers!.push(modifierPhrase);
                             } else {
                                 phrase.rightModifiers!.push(modifierPhrase);
                             }
-    
+
                             wordApplied = true;
                             break; // Move to the next modifier word
                         }
