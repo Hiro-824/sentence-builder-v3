@@ -923,7 +923,7 @@ export const blockI: Block = {
     {
         token: "my",
         categories: [{
-            head: { type: "det", agr: {} },
+            head: { type: "det", agr: {}, determinered: true },
             right: [{
                 head: { type: "noun", agr: {} }
             }],
@@ -1157,7 +1157,7 @@ export const blockInteresting: Block = {
         {
             head: { type: "adj" },
             rightModTargets: [{
-                head: { type: "det", agr: { type: "non-3sing", num: "pl", per: 3 } }
+                head: { type: "det", agr: { type: "non-3sing", num: "pl", per: 3 }, determinered: false }
             }],
             translationTemplates: {
                 default: ["面白い"]
@@ -1181,7 +1181,7 @@ export const blockThe: Block = {
     words: [{
         token: "",
         categories: [{
-            head: { type: "det", agr: {} },
+            head: { type: "det", agr: {}, determinered: true },
             right: [{
                 head: { type: "noun", agr: {} }
             }],
@@ -1216,7 +1216,7 @@ export const blockA: Block = {
     words: [{
         token: "",
         categories: [{
-            head: { type: "det", agr: { type: "3sing" } },
+            head: { type: "det", agr: { type: "3sing" }, determinered: true },
             right: [{
                 head: { type: "noun", agr: { type: "3sing" } }
             }],
