@@ -817,7 +817,7 @@ export class Renderer {
                 const info = id.split("-");
                 const parentId = info[1];
 
-                const expectedBlock = this.previewAttachment(blockData.id, parentId, side);
+                const expectedBlock = this.previewAttachment(blockData.id, parentId, possibleSide);
                 const isValid = this.validate(expectedBlock);
 
                 if (isValid) {
@@ -1169,10 +1169,11 @@ export class Renderer {
 
     validate(block) {
         const phraseInput = this.converter.convert(block);
-        console.log(phraseInput);
+        console.log("block:", block);
+        console.log("converted:", phraseInput);
         if(!phraseInput) return false;
         const validationResult = this.grammar.parseNestedPhrase(phraseInput);
-        console.log(validationResult);
+        console.log("validated:", validationResult);
         return (validationResult.categories.length > 0);
     }
 

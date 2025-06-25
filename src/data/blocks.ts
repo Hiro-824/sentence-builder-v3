@@ -1119,6 +1119,32 @@ export const blockBook: Block = {
     }]
 }
 
+export const blockInteresting: Block = {
+    id: "",
+    x: 0,
+    y: 0,
+    words: [{
+        token: "",
+        categories: [{
+            head: { type: "noun", agr: { type: "3sing" } },
+            rightModTargets: [{
+                head: { type: "noun" }
+            }],
+            translationTemplates: {
+                default: ["面白い"]
+            }
+        }]
+    }],
+    color: "dodgerblue",
+    isRound: true,
+    children: [{
+        id: "head",
+        hidden: false,
+        type: "text",
+        content: ["interesting"],
+    }]
+}
+
 export const blockList = {
     "文": [
         blockSentence,
@@ -1134,7 +1160,9 @@ export const blockList = {
         blockRead,
     ],
     "前置詞": [],
-    "形容詞": [],
+    "形容詞": [
+        blockInteresting,
+    ],
     "副詞": [],
     "関係詞": []
 }
