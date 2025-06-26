@@ -486,6 +486,7 @@ export class Renderer {
                     const isValid = this.validate(parentBlock);
                     if (!isValid) {
                         this.moveBlockToTopLevel(block.id, true);
+                        this.updateBlock(block.id);
                     }
                 });
 
