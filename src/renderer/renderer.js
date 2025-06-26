@@ -319,7 +319,7 @@ export class Renderer {
         const actualCornerRadius = block.isRound ? height / 2 : blockCornerRadius;
 
         // Render translation bubble if this is a top-level block (parent is grid)
-        if (blockGroup.node().parentNode && blockGroup.node().parentNode.id === "grid") {
+        if ((blockGroup.node().parentNode && blockGroup.node().parentNode.id === "grid") || block.id === this.draggedBlockId) {
             this.renderTranslationBubble(block, blockGroup, width, height);
         }
 
@@ -625,6 +625,9 @@ export class Renderer {
             d3.select(`#${d.id}`).attr("transform", `translate(${d.x}, ${d.y})`);
 
             this.dragStarted = true;
+            this.draggedBlockId = d.id;
+
+            this.updateBlock(d.id);
         } else {
             const dx = event.x - this.dragStartX;
             const dy = event.y - this.dragStartY;
@@ -656,6 +659,7 @@ export class Renderer {
             this.moveBlockToGrid(d.id);
         }
 
+        this.draggedBlockId = null;
         this.updateBlock(d.id);
     }
 
