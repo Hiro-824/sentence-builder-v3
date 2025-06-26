@@ -485,7 +485,7 @@ export class Renderer {
                     const parentBlock = this.findBlock(block.id).rootParent;
                     const isValid = this.validate(parentBlock);
                     if (!isValid) {
-                        this.moveBlockToTopLevel(block.id);
+                        this.moveBlockToTopLevel(block.id, true);
                     }
                 });
 
@@ -1021,7 +1021,7 @@ export class Renderer {
     }
 
     // UIを変更する
-    moveBlockToTopLevel(id) {
+    moveBlockToTopLevel(id, hop = false) {
         const foundResult = this.findBlock(id);
         if (!foundResult.parentBlock) return;
 
@@ -1029,6 +1029,10 @@ export class Renderer {
         let block = foundResult.foundBlock;
         block.x = foundResult.absoluteX;
         block.y = foundResult.absoluteY;
+        if(hop) {
+            block.x += 16;
+            block.y += 16;
+        }
         this.removeBlock(id);
         this.blocks.push(block);
 
@@ -1175,7 +1179,7 @@ export class Renderer {
         const phraseInput = this.converter.convert(block);
         console.log("block:", block);
         console.log("converted:", phraseInput);
-        if(!phraseInput) return false;
+        if (!phraseInput) return false;
         const validationResult = this.grammar.parseNestedPhrase(phraseInput);
         console.log("validated:", validationResult);
         return (validationResult.categories.length > 0);
