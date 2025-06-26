@@ -615,7 +615,6 @@ export class Renderer {
 
             this.moveBlockToTopLevel(d.id);
             this.moveBlockToDragboard(d.id);
-            this.grabbingHighlight(d.id, true);
 
             this.dragStartX = event.x;
             this.dragStartY = event.y;
@@ -628,6 +627,7 @@ export class Renderer {
             this.draggedBlockId = d.id;
 
             this.updateBlock(d.id);
+            this.grabbingHighlight(d.id, true);
         } else {
             const dx = event.x - this.dragStartX;
             const dy = event.y - this.dragStartY;
