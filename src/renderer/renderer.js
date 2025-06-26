@@ -318,7 +318,7 @@ export class Renderer {
         const strokeColor = this.darkenColor(block.color, 30);
         const actualCornerRadius = block.isRound ? height / 2 : blockCornerRadius;
 
-        // Render translation bubble if this is a top-level block (parent is grid)
+        // 日本語訳を表示する条件：ドラッグ中 or トップレベル(gridの直下にある)
         if ((blockGroup.node().parentNode && blockGroup.node().parentNode.id === "grid") || block.id === this.draggedBlockId) {
             this.renderTranslationBubble(block, blockGroup, width, height);
         }
