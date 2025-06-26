@@ -18,37 +18,57 @@ export class Converter {
 
         const leftArgs: RecursiveParseElement[] = Array(expectedLeftCount).fill(MissingArgument);
         const rightArgs: RecursiveParseElement[] = Array(expectedRightCount).fill(MissingArgument);
-
+        
         const headChildIndexInParent = block.children.findIndex(c => c.id === "head");
-        const potentialChildren = block.children.filter(c =>
+
+        // Separate children into placeholders (for arguments) and attachments (for modifiers)
+        const placeholderChildren = block.children.filter(c =>
             c.id !== "head" &&
             !c.hidden &&
-            (c.type === 'placeholder' || c.type === 'attachment')
+            c.type === 'placeholder' &&
+            c.content
         );
 
-        const potentialLeftChildren = potentialChildren
-            .filter(c => block.children.indexOf(c) < headChildIndexInParent)
-            .map(c => this.convert(c.content as Block))
+        const attachmentChildren = block.children.filter(c =>
+            c.id !== "head" &&
+            !c.hidden &&
+            c.type === 'attachment' &&
+            c.content
+        );
 
-        const potentialRightChildren = potentialChildren
-            .filter(c => block.children.indexOf(c) > headChildIndexInParent)
-            .map(c => this.convert(c.content as Block))
+        // Populate arguments ONLY from placeholders
+        const leftPlaceholders = placeholderChildren.filter(c => block.children.indexOf(c) < headChildIndexInParent);
+        const rightPlaceholders = placeholderChildren.filter(c => block.children.indexOf(c) > headChildIndexInParent);
 
-        for (let i = 0; i < Math.min(expectedLeftCount, potentialLeftChildren.length); i++) {
-            const convertedChild = potentialLeftChildren.shift();
-            if (convertedChild !== undefined) {
-                leftArgs[i] = convertedChild;
+        leftPlaceholders.forEach((p, i) => {
+            if (i < expectedLeftCount) {
+                const convertedChild = this.convert(p.content as Block);
+                if (convertedChild) {
+                    leftArgs[i] = convertedChild;
+                }
             }
-        }
-        for (let i = 0; i < Math.min(expectedRightCount, potentialRightChildren.length); i++) {
-            const convertedChild = potentialRightChildren.shift();
-            if (convertedChild !== undefined) {
-                rightArgs[i] = convertedChild;
-            }
-        }
+        });
 
-        const leftModifiers = potentialLeftChildren.filter(c => c !== undefined);
-        const rightModifiers = potentialRightChildren.filter(c => c !== undefined);
+        rightPlaceholders.forEach((p, i) => {
+            if (i < expectedRightCount) {
+                const convertedChild = this.convert(p.content as Block);
+                if (convertedChild) {
+                    rightArgs[i] = convertedChild;
+                }
+            }
+        });
+
+        // Populate modifiers ONLY from attachments
+        const leftAttachments = attachmentChildren.filter(c => block.children.indexOf(c) < headChildIndexInParent);
+        const rightAttachments = attachmentChildren.filter(c => block.children.indexOf(c) > headChildIndexInParent);
+        
+        const leftModifiers = leftAttachments
+            .map(c => this.convert(c.content as Block))
+            .filter((c): c is SubPhraseInput => c !== undefined);
+
+        const rightModifiers = rightAttachments
+            .map(c => this.convert(c.content as Block))
+            .filter((c): c is SubPhraseInput => c !== undefined);
 
         const elements: RecursiveParseElement[] = [
             ...leftModifiers,
@@ -66,6 +86,7 @@ export class Converter {
             phraseName: block.id,
         };
     }
+
 
     formatTranslation(translation: string) {
         // Remove all spaces
