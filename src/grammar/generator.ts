@@ -24,6 +24,15 @@ export interface PronounConfig {
     translations: PronounTranslations;
 }
 
+export interface NounConfig {
+    id: string;
+    isCountable: boolean;
+    singularForm: string;
+    pluralForm?: string;
+    translation: string;
+    color?: string;
+}
+
 export class Generator {
     private getAgrType(person: 1 | 2 | 3, number: 'sing' | 'pl'): '3sing' | 'non-3sing' {
         return person === 3 && number === 'sing' ? '3sing' : 'non-3sing';
@@ -170,6 +179,98 @@ export class Generator {
                 hidden: true, // Hide by default, logic will show it
                 headIndex: [possessiveDetIndex], // Link to the 'my' form
             }]
+        };
+    }
+
+    private createSingularCountableNounCategory(translation: string): Phrase {
+        return {
+            head: { type: "noun", agr: { type: "3sing" } },
+            translationTemplates: {
+                default: [translation]
+            }
+        };
+    }
+
+    private createPluralCountableNounCategories(translation: string): Phrase[] {
+        const sharedAgr = { type: "non-3sing", num: "pl", per: 3 };
+        const sharedTranslation = { default: [translation] };
+        return [
+            // Category 1: A full determiner phrase (can be a subject/object)
+            {
+                head: { type: "det", agr: sharedAgr },
+                translationTemplates: sharedTranslation
+            },
+            // Category 2: A simple noun (can be modified by another determiner)
+            {
+                head: { type: "noun", agr: sharedAgr },
+                translationTemplates: sharedTranslation
+            }
+        ];
+    }
+
+    private createUncountableNounCategories(translation: string): Phrase[] {
+        const sharedAgr = { type: "3sing" };
+        const sharedTranslation = { default: [translation] };
+        return [
+            // Category 1: A full determiner phrase (can be a subject/object)
+            {
+                head: { type: "det", agr: sharedAgr },
+                translationTemplates: sharedTranslation
+            },
+            // Category 2: A simple noun (can be modified by another determiner)
+            {
+                head: { type: "noun", agr: sharedAgr },
+                translationTemplates: sharedTranslation
+            }
+        ];
+    }
+
+    createNounBlock(config: NounConfig): Block {
+        const { id, isCountable, singularForm, translation } = config;
+        const color = config.color || "dodgerblue";
+        let words: Word[];
+        let children: Block['children'];
+
+        if (isCountable) {
+            const plural = config.pluralForm ?? `${singularForm}s`;
+            words = [
+                {
+                    token: singularForm,
+                    categories: [this.createSingularCountableNounCategory(translation)]
+                },
+                {
+                    token: plural,
+                    categories: this.createPluralCountableNounCategories(translation)
+                }
+            ];
+            children = [{
+                id: "head",
+                type: "dropdown",
+                content: [singularForm, plural],
+                selected: 0,
+                hidden: false,
+            }];
+        } else { // Uncountable
+            words = [{
+                token: singularForm,
+                categories: this.createUncountableNounCategories(translation)
+            }];
+            children = [{
+                id: "head",
+                type: "text",
+                content: singularForm,
+                hidden: false,
+            }];
+        }
+
+        return {
+            id,
+            x: 0,
+            y: 0,
+            color,
+            isRound: true,
+            words,
+            children
         };
     }
 }
