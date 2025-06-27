@@ -34,6 +34,40 @@ export interface NounConfig {
     color?: string;
 }
 
+export interface VerbForms {
+    base: string;
+    es: string;
+    ed: string;
+    en: string;
+    ing: string;
+}
+
+export interface VerbTranslation {
+    [key: string]: string;
+}
+
+export interface VerbTranslations {
+    present: VerbTranslation;
+    past: VerbTranslation;
+    progressive: VerbTranslation;
+    perfect: VerbTranslation;
+    passive?: VerbTranslation;
+}
+
+export interface VerbTranslationParticleConfiguration {
+    directObjectParticle: string;
+    indirectObjectParticle: string;
+}
+
+export interface VerbConfig {
+    id: string;
+    type: "intransitive" | "transitive" | "ditransitive";
+    forms: VerbForms;
+    translations: VerbTranslations;
+    particleConfiguratons: VerbTranslationParticleConfiguration;
+    color?: string;
+}
+
 export class Generator {
     private getAgrType(person: 1 | 2 | 3, number: 'sing' | 'pl'): '3sing' | 'non-3sing' {
         return person === 3 && number === 'sing' ? '3sing' : 'non-3sing';
