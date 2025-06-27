@@ -953,7 +953,7 @@ export const blockI: Block = {
         categories: [{
             head: {
                 type: "det",
-                agr: { type: "3sing" },
+                agr: { per: 3 },
             },
             translationTemplates: {
                 default: ["私のもの"]
