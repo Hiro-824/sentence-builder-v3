@@ -249,12 +249,12 @@ export class Generator {
         return [
             // Category 1: A full determiner phrase (can be a subject/object)
             {
-                head: { type: "det", agr: sharedAgr },
+                head: { type: "det", agr: sharedAgr, count: false },
                 translationTemplates: sharedTranslation
             },
             // Category 2: A simple noun (can be modified by another determiner)
             {
-                head: { type: "noun", agr: sharedAgr },
+                head: { type: "noun", agr: sharedAgr, count: false },
                 translationTemplates: sharedTranslation
             }
         ];

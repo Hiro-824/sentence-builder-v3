@@ -1037,7 +1037,7 @@ export const blockRead: Block = {
             token: "read(past)",
             categories: [{
                 head: { type: "verb", tense: "past" },
-                left: [{ head: { type: "det", agr: { type: "non-3sing" } } }],
+                left: [{ head: { type: "det" } }],
                 right: [{ head: { type: "det" } }],
                 translationTemplates: {
                     default: [
@@ -1220,7 +1220,7 @@ export const blockA: Block = {
         categories: [{
             head: { type: "det", agr: { type: "3sing" }, determinered: true },
             right: [{
-                head: { type: "noun", agr: { type: "3sing" } }
+                head: { type: "noun", agr: { type: "3sing" }, count: true }
             }],
             translationTemplates: {
                 default: ["(ある)", { path: ["right", 0], key: "default" }]
