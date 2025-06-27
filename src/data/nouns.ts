@@ -16,7 +16,8 @@ const configChild: NounConfig = {
     isCountable: true,
     singularForm: "child",
     pluralForm: "children",
-    translation: "子供"
+    translation: "子供",
+    pluralTranslation: "子供たち"
 };
 
 const configInformation: NounConfig = {

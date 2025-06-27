@@ -1257,9 +1257,7 @@ export const blockList = {
     "名詞": [
         ...allNounBlocks
     ],
-    "動詞": [
-        blockRead,
-    ],
+    "動詞": [],
     "前置詞": [],
     "形容詞": [
         blockInteresting,

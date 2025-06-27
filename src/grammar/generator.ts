@@ -30,6 +30,7 @@ export interface NounConfig {
     singularForm: string;
     pluralForm?: string;
     translation: string;
+    pluralTranslation?: string;
     color?: string;
 }
 
@@ -226,7 +227,7 @@ export class Generator {
     }
 
     createNounBlock(config: NounConfig): Block {
-        const { id, isCountable, singularForm, translation } = config;
+        const { id, isCountable, singularForm, translation, pluralTranslation } = config;
         const color = config.color || "dodgerblue";
         let words: Word[];
         let children: Block['children'];
@@ -240,7 +241,7 @@ export class Generator {
                 },
                 {
                     token: plural,
-                    categories: this.createPluralCountableNounCategories(translation)
+                    categories: this.createPluralCountableNounCategories(pluralTranslation ?? translation)
                 }
             ];
             children = [{
