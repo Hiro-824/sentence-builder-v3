@@ -54,17 +54,14 @@ export interface VerbTranslations {
     passive?: VerbTranslation;
 }
 
-export interface VerbTranslationParticleConfiguration {
-    directObjectParticle: string;
-    indirectObjectParticle: string;
-}
-
 export interface VerbConfig {
     id: string;
-    type: "intransitive" | "transitive" | "ditransitive";
     forms: VerbForms;
+    complements: {
+        expected: Phrase;
+        particle: string;
+    }[];
     translations: VerbTranslations;
-    particleConfiguratons: VerbTranslationParticleConfiguration;
     color?: string;
 }
 
