@@ -1,4 +1,5 @@
 import { Block } from "@/models/block";
+import { allPronounBlocks } from "./pronouns";
 
 /*export const Sentence_Block: Block = {
     id: "sentence",
@@ -1246,7 +1247,7 @@ export const blockList = {
         blockSentence,
     ],
     "代名詞": [
-        blockI,
+        ...allPronounBlocks,
     ],
     "冠詞": [
         blockA,
