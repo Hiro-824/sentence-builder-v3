@@ -487,6 +487,7 @@ export class Renderer {
                     if (!isValid) {
                         this.moveBlockToTopLevel(block.id, true);
                         this.updateBlock(block.id);
+                        d3.select(`#${block.id}`).raise();
                     }
                 });
 
