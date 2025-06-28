@@ -334,22 +334,31 @@ export class Renderer {
             .attr("stroke", strokeColor)
             .attr("stroke-width", blockStrokeWidth);
 
-        const children = block.children.filter(c => !c.hidden);
         let x = horizontalPadding + (block.isRound ? horizontalPadding : 0);
+        const allChildren = block.children;
 
-        // 内部の各種アイテムの描画
-        for (let count = 0; count < children.length; count++) {
-            const child = children[count];
+        // 内部の各種アイテムの描画 (Render various internal items)
+        // Iterate over the original children array to preserve the correct index.
+        for (let originalIndex = 0; originalIndex < allChildren.length; originalIndex++) {
+            const child = allChildren[originalIndex];
+            // Skip rendering if the child is marked as hidden.
+            if (child.hidden) {
+                continue;
+            }
+
             if (child.type === "placeholder") {
-                x += this.renderPlaceholder(child, height, block, blockGroup, count, x);
+                // Pass the 'originalIndex' which is the correct index in the data model.
+                x += this.renderPlaceholder(child, height, block, blockGroup, originalIndex, x);
             } else if (child.type === "text") {
                 x += this.renderText(child, height, blockGroup, x);
             } else if (child.type === "dropdown") {
-                x += this.renderDropdown(child, height, block, blockGroup, count, x);
+                // Pass the 'originalIndex' to dropdowns as well for consistency.
+                x += this.renderDropdown(child, height, block, blockGroup, originalIndex, x);
             } else if (child.type === "attachment") {
                 x += this.renderAttachment(child, height, blockGroup, x);
             }
         }
+        // ============================ FIX ENDS HERE ============================
 
         return { width: width, height: height };
     }
@@ -368,8 +377,13 @@ export class Renderer {
             //ブロックがはまっていない場合
             const y = (height - placeholderHeight) / 2;
             const inputColor = this.darkenColor(block.color, 30);
+            
+            // LOGGING: Log placeholder creation
+            const placeholderDomId = `placeholder-${count}-${block.id}-${child.id}`;
+            console.log(`Rendering placeholder with ID: ${placeholderDomId}. Original child index is ${count}.`);
+
             blockGroup.append("rect")
-                .attr("id", `placeholder-${count}-${block.id}-${child.id}`)
+                .attr("id", placeholderDomId)
                 .attr("x", x)
                 .attr("y", y)
                 .attr("width", placeholderWidth)
@@ -650,9 +664,12 @@ export class Renderer {
         const overlapInfo = this.detectBlockOverlap(d);
 
         if (placeholderId) {
+            // LOGGING: Log drop event
+            console.log(`Dropped on placeholder with ID: ${placeholderId}`);
             const info = placeholderId.split("-");
             const parentId = info[2];
             const index = info[1];
+            console.log(`Attempting to insert into parent ${parentId} at original index ${index}`);
             this.insertBlock(d.id, parentId, index);
         } else if (overlapInfo) {
             const targetBlockId = overlapInfo.id.split("-")[1];
@@ -913,7 +930,17 @@ export class Renderer {
 
         const targetParentResult = this.findBlock(targetParentId);
         const targetParent = targetParentResult.foundBlock;
-        if (!targetParent || !targetParent.children[index] || targetParent.children[index].type !== "placeholder") return;
+        
+        // LOGGING: Check insertion target
+        console.log(`previewInsertion: Target parent (ID: ${targetParentId}) found:`, JSON.parse(JSON.stringify(targetParent)));
+        console.log(`previewInsertion: Target index: ${index}`);
+
+        if (!targetParent || !targetParent.children[index] || targetParent.children[index].type !== "placeholder") {
+            console.error(`previewInsertion: Invalid target at index ${index}. Child is:`, targetParent.children[index]);
+            return;
+        }
+
+        console.log(`previewInsertion: Targeting child at index ${index}:`, JSON.parse(JSON.stringify(targetParent.children[index])));
 
         // Create a deep copy of the root parent block
         const expectedParent = JSON.parse(JSON.stringify(targetParentResult.rootParent));
@@ -970,6 +997,9 @@ export class Renderer {
             }
             if (block.children) {
                 for (const child of block.children) {
+                    // Skip hidden children
+                    if (child.hidden) continue;
+                    
                     if (child.type === "placeholder" || child.type === "attachment") {
                         if (child.content && updateParentInCopy(child.content)) {
                             return true;
@@ -1062,7 +1092,16 @@ export class Renderer {
     }
 
     insertBlock(id, targetParentId, index) {
+        // LOGGING: Log insertion call
+        console.log(`insertBlock called: Inserting block ${id} into parent ${targetParentId} at index ${index}`);
         const updatedParent = this.previewInsertion(id, targetParentId, index);
+        if (!updatedParent) {
+            console.error("Insertion failed, preview returned nothing. Aborting.");
+            // We might need to move the block back to the grid if insertion fails.
+            this.moveBlockToGrid(id);
+            this.updateBlock(id); // Rerender the dragged block at its new position
+            return;
+        }
         this.removeBlock(id);
         this.updateBlockInData(updatedParent);
         // Update translation for the updated parent/root
