@@ -403,7 +403,7 @@ export class Generator {
 
         const placeholders: BlockChild[] = config.complements.map((_, index) => {
             return {
-                id: "complement",
+                id: `complement-${index}`,
                 type: "placeholder",
                 content: null,
                 hidden: false,
