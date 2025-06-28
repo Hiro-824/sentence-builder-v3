@@ -490,7 +490,8 @@ export class Renderer {
             const optionGroup = optionsGroup.append("g")
                 .classed("pointer", true)
                 .attr("id", `option-${index}-dropdown-${count}-${block.id}`)
-                .on("mousedown", () => {
+                .on("mousedown", (event) => {
+                    event.stopPropagation();
                     child.selected = index;
                     this.setChildVisibility(block.id);
                     this.updateBlock(block.id);
@@ -501,7 +502,7 @@ export class Renderer {
                     if (!isValid) {
                         this.moveBlockToTopLevel(block.id, true);
                         this.updateBlock(block.id);
-                        d3.select(`#${block.id}`).raise();
+                        setTimeout(() => d3.select(`#${block.id}`).raise(), 0); 
                     }
                 });
 
@@ -656,6 +657,7 @@ export class Renderer {
     }
 
     dragEnd(event, d) {
+        event.sourceEvent.stopPropagation();
         this.grabbingCursor(d.id, false);
         if (!this.dragStarted) return;
         this.dragStarted = false;
