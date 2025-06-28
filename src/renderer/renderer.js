@@ -644,6 +644,7 @@ export class Renderer {
 
             this.updateBlock(d.id);
             this.grabbingHighlight(d.id, true);
+            this.closeAllDropdowns();
         } else {
             const dx = event.x - this.dragStartX;
             const dy = event.y - this.dragStartY;
