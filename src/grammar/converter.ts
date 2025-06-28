@@ -22,11 +22,11 @@ export class Converter {
         const headChildIndexInParent = block.children.findIndex(c => c.id === "head");
 
         // Separate children into placeholders (for arguments) and attachments (for modifiers)
+        // FIX: Removed `&& c.content` to preserve the position of empty placeholders.
         const placeholderChildren = block.children.filter(c =>
             c.id !== "head" &&
             !c.hidden &&
-            c.type === 'placeholder' &&
-            c.content
+            c.type === 'placeholder'
         );
 
         const attachmentChildren = block.children.filter(c =>
@@ -41,7 +41,7 @@ export class Converter {
         const rightPlaceholders = placeholderChildren.filter(c => block.children.indexOf(c) > headChildIndexInParent);
 
         leftPlaceholders.forEach((p, i) => {
-            if (i < expectedLeftCount) {
+            if (i < expectedLeftCount && p.content) { // Added check for p.content here
                 const convertedChild = this.convert(p.content as Block);
                 if (convertedChild) {
                     leftArgs[i] = convertedChild;
@@ -50,7 +50,7 @@ export class Converter {
         });
 
         rightPlaceholders.forEach((p, i) => {
-            if (i < expectedRightCount) {
+            if (i < expectedRightCount && p.content) { // Added check for p.content here
                 const convertedChild = this.convert(p.content as Block);
                 if (convertedChild) {
                     rightArgs[i] = convertedChild;
