@@ -1,6 +1,7 @@
 import { Block } from "@/models/block";
 import { allPronounBlocks } from "./pronouns";
 import { allNounBlocks } from "./nouns";
+import { allVerbBlocks } from "./verbs";
 
 /*export const Sentence_Block: Block = {
     id: "sentence",
@@ -1001,7 +1002,7 @@ export const blockRead: Block = {
             token: "read(base)",
             categories: [{
                 head: { type: "verb", tense: "present" },
-                left: [{ head: { type: "det", agr: { type: "non-3sing" } } }],
+                left: [{ head: { type: "det", agr: { type: "non-3sing" }, case: "nom" } }],
                 right: [{ head: { type: "det" } }],
                 translationTemplates: {
                     default: [
@@ -1037,7 +1038,7 @@ export const blockRead: Block = {
             token: "read(past)",
             categories: [{
                 head: { type: "verb", tense: "past" },
-                left: [{ head: { type: "det" } }],
+                left: [{ head: { type: "det", case: "nom" } }],
                 right: [{ head: { type: "det" } }],
                 translationTemplates: {
                     default: [
@@ -1055,7 +1056,7 @@ export const blockRead: Block = {
             token: "reading",
             categories: [{
                 head: { type: "verb", finite: false },
-                left: [{ head: { type: "det", agr: { type: "3sing" }, case: "nom" } }],
+                left: [{ head: { type: "det", agr: { type: "3sing" } } }],
                 right: [{ head: { type: "det" } }],
                 translationTemplates: {
                     default: [
@@ -1073,7 +1074,7 @@ export const blockRead: Block = {
             token: "read",
             categories: [{
                 head: { type: "verb", finite: false },
-                left: [{ head: { type: "det", agr: { type: "3sing" }, case: "nom" } }],
+                left: [{ head: { type: "det", agr: { type: "3sing" } } }],
                 translationTemplates: {
                     default: [
                         "読まれた"
@@ -1258,7 +1259,7 @@ export const blockList = {
         ...allNounBlocks
     ],
     "動詞": [
-        blockRead,
+        ...allVerbBlocks,
     ],
     "前置詞": [],
     "形容詞": [
