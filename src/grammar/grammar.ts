@@ -192,31 +192,51 @@ export class Grammar {
     processArguments(currentPhrase: Phrase, actualArgs: Word[], expectedPhrases: Phrase[], side: "left" | "right"): Phrase | null {
         const newPhrase = this.deepCopy(currentPhrase);
         if (!newPhrase.gaps) newPhrase.gaps = [];
-        const unifiedArgs: Phrase[] = [];
+
+        const unifiedArgs: Phrase[] = []; // This will be built up with placeholders for missing args
+
         for (let i = 0; i < expectedPhrases.length; i++) {
             const expected = expectedPhrases[i];
             const actualWord = actualArgs[i];
             let argSatisfied = false;
-            if (actualWord.token === MissingArgument.token) { newPhrase.gaps.push(expected); continue; }
-            for (const cat of actualWord.categories) {
-                const unifiedHead = this.unify(cat.head, expected.head);
-                if (unifiedHead === null) continue;
-                const requiredGaps = expected.gaps || [];
-                const availableGaps = this.deepCopy(cat.gaps || []);
-                let allRequiredGapsMet = true;
-                for (const reqGap of requiredGaps) {
-                    const foundIndex = availableGaps.findIndex(availGap => this.unify(availGap.head, reqGap.head) !== null);
-                    if (foundIndex > -1) { availableGaps.splice(foundIndex, 1); }
-                    else { allRequiredGapsMet = false; break; }
-                }
-                if (allRequiredGapsMet) {
-                    newPhrase.gaps.push(...availableGaps);
-                    const unifiedArg = this.deepCopy(cat);
-                    unifiedArg.head = unifiedHead;
-                    unifiedArgs.push(unifiedArg);
-                    argSatisfied = true; break;
+
+            // --- THE FIX IS HERE ---
+            if (actualWord.token === MissingArgument.token) {
+                newPhrase.gaps.push(expected);
+                // Push a placeholder to maintain argument position.
+                // A minimal Phrase object { head: {} } is a good choice.
+                // It has no translation, so it will correctly become "UNRESOLVED" later.
+                unifiedArgs.push({ head: {} });
+                // We consider this "satisfied" for the purpose of the loop
+                argSatisfied = true;
+                // No need to continue, we want argSatisfied to be checked at the end of the loop
+            } else {
+                // Original logic for when an argument is present
+                for (const cat of actualWord.categories) {
+                    const unifiedHead = this.unify(cat.head, expected.head);
+                    if (unifiedHead === null) continue;
+
+                    const requiredGaps = expected.gaps || [];
+                    const availableGaps = this.deepCopy(cat.gaps || []);
+                    let allRequiredGapsMet = true;
+                    for (const reqGap of requiredGaps) {
+                        const foundIndex = availableGaps.findIndex(availGap => this.unify(availGap.head, reqGap.head) !== null);
+                        if (foundIndex > -1) { availableGaps.splice(foundIndex, 1); }
+                        else { allRequiredGapsMet = false; break; }
+                    }
+
+                    if (allRequiredGapsMet) {
+                        newPhrase.gaps.push(...availableGaps);
+                        const unifiedArg = this.deepCopy(cat);
+                        unifiedArg.head = unifiedHead;
+                        unifiedArgs.push(unifiedArg);
+                        argSatisfied = true;
+                        break;
+                    }
                 }
             }
+
+            // This check now correctly handles both found and missing arguments
             if (!argSatisfied) return null;
         }
 
