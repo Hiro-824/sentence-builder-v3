@@ -2,6 +2,7 @@ import { Block } from "@/models/block";
 import { allPronounBlocks } from "./pronouns";
 import { allNounBlocks } from "./nouns";
 import { allVerbBlocks } from "./verbs";
+import { allAdjectiveBlocks } from "./adjectives";
 
 /*export const Sentence_Block: Block = {
     id: "sentence",
@@ -1142,50 +1143,6 @@ export const blockBook: Block = {
     }]
 }
 
-export const blockInteresting: Block = {
-    id: "",
-    x: 0,
-    y: 0,
-    words: [{
-        token: "",
-        categories: [{
-            head: { type: "adj" },
-            rightModTargets: [{
-                head: { type: "noun" }
-            }],
-            translationTemplates: {
-                default: ["面白い"]
-            }
-        },
-        {
-            head: { type: "adj" },
-            rightModTargets: [{
-                head: { type: "det", agr: { type: "non-3sing", num: "pl", per: 3 }, determinered: false }
-            }],
-            translationTemplates: {
-                default: ["面白い"]
-            }
-        },
-        {
-            head: { type: "adj" },
-            rightModTargets: [{
-                head: { type: "det", count: false, determinered: false }
-            }],
-            translationTemplates: {
-                default: ["面白い"]
-            }
-        }]
-    }],
-    color: "dodgerblue",
-    isRound: true,
-    children: [{
-        id: "head",
-        hidden: false,
-        type: "text",
-        content: ["interesting"],
-    }]
-}
-
 export const blockThe: Block = {
     id: "",
     x: 0,
@@ -1272,7 +1229,7 @@ export const blockList = {
     ],
     "前置詞": [],
     "形容詞": [
-        blockInteresting,
+        ...allAdjectiveBlocks,
     ],
     "副詞": [],
     "関係詞": []

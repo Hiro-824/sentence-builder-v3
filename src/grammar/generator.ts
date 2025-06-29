@@ -66,6 +66,15 @@ export interface VerbConfig {
     color?: string;
 }
 
+export interface AdjectiveConfig {
+    id: string;
+    base: string;
+    comparative: string;
+    superlative: string;
+    translation: string;
+    color?: string;
+}
+
 export class Generator {
     private getAgrType(person: 1 | 2 | 3, number: 'sing' | 'pl'): '3sing' | 'non-3sing' {
         return person === 3 && number === 'sing' ? '3sing' : 'non-3sing';
@@ -425,6 +434,70 @@ export class Generator {
                 hidden: false,
             },
             ...placeholders]
+        }
+    }
+
+    createAdjectiveBlock(config: AdjectiveConfig): Block {
+        const { id, base, comparative, superlative, translation } = config;
+        const comparativeTranslation = `もっと${translation}`;
+        const superlativeTranslation = `いちばん${translation}`;
+        return {
+            id: id,
+            x: 0,
+            y: 0,
+            words: [
+                {
+                    token: "",
+                    categories: [{
+                        head: { type: "adj", form: "base" },
+                        rightModTargets: [
+                            { head: { type: "noun" } },
+                            { head: { type: "det", agr: { type: "non-3sing", num: "pl", per: 3 }, determinered: false } },
+                            { head: { type: "det", count: false, determinered: false } }
+                        ],
+                        translationTemplates: {
+                            default: [translation]
+                        }
+                    }]
+                },
+                {
+                    token: "",
+                    categories: [{
+                        head: { type: "adj", form: "comparative" },
+                        rightModTargets: [
+                            { head: { type: "noun" } },
+                            { head: { type: "det", agr: { type: "non-3sing", num: "pl", per: 3 }, determinered: false } },
+                            { head: { type: "det", count: false, determinered: false } }
+                        ],
+                        translationTemplates: {
+                            default: [comparativeTranslation]
+                        }
+                    }]
+                },
+                {
+                    token: "",
+                    categories: [{
+                        head: { type: "adj", form: "superlative" },
+                        rightModTargets: [
+                            { head: { type: "noun" } },
+                            { head: { type: "det", agr: { type: "non-3sing", num: "pl", per: 3 }, determinered: false } },
+                            { head: { type: "det", count: false, determinered: false } }
+                        ],
+                        translationTemplates: {
+                            default: [superlativeTranslation]
+                        }
+                    }]
+                }
+            ],
+            color: config.color ?? "dodgerblue",
+            isRound: true,
+            children: [{
+                id: "head",
+                hidden: false,
+                type: "dropdown",
+                selected: 0,
+                content: [base, comparative, superlative],
+            }]
         }
     }
 }
