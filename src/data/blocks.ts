@@ -1165,6 +1165,15 @@ export const blockInteresting: Block = {
             translationTemplates: {
                 default: ["面白い"]
             }
+        },
+        {
+            head: { type: "adj" },
+            rightModTargets: [{
+                head: { type: "det", count: false, determinered: false }
+            }],
+            translationTemplates: {
+                default: ["面白い"]
+            }
         }]
     }],
     color: "dodgerblue",
