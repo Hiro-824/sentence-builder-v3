@@ -856,7 +856,7 @@ export const blockSentence: Block = {
                     type: "verb",
                     finite: true,
                 },
-                left: [{
+                gaps: [{
                     head: {
                         type: "det",
                         case: "nom"
@@ -866,7 +866,7 @@ export const blockSentence: Block = {
             customUnification: [
                 [
                     ['left', 0, 'head'],
-                    ['right', 0, 'left', 0, 'head']
+                    ['right', 0, 'gaps', 0, 'head']
                 ]
             ],
             translationTemplates: {
@@ -1233,7 +1233,7 @@ export const blockWho: Block = {
                     head: {
                         type: "sentence"
                     },
-                    left: [{
+                    gaps: [{
                         head: { type: "det", case: "nom", agr: {} }
                     }]
                 }],

@@ -16,6 +16,7 @@ export interface Phrase {
     categoryName?: string;
     leftModTargets?: Phrase[];
     rightModTargets?: Phrase[];
+    gaps?: Phrase[];
     customUnification?: CustomUnificationPath[][];
     translation?: FeatureStructure;
     translationTemplates?: TranslationTemplates;
