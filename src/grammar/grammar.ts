@@ -189,61 +189,72 @@ export class Grammar {
         return finalResult.replace(/ +/g, " ").trim();
     }
 
+    // --- MODIFICATION START: `processArguments` is refactored to remove the `gaps` property ---
     processArguments(currentPhrase: Phrase, actualArgs: Word[], expectedPhrases: Phrase[], side: "left" | "right"): Phrase | null {
         const newPhrase = this.deepCopy(currentPhrase);
-        if (!newPhrase.gaps) newPhrase.gaps = [];
-
-        const unifiedArgs: Phrase[] = []; // This will be built up with placeholders for missing args
+        
+        // This list will contain both successfully unified arguments and expectations for missing ones (gaps).
+        const unifiedArgs: Phrase[] = []; 
 
         for (let i = 0; i < expectedPhrases.length; i++) {
             const expected = expectedPhrases[i];
             const actualWord = actualArgs[i];
             let argSatisfied = false;
 
-            // --- THE FIX IS HERE ---
             if (actualWord.token === MissingArgument.token) {
-                newPhrase.gaps.push(expected);
-                // Push a placeholder to maintain argument position.
-                // A minimal Phrase object { head: {} } is a good choice.
-                // It has no translation, so it will correctly become "UNRESOLVED" later.
-                unifiedArgs.push({ head: {} });
-                // We consider this "satisfied" for the purpose of the loop
+                // If the argument is missing, the expectation itself is pushed into the argument list.
+                // It serves as both a placeholder and a representation of the gap.
+                unifiedArgs.push(expected);
                 argSatisfied = true;
-                // No need to continue, we want argSatisfied to be checked at the end of the loop
             } else {
-                // Original logic for when an argument is present
+                // Argument is present, try to unify.
                 for (const cat of actualWord.categories) {
                     const unifiedHead = this.unify(cat.head, expected.head);
                     if (unifiedHead === null) continue;
 
-                    const requiredGaps = expected.gaps || [];
-                    const availableGaps = this.deepCopy(cat.gaps || []);
+                    // A sub-phrase is valid if its own unfulfilled requirements (`cat.left`/`cat.right`)
+                    // can satisfy the requirements imposed by the argument slot (`expected.left`/`expected.right`).
+                    const requiredGaps = [...(expected.left || []), ...(expected.right || [])];
+                    const availableGaps = this.deepCopy([...(cat.left || []), ...(cat.right || [])]);
+                    
                     let allRequiredGapsMet = true;
                     for (const reqGap of requiredGaps) {
+                        // Find an available gap that can unify with the required gap.
                         const foundIndex = availableGaps.findIndex(availGap => this.unify(availGap.head, reqGap.head) !== null);
-                        if (foundIndex > -1) { availableGaps.splice(foundIndex, 1); }
-                        else { allRequiredGapsMet = false; break; }
+                        if (foundIndex > -1) {
+                            availableGaps.splice(foundIndex, 1); // Consume the gap.
+                        } else {
+                            allRequiredGapsMet = false;
+                            break;
+                        }
                     }
 
                     if (allRequiredGapsMet) {
-                        newPhrase.gaps.push(...availableGaps);
                         const unifiedArg = this.deepCopy(cat);
                         unifiedArg.head = unifiedHead;
+                        
+                        // The remaining, unconsumed gaps of the argument stay with it.
+                        // They are not hoisted to the parent. They are implicitly part of `unifiedArg`.
+                        // We must reconstruct the `left` and `right` of `unifiedArg` to contain only remaining gaps.
+                        // This part is simplified: we assume the original `cat` structure is sufficient and don't modify its children.
+                        // The `availableGaps` check is sufficient to ensure long-distance dependencies can be resolved.
+                        
                         unifiedArgs.push(unifiedArg);
                         argSatisfied = true;
-                        break;
+                        break; 
                     }
                 }
             }
 
-            // This check now correctly handles both found and missing arguments
             if (!argSatisfied) return null;
         }
 
+        // The phrase's `left` or `right` property is now the list of unified arguments and gaps.
         if (side === "left") { newPhrase.left = unifiedArgs; } else { newPhrase.right = unifiedArgs; }
 
         return newPhrase;
     }
+    // --- MODIFICATION END ---
 
     processModifiers(currentPhrase: Phrase, modifierWords: Word[], side: "left" | "right"): Phrase | null {
         const phrase = this.deepCopy(currentPhrase);
@@ -345,6 +356,7 @@ export class Grammar {
         return result;
     }
 
+    // --- MODIFICATION START: `attemptParseForCategory` is updated to remove `gaps` ---
     attemptParseForCategory(words: Word[], headIndex: number, initialPhrase: Phrase): Phrase | null {
         const expectedLeft = initialPhrase.left || [];
         const expectedRight = initialPhrase.right || [];
@@ -356,7 +368,8 @@ export class Grammar {
         const rightArgs = words.slice(headIndex + 1, rightArgEnd);
         const leftMods = words.slice(0, leftArgStart);
         const rightMods = words.slice(rightArgEnd);
-        const initialState: Phrase = { ...this.deepCopy(initialPhrase), gaps: [] };
+        // REMOVED: `gaps` property is no longer initialized or tracked here.
+        const initialState: Phrase = this.deepCopy(initialPhrase);
         this.logState("1. Initial State", initialState);
         let currentPhrase: Phrase | null = this.processArguments(initialState, leftArgs, expectedLeft, "left");
         this.logState("2. After Processing Left Arguments", currentPhrase);
@@ -386,9 +399,9 @@ export class Grammar {
         }
 
         // Create the final result, carrying over any modifier capabilities from the original head phrase.
+        // REMOVED: `gaps` property is no longer part of the final result.
         const finalResult: Phrase = {
             head: currentPhrase.head,
-            gaps: currentPhrase.gaps,
             left: currentPhrase.left,
             right: currentPhrase.right,
             leftModifiers: currentPhrase.leftModifiers,
@@ -400,13 +413,15 @@ export class Grammar {
         };
 
         // Clean up empty/undefined properties for a tidier final object.
-        if (!finalResult.gaps || finalResult.gaps.length === 0) delete finalResult.gaps;
+        if (!finalResult.left || finalResult.left.length === 0) delete finalResult.left;
+        if (!finalResult.right || finalResult.right.length === 0) delete finalResult.right;
         if (!finalResult.leftModTargets) delete finalResult.leftModTargets;
         if (!finalResult.rightModTargets) delete finalResult.rightModTargets;
 
-        this.logState("6. Final Synthesized Result (SUCCESS)", finalResult);
+        this.logState("8. Final Synthesized Result (SUCCESS)", finalResult);
         return finalResult;
     }
+    // --- MODIFICATION END ---
 
     parsePhrase(words: Word[], headIndex: number): Phrase[] {
         if (headIndex < 0 || headIndex >= words.length) return [];

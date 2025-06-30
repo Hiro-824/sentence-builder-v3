@@ -13,7 +13,6 @@ export interface Phrase {
     right?: Phrase[];
     leftModifiers?: Phrase[];
     rightModifiers?: Phrase[];
-    gaps?: Phrase[];
     categoryName?: string;
     leftModTargets?: Phrase[];
     rightModTargets?: Phrase[];
