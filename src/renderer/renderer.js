@@ -378,9 +378,7 @@ export class Renderer {
             const y = (height - placeholderHeight) / 2;
             const inputColor = this.darkenColor(block.color, 30);
             
-            // LOGGING: Log placeholder creation
             const placeholderDomId = `placeholder-${count}-${block.id}-${child.id}`;
-            console.log(`Rendering placeholder with ID: ${placeholderDomId}. Original child index is ${count}.`);
 
             blockGroup.append("rect")
                 .attr("id", placeholderDomId)
@@ -668,11 +666,9 @@ export class Renderer {
 
         if (placeholderId) {
             // LOGGING: Log drop event
-            console.log(`Dropped on placeholder with ID: ${placeholderId}`);
             const info = placeholderId.split("-");
             const parentId = info[2];
             const index = info[1];
-            console.log(`Attempting to insert into parent ${parentId} at original index ${index}`);
             this.insertBlock(d.id, parentId, index);
         } else if (overlapInfo) {
             const targetBlockId = overlapInfo.id.split("-")[1];
@@ -772,8 +768,6 @@ export class Renderer {
             const parentId = info[2];
             const index = info[1];
             const expectedBlock = this.previewInsertion(blockData.id, parentId, index);
-            /*console.log("BLOCK", expectedBlock);
-            console.log("SUB-PHRASE-INPUT", this.converter.convert(expectedBlock));*/
             const isValid = this.validate(expectedBlock);
             return isValid ? bestPlaceholderId : null;
         }
@@ -934,16 +928,10 @@ export class Renderer {
         const targetParentResult = this.findBlock(targetParentId);
         const targetParent = targetParentResult.foundBlock;
         
-        // LOGGING: Check insertion target
-        console.log(`previewInsertion: Target parent (ID: ${targetParentId}) found:`, JSON.parse(JSON.stringify(targetParent)));
-        console.log(`previewInsertion: Target index: ${index}`);
-
         if (!targetParent || !targetParent.children[index] || targetParent.children[index].type !== "placeholder") {
             console.error(`previewInsertion: Invalid target at index ${index}. Child is:`, targetParent.children[index]);
             return;
         }
-
-        console.log(`previewInsertion: Targeting child at index ${index}:`, JSON.parse(JSON.stringify(targetParent.children[index])));
 
         // Create a deep copy of the root parent block
         const expectedParent = JSON.parse(JSON.stringify(targetParentResult.rootParent));
@@ -1096,7 +1084,6 @@ export class Renderer {
 
     insertBlock(id, targetParentId, index) {
         // LOGGING: Log insertion call
-        console.log(`insertBlock called: Inserting block ${id} into parent ${targetParentId} at index ${index}`);
         const updatedParent = this.previewInsertion(id, targetParentId, index);
         if (!updatedParent) {
             console.error("Insertion failed, preview returned nothing. Aborting.");
