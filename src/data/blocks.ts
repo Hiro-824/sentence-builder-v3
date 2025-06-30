@@ -856,7 +856,7 @@ export const blockSentence: Block = {
                     type: "verb",
                     finite: true,
                 },
-                gaps: [{
+                left: [{
                     head: {
                         type: "det",
                         case: "nom"
@@ -866,7 +866,7 @@ export const blockSentence: Block = {
             customUnification: [
                 [
                     ['left', 0, 'head'],
-                    ['right', 0, 'gaps', 0, 'head']
+                    ['right', 0, 'left', 0, 'head']
                 ]
             ],
             translationTemplates: {
@@ -1210,6 +1210,67 @@ export const blockA: Block = {
     }]
 }
 
+export const blockWho: Block = {
+    id: "who-relative",
+    x: 0,
+    y: 0,
+    color: "dodgerblue",
+    isRound: true,
+    words: [
+        {
+            token: "who",
+            categories: [{
+                head: {
+                    type: "relative",
+                },
+                leftModTargets: [{
+                    head: {
+                        type: "noun",
+                        agr: {},
+                    }
+                }],
+                right: [{
+                    head: {
+                        type: "sentence"
+                    },
+                    left: [{
+                        head: { type: "det", case: "nom", agr: {} }
+                    }]
+                }],
+                customUnification: [
+                    [
+                        ['leftModTargets', 0, 'head', 'agr'], 
+                        ['right', 0, 'left', 0, 'head', 'agr']
+                    ]
+                ],
+                // The translation of the "who" phrase is simply the translation of its sentence argument.
+                // e.g., for "who reads books", the translation is just "本を読む" (reads books).
+                // The "who" itself is implicit in the Japanese relative clause structure.
+                translationTemplates: {
+                    default: [
+                        { path: ["right", 0], key: "default" }
+                    ]
+                }
+            }]
+        }
+    ],
+    // The visual block has a text 'head' and a 'complement' placeholder for the sentence.
+    children: [
+        {
+            id: "head",
+            hidden: false,
+            type: "text",
+            content: "who"
+        },
+        {
+            id: "complement",
+            hidden: false,
+            type: "placeholder",
+            content: null
+        }
+    ]
+};
+
 export const blockList = {
     "文": [
         blockSentence,
@@ -1232,5 +1293,7 @@ export const blockList = {
         ...allAdjectiveBlocks,
     ],
     "副詞": [],
-    "関係詞": []
+    "関係詞": [
+        blockWho
+    ]
 }
