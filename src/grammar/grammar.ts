@@ -112,7 +112,6 @@ export class Grammar {
             return current;
         }
 
-        // --- NEW: Helper function to translate an array of modifiers ---
         const translateModifiers = (modifiers: Phrase[] | undefined): string => {
             if (!modifiers || modifiers.length === 0) {
                 return "";
@@ -200,7 +199,6 @@ export class Grammar {
             const actualWord = actualArgs[i];
             let argSatisfied = false;
 
-            // --- THE FIX IS HERE ---
             if (actualWord.token === MissingArgument.token) {
                 newPhrase.gaps.push(expected);
                 // Push a placeholder to maintain argument position.
