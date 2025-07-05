@@ -100,7 +100,6 @@ export class Grammar {
         return result;
     }
 
-    // Replace the entire existing `translate` method with this one.
     translate(template: TranslationElement[], phrase: Phrase): string {
         // Helper to resolve a sub-phrase by path
         function resolveByPath(obj: unknown, path: (string | number)[]): unknown {
