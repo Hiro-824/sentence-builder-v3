@@ -1239,7 +1239,7 @@ export const blockWho: Block = {
                 }],
                 customUnification: [
                     [
-                        ['leftModTargets', 0, 'head', 'agr'], 
+                        ['leftModTargets', 0, 'head', 'agr'],
                         ['right', 0, 'left', 0, 'head', 'agr']
                     ]
                 ],
@@ -1293,7 +1293,5 @@ export const blockList = {
         ...allAdjectiveBlocks,
     ],
     "副詞": [],
-    "関係詞": [
-        blockWho
-    ]
+    "関係詞": []
 }
