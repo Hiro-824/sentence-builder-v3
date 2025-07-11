@@ -666,11 +666,11 @@ export class Renderer {
         this.dragStarted = false;
         this.grabbingHighlight(d.id, false);
 
-        const placeholderId = this.detectPlaceholderOverlap(d, d.x, d.y);
+        const placeholderInfo = this.detectPlaceholderOverlap(d, d.x, d.y);
         const overlapInfo = this.detectBlockOverlap(d);
 
-        if (placeholderId) {
-            const info = placeholderId.split("-");
+        if (placeholderInfo && placeholderInfo.isValid) {
+            const info = placeholderInfo.id.split("-");
             const parentId = info[2];
             const index = info[1];
             this.insertBlock(d.id, parentId, index);
@@ -688,18 +688,21 @@ export class Renderer {
     /*当たり判定***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
     detectOverlapAndHighlight(d) {
-        const placeholderId = this.detectPlaceholderOverlap(d, d.x, d.y);
+        const placeholderInfo = this.detectPlaceholderOverlap(d, d.x, d.y);
         const overlapInfo = this.detectBlockOverlap(d);
 
-        if (placeholderId) {
+        if (placeholderInfo && placeholderInfo.isValid) {
             this.deemphasizeAllBlock();
-            this.emphasizePlaceholder(placeholderId);
+            this.emphasizePlaceholder(placeholderInfo.id);
         } else {
             this.deemphasizeAllPlaceholder();
-            if (overlapInfo && !placeholderId) {
+            if (overlapInfo) {
                 const targetBlockId = overlapInfo.id;
                 this.emphasizeBlock(targetBlockId);
             } else {
+                if (placeholderInfo && !placeholderInfo.isValid) {
+                    this.emphasizePlaceholder(placeholderInfo.id, true);
+                }
                 this.deemphasizeAllBlock();
             }
         }
@@ -773,7 +776,7 @@ export class Renderer {
             const index = info[1];
             const expectedBlock = this.previewInsertion(blockData.id, parentId, index);
             const isValid = this.validate(expectedBlock);
-            return isValid ? bestPlaceholderId : null;
+            return { id: bestPlaceholderId, isValid: isValid };
         }
         return null;
     }
@@ -1178,9 +1181,9 @@ export class Renderer {
             .attr("stroke-width", 0);
     }
 
-    emphasizePlaceholder(id) {
+    emphasizePlaceholder(id, isError = false) {
         this.deemphasizeAllPlaceholder();
-        d3.select(`#${id}`).attr("stroke-width", highlightStrokeWidth).attr("stroke", "yellow");
+        d3.select(`#${id}`).attr("stroke-width", highlightStrokeWidth).attr("stroke", isError ? "red" : "yellow");
     }
 
     deemphasizeAllBlock() {
