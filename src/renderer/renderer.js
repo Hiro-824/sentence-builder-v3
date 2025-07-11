@@ -278,20 +278,11 @@ export class Renderer {
     }
 
     renderSideBarBlock(block, id, y) {
-        // グループを作る
-        const previewBlockGroup = this.blockBoard
+        this.blockBoard
             .append("g")
             .attr("transform", `translate(0, ${y})`)
             .attr("id", id)
             .datum(block);
-
-        // ダミー用に、idを変えたデータを用意
-        const dummyData = JSON.parse(JSON.stringify(block));
-        dummyData.id = "dummy-" + block.id;
-        dummyData.x = 0;
-        dummyData.y = 0;
-        const dummy = previewBlockGroup.append("g");
-        this.renderBlockImage(dummyData, dummy); // インタラクティブでないダミー(画像だけ)をレンダリング
 
         // 実際のブロックデータを用意
         this.renderPreviewBlock(id);
@@ -377,7 +368,7 @@ export class Renderer {
             //ブロックがはまっていない場合
             const y = (height - placeholderHeight) / 2;
             const inputColor = this.darkenColor(block.color, 30);
-            
+
             const placeholderDomId = `placeholder-${count}-${block.id}-${child.id}`;
 
             blockGroup.append("rect")
@@ -490,17 +481,25 @@ export class Renderer {
                 .attr("id", `option-${index}-dropdown-${count}-${block.id}`)
                 .on("mousedown", (event) => {
                     event.stopPropagation();
+                    const isFromSidebar = event.currentTarget.closest("#sidebar") !== null;
                     child.selected = index;
-                    this.setChildVisibility(block.id);
-                    this.updateBlock(block.id);
-                    this.raiseBlock(block.id);
-                    // After updating, validate the block
-                    const parentBlock = this.findBlock(block.id).rootParent;
-                    const isValid = this.validate(parentBlock);
-                    if (!isValid) {
-                        this.moveBlockToTopLevel(block.id, true);
+                    if (isFromSidebar) {
+                        this.closeAllDropdowns();
+                        const blockGroup = d3.select(`#${block.id}`);
+                        this.updateChildVisibilityForBlock(block);
+                        this.renderBlockImage(block, blockGroup);
+                    } else {
+                        this.setChildVisibility(block.id);
                         this.updateBlock(block.id);
-                        setTimeout(() => d3.select(`#${block.id}`).raise(), 0); 
+                        this.raiseBlock(block.id);
+                        // After updating, validate the block
+                        const parentBlock = this.findBlock(block.id).rootParent;
+                        const isValid = this.validate(parentBlock);
+                        if (!isValid) {
+                            this.moveBlockToTopLevel(block.id, true);
+                            this.updateBlock(block.id);
+                            setTimeout(() => d3.select(`#${block.id}`).raise(), 0);
+                        }
                     }
                 });
 
@@ -537,13 +536,20 @@ export class Renderer {
                     this.currentlyHoveredOptionIndex = null;
                 });
 
-            dropdownGroup.on("click", () => {
+            dropdownGroup.on("click", (event) => {
+                const isFromSidebar = event.currentTarget.closest("#sidebar") !== null;
                 const currentDisplay = optionsGroup.attr("display");
                 if (currentDisplay === "none") {
                     this.closeAllDropdowns();
                 }
                 optionsGroup.attr("display", currentDisplay === "none" ? "block" : "none");
-                this.raiseBlock(block.id);
+                if (isFromSidebar) {
+                    const blockGroup = d3.select(`#${block.id}`);
+                    const parent = blockGroup.node().parentNode;
+                    d3.select(parent).raise();
+                } else {
+                    this.raiseBlock(block.id);
+                }
                 dropdownGroup.raise();
             });
         });
@@ -606,9 +612,6 @@ export class Renderer {
     /*ドラッグ関係の処理***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
     dragStart(event, d, fromSideBar = false, sideBarId = undefined) {
-        if (fromSideBar) {
-            this.renderPreviewBlock(sideBarId);
-        }
         this.grabbingCursor(d.id, true);
         this.dragStarted = false;
     }
@@ -626,6 +629,8 @@ export class Renderer {
                 const gridY = (sideBarY - transform.y) / transform.k;
                 d.x = gridX;
                 d.y = gridY;
+                const sideBarId = d3.select(`#${d.id}`).node().parentNode.id;
+                this.renderPreviewBlock(sideBarId);
             }
 
             this.moveBlockToTopLevel(d.id);
@@ -927,7 +932,7 @@ export class Renderer {
 
         const targetParentResult = this.findBlock(targetParentId);
         const targetParent = targetParentResult.foundBlock;
-        
+
         if (!targetParent || !targetParent.children[index] || targetParent.children[index].type !== "placeholder") {
             console.error(`previewInsertion: Invalid target at index ${index}. Child is:`, targetParent.children[index]);
             return;
@@ -990,7 +995,7 @@ export class Renderer {
                 for (const child of block.children) {
                     // Skip hidden children
                     if (child.hidden) continue;
-                    
+
                     if (child.type === "placeholder" || child.type === "attachment") {
                         if (child.content && updateParentInCopy(child.content)) {
                             return true;
@@ -1052,7 +1057,7 @@ export class Renderer {
         let block = foundResult.foundBlock;
         block.x = foundResult.absoluteX;
         block.y = foundResult.absoluteY;
-        if(hop) {
+        if (hop) {
             block.x += 16;
             block.y += 16;
         }
@@ -1114,29 +1119,30 @@ export class Renderer {
 
         const block = foundResult.foundBlock;
 
-        // Find the head child (first text or dropdown)
+        const originalHiddenStates = block.children.map(child => child.hidden);
+        this.updateChildVisibilityForBlock(block);
+        block.children.forEach((child, index) => {
+            const wasVisible = !originalHiddenStates[index];
+            const isNowHidden = child.hidden;
+            if (wasVisible && isNowHidden && child.type === "placeholder" && child.content) {
+                this.moveBlockToTopLevel(child.content.id);
+            }
+        });
+
+        this.updateBlock(id);
+    }
+
+    updateChildVisibilityForBlock(block) {
         const headChild = block.children.find(child => child.id === "head" && (child.type === "text" || child.type === "dropdown"));
         if (!headChild) return;
-
-        // Determine the selected head index
         const selectedHeadIndex = headChild.type === "text" ? 0 : headChild.selected;
-
-        // Update visibility for each child
         block.children.forEach(child => {
             if (child.headIndex !== undefined) {
-                const shouldBeVisible = child.headIndex.includes(selectedHeadIndex);
-                if (!shouldBeVisible && child.type === "placeholder" && child.content) {
-                    // Move the child block to top level before hiding
-                    this.moveBlockToTopLevel(child.content.id);
-                }
-                child.hidden = !shouldBeVisible;
+                child.hidden = !child.headIndex.includes(selectedHeadIndex);
             } else {
                 child.hidden = false;
             }
         });
-
-        // Update the block in the UI
-        this.updateBlock(id);
     }
 
     /*ハイライト表示***********************************************************************************************************************************************************************************************************************************************************************************************************************/
