@@ -670,7 +670,6 @@ export class Renderer {
         const overlapInfo = this.detectBlockOverlap(d);
 
         if (placeholderId) {
-            // LOGGING: Log drop event
             const info = placeholderId.split("-");
             const parentId = info[2];
             const index = info[1];
