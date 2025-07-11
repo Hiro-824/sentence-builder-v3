@@ -691,6 +691,7 @@ export class Renderer {
         const placeholderInfo = this.detectPlaceholderOverlap(d, d.x, d.y);
         const overlapInfo = this.detectBlockOverlap(d);
 
+        this.grabbingHighlight(d.id, true, false);
         if (placeholderInfo && placeholderInfo.isValid) {
             this.deemphasizeAllBlock();
             this.emphasizePlaceholder(placeholderInfo.id);
@@ -702,6 +703,7 @@ export class Renderer {
             } else {
                 if (placeholderInfo && !placeholderInfo.isValid) {
                     this.emphasizePlaceholder(placeholderInfo.id, true);
+                    this.grabbingHighlight(d.id, true, true);
                 }
                 this.deemphasizeAllBlock();
             }
@@ -1157,7 +1159,7 @@ export class Renderer {
             .classed("grabbing", isDragging);
     }
 
-    grabbingHighlight(blockId, isDragging) {
+    grabbingHighlight(blockId, isDragging, isError = false) {
         const id = `#${blockId}`;
         this.grabbingCursor(blockId, isDragging)
 
@@ -1165,7 +1167,7 @@ export class Renderer {
         const block = this.findBlock(blockId).foundBlock;
         if (!block) return;
 
-        const strokeColor = isDragging ? "yellow" : this.darkenColor(block.color, 30);
+        const strokeColor = isDragging ? isError ? "red" : "yellow" : this.darkenColor(block.color, 30);
         const strokeWidth = isDragging ? highlightStrokeWidth : blockStrokeWidth;
 
         d3.select(frameId)
