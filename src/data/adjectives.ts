@@ -10,7 +10,8 @@ const configBig: AdjectiveConfig = {
     superlative: "biggest",
     translation: {
         default: "大きい",
-        predicative: "大きい"
+        predicative: "大きい",
+        past: "大きかった"
     }
 };
 
@@ -21,7 +22,8 @@ const configInteresting: AdjectiveConfig = {
     superlative: "most interesting",
     translation: {
         default: "興味深い",
-        predicative: "興味深い"
+        predicative: "興味深い",
+        past: "興味深かった"
     }
 };
 

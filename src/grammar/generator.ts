@@ -75,8 +75,9 @@ export interface AdjectiveConfig {
     comparative: string;
     superlative: string;
     translation: {
-        default: string,
-        predicative: string
+        default: string;
+        predicative: string;
+        past: string;
     }
     color?: string;
 }
@@ -492,10 +493,12 @@ export class Generator {
         const comparativeTranslation = {
             default: `もっと${translation.default}`,
             predicative: `もっと${translation.predicative}`,
+            past: `もっと${translation.past}`
         };
         const superlativeTranslation = {
             default: `いちばん${translation.default}`,
             predicative: `いちばん${translation.predicative}`,
+            past: `いちばん${translation.past}`
         };
         return {
             id: id,
@@ -513,7 +516,8 @@ export class Generator {
                         ],
                         translationTemplates: {
                             default: [translation.default],
-                            predicative: [translation.predicative]
+                            predicative: [translation.predicative],
+                            past: [translation.past]
                         }
                     }]
                 },
@@ -528,7 +532,8 @@ export class Generator {
                         ],
                         translationTemplates: {
                             default: [comparativeTranslation.default],
-                            predicative: [comparativeTranslation.predicative]
+                            predicative: [comparativeTranslation.predicative],
+                            past: [comparativeTranslation.past]
                         }
                     }]
                 },
@@ -544,6 +549,7 @@ export class Generator {
                         translationTemplates: {
                             default: [superlativeTranslation.default],
                             predicative: [superlativeTranslation.predicative],
+                            past: [superlativeTranslation.past]
                         }
                     }]
                 }
@@ -605,7 +611,7 @@ export class Generator {
                         path: ["right", 0],
                         key: "default",
                     },
-                    "だ"
+                    tense === "present" ? "だ" : tense === "past" ? "だった" : "である"
                 ]
             }
         }, {
@@ -623,7 +629,7 @@ export class Generator {
                     }] : [],
                     {
                         path: ["right", 0],
-                        key: "predicative",
+                        key: tense === "present" ? "predicative" : "past",
                     },
                 ]
             }
