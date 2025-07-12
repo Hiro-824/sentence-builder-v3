@@ -570,7 +570,7 @@ export class Generator {
         if (agr) left.head.agr = agr;
         return [{
             head: head,
-            left: [{ head: { type: det } }],
+            left: [{ head: { type: { type: "nominal", isDet: true, isTo: false, isGerund: false }, case: "nom", agr: agr ?? {} } }],
             right: [{
                 head: { type: "verb", form: "progressive" }
             }],
