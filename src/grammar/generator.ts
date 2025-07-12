@@ -74,7 +74,10 @@ export interface AdjectiveConfig {
     base: string;
     comparative: string;
     superlative: string;
-    translation: string;
+    translation: {
+        default: string,
+        predicative: string
+    }
     color?: string;
 }
 
@@ -486,8 +489,14 @@ export class Generator {
 
     createAdjectiveBlock(config: AdjectiveConfig): Block {
         const { id, base, comparative, superlative, translation } = config;
-        const comparativeTranslation = `もっと${translation}`;
-        const superlativeTranslation = `いちばん${translation}`;
+        const comparativeTranslation = {
+            default: `もっと${translation.default}`,
+            predicative: `もっと${translation.predicative}`,
+        };
+        const superlativeTranslation = {
+            default: `いちばん${translation.default}`,
+            predicative: `いちばん${translation.predicative}`,
+        };
         return {
             id: id,
             x: 0,
@@ -503,7 +512,8 @@ export class Generator {
                             { head: { type: det, count: false, determinered: false } }
                         ],
                         translationTemplates: {
-                            default: [translation]
+                            default: [translation.default],
+                            predicative: [translation.predicative]
                         }
                     }]
                 },
@@ -517,7 +527,8 @@ export class Generator {
                             { head: { type: det, count: false, determinered: false } }
                         ],
                         translationTemplates: {
-                            default: [comparativeTranslation]
+                            default: [comparativeTranslation.default],
+                            predicative: [comparativeTranslation.predicative]
                         }
                     }]
                 },
@@ -531,7 +542,8 @@ export class Generator {
                             { head: { type: det, count: false, determinered: false } }
                         ],
                         translationTemplates: {
-                            default: [superlativeTranslation]
+                            default: [superlativeTranslation.default],
+                            predicative: [superlativeTranslation.predicative],
                         }
                     }]
                 }
@@ -549,7 +561,7 @@ export class Generator {
     }
 
     private createBeCategory(form: "base" | "am" | "are" | "is" | "was" | "were" | "en" | "ing", agr?: FeatureStructure): Phrase[] {
-        const finite = (["be", "en", "ing"].includes(form)) ? false : true;
+        const finite = (["base", "en", "ing"].includes(form)) ? false : true;
         const tense = (finite && ["am", "are", "is"].includes(form)) ? "present" : finite ? "past" : undefined;
         const head: FeatureStructure = { type: "verb", finite: finite, form: form };
         const left: Phrase = { head: { type: { type: "nominal", isDet: true } } };
@@ -560,8 +572,61 @@ export class Generator {
             head: head,
             left: [left],
             right: [{
-                head: { type: det, case: "acc" }
-            }]
+                head: { type: "verb", form: "progressive" }
+            }],
+            translationTemplates: {
+                default: [
+                    ...finite ? [{
+                        path: ["left", 0],
+                        key: "default",
+                        particle: "は",
+                    }] : [],
+                    {
+                        path: ["right", 0],
+                        key: "default",
+                    },
+                    tense === "present" ? "だ" : tense === "past" ? "だった" : "である"
+                ]
+            }
+        }, {
+            head: head,
+            left: [left],
+            right: [{
+                head: { type: { type: "nominal" }, case: "acc" }
+            }],
+            translationTemplates: {
+                default: [
+                    ...finite ? [{
+                        path: ["left", 0],
+                        key: "default",
+                        particle: "は",
+                    }] : [],
+                    {
+                        path: ["right", 0],
+                        key: "default",
+                    },
+                    "だ"
+                ]
+            }
+        }, {
+            head: head,
+            left: [left],
+            right: [{
+                head: { type: "adj" }
+            }],
+            translationTemplates: {
+                default: [
+                    ...finite ? [{
+                        path: ["left", 0],
+                        key: "default",
+                        particle: "は",
+                    }] : [],
+                    {
+                        path: ["right", 0],
+                        key: "predicative",
+                    },
+                ]
+            }
         }]
     }
 

@@ -8,7 +8,10 @@ const configBig: AdjectiveConfig = {
     base: "big",
     comparative: "bigger",
     superlative: "biggest",
-    translation: "大きい"
+    translation: {
+        default: "大きい",
+        predicative: "大きい"
+    }
 };
 
 const configInteresting: AdjectiveConfig = {
@@ -16,7 +19,10 @@ const configInteresting: AdjectiveConfig = {
     base: "interesting",
     comparative: "more interesting",
     superlative: "most interesting",
-    translation: "面白い"
+    translation: {
+        default: "興味深い",
+        predicative: "興味深い"
+    }
 };
 
 export const blockBig = generator.createAdjectiveBlock(configBig);
