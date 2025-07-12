@@ -342,7 +342,7 @@ export class Generator {
         switch (form) {
             case "base":
                 categories.push({
-                    head: { type: "verb", tense: "present" },
+                    head: { type: "verb", tense: "present", finite: true, form: "base" },
                     left: [{ head: { type: det, agr: { type: "non-3sing" }, case: "nom" } }],
                     translation: config.translations.present,
                 });
@@ -354,14 +354,14 @@ export class Generator {
                 break;
             case "es":
                 categories.push({
-                    head: { type: "verb", tense: "present" },
+                    head: { type: "verb", tense: "present", finite: true, form: "es" },
                     left: [{ head: { type: subjectType, agr: { type: "3sing" }, case: "nom" } }],
                     translation: config.translations.present,
                 });
                 break;
             case "ed":
                 categories.push({
-                    head: { type: "verb", tense: "past" },
+                    head: { type: "verb", tense: "past", finite: true, form: "ed" },
                     left: [{ head: { type: subjectType, case: "nom" } }],
                     translation: config.translations.past,
                 });

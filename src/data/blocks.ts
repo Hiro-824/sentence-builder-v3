@@ -102,6 +102,21 @@ export const blockTo: Block = {
                     "こと"
                 ]
             }
+        }, {
+            head: { type: "adverbial", isTo: true },
+            right: [{
+                head: { type: "verb", finite: false, form: "base" }
+            }],
+            leftModTargets: [{ head: { type: "verb" } }],
+            translationTemplates: {
+                default: [
+                    {
+                        path: ["right", 0],
+                        key: "default",
+                    },
+                    "ために"
+                ]
+            }
         }]
     }],
     color: "dodgerblue",
