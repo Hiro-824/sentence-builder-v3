@@ -27,6 +27,12 @@ const configRun: VerbConfig = {
         perfect: {
             default: "既に走っている"
         },
+        noun: {
+            default: "走ること",
+            no: "走るの",
+            past: "走ったこと",
+            pastNo: "走ったの"
+        }
     }
 };
 
@@ -62,6 +68,12 @@ const configRead: VerbConfig = {
         passive: {
             default: "読まれる"
         },
+        noun: {
+            default: "読むこと",
+            no: "読むの",
+            past: "読んだこと",
+            pastNo: "読んだの"
+        }
     }
 };
 
@@ -102,6 +114,12 @@ const configGive: VerbConfig = {
         passive: {
             default: "あたえられる"
         },
+        noun: {
+            default: "あげること",
+            no: "あげるの",
+            past: "あげたこと",
+            pastNo: "あげたの"
+        }
     }
 };
 

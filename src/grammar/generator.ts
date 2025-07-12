@@ -52,6 +52,7 @@ export interface VerbTranslations {
     progressive: VerbTranslation;
     perfect: VerbTranslation;
     passive?: VerbTranslation;
+    noun: VerbTranslation;
 }
 
 export interface VerbConfig {
@@ -343,9 +344,14 @@ export class Generator {
                 break;
             case "ing":
                 categories.push({
-                    head: { type: "verb", tense: "ing" },
+                    head: { type: "verb", finite: false, tense: "progressive" },
                     left: [{ head: { type: "det" } }],
                     translation: config.translations.progressive,
+                });
+                categories.push({
+                    head: { type: "det", agr: { type: "3sing" } },
+                    left: [{ head: { type: "det" } }],
+                    translation: config.translations.noun,
                 });
                 break;
             case "perfect":
