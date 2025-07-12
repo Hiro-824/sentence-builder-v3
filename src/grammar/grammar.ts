@@ -312,12 +312,12 @@ export class Grammar {
                 if (v1IsObject && v2IsObject) {
                     const subUnification = this.unify(val1 as FeatureStructure, val2 as FeatureStructure);
                     if (subUnification === null) {
-                        if (this.enableLogging) console.log(`Custom unification failed: Conflict between ${JSON.stringify(val1)} and ${JSON.stringify(val2)}.`);
+                        console.log(`Custom unification failed: Conflict between ${JSON.stringify(val1)} and ${JSON.stringify(val2)}.`);
                         return null;
                     }
                     unifiedResult = subUnification;
                 } else if (val1 !== val2) {
-                    if (this.enableLogging) console.log(`Custom unification failed: Primitive mismatch between ${JSON.stringify(val1)} and ${JSON.stringify(val2)}.`);
+                    console.log(`Custom unification failed: Primitive mismatch between ${JSON.stringify(val1)} and ${JSON.stringify(val2)}.`);
                     return null;
                 }
             }
@@ -379,19 +379,21 @@ export class Grammar {
                 const args = finalPhrase[side];
                 if (!args) return;
                 const keptArgs: Phrase[] = [];
+                const newGaps: Phrase[] = [];
                 for (const arg of args) {
                     if (arg.head?.isGap === true) {
                         delete arg.head.isGap; // Clean up the temporary flag
-                        finalPhrase.gaps!.push(arg);
+                        newGaps.push(arg);
                     } else {
                         keptArgs.push(arg);
                     }
                 }
+                finalPhrase.gaps!.unshift(...newGaps);
                 finalPhrase[side] = keptArgs;
             };
 
-            processSide("left");
             processSide("right");
+            processSide("left");
             return finalPhrase;
         };
         currentPhrase = finalizeGaps(currentPhrase);
