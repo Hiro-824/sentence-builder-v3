@@ -316,64 +316,76 @@ export class Generator {
         };
     }
 
-    private createVerbCategory(config: VerbConfig, form: "base" | "es" | "ed" | "ing" | "perfect" | "passive"): Phrase {
-        let head;
-        let left;
-        let translation;
+    private createVerbCategory(config: VerbConfig, form: "base" | "es" | "ed" | "ing" | "perfect" | "passive"): Phrase[] {
+        const categories: Phrase[] = [];
 
         switch (form) {
             case "base":
-                head = { type: "verb", tense: "present" };
-                left = { head: { type: "det", agr: { type: "non-3sing" }, case: "nom" } };
-                translation = config.translations.present;
+                categories.push({
+                    head: { type: "verb", tense: "present" },
+                    left: [{ head: { type: "det", agr: { type: "non-3sing" }, case: "nom" } }],
+                    translation: config.translations.present,
+                });
                 break;
             case "es":
-                head = { type: "verb", tense: "present" };
-                left = { head: { type: "det", agr: { type: "3sing" }, case: "nom" } };
-                translation = config.translations.present;
+                categories.push({
+                    head: { type: "verb", tense: "present" },
+                    left: [{ head: { type: "det", agr: { type: "3sing" }, case: "nom" } }],
+                    translation: config.translations.present,
+                });
                 break;
             case "ed":
-                head = { type: "verb", tense: "past" };
-                left = { head: { type: "det", case: "nom" } };
-                translation = config.translations.past;
+                categories.push({
+                    head: { type: "verb", tense: "past" },
+                    left: [{ head: { type: "det", case: "nom" } }],
+                    translation: config.translations.past,
+                });
                 break;
             case "ing":
-                head = { type: "verb", finite: false, form: "ing" };
-                left = { head: { type: "det" } };
-                translation = config.translations.progressive;
+                categories.push({
+                    head: { type: "verb", tense: "ing" },
+                    left: [{ head: { type: "det" } }],
+                    translation: config.translations.progressive,
+                });
                 break;
             case "perfect":
-                head = { type: "verb", finite: false, form: "perfect" };
-                left = { head: { type: "det" } };
-                translation = config.translations.perfect;
+                categories.push({
+                    head: { type: "verb", finite: false, form: "perfect" },
+                    left: [{ head: { type: "det" } }],
+                    translation: config.translations.perfect,
+                });
                 break;
             case "passive":
-                head = { type: "verb", finite: false, form: "passive" };
-                left = { head: { type: "det" } };
-                translation = config.translations.passive ?? {};
+                categories.push({
+                    head: { type: "verb", finite: false, form: "passive" },
+                    left: [{ head: { type: "det" } }],
+                    translation: config.translations.passive ?? {},
+                });
                 break;
         }
 
-        const translationTemplates: TranslationTemplates = {};
-
-        Object.entries(translation).forEach(([key, translationWord]) => {
-            const complementsToUse = form === "passive" ? config.complements.slice(1) : config.complements; //受動態は訳の目的語が消える
-            translationTemplates[key] = [
-                ...complementsToUse.map((complement, index) => ({
-                    path: ["right", index],
-                    key: "default",
-                    particle: complement.particle
-                })),
-                translationWord
-            ];
-        });
-
-        return {
-            head: head,
-            left: [left],
-            right: [...config.complements.map(complement => complement.expected)],
-            translationTemplates
-        }
+        return categories.map((category) => {
+            const translationTemplates: TranslationTemplates = {};
+            if (category.translation) {
+                Object.entries(category.translation).forEach(([key, translationWord]) => {
+                    const complementsToUse = form === "passive" ? config.complements.slice(1) : config.complements; //受動態は訳の目的語が消える
+                    translationTemplates[key] = [
+                        ...complementsToUse.map((complement, index) => ({
+                            path: ["right", index],
+                            key: "default",
+                            particle: complement.particle
+                        })),
+                        translationWord as string
+                    ];
+                });
+            }
+            return {
+                head: category.head,
+                left: category.left,
+                right: [...config.complements.map(complement => complement.expected)],
+                translationTemplates
+            };
+        })
     }
 
     createVerbBlock(config: VerbConfig): Block {
@@ -386,27 +398,27 @@ export class Generator {
         const words = [
             {
                 token: `${forms.base}(base)`,
-                categories: [this.createVerbCategory(config, "base")]
+                categories: this.createVerbCategory(config, "base")
             },
             {
                 token: `${forms.es}(es)`,
-                categories: [this.createVerbCategory(config, "es")]
+                categories: this.createVerbCategory(config, "es")
             },
             {
                 token: `${forms.ed}(ed)`,
-                categories: [this.createVerbCategory(config, "ed")]
+                categories: this.createVerbCategory(config, "ed")
             },
             {
                 token: `${forms.en}(perfect)`,
-                categories: [this.createVerbCategory(config, "perfect")]
+                categories: this.createVerbCategory(config, "perfect")
             },
             {
                 token: `${forms.ing}(ing)`,
-                categories: [this.createVerbCategory(config, "ing")]
+                categories: this.createVerbCategory(config, "ing")
             },
             ...(transitive ? [{
                 token: `${forms.en}(passive)`,
-                categories: [this.createVerbCategory(config, "passive")]
+                categories: this.createVerbCategory(config, "passive")
             }] : [])
         ]
 
