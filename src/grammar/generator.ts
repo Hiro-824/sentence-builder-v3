@@ -355,7 +355,7 @@ export class Generator {
                 break;
             case "ing":
                 categories.push({
-                    head: { type: "verb", finite: false, tense: "progressive" },
+                    head: { type: "verb", finite: false, form: "progressive" },
                     left: [{ head: { type: "det" } }],
                     translation: config.translations.progressive,
                 });
