@@ -199,14 +199,10 @@ export class Grammar {
             let argSatisfied = false;
 
             if (actualWord.token === MissingArgument.token) {
-                newPhrase.gaps.push(expected);
-                // Push a placeholder to maintain argument position.
-                // A minimal Phrase object { head: {} } is a good choice.
-                // It has no translation, so it will correctly become "UNRESOLVED" later.
-                unifiedArgs.push({ head: {} });
-                // We consider this "satisfied" for the purpose of the loop
+                const placeholder = this.deepCopy(expected);
+                placeholder.head.isGap = true;
+                unifiedArgs.push(placeholder);
                 argSatisfied = true;
-                // No need to continue, we want argSatisfied to be checked at the end of the loop
             } else {
                 // Original logic for when an argument is present
                 for (const cat of actualWord.categories) {
@@ -374,15 +370,42 @@ export class Grammar {
             if (!currentPhrase) return null;
         }
 
+        // Step 7: Finalize Gaps.
+        const finalizeGaps = (phrase: Phrase): Phrase => {
+            const finalPhrase = this.deepCopy(phrase);
+            finalPhrase.gaps = finalPhrase.gaps || [];
+
+            const processSide = (side: "left" | "right") => {
+                const args = finalPhrase[side];
+                if (!args) return;
+                const keptArgs: Phrase[] = [];
+                for (const arg of args) {
+                    if (arg.head?.isGap === true) {
+                        delete arg.head.isGap; // Clean up the temporary flag
+                        finalPhrase.gaps!.push(arg);
+                    } else {
+                        keptArgs.push(arg);
+                    }
+                }
+                finalPhrase[side] = keptArgs;
+            };
+
+            processSide("left");
+            processSide("right");
+            return finalPhrase;
+        };
+        currentPhrase = finalizeGaps(currentPhrase);
+        this.logState("7. After Finalizing Gaps", currentPhrase);
+
+        // Step 8: Perform translation on the finalized structure.
         let finalTranslation: FeatureStructure | undefined = undefined;
         if (initialPhrase.translationTemplates) {
             finalTranslation = this.processTranslation(currentPhrase, initialPhrase.translationTemplates);
-            // We create a temporary phrase object with the final translation for the log
             const phraseForLog = { ...currentPhrase, translation: finalTranslation };
-            this.logState("7. After Translation", phraseForLog);
+            this.logState("8. After Translation", phraseForLog);
         }
 
-        // Create the final result, carrying over any modifier capabilities from the original head phrase.
+        // Step 9: Create the final result.
         const finalResult: Phrase = {
             head: currentPhrase.head,
             gaps: currentPhrase.gaps,
@@ -396,12 +419,11 @@ export class Grammar {
             translation: finalTranslation,
         };
 
-        // Clean up empty/undefined properties for a tidier final object.
         if (!finalResult.gaps || finalResult.gaps.length === 0) delete finalResult.gaps;
         if (!finalResult.leftModTargets) delete finalResult.leftModTargets;
         if (!finalResult.rightModTargets) delete finalResult.rightModTargets;
 
-        this.logState("6. Final Synthesized Result (SUCCESS)", finalResult);
+        this.logState("9. Final Synthesized Result (SUCCESS)", finalResult);
         return finalResult;
     }
 
