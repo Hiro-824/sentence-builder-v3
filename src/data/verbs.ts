@@ -34,7 +34,9 @@ const configRun: VerbConfig = {
             past: "走ったこと",
             pastNo: "走ったの"
         }
-    }
+    },
+    gerundSubject: false,
+    toSubject: false
 };
 
 const configRead: VerbConfig = {
@@ -75,7 +77,9 @@ const configRead: VerbConfig = {
             past: "読んだこと",
             pastNo: "読んだの"
         }
-    }
+    },
+    gerundSubject: false,
+    toSubject: false
 };
 
 const configGive: VerbConfig = {
@@ -121,7 +125,9 @@ const configGive: VerbConfig = {
             past: "あげたこと",
             pastNo: "あげたの"
         }
-    }
+    },
+    gerundSubject: true,
+    toSubject: true
 };
 
 export const verbRun = generator.createVerbBlock(configRun);

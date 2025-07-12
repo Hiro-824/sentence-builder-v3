@@ -87,9 +87,7 @@ export const blockTo: Block = {
             head: {
                 type: {
                     type: "nominal",
-                    isDet: false,
                     isTo: true,
-                    isGerund: false
                 }
             },
             right: [{

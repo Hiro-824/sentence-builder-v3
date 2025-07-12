@@ -63,6 +63,8 @@ export interface VerbConfig {
         particle: string;
     }[];
     transitive: boolean;
+    gerundSubject: boolean;
+    toSubject: boolean;
     translations: VerbTranslations;
     color?: string;
 }
@@ -330,6 +332,12 @@ export class Generator {
 
     private createVerbCategory(config: VerbConfig, form: "base" | "es" | "ed" | "ing" | "perfect" | "passive"): Phrase[] {
         const categories: Phrase[] = [];
+        const subjectType = {
+            type: "nominal",
+            isDet: true,
+            isGerund: config.gerundSubject,
+            isTo: config.toSubject
+        }
 
         switch (form) {
             case "base":
@@ -340,47 +348,47 @@ export class Generator {
                 });
                 categories.push({
                     head: { type: "verb", finite: false, form: "base" },
-                    left: [{ head: { type: det } }],
+                    left: [{ head: { type: subjectType } }],
                     translation: config.translations.present,
                 });
                 break;
             case "es":
                 categories.push({
                     head: { type: "verb", tense: "present" },
-                    left: [{ head: { type: det, agr: { type: "3sing" }, case: "nom" } }],
+                    left: [{ head: { type: subjectType, agr: { type: "3sing" }, case: "nom" } }],
                     translation: config.translations.present,
                 });
                 break;
             case "ed":
                 categories.push({
                     head: { type: "verb", tense: "past" },
-                    left: [{ head: { type: det, case: "nom" } }],
+                    left: [{ head: { type: subjectType, case: "nom" } }],
                     translation: config.translations.past,
                 });
                 break;
             case "ing":
                 categories.push({
                     head: { type: "verb", finite: false, form: "progressive" },
-                    left: [{ head: { type: det } }],
+                    left: [{ head: { type: subjectType } }],
                     translation: config.translations.progressive,
                 });
                 categories.push({
-                    head: { type: det, agr: { type: "3sing" } },
-                    left: [{ head: { type: det } }],
+                    head: { type: { type: "nominal", isGerund: true, }, agr: { type: "3sing" } },
+                    left: [{ head: { type: subjectType } }],
                     translation: config.translations.noun,
                 });
                 break;
             case "perfect":
                 categories.push({
                     head: { type: "verb", finite: false, form: "perfect" },
-                    left: [{ head: { type: det } }],
+                    left: [{ head: { type: subjectType } }],
                     translation: config.translations.perfect,
                 });
                 break;
             case "passive":
                 categories.push({
                     head: { type: "verb", finite: false, form: "passive" },
-                    left: [{ head: { type: det } }],
+                    left: [{ head: { type: subjectType } }],
                     translation: config.translations.passive ?? {},
                 });
                 break;
