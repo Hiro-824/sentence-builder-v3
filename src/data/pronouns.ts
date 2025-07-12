@@ -38,7 +38,7 @@ const configWe: PronounConfig = {
     translations: {
         default: "私たち",
         possessiveDetPrefix: "私たちの",
-        possessivePro: "私たのもの",
+        possessivePro: "私たちのもの",
         reflexive: "私たち自身"
     }
 };
