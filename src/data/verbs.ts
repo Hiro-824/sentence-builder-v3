@@ -1,5 +1,6 @@
 import { Generator, VerbConfig } from "@/grammar/generator";
 import { Block } from "@/models/block";
+import { det } from "@/models/grammar-entities";
 
 const generator = new Generator();
 
@@ -47,7 +48,7 @@ const configRead: VerbConfig = {
     },
     complements: [{
         expected: {
-            head: { type: "det", case: "acc" }
+            head: { type: det, case: "acc" }
         },
         particle: "を"
     }],
@@ -88,12 +89,12 @@ const configGive: VerbConfig = {
     },
     complements: [{
         expected: {
-            head: { type: "det", case: "acc" }
+            head: { type: det, case: "acc" }
         },
         particle: "に"
     }, {
         expected: {
-            head: { type: "det", case: "acc" }
+            head: { type: det, case: "acc" }
         },
         particle: "を"
     }],

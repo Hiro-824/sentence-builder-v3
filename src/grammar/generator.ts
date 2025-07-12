@@ -1,5 +1,5 @@
 import { Block, BlockChild } from "@/models/block";
-import { Phrase, Word, TranslationTemplates } from "@/models/grammar-entities";
+import { Phrase, Word, TranslationTemplates, det, noun } from "@/models/grammar-entities";
 
 export interface PronounForms {
     nominative: string;
@@ -84,7 +84,7 @@ export class Generator {
     private createNominativeCategory(person: 1 | 2 | 3, number: 'sing' | 'pl', translation: string): Phrase {
         return {
             head: {
-                type: "det",
+                type: det,
                 case: "nom",
                 agr: {
                     type: this.getAgrType(person, number),
@@ -101,7 +101,7 @@ export class Generator {
     private createAccusativeCategory(person: 1 | 2 | 3, number: 'sing' | 'pl', translation: string): Phrase {
         return {
             head: {
-                type: "det",
+                type: det,
                 case: "acc",
                 agr: {
                     type: this.getAgrType(person, number),
@@ -117,9 +117,9 @@ export class Generator {
 
     private createPossessiveDeterminerCategories(translationPrefix: string, defaultTranslation: string): Phrase[] {
         return [{
-            head: { type: "det", agr: {}, determinered: true },
+            head: { type: det, agr: {}, determinered: true },
             right: [{
-                head: { type: "noun", agr: {} }
+                head: { type: noun, agr: {} }
             }],
             // This unification ensures the determiner phrase inherits the
             // agreement features of the noun it modifies.
@@ -130,11 +130,11 @@ export class Generator {
                 default: [translationPrefix, { path: ["right", 0], key: "default" }]
             }
         }, {
-            head: { type: "det", agr: { type: "3sing" }, determinered: true },
+            head: { type: det, agr: { type: "3sing" }, determinered: true },
             right: [{
-                head: { type: "det" },
+                head: { type: det },
                 gaps: [{
-                    head: { type: "det" }
+                    head: { type: det }
                 }]
             }],
             translationTemplates: {
@@ -146,7 +146,7 @@ export class Generator {
     private createPossessivePronounCategory(number: 'sing' | 'pl', translation: string): Phrase {
         return {
             head: {
-                type: "det",
+                type: det,
                 // A standalone possessive pronoun often behaves as a 3rd person nominal.
                 // e.g., "Mine *is* red." not "Mine *am* red."
                 agr: { per: 3, num: number },
@@ -160,7 +160,7 @@ export class Generator {
     private createReflexiveCategory(person: 1 | 2 | 3, number: 'sing' | 'pl', translation: string): Phrase {
         return {
             head: {
-                type: "det",
+                type: det,
                 refl: true,
                 agr: {
                     type: this.getAgrType(person, number),
@@ -238,7 +238,7 @@ export class Generator {
 
     private createSingularCountableNounCategory(translation: string): Phrase {
         return {
-            head: { type: "noun", agr: { type: "3sing" } },
+            head: { type: noun, agr: { type: "3sing" } },
             translationTemplates: {
                 default: [translation]
             }
@@ -251,12 +251,12 @@ export class Generator {
         return [
             // Category 1: A full determiner phrase (can be a subject/object)
             {
-                head: { type: "det", agr: sharedAgr },
+                head: { type: det, agr: sharedAgr },
                 translationTemplates: sharedTranslation
             },
             // Category 2: A simple noun (can be modified by another determiner)
             {
-                head: { type: "noun", agr: sharedAgr },
+                head: { type: noun, agr: sharedAgr },
                 translationTemplates: sharedTranslation
             }
         ];
@@ -268,12 +268,12 @@ export class Generator {
         return [
             // Category 1: A full determiner phrase (can be a subject/object)
             {
-                head: { type: "det", agr: sharedAgr, count: false },
+                head: { type: det, agr: sharedAgr, count: false },
                 translationTemplates: sharedTranslation
             },
             // Category 2: A simple noun (can be modified by another determiner)
             {
-                head: { type: "noun", agr: sharedAgr, count: false },
+                head: { type: noun, agr: sharedAgr, count: false },
                 translationTemplates: sharedTranslation
             }
         ];
@@ -335,52 +335,52 @@ export class Generator {
             case "base":
                 categories.push({
                     head: { type: "verb", tense: "present" },
-                    left: [{ head: { type: "det", agr: { type: "non-3sing" }, case: "nom" } }],
+                    left: [{ head: { type: det, agr: { type: "non-3sing" }, case: "nom" } }],
                     translation: config.translations.present,
                 });
                 categories.push({
                     head: { type: "verb", finite: false, form: "base" },
-                    left: [{ head: { type: "det" } }],
+                    left: [{ head: { type: det } }],
                     translation: config.translations.present,
                 });
                 break;
             case "es":
                 categories.push({
                     head: { type: "verb", tense: "present" },
-                    left: [{ head: { type: "det", agr: { type: "3sing" }, case: "nom" } }],
+                    left: [{ head: { type: det, agr: { type: "3sing" }, case: "nom" } }],
                     translation: config.translations.present,
                 });
                 break;
             case "ed":
                 categories.push({
                     head: { type: "verb", tense: "past" },
-                    left: [{ head: { type: "det", case: "nom" } }],
+                    left: [{ head: { type: det, case: "nom" } }],
                     translation: config.translations.past,
                 });
                 break;
             case "ing":
                 categories.push({
                     head: { type: "verb", finite: false, form: "progressive" },
-                    left: [{ head: { type: "det" } }],
+                    left: [{ head: { type: det } }],
                     translation: config.translations.progressive,
                 });
                 categories.push({
-                    head: { type: "det", agr: { type: "3sing" } },
-                    left: [{ head: { type: "det" } }],
+                    head: { type: det, agr: { type: "3sing" } },
+                    left: [{ head: { type: det } }],
                     translation: config.translations.noun,
                 });
                 break;
             case "perfect":
                 categories.push({
                     head: { type: "verb", finite: false, form: "perfect" },
-                    left: [{ head: { type: "det" } }],
+                    left: [{ head: { type: det } }],
                     translation: config.translations.perfect,
                 });
                 break;
             case "passive":
                 categories.push({
                     head: { type: "verb", finite: false, form: "passive" },
-                    left: [{ head: { type: "det" } }],
+                    left: [{ head: { type: det } }],
                     translation: config.translations.passive ?? {},
                 });
                 break;
@@ -485,9 +485,9 @@ export class Generator {
                     categories: [{
                         head: { type: "adj", form: "base" },
                         rightModTargets: [
-                            { head: { type: "noun" } },
-                            { head: { type: "det", agr: { type: "non-3sing", num: "pl", per: 3 }, determinered: false } },
-                            { head: { type: "det", count: false, determinered: false } }
+                            { head: { type: noun } },
+                            { head: { type: det, agr: { type: "non-3sing", num: "pl", per: 3 }, determinered: false } },
+                            { head: { type: det, count: false, determinered: false } }
                         ],
                         translationTemplates: {
                             default: [translation]
@@ -499,9 +499,9 @@ export class Generator {
                     categories: [{
                         head: { type: "adj", form: "comparative" },
                         rightModTargets: [
-                            { head: { type: "noun" } },
-                            { head: { type: "det", agr: { type: "non-3sing", num: "pl", per: 3 }, determinered: false } },
-                            { head: { type: "det", count: false, determinered: false } }
+                            { head: { type: noun } },
+                            { head: { type: det, agr: { type: "non-3sing", num: "pl", per: 3 }, determinered: false } },
+                            { head: { type: det, count: false, determinered: false } }
                         ],
                         translationTemplates: {
                             default: [comparativeTranslation]
@@ -513,9 +513,9 @@ export class Generator {
                     categories: [{
                         head: { type: "adj", form: "superlative" },
                         rightModTargets: [
-                            { head: { type: "noun" } },
-                            { head: { type: "det", agr: { type: "non-3sing", num: "pl", per: 3 }, determinered: false } },
-                            { head: { type: "det", count: false, determinered: false } }
+                            { head: { type: noun } },
+                            { head: { type: det, agr: { type: "non-3sing", num: "pl", per: 3 }, determinered: false } },
+                            { head: { type: det, count: false, determinered: false } }
                         ],
                         translationTemplates: {
                             default: [superlativeTranslation]

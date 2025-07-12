@@ -3,6 +3,7 @@ import { allPronounBlocks } from "./pronouns";
 import { allNounBlocks } from "./nouns";
 import { allVerbBlocks } from "./verbs";
 import { allAdjectiveBlocks } from "./adjectives";
+import { det, noun } from "@/models/grammar-entities";
 
 export const blockSentence: Block = {
     id: "",
@@ -17,7 +18,7 @@ export const blockSentence: Block = {
             },
             left: [{
                 head: {
-                    type: "det",
+                    type: { type: "nominal" },
                     case: "nom"
                 }
             }],
@@ -28,7 +29,7 @@ export const blockSentence: Block = {
                 },
                 gaps: [{
                     head: {
-                        type: "det",
+                        type: { type: "nominal" },
                         case: "nom"
                     }
                 }]
@@ -83,7 +84,14 @@ export const blockTo: Block = {
     words: [{
         token: "",
         categories: [{
-            head: { type: "det" },
+            head: {
+                type: {
+                    type: "nominal",
+                    isDet: false,
+                    isTo: true,
+                    isGerund: false
+                }
+            },
             right: [{
                 head: { type: "verb", finite: false, form: "base" }
             }],
@@ -119,9 +127,9 @@ export const blockThe: Block = {
     words: [{
         token: "",
         categories: [{
-            head: { type: "det", agr: {}, determinered: true },
+            head: { type: det, agr: {}, determinered: true },
             right: [{
-                head: { type: "noun", agr: {} }
+                head: { type: noun, agr: {} }
             }],
             customUnification: [
                 [["head", "agr"], ["right", 0, "head", "agr"]]
@@ -154,9 +162,9 @@ export const blockA: Block = {
     words: [{
         token: "",
         categories: [{
-            head: { type: "det", agr: { type: "3sing" }, determinered: true },
+            head: { type: det, agr: { type: "3sing" }, determinered: true },
             right: [{
-                head: { type: "noun", agr: { type: "3sing" }, count: true }
+                head: { type: noun, agr: { type: "3sing" }, count: true }
             }],
             translationTemplates: {
                 default: ["(ある)", { path: ["right", 0], key: "default" }]
