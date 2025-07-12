@@ -338,6 +338,11 @@ export class Generator {
                     left: [{ head: { type: "det", agr: { type: "non-3sing" }, case: "nom" } }],
                     translation: config.translations.present,
                 });
+                categories.push({
+                    head: { type: "verb", finite: false, form: "base" },
+                    left: [{ head: { type: "det" } }],
+                    translation: config.translations.present,
+                });
                 break;
             case "es":
                 categories.push({

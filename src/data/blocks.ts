@@ -75,6 +75,43 @@ export const blockSentence: Block = {
     ],
 }
 
+export const blockTo: Block = {
+    id: "",
+    x: 0,
+    y: 0,
+    isRound: true,
+    words: [{
+        token: "",
+        categories: [{
+            head: { type: "det" },
+            right: [{
+                head: { type: "verb", finite: false, form: "base" }
+            }],
+            translationTemplates: {
+                default: [
+                    {
+                        path: ["right", 0],
+                        key: "default",
+                    },
+                    "こと"
+                ]
+            }
+        }]
+    }],
+    color: "dodgerblue",
+    children: [{
+        id: "head",
+        hidden: false,
+        type: "text",
+        content: "to"
+    }, {
+        id: "complement",
+        hidden: false,
+        type: "placeholder",
+        content: undefined
+    }]
+}
+
 export const blockThe: Block = {
     id: "",
     x: 0,
@@ -162,6 +199,9 @@ export const blockList = {
     "前置詞": [],
     "形容詞": [
         ...allAdjectiveBlocks,
+    ],
+    "不定詞": [
+        blockTo
     ],
     "副詞": [],
     "関係詞": []
