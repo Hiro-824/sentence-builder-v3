@@ -1,5 +1,5 @@
 import { Block, BlockChild } from "@/models/block";
-import { Phrase, Word, TranslationTemplates, det, noun } from "@/models/grammar-entities";
+import { Phrase, Word, TranslationTemplates, det, noun, FeatureStructure } from "@/models/grammar-entities";
 
 export interface PronounForms {
     nominative: string;
@@ -332,11 +332,16 @@ export class Generator {
 
     private createVerbCategory(config: VerbConfig, form: "base" | "es" | "ed" | "ing" | "perfect" | "passive"): Phrase[] {
         const categories: Phrase[] = [];
-        const subjectType = {
+        const subjectType: FeatureStructure = {
             type: "nominal",
-            isDet: true,
-            isGerund: config.gerundSubject,
-            isTo: config.toSubject
+            isDet: true
+        };
+
+        if (!config.gerundSubject) {
+            subjectType.isGerund = false;
+        }
+        if (!config.toSubject) {
+            subjectType.isTo = false;
         }
 
         switch (form) {
