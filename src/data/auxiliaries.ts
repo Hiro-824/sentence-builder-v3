@@ -1,0 +1,80 @@
+import { Generator } from "@/grammar/generator";
+import { Block } from "@/models/block";
+
+const generator = new Generator();
+export const blockSentence: Block = {
+    id: "",
+    x: 0,
+    y: 0,
+    color: "lightBlue",
+    words: [{
+        token: "",
+        categories: [{
+            head: {
+                type: "sentence"
+            },
+            left: [{
+                head: {
+                    type: { type: "nominal" },
+                    case: "nom"
+                }
+            }],
+            right: [{
+                head: {
+                    type: "verb",
+                    finite: true,
+                },
+                gaps: [{
+                    head: {
+                        type: { type: "nominal" },
+                        case: "nom"
+                    }
+                }]
+            }],
+            customUnification: [
+                [
+                    ['left', 0, 'head'],
+                    ['right', 0, 'gaps', 0, 'head']
+                ]
+            ],
+            translationTemplates: {
+                default: [
+                    {
+                        path: ["left", 0],
+                        key: "default",
+                        particle: "が",
+                    },
+                    {
+                        path: ["right", 0],
+                        key: "default",
+                    }
+                ]
+            }
+        }]
+    }],
+    children: [{
+        id: "specifier",
+        type: "placeholder",
+        content: null,
+        hidden: false,
+    },
+    {
+        id: "head",
+        type: "text",
+        content: "",
+        hidden: false,
+    },
+    {
+        id: "complement",
+        type: "placeholder",
+        content: null,
+        hidden: false,
+    }
+    ],
+}
+export const blockBe = generator.createBlockBe();
+
+export const allAuxiliaryBlocks: Block[] = [
+    blockSentence,
+    blockBe,
+];

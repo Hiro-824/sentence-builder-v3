@@ -119,7 +119,7 @@ export class Generator {
 
     private createPossessiveDeterminerCategories(translationPrefix: string, defaultTranslation: string): Phrase[] {
         return [{
-            head: { type: det, agr: {}, determinered: true },
+            head: { type: det, agr: { per: 3 }, determinered: true },
             right: [{
                 head: { type: noun, agr: {} }
             }],
@@ -544,6 +544,93 @@ export class Generator {
                 type: "dropdown",
                 selected: 0,
                 content: [base, comparative, superlative],
+            }]
+        }
+    }
+
+    private createBeCategory(form: "base" | "am" | "are" | "is" | "was" | "were" | "en" | "ing", agr?: FeatureStructure): Phrase[] {
+        const finite = (["be", "en", "ing"].includes(form)) ? false : true;
+        const tense = (finite && ["am", "are", "is"].includes(form)) ? "present" : finite ? "past" : undefined;
+        const head: FeatureStructure = { type: "verb", finite: finite, form: form };
+        const left: Phrase = { head: { type: { type: "nominal", isDet: true } } };
+        if (tense) head.tense = tense;
+        if (finite) left.head.case = "nom";
+        if (agr) left.head.agr = agr;
+        return [{
+            head: head,
+            left: [left],
+            right: [{
+                head: { type: det, case: "acc" }
+            }]
+        }]
+    }
+
+    createBlockBe(): Block {
+        return {
+            id: "",
+            x: 0,
+            y: 0,
+            words: [{
+                token: "",
+                categories: [...this.createBeCategory("base")]
+            }, {
+                token: "",
+                categories: [...this.createBeCategory("am", { type: "non-3sing", per: 1, num: 'sing' })]
+            }, {
+                token: "",
+                categories: [
+                    ...this.createBeCategory("are", { type: "non-3sing", num: 'pl' }),
+                    ...this.createBeCategory("are", { type: "non-3sing", per: 2, num: 'sing' })
+                ]
+            }, {
+                token: "",
+                categories: [...this.createBeCategory("is", { type: "3sing" })]
+            }, {
+                token: "",
+                categories: [
+                    ...this.createBeCategory("was", { type: "3sing" }),
+                    ...this.createBeCategory("was", { type: "non-3sing", num: "sing", per: 1 }),
+                ]
+            }, {
+                token: "",
+                categories: [
+                    ...this.createBeCategory("were", { type: "non-3sing", num: "pl" }),
+                    ...this.createBeCategory("were", { type: "non-3sing", num: "sing", per: 2 })
+                ]
+            }, {
+                token: "",
+                categories: [...this.createBeCategory("en")]
+            }, {
+                token: "",
+                categories: [...this.createBeCategory("ing")]
+            }],
+            color: "tomato",
+            children: [{
+                id: "specifier",
+                hidden: false,
+                type: "placeholder",
+                content: undefined,
+                headIndex: [1, 2, 3, 4, 5],
+            }, {
+                id: "head",
+                hidden: false,
+                type: "dropdown",
+                selected: 3,
+                content: [
+                    "be",
+                    "am",
+                    "are",
+                    "is",
+                    "was",
+                    "were",
+                    "been",
+                    "being"
+                ]
+            }, {
+                id: "complement",
+                hidden: false,
+                type: "placeholder",
+                content: undefined,
             }]
         }
     }
