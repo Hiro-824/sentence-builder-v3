@@ -115,8 +115,8 @@ export class Generator {
         };
     }
 
-    private createPossessiveDeterminerCategory(translationPrefix: string): Phrase {
-        return {
+    private createPossessiveDeterminerCategories(translationPrefix: string, defaultTranslation: string): Phrase[] {
+        return [{
             head: { type: "det", agr: {}, determinered: true },
             right: [{
                 head: { type: "noun", agr: {} }
@@ -129,7 +129,18 @@ export class Generator {
             translationTemplates: {
                 default: [translationPrefix, { path: ["right", 0], key: "default" }]
             }
-        };
+        }, {
+            head: { type: "det", agr: { type: "3sing" }, determinered: true },
+            right: [{
+                head: { type: "det" },
+                gaps: [{
+                    head: { type: "det" }
+                }]
+            }],
+            translationTemplates: {
+                default: [`${defaultTranslation}が`, { path: ["right", 0], key: "default" }]
+            }
+        }];
     }
 
     private createPossessivePronounCategory(number: 'sing' | 'pl', translation: string): Phrase {
@@ -173,7 +184,7 @@ export class Generator {
             },
             {
                 token: forms.possessiveDet,
-                categories: [this.createPossessiveDeterminerCategory(translations.possessiveDetPrefix)]
+                categories: this.createPossessiveDeterminerCategories(translations.possessiveDetPrefix, translations.default)
             },
             {
                 token: forms.accusative,
