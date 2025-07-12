@@ -179,9 +179,9 @@ export class Grammar {
         // --- FINAL ASSEMBLY ---
         // Combine all parts, filtering out empty strings to avoid extra spaces.
         const finalResult = [
+            rightModsTranslation,
             leftModsTranslation,
-            mainTranslation,
-            rightModsTranslation
+            mainTranslation
         ].filter(Boolean).join(" "); // filter(Boolean) is a concise way to remove empty strings
 
         return finalResult.replace(/ +/g, " ").trim();
