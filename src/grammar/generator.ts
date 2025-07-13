@@ -251,6 +251,48 @@ export class Generator {
         };
     }
 
+    createNumeralPronounBlock(): Block {
+        const words = [];
+        for (let i = 0; i < 9; i++) {
+            if (i === 0) {
+                words.push({
+                    token: "",
+                                    categories: [{
+                    head: { type: { type: "nominal", isDet: true, isGerund: false, isTo: false }, agr: { type: "3sing" } },
+                    translationTemplates: {
+                        default: ["1つ"]
+                    }
+                }]
+                });
+            } else {
+                words.push({
+                    token: "",
+                                    categories: [{
+                    head: { type: { type: "nominal", isDet: true, isGerund: false, isTo: false }, agr: { type: "non-3sing", num: "pl", per: 3 } },
+                    translationTemplates: {
+                        default: [`${i+1}つ`]
+                    }
+                }]
+                });
+            }
+        }
+        return {
+            id: "",
+            x: 0,
+            y: 0,
+            isRound: true,
+            words: words,
+            color: "dodgerblue",
+            children: [{
+                id: "head",
+                hidden: false,
+                type: "dropdown",
+                selected: 0,
+                content: ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
+            }]
+        }
+    }
+
     private createSingularCountableNounCategory(translation: string): Phrase {
         return {
             head: { type: noun, agr: { type: "3sing" } },

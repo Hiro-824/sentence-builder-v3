@@ -157,7 +157,6 @@ const configThey: PronounConfig = {
     }
 };
 
-
 // --- Individual Block Exports ---
 export const blockI = generator.createPronounBlock(configI);
 export const blockWe = generator.createPronounBlock(configWe);
@@ -167,6 +166,7 @@ export const blockHe = generator.createPronounBlock(configHe);
 export const blockShe = generator.createPronounBlock(configShe);
 export const blockIt = generator.createPronounBlock(configIt);
 export const blockThey = generator.createPronounBlock(configThey);
+export const blockNum = generator.createNumeralPronounBlock();
 
 // --- Grouped Export for UI ---
 export const allPronounBlocks: Block[] = [
@@ -178,4 +178,5 @@ export const allPronounBlocks: Block[] = [
     blockShe,
     blockIt,
     blockThey,
+    blockNum,
 ];
