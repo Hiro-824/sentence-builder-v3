@@ -48,7 +48,7 @@ export const blockA: Block = {
                 head: { type: noun, agr: { type: "3sing" }, count: true }
             }],
             translationTemplates: {
-                default: ["(ある)", { path: ["right", 0], key: "default" }]
+                default: ["", { path: ["right", 0], key: "default" }]
             }
         }]
     }],

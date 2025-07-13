@@ -5,6 +5,7 @@ import { allVerbBlocks } from "./verbs";
 import { allAdjectiveBlocks } from "./adjectives";
 import { blockA, blockThe } from "./determiners";
 import { allAuxiliaryBlocks } from "./auxiliaries";
+import { allPrepositionBlocks } from "./prepositions";
 
 export const blockTo: Block = {
     id: "",
@@ -80,7 +81,9 @@ export const blockList = {
     "動詞": [
         ...allVerbBlocks,
     ],
-    "前置詞": [],
+    "前置詞": [
+        ...allPrepositionBlocks,
+    ],
     "形容詞": [
         ...allAdjectiveBlocks,
     ],

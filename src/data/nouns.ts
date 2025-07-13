@@ -34,14 +34,34 @@ const configWater: NounConfig = {
     translation: "水"
 };
 
+const configBird: NounConfig = {
+    id: "noun_bird",
+    isCountable: true,
+    singularForm: "bird",
+    pluralForm: "birds",
+    translation: "鳥"
+};
+
+const configHand: NounConfig = {
+    id: "noun_hand",
+    isCountable: true,
+    singularForm: "hand",
+    pluralForm: "hands",
+    translation: "手"
+};
+
 export const blockBook = generator.createNounBlock(configBook);
 export const blockChild = generator.createNounBlock(configChild);
 export const blockInformation = generator.createNounBlock(configInformation);
 export const blockWater = generator.createNounBlock(configWater);
+export const blockBird = generator.createNounBlock(configBird);
+export const blockHand = generator.createNounBlock(configHand);
 
 export const allNounBlocks: Block[] = [
     blockBook,
     blockChild,
+    blockBird,
+    blockHand,
     blockInformation,
     blockWater,
 ];

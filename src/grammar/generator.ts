@@ -82,6 +82,15 @@ export interface AdjectiveConfig {
     color?: string;
 }
 
+export interface PrepositionConfig {
+    id: string;
+    word: string;
+    modAdj?: string;
+    predAdj?: string;
+    adv?: string;
+    color?: string;
+}
+
 export class Generator {
     private getAgrType(person: 1 | 2 | 3, number: 'sing' | 'pl'): '3sing' | 'non-3sing' {
         return person === 3 && number === 'sing' ? '3sing' : 'non-3sing';
@@ -633,6 +642,25 @@ export class Generator {
                     },
                 ]
             }
+        }, {
+            head: head,
+            left: [left],
+            right: [{
+                head: { type: "prep", pred: true }
+            }],
+            translationTemplates: {
+                default: [
+                    ...finite ? [{
+                        path: ["left", 0],
+                        key: "default",
+                        particle: "は",
+                    }] : [],
+                    {
+                        path: ["right", 0],
+                        key: "default",
+                    },
+                ]
+            }
         }]
     }
 
@@ -702,6 +730,70 @@ export class Generator {
                 hidden: false,
                 type: "placeholder",
                 content: undefined,
+            }]
+        }
+    }
+
+    createPrepositionBlock(config: PrepositionConfig): Block {
+        const categories = [];
+        if (config.modAdj) {
+            categories.push({
+                head: { type: "prep", pred: false },
+                right: [{
+                    head: { type: { type: "nominal", isDet: true }, case: "acc" }
+                }],
+                leftModTargets: [{
+                    head: { type: { type: "nominal", isDet: false, isTo: false, isGerund: false } }
+                }],
+                translationTemplates: {
+                    default: [
+                        {
+                            path: ["right", 0],
+                            key: "default",
+                        },
+                        config.modAdj
+                    ]
+                }
+            });
+        }
+
+        if (config.predAdj) {
+            categories.push({
+                head: { type: "prep", pred: true },
+                right: [{
+                    head: { type: { type: "nominal", isDet: true }, case: "acc" }
+                }],
+                translationTemplates: {
+                    default: [
+                        {
+                            path: ["right", 0],
+                            key: "default",
+                        },
+                        config.predAdj
+                    ]
+                }
+            });
+        }
+        return {
+            id: "",
+            x: 0,
+            y: 0,
+            isRound: true,
+            words: [{
+                token: "",
+                categories: categories,
+            }],
+            color: config.color ?? "orange",
+            children: [{
+                id: "head",
+                hidden: false,
+                type: "text",
+                content: config.word
+            }, {
+                id: "complement",
+                hidden: false,
+                type: "placeholder",
+                content: undefined
             }]
         }
     }
