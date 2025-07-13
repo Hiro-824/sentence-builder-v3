@@ -742,9 +742,11 @@ export class Generator {
                 right: [{
                     head: { type: { type: "nominal", isDet: true }, case: "acc" }
                 }],
-                leftModTargets: [{
-                    head: { type: { type: "nominal", isDet: false, isTo: false, isGerund: false } }
-                }],
+                leftModTargets: [
+                    { head: { type: noun } },
+                    { head: { type: det, agr: { type: "non-3sing", num: "pl", per: 3 }, determinered: false } },
+                    { head: { type: det, count: false, determinered: false } }
+                ],
                 translationTemplates: {
                     default: [
                         {
