@@ -620,7 +620,7 @@ export class Generator {
     private createBeCategory(form: "base" | "am" | "are" | "is" | "was" | "were" | "en" | "ing", agr?: FeatureStructure): Phrase[] {
         const finite = (["base", "en", "ing"].includes(form)) ? false : true;
         const tense = (finite && ["am", "are", "is"].includes(form)) ? "present" : finite ? "past" : undefined;
-        const head: FeatureStructure = { type: "verb", finite: finite, form: form };
+        const head: FeatureStructure = { type: "sentence", finite: finite, form: form };
         const left: Phrase = { head: { type: { type: "nominal", isDet: true } } };
         if (tense) head.tense = tense;
         if (finite) left.head.case = "nom";
@@ -629,7 +629,7 @@ export class Generator {
             head: head,
             left: [{ head: { type: { type: "nominal", isDet: true, isTo: false, isGerund: false }, case: "nom", agr: agr ?? {} } }],
             right: [{
-                head: { type: "verb", form: "progressive" }
+                head: { type: "sentence", form: "progressive" }
             }],
             translationTemplates: {
                 default: [
