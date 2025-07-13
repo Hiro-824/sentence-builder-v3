@@ -50,18 +50,28 @@ const configHand: NounConfig = {
     translation: "手"
 };
 
+const configBush: NounConfig = {
+    id: "noun_bush",
+    isCountable: true,
+    singularForm: "bush",
+    pluralForm: "bushes",
+    translation: "低木"
+};
+
 export const blockBook = generator.createNounBlock(configBook);
 export const blockChild = generator.createNounBlock(configChild);
 export const blockInformation = generator.createNounBlock(configInformation);
 export const blockWater = generator.createNounBlock(configWater);
 export const blockBird = generator.createNounBlock(configBird);
 export const blockHand = generator.createNounBlock(configHand);
+export const blockBush = generator.createNounBlock(configBush);
 
 export const allNounBlocks: Block[] = [
     blockBook,
     blockChild,
     blockBird,
     blockHand,
+    blockBush,
     blockInformation,
     blockWater,
 ];
