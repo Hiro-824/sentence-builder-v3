@@ -1,5 +1,5 @@
 import { Block, BlockChild } from "@/models/block";
-import { Phrase, Word, TranslationTemplates, det, noun, FeatureStructure } from "@/models/grammar-entities";
+import { Phrase, Word, TranslationTemplates, det, noun, FeatureStructure, pronoun } from "@/models/grammar-entities";
 
 export interface PronounForms {
     nominative: string;
@@ -99,7 +99,7 @@ export class Generator {
     private createNominativeCategory(person: 1 | 2 | 3, number: 'sing' | 'pl', translation: string): Phrase {
         return {
             head: {
-                type: det,
+                type: pronoun,
                 case: "nom",
                 agr: {
                     type: this.getAgrType(person, number),
@@ -116,7 +116,7 @@ export class Generator {
     private createAccusativeCategory(person: 1 | 2 | 3, number: 'sing' | 'pl', translation: string): Phrase {
         return {
             head: {
-                type: det,
+                type: pronoun,
                 case: "acc",
                 agr: {
                     type: this.getAgrType(person, number),
@@ -161,7 +161,7 @@ export class Generator {
     private createPossessivePronounCategory(number: 'sing' | 'pl', translation: string): Phrase {
         return {
             head: {
-                type: det,
+                type: pronoun,
                 // A standalone possessive pronoun often behaves as a 3rd person nominal.
                 // e.g., "Mine *is* red." not "Mine *am* red."
                 agr: { per: 3, num: number },
@@ -175,7 +175,7 @@ export class Generator {
     private createReflexiveCategory(person: 1 | 2 | 3, number: 'sing' | 'pl', translation: string): Phrase {
         return {
             head: {
-                type: det,
+                type: pronoun,
                 refl: true,
                 agr: {
                     type: this.getAgrType(person, number),
