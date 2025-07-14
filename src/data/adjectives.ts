@@ -13,7 +13,9 @@ const configBig: AdjectiveConfig = {
         predicative: "大きい",
         past: "大きかった",
         predNeg: "大きくない",
-        pastNeg: "大きくなかった"
+        pastNeg: "大きくなかった",
+        predQ: "大きいのか",
+        pastQ: "大きかったのか"
     }
 };
 
@@ -27,7 +29,9 @@ const configInteresting: AdjectiveConfig = {
         predicative: "興味深い",
         past: "興味深かった",
         predNeg: "興味深くない",
-        pastNeg: "興味深くなかった"
+        pastNeg: "興味深くなかった",
+        predQ: "興味深いのか",
+        pastQ: "興味深かったのか"
     }
 };
 

@@ -47,23 +47,41 @@ const configIn: PrepositionConfig = {
     id: "prep_in",
     word: "in",
     modAdj: "の中の",
-    predAdj: "の中にある",
-    predNeg: "の中にない"
+    pred: {
+        predAdj: "の中にある",
+        past: "の中にあった",
+        predNeg: "の中にない",
+        predQ: "の中にあるのか",
+        pastNeg: "の中になかった",
+        pastQ: "の中にあったのか",
+    }
 };
 
 const configFrom: PrepositionConfig = {
     id: "prep_from",
     word: "from",
     modAdj: "からの",
-    predAdj: "の出身である",
-    predNeg: "の出身ではない"
+    pred: {
+        predAdj: "の出身である",
+        past: "の出身だった",
+        predNeg: "の出身ではない",
+        predQ: "の出身なのか",
+        pastNeg: "の出身ではなかった",
+        pastQ: "の出身であったのか",
+    }
 };
 
 const configWorth: PrepositionConfig = {
     id: "prep_in",
     word: "worth",
-    predAdj: "に値する",
-    predNeg: "に値しない"
+    pred: {
+        predAdj: "に値する",
+        past: "に値した",
+        predNeg: "に値しない",
+        predQ: "に値しないのか",
+        pastNeg: "に値しなかった",
+        pastQ: "に値したのか",
+    },
 };
 
 export const blockIn = generator.createPrepositionBlock(configIn);

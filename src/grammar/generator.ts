@@ -80,6 +80,8 @@ export interface AdjectiveConfig {
         past: string;
         predNeg: string;
         pastNeg: string;
+        predQ: string;
+        pastQ: string;
     }
     color?: string;
 }
@@ -88,9 +90,15 @@ export interface PrepositionConfig {
     id: string;
     word: string;
     modAdj?: string;
-    predAdj?: string;
     adv?: string;
-    predNeg?: string;
+    pred?: {
+        predAdj: string;
+        past: string;
+        predNeg: string;
+        pastNeg: string;
+        predQ: string;
+        pastQ: string;
+    }
     color?: string;
 }
 
@@ -397,7 +405,7 @@ export class Generator {
             words: [{
                 token: "",
                 categories: [{
-                    head: { type: { type: "nominal", isDet: true, isGerund: false, isTo: false, isPron: false, isProper: true }, agr: { type: "3sing"} },
+                    head: { type: { type: "nominal", isDet: true, isGerund: false, isTo: false, isPron: false, isProper: true }, agr: { type: "3sing" } },
                     translationTemplates: {
                         default: [translation]
                     }
@@ -575,13 +583,17 @@ export class Generator {
             past: `もっと${translation.past}`,
             predNeg: `もっと${translation.predicative}というわけではない`,
             pastNeg: `もっと${translation.predicative}というわけではなかった`,
+            predQ: `もっと${translation.predQ}`,
+            pastQ: `もっと${translation.pastQ}`
         };
         const superlativeTranslation = {
             default: `いちばん${translation.default}`,
             predicative: `いちばん${translation.predicative}`,
             past: `いちばん${translation.past}`,
-            predNeg: `いちばん${translation.predicative}というわけではない`,
-            pastNeg: `いちばん${translation.predicative}というわけではなかった`,
+            predNeg: `いちばん${translation.predNeg}`,
+            pastNeg: `いちばん${translation.pastNeg}`,
+            predQ: `いちばん${translation.predQ}`,
+            pastQ: `いちばん${translation.pastQ}`
         };
         return {
             id: id,
@@ -602,7 +614,9 @@ export class Generator {
                             predicative: [translation.predicative],
                             past: [translation.past],
                             predNeg: [translation.predNeg],
-                            pastNeg: [translation.pastNeg]
+                            pastNeg: [translation.pastNeg],
+                            predQ: [translation.predQ],
+                            pastQ: [translation.pastQ],
                         }
                     }]
                 },
@@ -620,7 +634,9 @@ export class Generator {
                             predicative: [comparativeTranslation.predicative],
                             past: [comparativeTranslation.past],
                             predNeg: [comparativeTranslation.predNeg],
-                            pastNeg: [comparativeTranslation.pastNeg]
+                            pastNeg: [comparativeTranslation.pastNeg],
+                            predQ: [comparativeTranslation.predQ],
+                            pastQ: [comparativeTranslation.pastQ],
                         }
                     }]
                 },
@@ -638,7 +654,9 @@ export class Generator {
                             predicative: [superlativeTranslation.predicative],
                             past: [superlativeTranslation.past],
                             predNeg: [superlativeTranslation.predNeg],
-                            pastNeg: [superlativeTranslation.pastNeg]
+                            pastNeg: [superlativeTranslation.pastNeg],
+                            predQ: [superlativeTranslation.predQ],
+                            pastQ: [superlativeTranslation.pastQ],
                         }
                     }]
                 }
@@ -737,7 +755,7 @@ export class Generator {
                     }] : [],
                     {
                         path: ["right", 0],
-                        key: "default",
+                        key: tense === "present" ? "default" : "past",
                     },
                 ]
             }
@@ -824,7 +842,91 @@ export class Generator {
                     },
                     {
                         path: ["right", 0],
-                        key: "predNeg",
+                        key: tense === "present" ? "predNeg" : "pastNeg",
+                    },
+                ]
+            }
+        }]
+    }
+
+    private createInvertedBeCategory(form: "am" | "are" | "is" | "was" | "were", agr?: FeatureStructure): Phrase[] {
+        const tense = ["am", "are", "is"].includes(form) ? "present" : "past";
+        const head: FeatureStructure = { type: "sentence", finite: true, form: form };
+        const subject: Phrase = { head: { type: { type: "nominal", isDet: true }, case: "nom" } };
+        if (tense) head.tense = tense;
+        if (agr) subject.head.agr = agr;
+        return [{
+            head: head,
+            right: [
+                { head: { type: { type: "nominal", isDet: true, isTo: false, isGerund: false }, case: "nom", agr: agr ?? {} } },
+                { head: { type: "sentence", form: "progressive" } }
+            ],
+            translationTemplates: {
+                default: [
+                    {
+                        path: ["right", 0],
+                        key: "default",
+                        particle: "は",
+                    },
+                    {
+                        path: ["right", 1],
+                        key: "default",
+                    },
+                    tense === "present" ? "なのか？" : "だったのか？"
+                ]
+            }
+        }, {
+            head: head,
+            right: [subject, {
+                head: { type: { type: "nominal", isDet: true }, case: "acc" }
+            }],
+            translationTemplates: {
+                default: [
+                    {
+                        path: ["right", 0],
+                        key: "default",
+                        particle: "は",
+                    },
+                    {
+                        path: ["right", 1],
+                        key: "default",
+                    },
+                    tense === "present" ? "なのか？" : "だったのか？"
+                ]
+            }
+        }, {
+            head: head,
+            right: [subject, {
+                head: { type: "adj" }
+            }],
+            translationTemplates: {
+                default: [
+                    {
+                        path: ["right", 0],
+                        key: "default",
+                        particle: "は",
+                    },
+                    {
+                        path: ["right", 1],
+                        key: tense === "present" ? "predQ" + "？" : "pastQ" + "？",
+                    },
+                ]
+            }
+        }, {
+            head: head,
+            right: [subject, {
+                head: { type: "prep", pred: true }
+            }],
+            translationTemplates: {
+                default: [
+                    {
+                        path: ["right", 0],
+                        key: "default",
+                        particle: "は",
+                    },
+                    {
+                        path: ["right", 1],
+                        key: tense === "present" ? "predQ" + "？" : "pastQ" + "？",
                     },
                 ]
             }
@@ -958,6 +1060,68 @@ export class Generator {
         }
     }
 
+    createBlockInvertedBe(): Block {
+        return {
+            id: "",
+            x: 0,
+            y: 0,
+            words: [{
+                token: "",
+                categories: [...this.createInvertedBeCategory("am", { type: "non-3sing", per: 1, num: 'sing' })]
+            }, {
+                token: "",
+                categories: [
+                    ...this.createInvertedBeCategory("are", { type: "non-3sing", num: 'pl' }),
+                    ...this.createInvertedBeCategory("are", { type: "non-3sing", per: 2, num: 'sing' })
+                ]
+            }, {
+                token: "",
+                categories: [...this.createInvertedBeCategory("is", { type: "3sing" })]
+            }, {
+                token: "",
+                categories: [
+                    ...this.createInvertedBeCategory("was", { type: "3sing" }),
+                    ...this.createInvertedBeCategory("was", { type: "non-3sing", num: "sing", per: 1 }),
+                ]
+            }, {
+                token: "",
+                categories: [
+                    ...this.createInvertedBeCategory("were", { type: "non-3sing", num: "pl" }),
+                    ...this.createInvertedBeCategory("were", { type: "non-3sing", num: "sing", per: 2 })
+                ]
+            }],
+            color: "tomato",
+            children: [{
+                id: "head",
+                hidden: false,
+                type: "dropdown",
+                selected: 2,
+                content: [
+                    "Am",
+                    "Are",
+                    "Is",
+                    "Was",
+                    "Were",
+                ]
+            }, {
+                id: "specifier",
+                hidden: false,
+                type: "placeholder",
+                content: undefined,
+            }, {
+                id: "complement",
+                hidden: false,
+                type: "placeholder",
+                content: undefined,
+            }, {
+                id: "punctuation",
+                hidden: false,
+                type: "text",
+                content: "?"
+            }]
+        }
+    }
+
     createPrepositionBlock(config: PrepositionConfig): Block {
         const categories = [];
         if (config.modAdj) {
@@ -983,7 +1147,7 @@ export class Generator {
             });
         }
 
-        if (config.predAdj && config.predNeg) {
+        if (config.pred) {
             categories.push({
                 head: { type: "prep", pred: true },
                 right: [{
@@ -995,14 +1159,42 @@ export class Generator {
                             path: ["right", 0],
                             key: "default",
                         },
-                        config.predAdj
+                        config.pred.predAdj
+                    ],
+                    past: [
+                        {
+                            path: ["right", 0],
+                            key: "default",
+                        },
+                        config.pred.past
                     ],
                     predNeg: [
                         {
                             path: ["right", 0],
                             key: "default",
                         },
-                        config.predNeg
+                        config.pred.predNeg
+                    ],
+                    predQ: [
+                        {
+                            path: ["right", 0],
+                            key: "default",
+                        },
+                        config.pred.predQ
+                    ],
+                    pastNeg: [
+                        {
+                            path: ["right", 0],
+                            key: "default",
+                        },
+                        config.pred.pastNeg
+                    ],
+                    pastQ: [
+                        {
+                            path: ["right", 0],
+                            key: "default",
+                        },
+                        config.pred.pastQ
                     ]
                 }
             });
