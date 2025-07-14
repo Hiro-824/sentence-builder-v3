@@ -3,8 +3,6 @@ import { Block } from "@/models/block";
 
 const generator = new Generator();
 
-// --- Configuration Data for Each Pronoun ---
-
 const configI: PronounConfig = {
     id: "pronoun_I",
     person: 1,
@@ -157,7 +155,6 @@ const configThey: PronounConfig = {
     }
 };
 
-// --- Individual Block Exports ---
 export const blockI = generator.createPronounBlock(configI);
 export const blockWe = generator.createPronounBlock(configWe);
 export const blockYouSingular = generator.createPronounBlock(configYouSingular);
@@ -168,7 +165,70 @@ export const blockIt = generator.createPronounBlock(configIt);
 export const blockThey = generator.createPronounBlock(configThey);
 export const blockNum = generator.createNumeralPronounBlock();
 
-// --- Grouped Export for UI ---
+export const blockThis: Block = {
+    id: "this",
+    x: 0,
+    y: 0,
+    words: [{
+        token: "",
+        categories: [{
+            head: { type: { type: "nominal", isTo: false, isGerund: false, isDet: true, isPron: true }, agr: { type: "3sing" }, determined: true },
+            translationTemplates: {
+                default: ["これ"]
+            }
+        }]
+    }, {
+        token: "",
+        categories: [{
+            head: { type: { type: "nominal", isTo: false, isGerund: false, isDet: true, isPron: true }, agr: { type: "non-3sing", num: "pl", per: 3 }, determined: true },
+            translationTemplates: {
+                default: ["あれら"]
+            }
+        }]
+    }],
+    isRound: true,
+    color: "dodgerblue",
+    children: [{
+        id: "head",
+        hidden: false,
+        type: "dropdown",
+        selected: 0,
+        content: ["this", "these"]
+    }]
+}
+
+export const blockThat: Block = {
+    id: "these",
+    x: 0,
+    y: 0,
+    words: [{
+        token: "",
+        categories: [{
+            head: { type: { type: "nominal", isTo: false, isGerund: false, isDet: true, isPron: true }, agr: { type: "3sing" }, determined: true },
+            translationTemplates: {
+                default: ["あれ"]
+            }
+        }]
+    }, {
+        token: "",
+        categories: [{
+            head: { type: { type: "nominal", isTo: false, isGerund: false, isDet: true, isPron: true }, agr: { type: "non-3sing", num: "pl", per: 3 }, determined: true },
+            translationTemplates: {
+                default: ["あれら"]
+            }
+        }]
+    }],
+    isRound: true,
+    color: "dodgerblue",
+    children: [{
+        id: "head",
+        hidden: false,
+        type: "dropdown",
+        selected: 0,
+        content: ["that", "those"]
+    }]
+}
+
 export const allPronounBlocks: Block[] = [
     blockI,
     blockWe,
@@ -178,5 +238,6 @@ export const allPronounBlocks: Block[] = [
     blockShe,
     blockIt,
     blockThey,
-    blockNum,
+    blockThis,
+    blockThat
 ];
