@@ -394,7 +394,7 @@ export class Generator {
             words: [{
                 token: "",
                 categories: [{
-                    head: { type: { type: "nominal", isDet: true, isGerund: false, isTo: false, isPron: false, isProper: true } },
+                    head: { type: { type: "nominal", isDet: true, isGerund: false, isTo: false, isPron: false, isProper: true }, agr: { type: "3sing"} },
                     translationTemplates: {
                         default: [translation]
                     }

@@ -50,6 +50,14 @@ const configHand: NounConfig = {
     translation: "手"
 };
 
+const configStudent: NounConfig = {
+    id: "noun_student",
+    isCountable: true,
+    singularForm: "student",
+    pluralForm: "students",
+    translation: "学生"
+};
+
 const configBush: NounConfig = {
     id: "noun_bush",
     isCountable: true,
@@ -65,6 +73,7 @@ export const blockWater = generator.createNounBlock(configWater);
 export const blockBird = generator.createNounBlock(configBird);
 export const blockHand = generator.createNounBlock(configHand);
 export const blockBush = generator.createNounBlock(configBush);
+export const blockStudent = generator.createNounBlock(configStudent);
 
 export const blockJohn = generator.createProperNounBlock("John", "ジョン");
 export const blockMary = generator.createProperNounBlock("Mary", "メアリー");
@@ -74,6 +83,7 @@ export const allNounBlocks: Block[] = [
     blockChild,
     blockBird,
     blockHand,
+    blockStudent,
     blockBush,
     blockInformation,
     blockWater,
