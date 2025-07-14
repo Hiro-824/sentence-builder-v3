@@ -50,6 +50,13 @@ const configIn: PrepositionConfig = {
     predAdj: "の中にある",
 };
 
+const configFrom: PrepositionConfig = {
+    id: "prep_from",
+    word: "from",
+    modAdj: "からの",
+    predAdj: "の出身である",
+};
+
 const configWorth: PrepositionConfig = {
     id: "prep_in",
     word: "worth",
@@ -58,8 +65,10 @@ const configWorth: PrepositionConfig = {
 
 export const blockIn = generator.createPrepositionBlock(configIn);
 export const blockWorth = generator.createPrepositionBlock(configWorth);
+export const blockFrom = generator.createPrepositionBlock(configFrom);
 
 export const allPrepositionBlocks: Block[] = [
     blockIn,
+    blockFrom,
     blockWorth
 ];

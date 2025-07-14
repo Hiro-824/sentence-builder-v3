@@ -257,22 +257,22 @@ export class Generator {
             if (i === 0) {
                 words.push({
                     token: "",
-                                    categories: [{
-                    head: { type: { type: "nominal", isDet: true, isGerund: false, isTo: false }, agr: { type: "3sing" } },
-                    translationTemplates: {
-                        default: ["1つ"]
-                    }
-                }]
+                    categories: [{
+                        head: { type: { type: "nominal", isDet: true, isGerund: false, isTo: false }, agr: { type: "3sing" } },
+                        translationTemplates: {
+                            default: ["1つ"]
+                        }
+                    }]
                 });
             } else {
                 words.push({
                     token: "",
-                                    categories: [{
-                    head: { type: { type: "nominal", isDet: true, isGerund: false, isTo: false }, agr: { type: "non-3sing", num: "pl", per: 3 } },
-                    translationTemplates: {
-                        default: [`${i+1}つ`]
-                    }
-                }]
+                    categories: [{
+                        head: { type: { type: "nominal", isDet: true, isGerund: false, isTo: false }, agr: { type: "non-3sing", num: "pl", per: 3 } },
+                        translationTemplates: {
+                            default: [`${i + 1}つ`]
+                        }
+                    }]
                 });
             }
         }
@@ -383,6 +383,31 @@ export class Generator {
             words,
             children
         };
+    }
+
+    createProperNounBlock(name: string, translation: string): Block {
+        return {
+            id: `${name}_proper`,
+            x: 0,
+            y: 0,
+            isRound: true,
+            words: [{
+                token: "",
+                categories: [{
+                    head: { type: { type: "nominal", isDet: true, isGerund: false, isTo: false, isPron: false, isProper: true } },
+                    translationTemplates: {
+                        default: [translation]
+                    }
+                }]
+            }],
+            color: "dodgerblue",
+            children: [{
+                id: "head",
+                hidden: false,
+                type: "text",
+                content: name
+            }]
+        }
     }
 
     private createVerbCategory(config: VerbConfig, form: "base" | "es" | "ed" | "ing" | "perfect" | "passive"): Phrase[] {

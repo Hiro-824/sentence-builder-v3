@@ -66,6 +66,9 @@ export const blockBird = generator.createNounBlock(configBird);
 export const blockHand = generator.createNounBlock(configHand);
 export const blockBush = generator.createNounBlock(configBush);
 
+export const blockJohn = generator.createProperNounBlock("John", "ジョン");
+export const blockMary = generator.createProperNounBlock("Mary", "メアリー");
+
 export const allNounBlocks: Block[] = [
     blockBook,
     blockChild,
@@ -74,4 +77,6 @@ export const allNounBlocks: Block[] = [
     blockBush,
     blockInformation,
     blockWater,
+    blockJohn,
+    blockMary
 ];
