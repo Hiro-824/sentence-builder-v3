@@ -1,5 +1,5 @@
 import { Block, BlockChild } from "@/models/block";
-import { Phrase, Word, TranslationTemplates, det, noun, FeatureStructure, pronoun } from "@/models/grammar-entities";
+import { Phrase, Word, TranslationTemplates, det, noun, FeatureStructure, pronoun, commonNominal } from "@/models/grammar-entities";
 
 export interface PronounForms {
     nominative: string;
@@ -606,8 +606,8 @@ export class Generator {
                         head: { type: "adj", form: "base" },
                         rightModTargets: [
                             { head: { type: noun } },
-                            { head: { type: det, agr: { type: "non-3sing", num: "pl", per: 3 }, determinered: false } },
-                            { head: { type: det, count: false, determinered: false } }
+                            { head: { type: commonNominal, agr: { type: "non-3sing", num: "pl", per: 3 }, determinered: false } },
+                            { head: { type: commonNominal, count: false, determinered: false } }
                         ],
                         translationTemplates: {
                             default: [translation.default],
@@ -626,8 +626,8 @@ export class Generator {
                         head: { type: "adj", form: "comparative" },
                         rightModTargets: [
                             { head: { type: noun } },
-                            { head: { type: det, agr: { type: "non-3sing", num: "pl", per: 3 }, determinered: false } },
-                            { head: { type: det, count: false, determinered: false } }
+                            { head: { type: commonNominal, agr: { type: "non-3sing", num: "pl", per: 3 }, determinered: false } },
+                            { head: { type: commonNominal, count: false, determinered: false } }
                         ],
                         translationTemplates: {
                             default: [comparativeTranslation.default],
@@ -646,8 +646,8 @@ export class Generator {
                         head: { type: "adj", form: "superlative" },
                         rightModTargets: [
                             { head: { type: noun } },
-                            { head: { type: det, agr: { type: "non-3sing", num: "pl", per: 3 }, determinered: false } },
-                            { head: { type: det, count: false, determinered: false } }
+                            { head: { type: commonNominal, agr: { type: "non-3sing", num: "pl", per: 3 }, determinered: false } },
+                            { head: { type: commonNominal, count: false, determinered: false } }
                         ],
                         translationTemplates: {
                             default: [superlativeTranslation.default],
@@ -1134,8 +1134,8 @@ export class Generator {
                 }],
                 leftModTargets: [
                     { head: { type: noun } },
-                    { head: { type: det, agr: { type: "non-3sing", num: "pl", per: 3 }, determinered: false } },
-                    { head: { type: det, count: false, determinered: false } }
+                    { head: { type: commonNominal, agr: { type: "non-3sing", num: "pl", per: 3 }, determinered: false } },
+                    { head: { type: commonNominal, count: false, determinered: false } }
                 ],
                 translationTemplates: {
                     default: [

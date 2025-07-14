@@ -29,6 +29,7 @@ export const MissingArgument: Word = { token: "[[MISSING_ARGUMENT]]", categories
 export type RecursiveParseElement = Word | SubPhraseInput;
 export interface SubPhraseInput { elements: RecursiveParseElement[]; headIndex: number; phraseName?: string; }
 
-export const det = { type: "nominal", isDet: true, isTo: false, isGerund: false, isPron: false, isProper: false }
+export const det = { type: "nominal", isDet: true, isTo: false, isGerund: false }
+export const commonNominal = { type: "nominal", isDet: true, isTo: false, isGerund: false, isPron: false, isProper: false }
 export const pronoun = { type: "nominal", isDet: true, isTo: false, isGerund: false, isPron: true, isProper: false }
 export const noun = { type: "nominal", isDet: false, isTo: false, isGerund: false, isPron: false, isProper: false }
