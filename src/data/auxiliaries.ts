@@ -11,7 +11,9 @@ export const blockSentence: Block = {
         token: "",
         categories: [{
             head: {
-                type: "sentence"
+                type: "sentence",
+                inverted: false,
+                negative: false,
             },
             left: [{
                 head: {
