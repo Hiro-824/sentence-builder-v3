@@ -73,8 +73,10 @@ export const blockSentence: Block = {
     ],
 }
 export const blockBe = generator.createBlockBe();
+export const blockBeNot = generator.createBlockBeNot();
 
 export const allAuxiliaryBlocks: Block[] = [
     blockSentence,
     blockBe,
+    blockBeNot,
 ];

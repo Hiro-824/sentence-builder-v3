@@ -48,6 +48,7 @@ const configIn: PrepositionConfig = {
     word: "in",
     modAdj: "の中の",
     predAdj: "の中にある",
+    predNeg: "の中にない"
 };
 
 const configFrom: PrepositionConfig = {
@@ -55,12 +56,14 @@ const configFrom: PrepositionConfig = {
     word: "from",
     modAdj: "からの",
     predAdj: "の出身である",
+    predNeg: "の出身ではない"
 };
 
 const configWorth: PrepositionConfig = {
     id: "prep_in",
     word: "worth",
     predAdj: "に値する",
+    predNeg: "に値しない"
 };
 
 export const blockIn = generator.createPrepositionBlock(configIn);

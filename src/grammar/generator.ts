@@ -78,6 +78,8 @@ export interface AdjectiveConfig {
         default: string;
         predicative: string;
         past: string;
+        predNeg: string;
+        pastNeg: string;
     }
     color?: string;
 }
@@ -88,6 +90,7 @@ export interface PrepositionConfig {
     modAdj?: string;
     predAdj?: string;
     adv?: string;
+    predNeg?: string;
     color?: string;
 }
 
@@ -569,12 +572,16 @@ export class Generator {
         const comparativeTranslation = {
             default: `もっと${translation.default}`,
             predicative: `もっと${translation.predicative}`,
-            past: `もっと${translation.past}`
+            past: `もっと${translation.past}`,
+            predNeg: `もっと${translation.predicative}というわけではない`,
+            pastNeg: `もっと${translation.predicative}というわけではなかった`,
         };
         const superlativeTranslation = {
             default: `いちばん${translation.default}`,
             predicative: `いちばん${translation.predicative}`,
-            past: `いちばん${translation.past}`
+            past: `いちばん${translation.past}`,
+            predNeg: `いちばん${translation.predicative}というわけではない`,
+            pastNeg: `いちばん${translation.predicative}というわけではなかった`,
         };
         return {
             id: id,
@@ -593,7 +600,9 @@ export class Generator {
                         translationTemplates: {
                             default: [translation.default],
                             predicative: [translation.predicative],
-                            past: [translation.past]
+                            past: [translation.past],
+                            predNeg: [translation.predNeg],
+                            pastNeg: [translation.pastNeg]
                         }
                     }]
                 },
@@ -609,7 +618,9 @@ export class Generator {
                         translationTemplates: {
                             default: [comparativeTranslation.default],
                             predicative: [comparativeTranslation.predicative],
-                            past: [comparativeTranslation.past]
+                            past: [comparativeTranslation.past],
+                            predNeg: [comparativeTranslation.predNeg],
+                            pastNeg: [comparativeTranslation.pastNeg]
                         }
                     }]
                 },
@@ -625,7 +636,9 @@ export class Generator {
                         translationTemplates: {
                             default: [superlativeTranslation.default],
                             predicative: [superlativeTranslation.predicative],
-                            past: [superlativeTranslation.past]
+                            past: [superlativeTranslation.past],
+                            predNeg: [superlativeTranslation.predNeg],
+                            pastNeg: [superlativeTranslation.pastNeg]
                         }
                     }]
                 }
@@ -731,6 +744,93 @@ export class Generator {
         }]
     }
 
+    private createBeNotCategory(form: "am" | "are" | "is" | "was" | "were", agr?: FeatureStructure): Phrase[] {
+        const tense = ["am", "are", "is"].includes(form) ? "present" : "past";
+        const head: FeatureStructure = { type: "sentence", finite: true, form: form };
+        const left: Phrase = { head: { type: { type: "nominal", isDet: true }, case: "nom" } };
+        if (tense) head.tense = tense;
+        if (agr) left.head.agr = agr;
+        return [{
+            head: head,
+            left: [{ head: { type: { type: "nominal", isDet: true, isTo: false, isGerund: false }, case: "nom", agr: agr ?? {} } }],
+            right: [{
+                head: { type: "sentence", form: "progressive" }
+            }],
+            translationTemplates: {
+                default: [
+                    {
+                        path: ["left", 0],
+                        key: "default",
+                        particle: "は",
+                    },
+                    {
+                        path: ["right", 0],
+                        key: "default",
+                    },
+                    tense === "present" ? "ではない" : "ではなかった"
+                ]
+            }
+        }, {
+            head: head,
+            left: [left],
+            right: [{
+                head: { type: { type: "nominal", isDet: true }, case: "acc" }
+            }],
+            translationTemplates: {
+                default: [
+                    {
+                        path: ["left", 0],
+                        key: "default",
+                        particle: "は",
+                    },
+                    {
+                        path: ["right", 0],
+                        key: "default",
+                    },
+                    tense === "present" ? "ではない" : "ではなかった"
+                ]
+            }
+        }, {
+            head: head,
+            left: [left],
+            right: [{
+                head: { type: "adj" }
+            }],
+            translationTemplates: {
+                default: [
+                    {
+                        path: ["left", 0],
+                        key: "default",
+                        particle: "は",
+                    },
+                    {
+                        path: ["right", 0],
+                        key: tense === "present" ? "predNeg" : "pastNeg",
+                    },
+                ]
+            }
+        }, {
+            head: head,
+            left: [left],
+            right: [{
+                head: { type: "prep", pred: true }
+            }],
+            translationTemplates: {
+                default: [
+                    {
+                        path: ["left", 0],
+                        key: "default",
+                        particle: "は",
+                    },
+                    {
+                        path: ["right", 0],
+                        key: "predNeg",
+                    },
+                ]
+            }
+        }]
+    }
+
     createBlockBe(): Block {
         return {
             id: "",
@@ -801,6 +901,63 @@ export class Generator {
         }
     }
 
+    createBlockBeNot(): Block {
+        return {
+            id: "",
+            x: 0,
+            y: 0,
+            words: [{
+                token: "",
+                categories: [...this.createBeNotCategory("am", { type: "non-3sing", per: 1, num: 'sing' })]
+            }, {
+                token: "",
+                categories: [
+                    ...this.createBeNotCategory("are", { type: "non-3sing", num: 'pl' }),
+                    ...this.createBeNotCategory("are", { type: "non-3sing", per: 2, num: 'sing' })
+                ]
+            }, {
+                token: "",
+                categories: [...this.createBeNotCategory("is", { type: "3sing" })]
+            }, {
+                token: "",
+                categories: [
+                    ...this.createBeNotCategory("was", { type: "3sing" }),
+                    ...this.createBeNotCategory("was", { type: "non-3sing", num: "sing", per: 1 }),
+                ]
+            }, {
+                token: "",
+                categories: [
+                    ...this.createBeNotCategory("were", { type: "non-3sing", num: "pl" }),
+                    ...this.createBeNotCategory("were", { type: "non-3sing", num: "sing", per: 2 })
+                ]
+            }],
+            color: "tomato",
+            children: [{
+                id: "specifier",
+                hidden: false,
+                type: "placeholder",
+                content: undefined,
+            }, {
+                id: "head",
+                hidden: false,
+                type: "dropdown",
+                selected: 2,
+                content: [
+                    "am not",
+                    "are not",
+                    "is not",
+                    "was not",
+                    "were not",
+                ]
+            }, {
+                id: "complement",
+                hidden: false,
+                type: "placeholder",
+                content: undefined,
+            }]
+        }
+    }
+
     createPrepositionBlock(config: PrepositionConfig): Block {
         const categories = [];
         if (config.modAdj) {
@@ -826,7 +983,7 @@ export class Generator {
             });
         }
 
-        if (config.predAdj) {
+        if (config.predAdj && config.predNeg) {
             categories.push({
                 head: { type: "prep", pred: true },
                 right: [{
@@ -839,6 +996,13 @@ export class Generator {
                             key: "default",
                         },
                         config.predAdj
+                    ],
+                    predNeg: [
+                        {
+                            path: ["right", 0],
+                            key: "default",
+                        },
+                        config.predNeg
                     ]
                 }
             });

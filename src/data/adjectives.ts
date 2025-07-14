@@ -11,7 +11,9 @@ const configBig: AdjectiveConfig = {
     translation: {
         default: "大きい",
         predicative: "大きい",
-        past: "大きかった"
+        past: "大きかった",
+        predNeg: "大きくない",
+        pastNeg: "大きくなかった"
     }
 };
 
@@ -23,7 +25,9 @@ const configInteresting: AdjectiveConfig = {
     translation: {
         default: "興味深い",
         predicative: "興味深い",
-        past: "興味深かった"
+        past: "興味深かった",
+        predNeg: "興味深くない",
+        pastNeg: "興味深くなかった"
     }
 };
 
