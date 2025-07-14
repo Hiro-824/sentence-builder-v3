@@ -676,7 +676,7 @@ export class Generator {
     private createBeCategory(form: "base" | "am" | "are" | "is" | "was" | "were" | "en" | "ing", agr?: FeatureStructure): Phrase[] {
         const finite = (["base", "en", "ing"].includes(form)) ? false : true;
         const tense = (finite && ["am", "are", "is"].includes(form)) ? "present" : finite ? "past" : undefined;
-        const head: FeatureStructure = { type: "sentence", finite: finite, form: form };
+        const head: FeatureStructure = { type: "sentence", inverted: false, negative: false, finite: finite, form: form };
         const left: Phrase = { head: { type: { type: "nominal", isDet: true } } };
         if (tense) head.tense = tense;
         if (finite) left.head.case = "nom";
@@ -764,7 +764,7 @@ export class Generator {
 
     private createBeNotCategory(form: "am" | "are" | "is" | "was" | "were", agr?: FeatureStructure): Phrase[] {
         const tense = ["am", "are", "is"].includes(form) ? "present" : "past";
-        const head: FeatureStructure = { type: "sentence", finite: true, form: form };
+        const head: FeatureStructure = { type: "sentence", inverted: false, negative: true, finite: true, form: form };
         const left: Phrase = { head: { type: { type: "nominal", isDet: true }, case: "nom" } };
         if (tense) head.tense = tense;
         if (agr) left.head.agr = agr;
@@ -851,7 +851,7 @@ export class Generator {
 
     private createInvertedBeCategory(form: "am" | "are" | "is" | "was" | "were", agr?: FeatureStructure): Phrase[] {
         const tense = ["am", "are", "is"].includes(form) ? "present" : "past";
-        const head: FeatureStructure = { type: "sentence", finite: true, form: form };
+        const head: FeatureStructure = { type: "sentence", inverted: true, negative: false, finite: true, form: form };
         const subject: Phrase = { head: { type: { type: "nominal", isDet: true }, case: "nom" } };
         if (tense) head.tense = tense;
         if (agr) subject.head.agr = agr;

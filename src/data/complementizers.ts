@@ -10,7 +10,7 @@ export const blockThat: Block = {
         categories: [{
             head: { type: { type: "nominal" } },
             right: [{
-                head: { type: "sentence" }
+                head: { type: "sentence", inverted: false }
             }],
             translationTemplates: {
                 default: [
