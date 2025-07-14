@@ -1099,11 +1099,11 @@ export class Generator {
                 type: "dropdown",
                 selected: 2,
                 content: [
-                    "Am",
-                    "Are",
-                    "Is",
-                    "Was",
-                    "Were",
+                    "am",
+                    "are",
+                    "is",
+                    "was",
+                    "were",
                 ]
             }, {
                 id: "specifier",
@@ -1115,11 +1115,6 @@ export class Generator {
                 hidden: false,
                 type: "placeholder",
                 content: undefined,
-            }, {
-                id: "punctuation",
-                hidden: false,
-                type: "text",
-                content: "?"
             }]
         }
     }
