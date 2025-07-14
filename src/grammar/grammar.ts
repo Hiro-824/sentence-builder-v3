@@ -378,18 +378,21 @@ export class Grammar {
             const processSide = (side: "left" | "right") => {
                 const args = finalPhrase[side];
                 if (!args) return;
-                const keptArgs: Phrase[] = [];
+
                 const newGaps: Phrase[] = [];
                 for (const arg of args) {
                     if (arg.head?.isGap === true) {
-                        delete arg.head.isGap; // Clean up the temporary flag
                         newGaps.push(arg);
-                    } else {
-                        keptArgs.push(arg);
                     }
                 }
+
                 finalPhrase.gaps!.unshift(...newGaps);
-                finalPhrase[side] = keptArgs;
+
+                for (const arg of args) {
+                    if (arg.head?.isGap === true) {
+                        delete arg.head.isGap;
+                    }
+                }
             };
 
             processSide("right");
