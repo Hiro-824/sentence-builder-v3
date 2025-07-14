@@ -908,8 +908,9 @@ export class Generator {
                     },
                     {
                         path: ["right", 1],
-                        key: tense === "present" ? "predQ" + "？" : "pastQ" + "？",
+                        key: tense === "present" ? "predQ" : "pastQ",
                     },
+                    "？"
                 ]
             }
         }, {
@@ -926,8 +927,9 @@ export class Generator {
                     },
                     {
                         path: ["right", 1],
-                        key: tense === "present" ? "predQ" + "？" : "pastQ" + "？",
+                        key: tense === "present" ? "predQ" : "pastQ",
                     },
+                    "？"
                 ]
             }
         }]
