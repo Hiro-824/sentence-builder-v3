@@ -851,7 +851,7 @@ export class Generator {
 
     private createInvertedBeCategory(form: "am" | "are" | "is" | "was" | "were", agr?: FeatureStructure): Phrase[] {
         const tense = ["am", "are", "is"].includes(form) ? "present" : "past";
-        const head: FeatureStructure = { type: "sentence", inverted: true, negative: false, finite: true, form: form };
+        const head: FeatureStructure = { type: "sentence", inverted: true, question: true, negative: false, finite: true, form: form };
         const subject: Phrase = { head: { type: { type: "nominal", isDet: true }, case: "nom" } };
         if (tense) head.tense = tense;
         if (agr) subject.head.agr = agr;
