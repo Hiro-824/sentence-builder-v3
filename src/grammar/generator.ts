@@ -685,7 +685,7 @@ export class Generator {
             head: head,
             left: [{ head: { type: { type: "nominal", isDet: true, isTo: false, isGerund: false }, case: "nom", agr: agr ?? {} } }],
             right: [{
-                head: { type: "sentence", form: "progressive" }
+                head: { type: "verb", form: "progressive" }
             }],
             translationTemplates: {
                 default: [
@@ -772,7 +772,7 @@ export class Generator {
             head: head,
             left: [{ head: { type: { type: "nominal", isDet: true, isTo: false, isGerund: false }, case: "nom", agr: agr ?? {} } }],
             right: [{
-                head: { type: "sentence", form: "progressive" }
+                head: { type: "verb", form: "progressive" }
             }],
             translationTemplates: {
                 default: [
@@ -859,7 +859,7 @@ export class Generator {
             head: head,
             right: [
                 { head: { type: { type: "nominal", isDet: true, isTo: false, isGerund: false }, case: "nom", agr: agr ?? {} } },
-                { head: { type: "sentence", form: "progressive" } }
+                { head: { type: "verb", form: "progressive" } }
             ],
             translationTemplates: {
                 default: [
