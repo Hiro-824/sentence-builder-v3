@@ -8,10 +8,14 @@ export class Renderer {
     constructor(blocks, blockList, svg) {
         this.blocks = blocks;
         this.blockList = blockList;
+        // Format each block in blockList using converter.formatBlock()
+        this.converter = new Converter;
+        Object.keys(this.blockList).forEach(groupName => {
+            this.blockList[groupName] = this.blockList[groupName].map(block => this.converter.formatBlock(block));
+        });
         this.svg = svg;
         this.sideBarScrollExtent = 0;
         this.viewportHeight = window.innerHeight
-        this.converter = new Converter;
         this.grammar = new Grammar;
         // Update translation for all initial blocks
         this.blocks.forEach(block => this.updateBlockTranslation(block));
@@ -67,8 +71,12 @@ export class Renderer {
     }
 
     renderBlocks() {
+        console.log("render blocks")
         d3.select("#grid").selectAll("*").remove();
         d3.select("#dragboard").selectAll("*").remove();
+        this.blocks = this.blocks.map((block) => {
+            return this.converter.formatBlock(block);
+        });
         this.blocks.forEach(block => {
             this.renderBlock(block, this.grid);
         });
@@ -490,9 +498,8 @@ export class Renderer {
                         this.renderBlockImage(block, blockGroup);
                     } else {
                         this.setChildVisibility(block.id);
-                        this.updateBlock(block.id);
+                        this.formatBlock(block.id);
                         this.raiseBlock(block.id);
-                        // After updating, validate the block
                         const parentBlock = this.findBlock(block.id).rootParent;
                         const isValid = this.validate(parentBlock);
                         if (!isValid) {
@@ -679,6 +686,7 @@ export class Renderer {
             this.attachBlock(d.id, targetBlockId, overlapInfo.side)
         } else {
             this.moveBlockToGrid(d.id);
+            this.formatBlock(d.id);
         }
 
         this.draggedBlockId = null;
@@ -1116,6 +1124,14 @@ export class Renderer {
         // Update translation for the updated parent/root
         this.updateBlockTranslation(updatedParent);
         this.renderBlocks();
+    }
+
+    formatBlock(id) {
+        const block = this.findBlock(id).rootParent;
+        if (!block) return;
+        const newBlock = this.converter.formatBlock(block);
+        this.updateBlockInData(newBlock);
+        this.updateBlock(block.id);
     }
 
     setChildVisibility(id) {

@@ -45,7 +45,7 @@ export const blockWhat: Block = {
     words: [{
         token: "",
         categories: [{
-            head: { type: "sentence", inverted: true, wh: true },
+            head: { type: "sentence", finite: true, question: true, inverted: true, wh: true },
             right: [{
                 head: { type: "sentence", inverted: true, wh: false },
                 gaps: [{ head: { type: { type: "nominal" } } }]

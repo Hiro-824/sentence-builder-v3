@@ -12,6 +12,7 @@ export const blockSentence: Block = {
         categories: [{
             head: {
                 type: "sentence",
+                finite: true,
                 inverted: false,
                 negative: false,
             },
