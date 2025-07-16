@@ -8,7 +8,7 @@ export const blockThat: Block = {
     words: [{
         token: "",
         categories: [{
-            head: { type: { type: "nominal" } },
+            head: { type: { type: "nominal" }, agr: { type: "3sing" } },
             right: [{
                 head: { type: "sentence", inverted: false }
             }],
