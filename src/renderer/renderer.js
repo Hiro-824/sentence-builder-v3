@@ -494,8 +494,8 @@ export class Renderer {
                     if (isFromSidebar) {
                         this.closeAllDropdowns();
                         const blockGroup = d3.select(`#${block.id}`);
-                        this.updateChildVisibilityForBlock(block);
                         this.renderBlockImage(block, blockGroup);
+                        this.updateChildVisibilityForBlock(block);
                     } else {
                         this.setChildVisibility(block.id);
                         this.formatBlock(block.id);
