@@ -1,5 +1,6 @@
 import { Block } from "@/models/block";
 import { FeatureStructure, MissingArgument, Phrase, RecursiveParseElement, SubPhraseInput, Word } from "@/models/grammar-entities";
+import { Grammar } from "./grammar";
 
 export class Converter {
     convert(block: Block): SubPhraseInput | undefined {
@@ -144,6 +145,47 @@ export class Converter {
         return "inst_" + crypto.randomUUID().replaceAll(/-/g, '');
     }
 
+    private hideResolvedGapPlaceholders(block: Block): void {
+        if (!block) return;
+
+        // 1. Convert the block structure to grammar input.
+        const phraseInput = this.convert(block);
+        if (!phraseInput) return;
+
+        // 2. Parse the input to get linguistic data.
+        // We instantiate Grammar here to keep it self-contained.
+        const grammar = new Grammar(); 
+        const parseResult = grammar.parseNestedPhrase(phraseInput);
+        
+        // 3. Extract the resolved gap IDs.
+        if (!parseResult || parseResult.categories.length === 0) return;
+        
+        const firstParse = parseResult.categories[0];
+        const resolvedGapIds = firstParse.resolvedGapIds;
+        
+        if (!resolvedGapIds || resolvedGapIds.length === 0) return;
+
+        // 4. Traverse the block and hide placeholders with matching IDs.
+        // This function modifies the block object passed to it by reference.
+        const findAndHide = (current: Block) => {
+            if (!current.children) return;
+
+            for (const child of current.children) {
+                if (child.type === 'placeholder' && child.instanceId && resolvedGapIds.includes(child.instanceId)) {
+                    child.hidden = true;
+                }
+                
+                // Recurse into children's content, even if the parent placeholder is now hidden.
+                // This is important for deeply nested structures.
+                if (child.content) {
+                     findAndHide(child.content as Block);
+                }
+            }
+        };
+
+        findAndHide(block);
+    }
+
     formatBlock(block: Block): Block {
         if (!block) {
             return block;
@@ -232,6 +274,8 @@ export class Converter {
         };
 
         traverseAndFormat(newBlock);
+
+        this.hideResolvedGapPlaceholders(newBlock);
 
         // Punctuation is still added based on the grammatical `isFinite` property,
         // which is the correct behavior.

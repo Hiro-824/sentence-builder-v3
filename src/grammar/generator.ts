@@ -465,11 +465,11 @@ export class Generator {
             case "ing":
                 categories.push({
                     head: { type: "verb", finite: false, form: "progressive" },
-                    left: [{ head: { type: subjectType } }],
+                    left: [{ head: { type: subjectType, isSubject: true } }],
                     translation: config.translations.progressive,
                 });
                 categories.push({
-                    head: { type: { type: "nominal", isGerund: true, }, agr: { type: "3sing" } },
+                    head: { type: { type: "nominal", isGerund: true, isSubject: true }, agr: { type: "3sing" } },
                     left: [{ head: { type: subjectType } }],
                     translation: config.translations.noun,
                 });
@@ -477,14 +477,14 @@ export class Generator {
             case "perfect":
                 categories.push({
                     head: { type: "verb", finite: false, form: "perfect" },
-                    left: [{ head: { type: subjectType } }],
+                    left: [{ head: { type: subjectType, isSubject: true } }],
                     translation: config.translations.perfect,
                 });
                 break;
             case "passive":
                 categories.push({
                     head: { type: "verb", finite: false, form: "passive" },
-                    left: [{ head: { type: subjectType } }],
+                    left: [{ head: { type: subjectType, isSubject: true } }],
                     translation: config.translations.passive ?? {},
                 });
                 break;
