@@ -857,6 +857,26 @@ export class Generator {
         if (agr) subject.head.agr = agr;
         return [{
             head: head,
+            right: [
+                { head: { type: { type: "nominal", isDet: true, isTo: false, isGerund: false }, case: "nom", agr: agr ?? {} } },
+                { head: { type: "verb", form: "progressive" } }
+            ],
+            translationTemplates: {
+                default: [
+                    {
+                        path: ["right", 0],
+                        key: "default",
+                        particle: "は",
+                    },
+                    {
+                        path: ["right", 1],
+                        key: "default",
+                    },
+                    tense === "present" ? "なのか？" : "だったのか？"
+                ]
+            }
+        }, {
+            head: head,
             right: [subject, {
                 head: { type: { type: "nominal", isDet: true }, case: "acc" }
             }],
@@ -910,26 +930,6 @@ export class Generator {
                         key: tense === "present" ? "predQ" : "pastQ",
                     },
                     "？"
-                ]
-            }
-        }, {
-            head: head,
-            right: [
-                { head: { type: { type: "nominal", isDet: true, isTo: false, isGerund: false }, case: "nom", agr: agr ?? {} } },
-                { head: { type: "verb", form: "progressive" } }
-            ],
-            translationTemplates: {
-                default: [
-                    {
-                        path: ["right", 0],
-                        key: "default",
-                        particle: "は",
-                    },
-                    {
-                        path: ["right", 1],
-                        key: "default",
-                    },
-                    tense === "present" ? "なのか？" : "だったのか？"
                 ]
             }
         }]
