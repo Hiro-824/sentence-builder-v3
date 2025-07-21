@@ -190,6 +190,7 @@ export class Grammar {
     processArguments(currentPhrase: Phrase, actualArgs: Word[], expectedPhrases: Phrase[], side: "left" | "right"): Phrase | null {
         const newPhrase = this.deepCopy(currentPhrase);
         if (!newPhrase.gaps) newPhrase.gaps = [];
+        if (!newPhrase.resolvedGapIds) newPhrase.resolvedGapIds = [];
 
         const unifiedArgs: Phrase[] = []; // This will be built up with placeholders for missing args
 
@@ -198,12 +199,15 @@ export class Grammar {
             const actualWord = actualArgs[i];
             let argSatisfied = false;
 
-            if (actualWord.token === MissingArgument.token) {
+            if (actualWord && actualWord.token === MissingArgument.token) {
                 const placeholder = this.deepCopy(expected);
                 placeholder.head.isGap = true;
+                if (actualWord.instanceId) {
+                    (placeholder.head).instanceId = actualWord.instanceId;
+                }
                 unifiedArgs.push(placeholder);
                 argSatisfied = true;
-            } else {
+            } else if (actualWord) {
                 // Original logic for when an argument is present
                 for (const cat of actualWord.categories) {
                     const unifiedHead = this.unify(cat.head, expected.head);
@@ -214,7 +218,14 @@ export class Grammar {
                     let allRequiredGapsMet = true;
                     for (const reqGap of requiredGaps) {
                         const foundIndex = availableGaps.findIndex(availGap => this.unify(availGap.head, reqGap.head) !== null);
-                        if (foundIndex > -1) { availableGaps.splice(foundIndex, 1); }
+                        if (foundIndex > -1) {
+                            const resolvedGap = availableGaps[foundIndex];
+                            const resolvedId = (resolvedGap.head)?.instanceId;
+                            if (resolvedId) {
+                                newPhrase.resolvedGapIds.push(resolvedId as string);
+                            }
+                            availableGaps.splice(foundIndex, 1);
+                        }
                         else { allRequiredGapsMet = false; break; }
                     }
 
@@ -422,11 +433,13 @@ export class Grammar {
             rightModTargets: currentPhrase.rightModTargets,
             categoryName: initialPhrase.categoryName ? `Unified(${initialPhrase.categoryName})` : 'UnifiedPhrase',
             translation: finalTranslation,
+            resolvedGapIds: currentPhrase.resolvedGapIds,
         };
 
         if (!finalResult.gaps || finalResult.gaps.length === 0) delete finalResult.gaps;
         if (!finalResult.leftModTargets) delete finalResult.leftModTargets;
         if (!finalResult.rightModTargets) delete finalResult.rightModTargets;
+        if (!finalResult.resolvedGapIds || finalResult.resolvedGapIds.length === 0) delete finalResult.resolvedGapIds;
 
         this.logState("9. Final Synthesized Result (SUCCESS)", finalResult);
         return finalResult;

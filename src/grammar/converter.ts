@@ -1,5 +1,5 @@
 import { Block } from "@/models/block";
-import { FeatureStructure, MissingArgument, Phrase, RecursiveParseElement, SubPhraseInput } from "@/models/grammar-entities";
+import { FeatureStructure, MissingArgument, Phrase, RecursiveParseElement, SubPhraseInput, Word } from "@/models/grammar-entities";
 
 export class Converter {
     convert(block: Block): SubPhraseInput | undefined {
@@ -16,9 +16,11 @@ export class Converter {
         const expectedLeftCount = headCategory?.left?.length || 0;
         const expectedRightCount = headCategory?.right?.length || 0;
 
-        const leftArgs: RecursiveParseElement[] = Array(expectedLeftCount).fill(MissingArgument);
-        const rightArgs: RecursiveParseElement[] = Array(expectedRightCount).fill(MissingArgument);
+        const leftArgs: (Word | SubPhraseInput)[] = Array(expectedLeftCount);
+        const rightArgs: (Word | SubPhraseInput)[] = Array(expectedRightCount);
 
+        leftArgs.fill({ token: "DEFAULT_UNFILLED", categories: [] });
+        rightArgs.fill({ token: "DEFAULT_UNFILLED", categories: [] });
         const headChildIndexInParent = block.children.findIndex(c => c.id === "head");
 
         // Separate children into placeholders (for arguments) and attachments (for modifiers)
@@ -41,22 +43,49 @@ export class Converter {
         const rightPlaceholders = placeholderChildren.filter(c => block.children.indexOf(c) > headChildIndexInParent);
 
         leftPlaceholders.forEach((p, i) => {
-            if (i < expectedLeftCount && p.content) { // Added check for p.content here
-                const convertedChild = this.convert(p.content as Block);
-                if (convertedChild) {
-                    leftArgs[i] = convertedChild;
+            if (i < expectedLeftCount) {
+                if (p.content) {
+                    const convertedChild = this.convert(p.content as Block);
+                    if (convertedChild) {
+                        leftArgs[i] = convertedChild;
+                    }
+                } else {
+                    // Create a proper Word object for the gap.
+                    leftArgs[i] = {
+                        token: MissingArgument.token,
+                        categories: [], // Must have categories to be a Word
+                        instanceId: p.instanceId
+                    };
                 }
             }
         });
+        for (let i = 0; i < leftArgs.length; i++) {
+            if ((leftArgs[i] as Word).token === 'DEFAULT_UNFILLED') {
+                leftArgs[i] = { token: MissingArgument.token, categories: [] };
+            }
+        }
 
         rightPlaceholders.forEach((p, i) => {
-            if (i < expectedRightCount && p.content) { // Added check for p.content here
-                const convertedChild = this.convert(p.content as Block);
-                if (convertedChild) {
-                    rightArgs[i] = convertedChild;
+            if (i < expectedRightCount) {
+                if (p.content) {
+                    const convertedChild = this.convert(p.content as Block);
+                    if (convertedChild) {
+                        rightArgs[i] = convertedChild;
+                    }
+                } else {
+                    rightArgs[i] = {
+                        token: MissingArgument.token,
+                        categories: [],
+                        instanceId: p.instanceId
+                    };
                 }
             }
         });
+        for (let i = 0; i < rightArgs.length; i++) {
+            if ((rightArgs[i] as Word).token === 'DEFAULT_UNFILLED') {
+                rightArgs[i] = { token: MissingArgument.token, categories: [] };
+            }
+        }
 
         // Populate modifiers ONLY from attachments
         const leftAttachments = attachmentChildren.filter(c => block.children.indexOf(c) < headChildIndexInParent);
@@ -72,9 +101,9 @@ export class Converter {
 
         const elements: RecursiveParseElement[] = [
             ...leftModifiers,
-            ...leftArgs,
+            ...(leftArgs.filter(arg => (arg as Word).token !== 'DEFAULT_UNFILLED')),
             headWord,
-            ...rightArgs,
+            ...(rightArgs.filter(arg => (arg as Word).token !== 'DEFAULT_UNFILLED')),
             ...rightModifiers
         ];
 
@@ -111,6 +140,10 @@ export class Converter {
         });
     }
 
+    private generateInstanceId(): string {
+        return "inst_" + crypto.randomUUID().replaceAll(/-/g, '');
+    }
+
     formatBlock(block: Block): Block {
         if (!block) {
             return block;
@@ -118,11 +151,26 @@ export class Converter {
 
         const newBlock = structuredClone(block);
 
+        const assignIds = (current: Block) => {
+            if (!current.children) return;
+            for (const child of current.children) {
+                if ((child.type === 'placeholder' || child.type === 'attachment')) {
+                    if (!child.instanceId) {
+                        child.instanceId = this.generateInstanceId();
+                    }
+                    if (child.content) {
+                        assignIds(child.content as Block);
+                    }
+                }
+            }
+        };
+        assignIds(newBlock);
+
         const headChild = newBlock.children.find(c => c.id === 'head');
         const wordIndex = headChild?.type === 'dropdown' ? (headChild.selected ?? 0) : 0;
         const selectedWord = newBlock.words?.[wordIndex];
         const activeCategory = selectedWord?.categories?.[0];
-        
+
         const isFinite = activeCategory?.head?.type === 'sentence' && activeCategory.head.finite === true;
         const isQuestion = activeCategory?.head?.type === 'sentence' && activeCategory.head.question === true;
 
@@ -141,7 +189,7 @@ export class Converter {
 
         const processString = (input: string): string => {
             if (typeof input !== 'string' || input === '') return input;
-            
+
             let processed = input.trim().replace(/[.?]$/, "").trim();
             processed = processed.split(' ').map(word => word.toLowerCase() === 'i' ? 'I' : word.toLowerCase()).join(' ');
 
@@ -152,7 +200,7 @@ export class Converter {
             }
             return processed;
         };
-        
+
         const traverseAndFormat = (currentBlock: Block) => {
             if (this.isProperNounBlock(currentBlock)) {
                 return;

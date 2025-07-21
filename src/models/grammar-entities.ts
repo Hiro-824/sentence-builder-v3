@@ -20,10 +20,11 @@ export interface Phrase {
     customUnification?: CustomUnificationPath[][];
     translation?: FeatureStructure;
     translationTemplates?: TranslationTemplates;
+    resolvedGapIds?: string[];
 }
 
 export type CustomUnificationPath = (string | number)[];
-export interface Word { token: string; categories: Phrase[]; }
+export interface Word { token: string; categories: Phrase[]; instanceId?: string; }
 export const MissingArgument: Word = { token: "[[MISSING_ARGUMENT]]", categories: [] };
 
 export type RecursiveParseElement = Word | SubPhraseInput;

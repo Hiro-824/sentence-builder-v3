@@ -20,4 +20,5 @@ export interface BlockChild {
     type: blockChildType;
     selected?: number;
     content: unknown;
+    instanceId?: string;
 }
