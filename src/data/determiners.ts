@@ -77,7 +77,7 @@ export const blockS: Block = {
         categories: [{
             head: { type: commonNominal, agr: {}, determinered: true },
             left: [{
-                head: { type: commonNominal, agr: {}, postModified: false }
+                head: { type: { type: "nominal", isDet: true, isTo: false, isGerund: false, isPron: false }, agr: {}, postModified: false }
             }],
             right: [{
                 head: { type: noun, agr: {} }
