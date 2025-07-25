@@ -71,11 +71,11 @@ export const blockList = {
     ],
     "代名詞": [
         ...allPronounBlocks,
-        blockS
     ],
     "冠詞": [
         blockA,
         blockThe,
+        blockS,
     ],
     "疑問詞": [
         blockWhat,
