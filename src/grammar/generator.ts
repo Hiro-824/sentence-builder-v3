@@ -1219,4 +1219,73 @@ export class Generator {
             }]
         }
     }
+
+    private createDoNotCategory(form: "do" | "does" | "did", agr?: FeatureStructure) {
+        const tense = ["do", "does"].includes(form) ? "present" : "past";
+        const head: FeatureStructure = { type: "sentence", inverted: false, negative: true, finite: true, form: form };
+        const left: Phrase = { head: { type: { type: "nominal", isDet: true }, case: "nom" } };
+        if (tense) head.tense = tense;
+        if (agr) left.head.agr = agr;
+        return [{
+            head: head,
+            left: [{ head: { type: { type: "nominal", isDet: true, isTo: false, isGerund: false }, case: "nom", agr: agr ?? {} } }],
+            right: [{
+                head: { type: "verb", form: "base" }
+            }],
+            translationTemplates: {
+                default: [
+                    {
+                        path: ["left", 0],
+                        key: "default",
+                        particle: "は",
+                    },
+                    {
+                        path: ["right", 0],
+                        key: "imperfective",
+                    },
+                    tense === "present" ? "ない" : "なかった"
+                ]
+            }
+        }]
+    }
+
+    createBlockDoNot(): Block {
+        return {
+            id: "",
+            x: 0,
+            y: 0,
+            words: [{
+                token: "",
+                categories: [...this.createDoNotCategory("do", { type: "non-3sing" })]
+            }, {
+                token: "",
+                categories: [...this.createDoNotCategory("does", { type: "3sing" })]
+            }, {
+                token: "",
+                categories: [...this.createDoNotCategory("did", {})]
+            }],
+            color: "tomato",
+            children: [{
+                id: "specifier",
+                hidden: false,
+                type: "placeholder",
+                content: undefined,
+            }, {
+                id: "head",
+                hidden: false,
+                type: "dropdown",
+                selected: 0,
+                content: [
+                    "do not",
+                    "does not",
+                    "did not",
+                ]
+            }, {
+                id: "complement",
+                hidden: false,
+                type: "placeholder",
+                content: undefined,
+            }]
+        }
+    }
 }
