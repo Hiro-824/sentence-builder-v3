@@ -182,7 +182,7 @@ export const blockThis: Block = {
         categories: [{
             head: { type: { type: "nominal", isTo: false, isGerund: false, isDet: true, isPron: true }, agr: { type: "non-3sing", num: "pl", per: 3 }, determined: true },
             translationTemplates: {
-                default: ["あれら"]
+                default: ["これら"]
             }
         }]
     }],
@@ -198,7 +198,7 @@ export const blockThis: Block = {
 }
 
 export const blockThat: Block = {
-    id: "these",
+    id: "that",
     x: 0,
     y: 0,
     words: [{
