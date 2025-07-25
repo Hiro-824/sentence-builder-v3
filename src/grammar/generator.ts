@@ -439,7 +439,7 @@ export class Generator {
             case "base":
                 categories.push({
                     head: { type: "verb", tense: "present", finite: true, form: "base" },
-                    left: [{ head: { type: det, agr: { type: "non-3sing" }, case: "nom" } }],
+                    left: [{ head: { type: det, agr: { type: "non-3sing" }, case: "nom", isSubject: true } }],
                     translation: config.translations.present,
                 });
                 categories.push({
@@ -1249,6 +1249,35 @@ export class Generator {
         }]
     }
 
+    private createInvertedDoCategory(form: "do" | "does" | "did", agr?: FeatureStructure): Phrase[] {
+        const tense = ["do", "does"].includes(form) ? "present" : "past";
+        const head: FeatureStructure = { type: "sentence", inverted: true, question: true, negative: false, finite: true, form: form };
+        if (tense) head.tense = tense;
+
+        // The subject is the first argument to the right, and the base verb is the second.
+        const subject: Phrase = { head: { type: { type: "nominal", isDet: true, isTo: false, isGerund: false }, case: "nom", isSubject: true, agr: agr ?? {} } };
+        const verb: Phrase = { head: { type: "verb", form: "base" } };
+
+        return [{
+            head: head,
+            right: [subject, verb],
+            translationTemplates: {
+                default: [
+                    {
+                        path: ["right", 0],
+                        key: "default",
+                        particle: "は",
+                    },
+                    {
+                        path: ["right", 1],
+                        key: tense === "present" ? "default" : "past",
+                    },
+                    "のか？",
+                ]
+            }
+        }]
+    }
+
     createBlockDoNot(): Block {
         return {
             id: "",
@@ -1282,6 +1311,46 @@ export class Generator {
                 ]
             }, {
                 id: "complement",
+                hidden: false,
+                type: "placeholder",
+                content: undefined,
+            }]
+        }
+    }
+
+    createBlockInvertedDo(): Block {
+        return {
+            id: "inverted_do",
+            x: 0,
+            y: 0,
+            words: [{
+                token: "",
+                categories: [...this.createInvertedDoCategory("do", { type: "non-3sing" })]
+            }, {
+                token: "",
+                categories: [...this.createInvertedDoCategory("does", { type: "3sing" })]
+            }, {
+                token: "",
+                categories: [...this.createInvertedDoCategory("did", {})]
+            }],
+            color: "tomato",
+            children: [{
+                id: "head",
+                hidden: false,
+                type: "dropdown",
+                selected: 0,
+                content: [
+                    "do",
+                    "does",
+                    "did",
+                ]
+            }, {
+                id: "specifier", // Placeholder for the subject
+                hidden: false,
+                type: "placeholder",
+                content: undefined,
+            }, {
+                id: "complement", // Placeholder for the main verb (in base form)
                 hidden: false,
                 type: "placeholder",
                 content: undefined,

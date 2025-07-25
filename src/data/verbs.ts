@@ -18,7 +18,8 @@ const configRun: VerbConfig = {
     translations: {
         present: {
             default: "走る",
-            imperfective: "走ら"
+            imperfective: "走ら",
+            past: "走った"
         },
         past: {
             default: "走った"
@@ -59,7 +60,8 @@ const configRead: VerbConfig = {
     translations: {
         present: {
             default: "読む",
-            imperfective: "読ま"
+            imperfective: "読ま",
+            past: "読んだ"
         },
         past: {
             default: "読んだ"
@@ -108,7 +110,8 @@ const configGive: VerbConfig = {
     translations: {
         present: {
             default: "あげる",
-            imperfective: "あげ"
+            imperfective: "あげ",
+            past: "あげた"
         },
         past: {
             default: "あげた"
