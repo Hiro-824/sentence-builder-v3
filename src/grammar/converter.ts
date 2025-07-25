@@ -255,14 +255,37 @@ export class Converter {
                     case "text":
                         child.content = processString(child.content as string);
                         break;
+                    
                     case "dropdown":
                         if (Array.isArray(child.content) && typeof child.selected === 'number') {
-                            const selectedIndex = child.selected;
-                            if (child.content[selectedIndex]) {
-                                child.content[selectedIndex] = processString(child.content[selectedIndex]);
+                            // Determine if this dropdown is the first visible element that needs capitalizing.
+                            const applyCapitalization = shouldCapitalize && !firstLetterCapitalized;
+
+                            // A simpler processor that only handles trimming and "i" -> "I".
+                            const basicProcess = (input: string) => {
+                                if (typeof input !== 'string' || input === '') return input;
+                                const processed = input.trim().replace(/[.?]$/, "").trim();
+                                return processed.split(' ').map(word => word.toLowerCase() === 'i' ? 'I' : word.toLowerCase()).join(' ');
+                            };
+
+                            // Map over all options and apply the correct logic.
+                            child.content = (child.content as string[]).map(option => {
+                                const processedOption = basicProcess(option);
+                                
+                                // If capitalization should be applied for this block, capitalize every option.
+                                if (applyCapitalization && processedOption.length > 0) {
+                                    return processedOption.charAt(0).toUpperCase() + processedOption.slice(1);
+                                }
+                                return processedOption;
+                            });
+
+                            // If we just applied capitalization, set the flag so no other element does.
+                            if (applyCapitalization) {
+                                firstLetterCapitalized = true;
                             }
                         }
                         break;
+
                     case "placeholder":
                     case "attachment":
                         if (child.content && typeof child.content === 'object') {
