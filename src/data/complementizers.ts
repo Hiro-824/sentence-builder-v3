@@ -65,3 +65,31 @@ export const blockWhat: Block = {
         content: undefined
     }]
 }
+
+export const blockWho: Block = {
+    id: "",
+    x: 0,
+    y: 0,
+    words: [{
+        token: "",
+        categories: [{
+            head: { type: "sentence", finite: true, question: true, inverted: true, wh: true },
+            right: [{
+                head: { type: "sentence", inverted: true, wh: false },
+                gaps: [{ head: { type: { type: "nominal", isDet: true }, isSubject: false } }]
+            }]
+        }]
+    }],
+    color: "mediumseagreen",
+    children: [{
+        id: "head",
+        hidden: false,
+        type: "text",
+        content: "who"
+    }, {
+        id: "complement",
+        hidden: false,
+        type: "placeholder",
+        content: undefined
+    }]
+}
