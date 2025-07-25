@@ -3,10 +3,10 @@ import { allPronounBlocks } from "./pronouns";
 import { allNounBlocks } from "./nouns";
 import { allVerbBlocks } from "./verbs";
 import { allAdjectiveBlocks } from "./adjectives";
-import { blockA, blockThe } from "./determiners";
+import { blockA, blockS, blockThe } from "./determiners";
 import { allAuxiliaryBlocks } from "./auxiliaries";
 import { allPrepositionBlocks } from "./prepositions";
-import { blockThat, blockWhat } from "./complementizers";
+import { blockThat, blockWhat, blockWho } from "./complementizers";
 
 export const blockTo: Block = {
     id: "",
@@ -71,6 +71,7 @@ export const blockList = {
     ],
     "代名詞": [
         ...allPronounBlocks,
+        blockS
     ],
     "冠詞": [
         blockA,
@@ -78,6 +79,7 @@ export const blockList = {
     ],
     "疑問詞": [
         blockWhat,
+        blockWho
     ],
     "名詞": [
         ...allNounBlocks

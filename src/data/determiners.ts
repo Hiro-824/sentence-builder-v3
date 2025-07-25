@@ -1,5 +1,5 @@
 import { Block } from "@/models/block"
-import { det, noun } from "@/models/grammar-entities"
+import { commonNominal, det, noun } from "@/models/grammar-entities"
 
 export const blockThe: Block = {
     id: "",
@@ -65,5 +65,47 @@ export const blockA: Block = {
         hidden: false,
         type: "placeholder",
         content: null,
+    }]
+}
+
+export const blockS: Block = {
+    id: "s",
+    x: 0,
+    y: 0,
+    words: [{
+        token: "",
+        categories: [{
+            head: { type: commonNominal, agr: {}, determinered: true },
+            left: [{
+                head: { type: commonNominal, agr: {}, postModified: false }
+            }],
+            right: [{
+                head: { type: noun, agr: {} }
+            }],
+            customUnification: [
+                [["head", "agr"], ["right", 0, "head", "agr"]]
+            ],
+            translationTemplates: {
+                default: [{ path: ["left", 0], key: "default" }, "の", { path: ["right", 0], key: "default" }]
+            }
+        }]
+    }],
+    isRound: true,
+    color: "dodgerblue",
+    children: [{
+        id: "",
+        hidden: false,
+        type: "placeholder",
+        content: undefined
+    }, {
+        id: "head",
+        hidden: false,
+        type: "text",
+        content: "'s"
+    }, {
+        id: "",
+        hidden: false,
+        type: "placeholder",
+        content: undefined
     }]
 }
