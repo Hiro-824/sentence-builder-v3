@@ -495,9 +495,7 @@ export class Renderer {
                         this.closeAllDropdowns();
                         const blockGroup = d3.select(`#${block.id}`);
                         this.renderBlockImage(block, blockGroup);
-                        this.updateChildVisibilityForBlock(block);
                     } else {
-                        this.setChildVisibility(block.id);
                         this.formatBlock(block.id);
                         this.raiseBlock(block.id);
                         const parentBlock = this.findBlock(block.id).rootParent;
@@ -1132,38 +1130,6 @@ export class Renderer {
         const newBlock = this.converter.formatBlock(block);
         this.updateBlockInData(newBlock);
         this.updateBlock(block.id);
-    }
-
-    setChildVisibility(id) {
-        const foundResult = this.findBlock(id);
-        if (!foundResult.foundBlock) return;
-
-        const block = foundResult.foundBlock;
-
-        const originalHiddenStates = block.children.map(child => child.hidden);
-        this.updateChildVisibilityForBlock(block);
-        block.children.forEach((child, index) => {
-            const wasVisible = !originalHiddenStates[index];
-            const isNowHidden = child.hidden;
-            if (wasVisible && isNowHidden && child.type === "placeholder" && child.content) {
-                this.moveBlockToTopLevel(child.content.id);
-            }
-        });
-
-        this.updateBlock(id);
-    }
-
-    updateChildVisibilityForBlock(block) {
-        const headChild = block.children.find(child => child.id === "head" && (child.type === "text" || child.type === "dropdown"));
-        if (!headChild) return;
-        const selectedHeadIndex = headChild.type === "text" ? 0 : headChild.selected;
-        block.children.forEach(child => {
-            if (child.headIndex !== undefined) {
-                child.hidden = !child.headIndex.includes(selectedHeadIndex);
-            } else {
-                child.hidden = false;
-            }
-        });
     }
 
     /*ハイライト表示***********************************************************************************************************************************************************************************************************************************************************************************************************************/

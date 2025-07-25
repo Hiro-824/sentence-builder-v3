@@ -154,15 +154,15 @@ export class Converter {
 
         // 2. Parse the input to get linguistic data.
         // We instantiate Grammar here to keep it self-contained.
-        const grammar = new Grammar(); 
+        const grammar = new Grammar();
         const parseResult = grammar.parseNestedPhrase(phraseInput);
-        
+
         // 3. Extract the resolved gap IDs.
         if (!parseResult || parseResult.categories.length === 0) return;
-        
+
         const firstParse = parseResult.categories[0];
         const resolvedGapIds = firstParse.resolvedGapIds;
-        
+
         if (!resolvedGapIds || resolvedGapIds.length === 0) return;
 
         // 4. Traverse the block and hide placeholders with matching IDs.
@@ -174,16 +174,50 @@ export class Converter {
                 if (child.type === 'placeholder' && child.instanceId && resolvedGapIds.includes(child.instanceId)) {
                     child.hidden = true;
                 }
-                
+
                 // Recurse into children's content, even if the parent placeholder is now hidden.
                 // This is important for deeply nested structures.
                 if (child.content) {
-                     findAndHide(child.content as Block);
+                    findAndHide(child.content as Block);
                 }
             }
         };
 
         findAndHide(block);
+    }
+
+    private unhideAll(block: Block): void {
+        if (!block.children) return;
+
+        for (const child of block.children) {
+            child.hidden = false;
+            if (child.content && typeof child.content === 'object' && 'children' in child.content) {
+                this.unhideAll(child.content as Block);
+            }
+        }
+    }
+
+    private updateChildVisibilityForBlock(block: Block): void {
+        const headChild = block.children.find(child => child.id === "head" && (child.type === "text" || child.type === "dropdown"));
+        if (!headChild) return;
+
+        const selectedHeadIndex = headChild.type === "dropdown" ? (headChild.selected ?? 0) : 0;
+
+        block.children.forEach(child => {
+            if (child.id !== "head" && child.headIndex !== undefined) {
+                child.hidden = !child.headIndex.includes(selectedHeadIndex);
+            }
+        });
+    }
+
+    private applyHeadIndexVisibility(block: Block): void {
+        if (!block.children) return;
+        this.updateChildVisibilityForBlock(block);
+        for (const child of block.children) {
+            if (child.content && typeof child.content === 'object' && 'children' in child.content) {
+                this.applyHeadIndexVisibility(child.content as Block);
+            }
+        }
     }
 
     formatBlock(block: Block): Block {
@@ -192,6 +226,7 @@ export class Converter {
         }
 
         const newBlock = structuredClone(block);
+        this.unhideAll(newBlock);
 
         const assignIds = (current: Block) => {
             if (!current.children) return;
@@ -208,6 +243,7 @@ export class Converter {
         };
         assignIds(newBlock);
 
+        this.applyHeadIndexVisibility(newBlock);
         const headChild = newBlock.children.find(c => c.id === 'head');
         const wordIndex = headChild?.type === 'dropdown' ? (headChild.selected ?? 0) : 0;
         const selectedWord = newBlock.words?.[wordIndex];
@@ -255,7 +291,7 @@ export class Converter {
                     case "text":
                         child.content = processString(child.content as string);
                         break;
-                    
+
                     case "dropdown":
                         if (Array.isArray(child.content) && typeof child.selected === 'number') {
                             // Determine if this dropdown is the first visible element that needs capitalizing.
@@ -271,7 +307,7 @@ export class Converter {
                             // Map over all options and apply the correct logic.
                             child.content = (child.content as string[]).map(option => {
                                 const processedOption = basicProcess(option);
-                                
+
                                 // If capitalization should be applied for this block, capitalize every option.
                                 if (applyCapitalization && processedOption.length > 0) {
                                     return processedOption.charAt(0).toUpperCase() + processedOption.slice(1);
