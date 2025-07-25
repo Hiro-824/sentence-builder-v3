@@ -341,7 +341,7 @@ export class Renderer {
         for (let originalIndex = 0; originalIndex < allChildren.length; originalIndex++) {
             const child = allChildren[originalIndex];
             // Skip rendering if the child is marked as hidden.
-            if (child.hidden) {
+            if (child.hidden || child.resolved) {
                 continue;
             }
 
@@ -1005,7 +1005,7 @@ export class Renderer {
             if (block.children) {
                 for (const child of block.children) {
                     // Skip hidden children
-                    if (child.hidden) continue;
+                    if (child.hidden || child.resolved) continue;
 
                     if (child.type === "placeholder" || child.type === "attachment") {
                         if (child.content && updateParentInCopy(child.content)) {
@@ -1271,7 +1271,7 @@ export class Renderer {
     }
 
     calculateWidth(block) {
-        const children = block.children.filter((child) => !child.hidden);
+        const children = block.children.filter((child) => (!child.hidden && child.resolved !== true));
         const paddingNumber = children.length + 1;
         let width = 0;
         if (block.isRound && block.isRound === true) {
@@ -1306,7 +1306,7 @@ export class Renderer {
     }
 
     calculateHeight(block) {
-        const children = block.children.filter((child) => !child.hidden);
+        const children = block.children.filter((child) => (!child.hidden && child.resolved !== true));
         let heights = [placeholderHeight - padding * 2];
         children.forEach(child => {
             if (child.type === "placeholder") {

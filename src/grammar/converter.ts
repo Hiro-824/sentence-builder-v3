@@ -172,7 +172,7 @@ export class Converter {
 
             for (const child of current.children) {
                 if (child.type === 'placeholder' && child.instanceId && resolvedGapIds.includes(child.instanceId)) {
-                    child.hidden = true;
+                    child.resolved = true;
                 }
 
                 // Recurse into children's content, even if the parent placeholder is now hidden.
@@ -191,6 +191,7 @@ export class Converter {
 
         for (const child of block.children) {
             child.hidden = false;
+            child.resolved = false;
             if (child.content && typeof child.content === 'object' && 'children' in child.content) {
                 this.unhideAll(child.content as Block);
             }
