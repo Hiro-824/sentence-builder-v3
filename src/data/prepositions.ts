@@ -58,6 +58,21 @@ const configIn: PrepositionConfig = {
     }
 };
 
+const configAt: PrepositionConfig = {
+    id: "prep_at",
+    word: "at",
+    modAdj: "の",
+    adv: "で",
+    pred: {
+        predAdj: "にある",
+        past: "にあった",
+        predNeg: "にはない",
+        predQ: "にあるのか",
+        pastNeg: "にはなかった",
+        pastQ: "にあったのか",
+    }
+};
+
 const configFrom: PrepositionConfig = {
     id: "prep_from",
     word: "from",
@@ -102,12 +117,14 @@ const configWorth: PrepositionConfig = {
 };
 
 export const blockIn = generator.createPrepositionBlock(configIn);
+export const blockAt = generator.createPrepositionBlock(configAt);
 export const blockTo = generator.createPrepositionBlock(configTo);
 export const blockFrom = generator.createPrepositionBlock(configFrom);
 export const blockWorth = generator.createPrepositionBlock(configWorth);
 
 export const allPrepositionBlocks: Block[] = [
     blockIn,
+    blockAt,
     blockTo,
     blockFrom,
     blockWorth
