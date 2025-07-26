@@ -69,6 +69,9 @@ export const blockList = {
     "文・助動詞": [
         ...allAuxiliaryBlocks
     ],
+    "動詞": [
+        ...allVerbBlocks,
+    ],
     "代名詞": [
         ...allPronounBlocks,
     ],
@@ -83,9 +86,6 @@ export const blockList = {
     ],
     "名詞": [
         ...allNounBlocks
-    ],
-    "動詞": [
-        ...allVerbBlocks,
     ],
     "前置詞": [
         ...allPrepositionBlocks,
