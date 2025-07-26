@@ -1,5 +1,6 @@
 import { Generator, NounConfig } from "@/grammar/generator";
 import { Block } from "@/models/block";
+import { timeBlocks } from "./adverbials";
 
 const generator = new Generator();
 
@@ -108,5 +109,6 @@ export const allNounBlocks: Block[] = [
     blockInformation,
     blockWater,
     blockJohn,
-    blockMary
+    blockMary,
+    ...timeBlocks
 ];

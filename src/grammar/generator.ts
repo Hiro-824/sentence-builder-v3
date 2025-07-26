@@ -102,6 +102,13 @@ export interface PrepositionConfig {
     color?: string;
 }
 
+export interface TemporalAdverbialConfig {
+    id: string;
+    word: string;
+    translationPrefix: string;
+    color?: string;
+}
+
 export class Generator {
     private getAgrType(person: 1 | 2 | 3, number: 'sing' | 'pl'): '3sing' | 'non-3sing' {
         return person === 3 && number === 'sing' ? '3sing' : 'non-3sing';
@@ -1380,5 +1387,48 @@ export class Generator {
                 content: undefined,
             }]
         }
+    }
+
+    createTemporalAdverbialBlock(config: TemporalAdverbialConfig): Block {
+        return {
+            id: config.id,
+            x: 0,
+            y: 0,
+            isRound: true,
+            words: [{
+                token: config.word,
+                categories: [{
+                    // This is the definition for the combined phrase, e.g., "every day"
+                    head: { type: "temporal-adv" }, // A custom type for this kind of adverbial
+                    right: [{
+                        // It expects one argument on its right: a noun.
+                        head: { type: noun, agr: { type: "3sing" } }
+                    }],
+                    // This defines what the resulting phrase can modify.
+                    // It can be a right-hand modifier for a sentence or a verb.
+                    leftModTargets: [
+                        { head: { type: "sentence" } },
+                        { head: { type: "verb" } },
+                    ],
+                    translationTemplates: {
+                        // The translation prepends the prefix to the complement's translation.
+                        // e.g., "毎" + "日" -> "毎日"
+                        default: [config.translationPrefix, { path: ["right", 0], key: "default" }]
+                    }
+                }]
+            }],
+            color: config.color ?? "dodgerblue",
+            children: [{
+                id: "head",
+                hidden: false,
+                type: "text",
+                content: config.word
+            }, {
+                id: "complement",
+                hidden: false,
+                type: "placeholder",
+                content: undefined
+            }]
+        };
     }
 }

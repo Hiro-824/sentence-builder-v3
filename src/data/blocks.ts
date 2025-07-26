@@ -7,6 +7,7 @@ import { blockA, blockS, blockThe } from "./determiners";
 import { allAuxiliaryBlocks } from "./auxiliaries";
 import { allPrepositionBlocks } from "./prepositions";
 import { blockThat, blockWhat, blockWhatDetSentence, blockWho } from "./complementizers";
+import { blockEvery } from "./adverbials";
 
 export const blockTo: Block = {
     id: "",
@@ -79,6 +80,7 @@ export const blockList = {
         blockA,
         blockThe,
         blockS,
+        blockEvery
     ],
     "疑問詞": [
         blockWhat,
