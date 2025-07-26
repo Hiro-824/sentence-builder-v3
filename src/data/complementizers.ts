@@ -1,5 +1,7 @@
 import { Block } from "@/models/block";
-import { noun } from "@/models/grammar-entities";
+import { FeatureStructure, noun } from "@/models/grammar-entities";
+import { Generator } from "@/grammar/generator";
+
 
 export const blockThat: Block = {
     id: "that_clause",
@@ -38,196 +40,58 @@ export const blockThat: Block = {
         content: undefined
     }]
 }
+const generator = new Generator();
 
+export const whatPronounFeatures: FeatureStructure = { type: "interrogative", nominal: true, determiner: false, number: false };
 export const blockWhat: Block = {
     id: "what_pronoun",
-    x: 0,
-    y: 0,
-    isRound: true,
-    undraggable: true,
-    words: [{
-        token: "",
-        categories: [{
-            head: { type: "interrogative", nominal: true, determiner: false, number: false },
-        }]
-    }],
+    x: 0, y: 0, isRound: true, undraggable: true,
+    words: [{ token: "", categories: [{ head: whatPronounFeatures }] }],
     color: "dodgerblue",
-    children: [{
-        id: "head",
-        hidden: false,
-        type: "text",
-        content: "what"
-    }]
-}
+    children: [{ id: "head", hidden: false, type: "text", content: "what" }]
+};
 
-export const blockWhatSentence: Block = {
-    id: "what_sentence",
-    x: 0,
-    y: 0,
-    words: [{
-        token: "",
-        categories: [{
-            left: [{
-                head: { type: "interrogative", nominal: true },
-            }],
-            head: { type: "sentence", finite: true, question: true, inverted: true, wh: true },
-            right: [{
-                head: { type: "sentence", inverted: true, wh: false },
-                gaps: [{ head: { type: { type: "nominal", isDet: true }, isSubject: false } }]
-            }]
-        }]
-    }],
-    color: "mediumseagreen",
-    children: [{
-        // Corrected ID
-        id: "interrogative-complement",
-        hidden: false,
-        type: "placeholder",
-        content: blockWhat
-    }, {
-        id: "head",
-        hidden: false,
-        type: "text",
-        content: ""
-    }, {
-        // Corrected ID
-        id: "sentence-complement",
-        hidden: false,
-        type: "placeholder",
-        content: undefined
-    }]
-}
-
+export const whatDeterminerFeatures: FeatureStructure = { type: "interrogative", nominal: false, determiner: true, number: false };
 export const blockWhatDeterminer: Block = {
     id: "what_determiner",
-    x: 0,
-    y: 0,
-    isRound: true,
-    undraggable: true,
-    words: [{
-        token: "",
-        categories: [{
-            head: { type: "interrogative", nominal: false, determiner: true, number: false },
-            right: [{
-                head: { type: noun },
-            }]
-        }]
-    }],
+    x: 0, y: 0, isRound: true, undraggable: true,
+    words: [{ token: "", categories: [{ head: whatDeterminerFeatures, right: [{ head: { type: noun } }] }] }],
     color: "dodgerblue",
-    children: [{
-        id: "head",
-        hidden: false,
-        type: "text",
-        content: "what"
-    }, {
-        id: "complement",
-        hidden: false,
-        type: "placeholder",
-        content: undefined
-    }]
-}
+    children: [
+        { id: "head", hidden: false, type: "text", content: "what" },
+        { id: "complement", hidden: false, type: "placeholder", content: undefined }
+    ]
+};
 
-export const blockWhatDetSentence: Block = {
-    id: "what_det_sentence",
-    x: 0,
-    y: 0,
-    words: [{
-        token: "",
-        categories: [{
-            left: [{
-                head: { type: "interrogative", nominal: false, determiner: true, number: false },
-            }],
-            head: { type: "sentence", finite: true, question: true, inverted: true, wh: true },
-            right: [{
-                head: { type: "sentence", inverted: true, wh: false },
-                gaps: [{ head: { type: { type: "nominal", isDet: true }, isSubject: false } }]
-            }]
-        }]
-    }],
-    color: "mediumseagreen",
-    children: [{
-        // Corrected ID
-        id: "interrogative-complement",
-        hidden: false,
-        type: "placeholder",
-        content: blockWhatDeterminer
-    }, {
-        id: "head",
-        type: "text",
-        content: "",
-        hidden: false,
-    }, {
-        // Corrected ID
-        id: "sentence-complement",
-        hidden: false,
-        type: "placeholder",
-        content: undefined
-    }]
-}
-
+export const howManyFeatures: FeatureStructure = { type: "interrogative", nominal: false, determiner: true, number: true };
 export const blockHowMany: Block = {
     id: "how_many",
-    x: 0,
-    y: 0,
-    isRound: true,
-    undraggable: true,
-    words: [{
-        token: "",
-        categories: [{
-            head: { type: "interrogative", nominal: false, determiner: true, number: true },
-            right: [{
-                head: { type: noun, agr: { type: "non-3sing", num: "pl" } },
-            }]
-        }]
-    }],
+    x: 0, y: 0, isRound: true, undraggable: true,
+    words: [{ token: "", categories: [{ head: howManyFeatures, right: [{ head: { type: noun, agr: { type: "non-3sing", num: "pl" } } }] }] }],
     color: "dodgerblue",
-    children: [{
-        id: "head",
-        hidden: false,
-        type: "text",
-        content: "how many"
-    }, {
-        id: "complement",
-        hidden: false,
-        type: "placeholder",
-        content: undefined
-    }]
-}
+    children: [
+        { id: "head", hidden: false, type: "text", content: "how many" },
+        { id: "complement", hidden: false, type: "placeholder", content: undefined }
+    ]
+};
 
-export const blockHowManySentence: Block = {
-    id: "how_many_sentence",
-    x: 0,
-    y: 0,
-    words: [{
-        token: "",
-        categories: [{
-            left: [{
-                head: { type: "interrogative", nominal: false, determiner: true, number: true },
-            }],
-            head: { type: "sentence", finite: true, question: true, inverted: true, wh: true },
-            right: [{
-                head: { type: "sentence", inverted: true, wh: false },
-                gaps: [{ head: { type: { type: "nominal", isDet: true }, isSubject: false } }]
-            }]
-        }]
-    }],
-    color: "mediumseagreen",
-    children: [{
-        // Corrected ID
-        id: "interrogative-complement",
-        hidden: false,
-        type: "placeholder",
-        content: blockHowMany,
-    }, {
-        id: "head",
-        type: "text",
-        content: "",
-        hidden: false,
-    }, {
-        // Corrected ID
-        id: "sentence-complement",
-        hidden: false,
-        type: "placeholder",
-        content: undefined
-    }]
-}
+
+// ===== Part 2: Use the Generator to Build the Final, User-Facing Blocks =====
+
+export const blockWhatSentence = generator.createWhSentenceBlock({
+    id: "what_question",
+    whPhraseBlock: blockWhat,
+    expectedWhFeatures: whatPronounFeatures
+});
+
+export const blockWhatDetSentence = generator.createWhSentenceBlock({
+    id: "what_det_question",
+    whPhraseBlock: blockWhatDeterminer,
+    expectedWhFeatures: whatDeterminerFeatures
+});
+
+export const blockHowManySentence = generator.createWhSentenceBlock({
+    id: "how_many_question",
+    whPhraseBlock: blockHowMany,
+    expectedWhFeatures: howManyFeatures
+});

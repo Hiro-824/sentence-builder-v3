@@ -125,6 +125,13 @@ export interface NegativeModalConfig extends ModalConfig {
     negativeTranslation: string;
 }
 
+export interface WhSentenceConfig {
+    id: string;
+    whPhraseBlock: Block;
+    expectedWhFeatures: FeatureStructure;
+    color?: string;
+}
+
 export class Generator {
     private getAgrType(person: 1 | 2 | 3, number: 'sing' | 'pl'): '3sing' | 'non-3sing' {
         return person === 3 && number === 'sing' ? '3sing' : 'non-3sing';
@@ -1651,6 +1658,58 @@ export class Generator {
                     hidden: false,
                     type: "placeholder",
                     content: undefined,
+                }
+            ]
+        };
+    }
+
+    createWhSentenceBlock(config: WhSentenceConfig): Block {
+        const { id, whPhraseBlock, expectedWhFeatures } = config;
+        const color = config.color || "mediumseagreen";
+
+        return {
+            id: id,
+            x: 0,
+            y: 0,
+            words: [{
+                token: "",
+                categories: [{
+                    // The head of the resulting phrase is a complete, interrogative sentence.
+                    head: { type: "sentence", finite: true, question: true, inverted: true, wh: true },
+                    
+                    // It expects a specific wh-phrase on its left, defined by the config.
+                    left: [{ head: expectedWhFeatures }],
+                    
+                    // It expects an inverted clause on its right that is missing a nominal argument (a "gap").
+                    // This is the core, shared logic for all wh-questions.
+                    right: [{
+                        head: { type: "sentence", inverted: true, wh: false },
+                        gaps: [{ head: { type: { type: "nominal", isDet: true }, isSubject: false } }]
+                    }]
+                }]
+            }],
+            color: color,
+            children: [
+                // The first placeholder is pre-filled with the specific wh-phrase block.
+                {
+                    id: "interrogative-complement",
+                    hidden: false,
+                    type: "placeholder",
+                    content: whPhraseBlock,
+                },
+                // The head is empty as there's no single word for the sentence frame itself.
+                {
+                    id: "head",
+                    hidden: false,
+                    type: "text",
+                    content: "",
+                },
+                // The second placeholder waits for the user to drop the main inverted clause.
+                {
+                    id: "sentence-complement",
+                    hidden: false,
+                    type: "placeholder",
+                    content: undefined
                 }
             ]
         };
