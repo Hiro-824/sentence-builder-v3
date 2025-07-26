@@ -1,4 +1,4 @@
-import { Block } from "@/models/block";
+import { Block, BlockChild } from "@/models/block";
 import { FeatureStructure, MissingArgument, Phrase, RecursiveParseElement, SubPhraseInput, Word } from "@/models/grammar-entities";
 import { Grammar } from "./grammar";
 
@@ -24,8 +24,6 @@ export class Converter {
         rightArgs.fill({ token: "DEFAULT_UNFILLED", categories: [] });
         const headChildIndexInParent = block.children.findIndex(c => c.id === "head");
 
-        // Separate children into placeholders (for arguments) and attachments (for modifiers)
-        // FIX: Removed `&& c.content` to preserve the position of empty placeholders.
         const placeholderChildren = block.children.filter(c =>
             c.id !== "head" &&
             !c.hidden &&
@@ -39,7 +37,6 @@ export class Converter {
             c.content
         );
 
-        // Populate arguments ONLY from placeholders
         const leftPlaceholders = placeholderChildren.filter(c => block.children.indexOf(c) < headChildIndexInParent);
         const rightPlaceholders = placeholderChildren.filter(c => block.children.indexOf(c) > headChildIndexInParent);
 
@@ -51,10 +48,9 @@ export class Converter {
                         leftArgs[i] = convertedChild;
                     }
                 } else {
-                    // Create a proper Word object for the gap.
                     leftArgs[i] = {
                         token: MissingArgument.token,
-                        categories: [], // Must have categories to be a Word
+                        categories: [],
                         instanceId: p.instanceId
                     };
                 }
@@ -88,7 +84,6 @@ export class Converter {
             }
         }
 
-        // Populate modifiers ONLY from attachments
         const leftAttachments = attachmentChildren.filter(c => block.children.indexOf(c) < headChildIndexInParent);
         const rightAttachments = attachmentChildren.filter(c => block.children.indexOf(c) > headChildIndexInParent);
 
@@ -118,9 +113,7 @@ export class Converter {
     }
 
     formatTranslation(translation: string) {
-        // Remove all spaces
         let result = translation.replace(/\s+/g, "");
-        // Replace [[UNRESOLVED...]] patterns with '＿'
         result = result.replace(/\[\[UNRESOLVED[^\]]*\]\]/g, "＿");
         return result;
     }
@@ -133,10 +126,8 @@ export class Converter {
         const word = block.words[wordIndex];
         if (!word?.categories) return false;
 
-        // Check if any category has the proper noun feature structure.
         return word.categories.some(cat => {
             const headType = cat?.head?.type;
-            // The `type` feature is an object for proper nouns, e.g., { type: "nominal", isProper: true }
             return typeof headType === 'object' && headType !== null && (headType as FeatureStructure).isProper === true;
         });
     }
@@ -147,48 +138,31 @@ export class Converter {
 
     private hideResolvedGapPlaceholders(block: Block): void {
         if (!block) return;
-
-        // 1. Convert the block structure to grammar input.
         const phraseInput = this.convert(block);
         if (!phraseInput) return;
-
-        // 2. Parse the input to get linguistic data.
-        // We instantiate Grammar here to keep it self-contained.
         const grammar = new Grammar();
         const parseResult = grammar.parseNestedPhrase(phraseInput);
-
-        // 3. Extract the resolved gap IDs.
         if (!parseResult || parseResult.categories.length === 0) return;
-
         const firstParse = parseResult.categories[0];
         const resolvedGapIds = firstParse.resolvedGapIds;
-
         if (!resolvedGapIds || resolvedGapIds.length === 0) return;
 
-        // 4. Traverse the block and hide placeholders with matching IDs.
-        // This function modifies the block object passed to it by reference.
         const findAndHide = (current: Block) => {
             if (!current.children) return;
-
             for (const child of current.children) {
                 if (child.type === 'placeholder' && child.instanceId && resolvedGapIds.includes(child.instanceId)) {
                     child.resolved = true;
                 }
-
-                // Recurse into children's content, even if the parent placeholder is now hidden.
-                // This is important for deeply nested structures.
                 if (child.content) {
                     findAndHide(child.content as Block);
                 }
             }
         };
-
         findAndHide(block);
     }
 
     private unhideAll(block: Block): void {
         if (!block.children) return;
-
         for (const child of block.children) {
             child.hidden = false;
             child.resolved = false;
@@ -201,9 +175,7 @@ export class Converter {
     private updateChildVisibilityForBlock(block: Block): void {
         const headChild = block.children.find(child => child.id === "head" && (child.type === "text" || child.type === "dropdown"));
         if (!headChild) return;
-
         const selectedHeadIndex = headChild.type === "dropdown" ? (headChild.selected ?? 0) : 0;
-
         block.children.forEach(child => {
             if (child.id !== "head" && child.headIndex !== undefined) {
                 child.hidden = !child.headIndex.includes(selectedHeadIndex);
@@ -221,138 +193,132 @@ export class Converter {
         }
     }
 
-    formatBlock(block: Block): Block {
-        if (!block) {
-            return block;
+    private _cleanBlockText(block: Block): void {
+        if (this.isProperNounBlock(block)) {
+            return;
         }
 
-        const newBlock = structuredClone(block);
-        this.unhideAll(newBlock);
-
-        const assignIds = (current: Block) => {
-            if (!current.children) return;
-            for (const child of current.children) {
-                if ((child.type === 'placeholder' || child.type === 'attachment')) {
-                    if (!child.instanceId) {
-                        child.instanceId = this.generateInstanceId();
-                    }
-                    if (child.content) {
-                        assignIds(child.content as Block);
-                    }
-                }
-            }
+        const basicProcess = (input: string): string => {
+            if (typeof input !== 'string' || input === '') return input;
+            const processed = input.trim().replace(/[.?]$/, "").trim();
+            return processed.split(' ').map(word => word.toLowerCase() === 'i' ? 'I' : word.toLowerCase()).join(' ');
         };
-        assignIds(newBlock);
 
-        this.applyHeadIndexVisibility(newBlock);
-        const headChild = newBlock.children.find(c => c.id === 'head');
+        for (const child of block.children) {
+            if (child.hidden) continue;
+
+            switch (child.type) {
+                case "text":
+                    child.content = basicProcess(child.content as string);
+                    break;
+                case "dropdown":
+                    if(Array.isArray(child.content)){
+                         child.content = child.content.map(option => basicProcess(option));
+                    }
+                    break;
+                case "placeholder":
+                case "attachment":
+                    if (child.content && typeof child.content === 'object') {
+                        this._cleanBlockText(child.content as Block);
+                    }
+                    break;
+            }
+        }
+    }
+
+    private applyPunctuationAndCapitalization(block: Block): void {
+        const headChild = block.children.find(c => c.id === 'head');
         const wordIndex = headChild?.type === 'dropdown' ? (headChild.selected ?? 0) : 0;
-        const selectedWord = newBlock.words?.[wordIndex];
+        const selectedWord = block.words?.[wordIndex];
         const activeCategory = selectedWord?.categories?.[0];
 
         const isFinite = activeCategory?.head?.type === 'sentence' && activeCategory.head.finite === true;
         const isQuestion = activeCategory?.head?.type === 'sentence' && activeCategory.head.question === true;
 
-        // Determine the condition for capitalization. By default, it's true for finite sentences.
         let shouldCapitalize = isFinite;
-
-        // However, find the first *visible* child in the block's linear order.
-        const firstVisibleChild = newBlock.children.find(child => !child.hidden);
-
-        // If the first visible child is an empty placeholder, suppress initial capitalization.
+        const firstVisibleChild = block.children.find(child => !child.hidden);
         if (firstVisibleChild && firstVisibleChild.type === 'placeholder' && !firstVisibleChild.content) {
             shouldCapitalize = false;
         }
 
-        let firstLetterCapitalized = false;
-
-        const processString = (input: string): string => {
-            if (typeof input !== 'string' || input === '') return input;
-
-            let processed = input.trim().replace(/[.?]$/, "").trim();
-            processed = processed.split(' ').map(word => word.toLowerCase() === 'i' ? 'I' : word.toLowerCase()).join(' ');
-
-            // Use the new, more intelligent flag to control capitalization.
-            if (shouldCapitalize && !firstLetterCapitalized && processed.length > 0) {
-                processed = processed.charAt(0).toUpperCase() + processed.slice(1);
-                firstLetterCapitalized = true;
-            }
-            return processed;
-        };
-
-        const traverseAndFormat = (currentBlock: Block) => {
-            if (this.isProperNounBlock(currentBlock)) {
-                return;
-            }
-
-            for (const child of currentBlock.children) {
-                if (child.hidden) continue;
-
-                switch (child.type) {
-                    case "text":
-                        child.content = processString(child.content as string);
-                        break;
-
-                    case "dropdown":
-                        if (Array.isArray(child.content) && typeof child.selected === 'number') {
-                            // Determine if this dropdown is the first visible element that needs capitalizing.
-                            const applyCapitalization = shouldCapitalize && !firstLetterCapitalized;
-
-                            // A simpler processor that only handles trimming and "i" -> "I".
-                            const basicProcess = (input: string) => {
-                                if (typeof input !== 'string' || input === '') return input;
-                                const processed = input.trim().replace(/[.?]$/, "").trim();
-                                return processed.split(' ').map(word => word.toLowerCase() === 'i' ? 'I' : word.toLowerCase()).join(' ');
-                            };
-
-                            // Map over all options and apply the correct logic.
-                            child.content = (child.content as string[]).map(option => {
-                                const processedOption = basicProcess(option);
-
-                                // If capitalization should be applied for this block, capitalize every option.
-                                if (applyCapitalization && processedOption.length > 0) {
-                                    return processedOption.charAt(0).toUpperCase() + processedOption.slice(1);
-                                }
-                                return processedOption;
-                            });
-
-                            // If we just applied capitalization, set the flag so no other element does.
-                            if (applyCapitalization) {
-                                firstLetterCapitalized = true;
-                            }
-                        }
-                        break;
-
-                    case "placeholder":
-                    case "attachment":
-                        if (child.content && typeof child.content === 'object') {
-                            traverseAndFormat(child.content as Block);
-                        }
-                        break;
+        if (shouldCapitalize) {
+            const flatList: BlockChild[] = [];
+            const _flattenVisibleChildren = (currentBlock: Block) => {
+                if (this.isProperNounBlock(currentBlock)) {
+                    const head = currentBlock.children.find(c => c.id === 'head');
+                    if(head) flatList.push(head);
+                    return;
+                }
+                for (const child of currentBlock.children) {
+                    if (child.hidden) continue;
+                    if (child.type === "text" || child.type === "dropdown") {
+                        flatList.push(child);
+                    } else if (child.content && typeof child.content === 'object') {
+                        _flattenVisibleChildren(child.content as Block);
+                    }
+                }
+            };
+            _flattenVisibleChildren(block);
+            
+            const firstElement = flatList[0];
+            if (firstElement) {
+                const content = firstElement.content;
+                if (typeof content === 'string' && content.length > 0) {
+                    firstElement.content = content.charAt(0).toUpperCase() + content.slice(1);
+                } else if (Array.isArray(content)) {
+                     firstElement.content = content.map((option: string) => {
+                         if(option.length > 0) return option.charAt(0).toUpperCase() + option.slice(1);
+                         return option;
+                     });
                 }
             }
-        };
-
-        traverseAndFormat(newBlock);
-
-        this.hideResolvedGapPlaceholders(newBlock);
-
-        // Punctuation is still added based on the grammatical `isFinite` property,
-        // which is the correct behavior.
+        }
+        
         if (isFinite) {
-            newBlock.isRound = false;
-
-            newBlock.children = newBlock.children.filter(child => child.id !== 'punctuation');
-
-            newBlock.children.push({
+            block.isRound = false;
+            block.children = block.children.filter(child => child.id !== 'punctuation');
+            block.children.push({
                 id: 'punctuation',
                 type: 'text',
                 content: isQuestion ? '?' : '.',
                 hidden: false,
             });
         } else {
-            newBlock.isRound = true;
+            block.isRound = true;
         }
+    }
+
+    formatBlock(block: Block): Block {
+        if (!block) {
+            return block;
+        }
+
+        const newBlock = structuredClone(block);
+
+        // 1. Reset visibility and assign unique instance IDs for tracking.
+        this.unhideAll(newBlock);
+        const assignIds = (current: Block) => {
+            if (!current.children) return;
+            for (const child of current.children) {
+                if ((child.type === 'placeholder' || child.type === 'attachment')) {
+                    if (!child.instanceId) child.instanceId = this.generateInstanceId();
+                    if (child.content) assignIds(child.content as Block);
+                }
+            }
+        };
+        assignIds(newBlock);
+
+        // 2. Apply visibility rules based on dropdown selections.
+        this.applyHeadIndexVisibility(newBlock);
+
+        // 3. Perform basic, word-level text cleaning.
+        this._cleanBlockText(newBlock);
+
+        // 4. Hide placeholders that have been linguistically filled by gaps.
+        this.hideResolvedGapPlaceholders(newBlock);
+
+        // 5. Apply sentence-level formatting (capitalization and punctuation).
+        this.applyPunctuationAndCapitalization(newBlock);
 
         return newBlock;
     }
