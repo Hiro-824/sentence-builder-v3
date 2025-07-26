@@ -642,7 +642,7 @@ export class Generator {
                             type: "adj",
                             form: "base",
                             isGradable: !!config.isGradable
-                        }, 
+                        },
                         rightModTargets: [
                             { head: { type: noun } },
                             { head: { type: commonNominal, agr: { type: "non-3sing", num: "pl", per: 3 }, determinered: false } },
@@ -1674,14 +1674,8 @@ export class Generator {
             words: [{
                 token: "",
                 categories: [{
-                    // The head of the resulting phrase is a complete, interrogative sentence.
                     head: { type: "sentence", finite: true, question: true, inverted: true, wh: true },
-                    
-                    // It expects a specific wh-phrase on its left, defined by the config.
                     left: [{ head: expectedWhFeatures }],
-                    
-                    // It expects an inverted clause on its right that is missing a nominal argument (a "gap").
-                    // This is the core, shared logic for all wh-questions.
                     right: [{
                         head: { type: "sentence", inverted: true, wh: false },
                         gaps: [{ head: { type: { type: "nominal", isDet: true }, isSubject: false } }]
@@ -1690,21 +1684,18 @@ export class Generator {
             }],
             color: color,
             children: [
-                // The first placeholder is pre-filled with the specific wh-phrase block.
                 {
                     id: "interrogative-complement",
                     hidden: false,
                     type: "placeholder",
                     content: whPhraseBlock,
                 },
-                // The head is empty as there's no single word for the sentence frame itself.
                 {
                     id: "head",
                     hidden: false,
                     type: "text",
                     content: "",
                 },
-                // The second placeholder waits for the user to drop the main inverted clause.
                 {
                     id: "sentence-complement",
                     hidden: false,
