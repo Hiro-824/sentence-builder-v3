@@ -1121,6 +1121,30 @@ export class Generator {
 
     createPrepositionBlock(config: PrepositionConfig): Block {
         const categories = [];
+
+        if (config.adv) {
+            categories.push({
+                head: { type: "prep", pred: false },
+                right: [{
+                    head: { type: { type: "nominal", isDet: true }, case: "acc" }
+                }],
+                leftModTargets: [
+                    { head: { type: "verb" } },
+                    { head: { type: "sentence" } },
+                ],
+                translationTemplates: {
+                    default: [
+                        {
+                            path: ["right", 0],
+                            key: "default",
+                        },
+                        config.adv
+                    ]
+                }
+            });
+        }
+
+
         if (config.modAdj) {
             categories.push({
                 head: { type: "prep", pred: false },

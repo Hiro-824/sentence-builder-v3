@@ -47,6 +47,7 @@ const configIn: PrepositionConfig = {
     id: "prep_in",
     word: "in",
     modAdj: "の中の",
+    adv: "の中で",
     pred: {
         predAdj: "の中にある",
         past: "の中にあった",
@@ -61,6 +62,7 @@ const configFrom: PrepositionConfig = {
     id: "prep_from",
     word: "from",
     modAdj: "からの",
+    adv: "から",
     pred: {
         predAdj: "の出身である",
         past: "の出身だった",
@@ -68,6 +70,21 @@ const configFrom: PrepositionConfig = {
         predQ: "の出身なのか",
         pastNeg: "の出身ではなかった",
         pastQ: "の出身であったのか",
+    }
+};
+
+const configTo: PrepositionConfig = {
+    id: "prep_in",
+    word: "to",
+    modAdj: "に向かう",
+    adv: "に",
+    pred: {
+        predAdj: "に向かっている",
+        past: "に向かっていた",
+        predNeg: "に向かっていない",
+        predQ: "に向かっているのか",
+        pastNeg: "に向かっていなかった",
+        pastQ: "に向かっていたのか",
     }
 };
 
@@ -85,11 +102,13 @@ const configWorth: PrepositionConfig = {
 };
 
 export const blockIn = generator.createPrepositionBlock(configIn);
-export const blockWorth = generator.createPrepositionBlock(configWorth);
+export const blockTo = generator.createPrepositionBlock(configTo);
 export const blockFrom = generator.createPrepositionBlock(configFrom);
+export const blockWorth = generator.createPrepositionBlock(configWorth);
 
 export const allPrepositionBlocks: Block[] = [
     blockIn,
+    blockTo,
     blockFrom,
     blockWorth
 ];
