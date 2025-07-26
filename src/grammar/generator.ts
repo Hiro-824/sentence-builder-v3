@@ -67,7 +67,7 @@ export interface VerbConfig {
     toSubject: boolean;
     translations: VerbTranslations;
     color?: string;
-    adv_manner_type?: 'skill' | 'degree'; 
+    adv_manner_type?: 'skill' | 'degree';
 }
 
 export interface AdjectiveConfig {
@@ -84,6 +84,7 @@ export interface AdjectiveConfig {
         predQ: string;
         pastQ: string;
     }
+    isGradable?: boolean;
     color?: string;
 }
 
@@ -616,7 +617,11 @@ export class Generator {
                 {
                     token: "",
                     categories: [{
-                        head: { type: "adj", form: "base" },
+                        head: {
+                            type: "adj",
+                            form: "base",
+                            isGradable: !!config.isGradable
+                        }, 
                         rightModTargets: [
                             { head: { type: noun } },
                             { head: { type: commonNominal, agr: { type: "non-3sing", num: "pl", per: 3 }, determinered: false } },

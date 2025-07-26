@@ -18,15 +18,13 @@ export const blockWell: Block = {
         {
             token: "well",
             categories: [
-                // "skill" meaning
                 {
-                    head: { type: "adverb", manner: true, meaning: "skill", form: "base" },
+                    head: { type: "adverb", manner: true, meaning: "skill", form: "base", isGradable: true },
                     leftModTargets: [{ head: { type: "verb", adv_manner_type: "skill" } }],
                     translationTemplates: { default: ["上手に"] }
                 },
-                // "degree" meaning
                 {
-                    head: { type: "adverb", manner: true, meaning: "degree", form: "base" },
+                    head: { type: "adverb", manner: true, meaning: "degree", form: "base", isGradable: true },
                     leftModTargets: [{ head: { type: "verb", adv_manner_type: "degree" } }],
                     translationTemplates: { default: ["よく"] }
                 }
@@ -76,5 +74,34 @@ export const blockWell: Block = {
         type: "dropdown",
         content: ["well", "better", "best"],
         selected: 0,
+    }]
+};
+
+export const blockVery: Block = {
+    id: "very_adverb",
+    x: 0,
+    y: 0,
+    isRound: true,
+    words: [{
+        token: "very",
+        categories: [{
+            head: { type: "adverb", degree: true },
+            
+            rightModTargets: [
+                { head: { type: "adj", form: "base", isGradable: true } },
+                { head: { type: "adverb", form: "base", isGradable: true } }
+            ],
+            
+            translationTemplates: {
+                default: ["とても"]
+            }
+        }]
+    }],
+    color: "orange",
+    children: [{
+        id: "head",
+        hidden: false,
+        type: "text",
+        content: "very"
     }]
 };

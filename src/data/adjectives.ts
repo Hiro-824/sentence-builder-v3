@@ -8,6 +8,7 @@ const configBig: AdjectiveConfig = {
     base: "big",
     comparative: "bigger",
     superlative: "biggest",
+    isGradable: true,
     translation: {
         default: "大きい",
         predicative: "大きい",
@@ -24,6 +25,7 @@ const configInteresting: AdjectiveConfig = {
     base: "interesting",
     comparative: "more interesting",
     superlative: "most interesting",
+    isGradable: true,
     translation: {
         default: "興味深い",
         predicative: "興味深い",

@@ -7,7 +7,7 @@ import { blockA, blockS, blockThe } from "./determiners";
 import { allAuxiliaryBlocks } from "./auxiliaries";
 import { allPrepositionBlocks } from "./prepositions";
 import { blockHowManySentence, blockThat, blockWhatDetSentence, blockWhatSentence } from "./complementizers";
-import { blockEvery, blockWell } from "./adverbials";
+import { blockEvery, blockVery, blockWell } from "./adverbials";
 
 export const blockTo: Block = {
     id: "",
@@ -103,7 +103,8 @@ export const blockList = {
     ],
     "副詞": [
         blockEvery,
-        blockWell
+        blockWell,
+        blockVery,
     ],
     "関係詞": []
 }
