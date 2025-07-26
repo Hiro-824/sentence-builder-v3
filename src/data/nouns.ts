@@ -66,6 +66,14 @@ const configName: NounConfig = {
     translation: "名前"
 };
 
+const configBag: NounConfig = {
+    id: "noun_name",
+    isCountable: true,
+    singularForm: "bag",
+    pluralForm: "bags",
+    translation: "かばん"
+};
+
 const configBush: NounConfig = {
     id: "noun_bush",
     isCountable: true,
@@ -80,6 +88,7 @@ export const blockInformation = generator.createNounBlock(configInformation);
 export const blockWater = generator.createNounBlock(configWater);
 export const blockBird = generator.createNounBlock(configBird);
 export const blockHand = generator.createNounBlock(configHand);
+export const blockBag = generator.createNounBlock(configBag);
 export const blockBush = generator.createNounBlock(configBush);
 export const blockStudent = generator.createNounBlock(configStudent);
 export const blockName = generator.createNounBlock(configName);
@@ -94,6 +103,7 @@ export const allNounBlocks: Block[] = [
     blockHand,
     blockStudent,
     blockName,
+    blockBag,
     blockBush,
     blockInformation,
     blockWater,

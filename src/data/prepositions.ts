@@ -47,7 +47,7 @@ const configIn: PrepositionConfig = {
     id: "prep_in",
     word: "in",
     modAdj: "の中の",
-    adv: "の中で",
+    adv: "の中に(で)",
     pred: {
         predAdj: "の中にある",
         past: "の中にあった",

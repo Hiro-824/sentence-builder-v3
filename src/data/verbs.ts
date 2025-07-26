@@ -86,6 +86,51 @@ const configRead: VerbConfig = {
     toSubject: false
 };
 
+const configHave: VerbConfig = {
+    id: "have_verb",
+    forms: {
+        base: "have",
+        es: "has",
+        ed: "had",
+        en: "had",
+        ing: "having"
+    },
+    complements: [{
+        expected: {
+            head: { type: det, case: "acc" }
+        },
+        particle: "を"
+    }],
+    transitive: true,
+    translations: {
+        present: {
+            default: "持っている",
+            imperfective: "持ってい",
+            past: "持っていた"
+        },
+        past: {
+            default: "持っていた"
+        },
+        progressive: {
+            default: "食べている"
+        },
+        perfect: {
+            default: "すでに持っている"
+        },
+        passive: {
+            default: "所有されている"
+        },
+        noun: {
+            default: "持っていること",
+            no: "持っているの",
+            past: "持っていたこと",
+            pastNo: "持っていたの"
+        }
+    },
+    gerundSubject: false,
+    toSubject: false
+};
+
 const configGive: VerbConfig = {
     id: "give_verb",
     forms: {
@@ -137,11 +182,13 @@ const configGive: VerbConfig = {
 };
 
 export const verbRun = generator.createVerbBlock(configRun);
+export const verbHave = generator.createVerbBlock(configHave);
 export const verbRead = generator.createVerbBlock(configRead);
 export const verbGive = generator.createVerbBlock(configGive);
 
 export const allVerbBlocks: Block[] = [
     verbRun,
+    verbHave,
     verbRead,
     verbGive
 ];
