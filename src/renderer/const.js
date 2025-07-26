@@ -9,6 +9,7 @@ export const placeholderCornerRadius = 36;
 export const labelFontSize = 32;
 export const dropdownHeight = 60;
 export const bubbleColor = "#121212";
+export const resolvedGapRadius = 12;
 
 export const sidebarPadding = { top: 80, bottom: 80, right: 80, left: 8 };
 export const blockListSpacing = 16;

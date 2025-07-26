@@ -2,7 +2,7 @@ import { Block } from "@/models/block";
 import { noun } from "@/models/grammar-entities";
 
 export const blockThat: Block = {
-    id: "",
+    id: "that_clause",
     isRound: true,
     x: 0,
     y: 0,
@@ -40,10 +40,11 @@ export const blockThat: Block = {
 }
 
 export const blockWhat: Block = {
-    id: "",
+    id: "what_pronoun",
     x: 0,
     y: 0,
     isRound: true,
+    undraggable: true,
     words: [{
         token: "",
         categories: [{
@@ -60,7 +61,7 @@ export const blockWhat: Block = {
 }
 
 export const blockWhatSentence: Block = {
-    id: "",
+    id: "what_sentence",
     x: 0,
     y: 0,
     words: [{
@@ -78,7 +79,8 @@ export const blockWhatSentence: Block = {
     }],
     color: "mediumseagreen",
     children: [{
-        id: "complement",
+        // Corrected ID
+        id: "interrogative-complement",
         hidden: false,
         type: "placeholder",
         content: blockWhat
@@ -88,7 +90,8 @@ export const blockWhatSentence: Block = {
         type: "text",
         content: ""
     }, {
-        id: "complement",
+        // Corrected ID
+        id: "sentence-complement",
         hidden: false,
         type: "placeholder",
         content: undefined
@@ -96,7 +99,7 @@ export const blockWhatSentence: Block = {
 }
 
 export const blockWhatDeterminer: Block = {
-    id: "",
+    id: "what_determiner",
     x: 0,
     y: 0,
     isRound: true,
@@ -125,7 +128,7 @@ export const blockWhatDeterminer: Block = {
 }
 
 export const blockWhatDetSentence: Block = {
-    id: "",
+    id: "what_det_sentence",
     x: 0,
     y: 0,
     words: [{
@@ -143,7 +146,8 @@ export const blockWhatDetSentence: Block = {
     }],
     color: "mediumseagreen",
     children: [{
-        id: "complement",
+        // Corrected ID
+        id: "interrogative-complement",
         hidden: false,
         type: "placeholder",
         content: blockWhatDeterminer
@@ -153,7 +157,8 @@ export const blockWhatDetSentence: Block = {
         content: "",
         hidden: false,
     }, {
-        id: "complement",
+        // Corrected ID
+        id: "sentence-complement",
         hidden: false,
         type: "placeholder",
         content: undefined
@@ -161,7 +166,7 @@ export const blockWhatDetSentence: Block = {
 }
 
 export const blockHowMany: Block = {
-    id: "",
+    id: "how_many",
     x: 0,
     y: 0,
     isRound: true,
@@ -190,7 +195,7 @@ export const blockHowMany: Block = {
 }
 
 export const blockHowManySentence: Block = {
-    id: "",
+    id: "how_many_sentence",
     x: 0,
     y: 0,
     words: [{
@@ -208,7 +213,8 @@ export const blockHowManySentence: Block = {
     }],
     color: "mediumseagreen",
     children: [{
-        id: "complement",
+        // Corrected ID
+        id: "interrogative-complement",
         hidden: false,
         type: "placeholder",
         content: blockHowMany,
@@ -218,7 +224,8 @@ export const blockHowManySentence: Block = {
         content: "",
         hidden: false,
     }, {
-        id: "complement",
+        // Corrected ID
+        id: "sentence-complement",
         hidden: false,
         type: "placeholder",
         content: undefined

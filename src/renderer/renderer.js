@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Converter } from "@/grammar/converter";
 import { Grammar } from "@/grammar/grammar";
-import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding } from "./const.js";
+import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding, resolvedGapRadius } from "./const.js";
 import * as d3 from "d3";
 
 export class Renderer {
@@ -343,24 +343,22 @@ export class Renderer {
         // Iterate over the original children array to preserve the correct index.
         for (let originalIndex = 0; originalIndex < allChildren.length; originalIndex++) {
             const child = allChildren[originalIndex];
-            // Skip rendering if the child is marked as hidden.
-            if (child.hidden || child.resolved) {
+            if (child.hidden) {
                 continue;
             }
 
-            if (child.type === "placeholder") {
-                // Pass the 'originalIndex' which is the correct index in the data model.
+            if (child.resolved && child.type === "placeholder") {
+                x += this.renderResolvedGap(child, height, block, blockGroup, x);
+            } else if (child.type === "placeholder") {
                 x += this.renderPlaceholder(child, height, block, blockGroup, originalIndex, x);
             } else if (child.type === "text") {
                 x += this.renderText(child, height, blockGroup, x);
             } else if (child.type === "dropdown") {
-                // Pass the 'originalIndex' to dropdowns as well for consistency.
                 x += this.renderDropdown(child, height, block, blockGroup, originalIndex, x);
             } else if (child.type === "attachment") {
                 x += this.renderAttachment(child, height, blockGroup, x);
             }
         }
-        // ============================ FIX ENDS HERE ============================
 
         return { width: width, height: height };
     }
@@ -615,6 +613,28 @@ export class Renderer {
             .attr('dy', '0.35em')
             .attr('text-anchor', 'middle')
             .style('user-select', 'none');
+    }
+
+    renderResolvedGap(child, height, block, blockGroup, x) {
+        // Use the same darkened color as a regular placeholder for consistency.
+        const circleColor = this.darkenColor(block.color, 30);
+        const radius = resolvedGapRadius; // Use our new constant
+
+        // Vertically center the circle within the parent block.
+        const centerY = height / 2;
+        // Horizontally position the center of the circle.
+        const centerX = x + radius;
+
+        // Append an SVG <circle> element.
+        blockGroup.append("circle")
+            .attr("cx", centerX)
+            .attr("cy", centerY)
+            .attr("r", radius)
+            .attr("fill", circleColor)
+            .attr("pointer-events", "none"); // This makes the circle non-interactive.
+
+        // Return the space occupied by the circle plus padding, so the next element is positioned correctly.
+        return (radius * 2 + horizontalPadding);
     }
 
     /*ドラッグ関係の処理***********************************************************************************************************************************************************************************************************************************************************************************************************************/
@@ -1274,14 +1294,18 @@ export class Renderer {
     }
 
     calculateWidth(block) {
-        const children = block.children.filter((child) => (!child.hidden && child.resolved !== true));
+        const children = block.children.filter((child) => !child.hidden);
         const paddingNumber = children.length + 1;
         let width = 0;
         if (block.isRound && block.isRound === true) {
             width += horizontalPadding * 2;
         }
+
         children.forEach(child => {
-            if (child.type === "placeholder") {
+            if (child.resolved && child.type === "placeholder") {
+                // Add the width of the resolved gap circle (its diameter).
+                width += resolvedGapRadius * 2;
+            } else if (child.type === "placeholder") {
                 const content = child.content;
                 if (content) {
                     const contentWidth = this.calculateWidth(content);
