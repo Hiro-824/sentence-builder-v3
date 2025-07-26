@@ -1,6 +1,6 @@
 import { Generator, NounConfig } from "@/grammar/generator";
 import { Block } from "@/models/block";
-import { timeBlocks } from "./adverbials";
+import { timeBlocks } from "./time-nominals";
 
 const generator = new Generator();
 

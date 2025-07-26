@@ -1,86 +1,80 @@
 import { Block } from "@/models/block";
-import { Generator, NounConfig } from "@/grammar/generator";
+import { Generator } from "@/grammar/generator";
 
 const generator = new Generator();
-
-// 1. Define the nouns that can follow "every"
-
-const dayConfig: NounConfig = {
-    id: "day",
-    isCountable: true,
-    singularForm: "day",
-    pluralForm: "days",
-    translation: "日",
-    pluralTranslation: "日々",
-    color: "dodgerblue"
-};
-
-const morningConfig: NounConfig = {
-    id: "morning",
-    isCountable: true,
-    singularForm: "morning",
-    pluralForm: "mornings",
-    translation: "朝",
-    color: "dodgerblue"
-};
-
-const nightConfig: NounConfig = {
-    id: "night",
-    isCountable: true,
-    singularForm: "night",
-    pluralForm: "nights",
-    translation: "晩",
-    color: "dodgerblue"
-};
-
-const weekConfig: NounConfig = {
-    id: "week",
-    isCountable: true,
-    singularForm: "week",
-    pluralForm: "weeks",
-    translation: "週",
-    color: "dodgerblue"
-};
-
-const monthConfig: NounConfig = {
-    id: "month",
-    isCountable: true,
-    singularForm: "month",
-    pluralForm: "months",
-    translation: "月",
-    color: "dodgerblue"
-};
-
-const year: NounConfig = {
-    id: "year",
-    isCountable: true,
-    singularForm: "year",
-    pluralForm: "years",
-    translation: "年",
-    color: "dodgerblue"
-};
-
-// 2. generatorerate the noun blocks using the existing Noun generatorerator
-
-export const blockDay: Block = generator.createNounBlock(dayConfig);
-export const blockMorning: Block = generator.createNounBlock(morningConfig);
-export const blockNight: Block = generator.createNounBlock(nightConfig);
-export const blockWeek: Block = generator.createNounBlock(weekConfig);
-export const blockMonth: Block = generator.createNounBlock(monthConfig);
-export const blockYear: Block = generator.createNounBlock(year);
-
-
-export const timeBlocks = [
-    blockMorning,
-    blockNight,
-    blockDay,
-    blockWeek,
-    blockMonth,
-    blockYear,
-]
 
 export const blockEvery: Block = generator.createTemporalAdverbialBlock({
     id: "every",
     word: "every",
     translationPrefix: "毎"
 });
+
+export const blockWell: Block = {
+    id: "well_adverb",
+    x: 0,
+    y: 0,
+    isRound: true,
+    words: [
+        {
+            token: "well",
+            categories: [
+                // "skill" meaning
+                {
+                    head: { type: "adverb", manner: true, meaning: "skill", form: "base" },
+                    leftModTargets: [{ head: { type: "verb", adv_manner_type: "skill" } }],
+                    translationTemplates: { default: ["上手に"] }
+                },
+                // "degree" meaning
+                {
+                    head: { type: "adverb", manner: true, meaning: "degree", form: "base" },
+                    leftModTargets: [{ head: { type: "verb", adv_manner_type: "degree" } }],
+                    translationTemplates: { default: ["よく"] }
+                }
+            ]
+        },
+        {
+            token: "better",
+            categories: [
+                // "skill" meaning
+                {
+                    head: { type: "adverb", manner: true, meaning: "skill", form: "comparative" },
+                    leftModTargets: [{ head: { type: "verb", adv_manner_type: "skill" } }],
+                    translationTemplates: { default: ["もっと上手に"] }
+                },
+                // "degree" meaning
+                {
+                    head: { type: "adverb", manner: true, meaning: "degree", form: "comparative" },
+                    leftModTargets: [{ head: { type: "verb", adv_manner_type: "degree" } }],
+                    translationTemplates: { default: ["もっとよく"] }
+                }
+            ]
+        },
+        {
+            token: "best",
+            categories: [
+                // "skill" meaning
+                {
+                    head: { type: "adverb", manner: true, meaning: "skill", form: "superlative" },
+                    leftModTargets: [{ head: { type: "verb", adv_manner_type: "degree" } }],
+                    translationTemplates: { default: ["いちばん上手に"] }
+                },
+                // "degree" meaning
+                {
+                    head: { type: "adverb", manner: true, meaning: "degree", form: "superlative" },
+                    leftModTargets: [{ head: { type: "verb", adv_manner_type: "degree" } }],
+                    translationTemplates: { default: ["いちばんよく"] }
+                }
+            ]
+        }
+    ],
+
+    color: "orange",
+
+    children: [{
+        id: "head",
+        hidden: false,
+        type: "dropdown",
+        content: ["well", "better", "best"],
+        selected: 0,
+    }]
+};

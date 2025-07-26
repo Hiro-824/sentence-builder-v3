@@ -67,6 +67,7 @@ export interface VerbConfig {
     toSubject: boolean;
     translations: VerbTranslations;
     color?: string;
+    adv_manner_type?: 'skill' | 'degree'; 
 }
 
 export interface AdjectiveConfig {
@@ -498,6 +499,11 @@ export class Generator {
         }
 
         return categories.map((category) => {
+            if (config.adv_manner_type) {
+                category.head.adv_manner_type = config.adv_manner_type;
+            } else {
+                category.head.adv_manner_type = "none";
+            }
             const translationTemplates: TranslationTemplates = {};
             if (category.translation) {
                 Object.entries(category.translation).forEach(([key, translationWord]) => {
@@ -1417,7 +1423,7 @@ export class Generator {
                     }
                 }]
             }],
-            color: config.color ?? "dodgerblue",
+            color: config.color ?? "orange",
             children: [{
                 id: "head",
                 hidden: false,

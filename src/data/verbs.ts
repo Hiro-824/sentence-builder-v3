@@ -13,6 +13,7 @@ const configRun: VerbConfig = {
         en: "run",
         ing: "running"
     },
+    adv_manner_type: "skill",
     complements: [],
     transitive: false,
     translations: {
@@ -181,14 +182,74 @@ const configGive: VerbConfig = {
     toSubject: true
 };
 
+const knowConfig: VerbConfig = {
+    id: "know",
+    adv_manner_type: 'degree',
+    forms: {
+        base: "know",
+        es: "knows",
+        ed: "knew",
+        en: "known",
+        ing: "knowing",
+    },
+    complements: [{
+        expected: { head: { type: det, case: "acc" } },
+        particle: "を"
+    }],
+    transitive: true,
+    gerundSubject: true,
+    toSubject: true,
+    translations: {
+        present: { default: "知っている" },
+        past: { default: "知っていた" },
+        progressive: { default: "知っている" },
+        perfect: { default: "既に知っている" },
+        passive: { default: "知られている" },
+        noun: { default: "知っていること" }
+    },
+    color: "tomato",
+};
+
+const playConfig: VerbConfig = {
+    id: "play",
+    adv_manner_type: 'skill',
+    forms: {
+        base: "play",
+        es: "plays",
+        ed: "played",
+        en: "played",
+        ing: "playing",
+    },
+    complements: [{
+        expected: { head: { type: det, case: "acc" } },
+        particle: "を"
+    }],
+    transitive: true,
+    gerundSubject: true,
+    toSubject: true,
+    translations: {
+        present: { default: "する" },
+        past: { default: "した" },
+        progressive: { default: "している" },
+        perfect: { default: "既にしている" },
+        passive: { default: "される" },
+        noun: { default: "すること" }
+    },
+    color: "tomato",
+};
+
 export const verbRun = generator.createVerbBlock(configRun);
 export const verbHave = generator.createVerbBlock(configHave);
 export const verbRead = generator.createVerbBlock(configRead);
 export const verbGive = generator.createVerbBlock(configGive);
+export const blockKnow: Block = generator.createVerbBlock(knowConfig);
+export const blockPlay: Block = generator.createVerbBlock(playConfig);
 
 export const allVerbBlocks: Block[] = [
     verbRun,
     verbHave,
     verbRead,
-    verbGive
+    verbGive,
+    blockKnow,
+    blockPlay
 ];
