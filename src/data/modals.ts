@@ -1,9 +1,9 @@
 import { Generator } from "@/grammar/generator";
 import { Block } from "@/models/block";
+import { commonNominal, noun } from "@/models/grammar-entities";
 
 const generator = new Generator();
 
-// --- Added definitions for each modal block ---
 export const blockCan: Block = generator.createModalBlock({
     id: "can_modal",
     word: "can",
@@ -72,7 +72,119 @@ export const blockInvertedMust: Block = generator.createInvertedModalBlock({ id:
 export const blockInvertedMay: Block = generator.createInvertedModalBlock({ id: "inverted_may_modal", word: "May", translation: "もよろしいです" });
 export const blockInvertedMight: Block = generator.createInvertedModalBlock({ id: "inverted_might_modal", word: "Might", translation: "のでしょうか" });
 
+export const blockToInfinitive: Block = {
+    id: "to_infinitive",
+    x: 0,
+    y: 0,
+    undraggable: true,
+    color: "mediumseagreen",
+    isRound: true,
+    words: [{
+        token: "",
+        categories: [{
+            head: { type: { type: "nominal", isTo: true, isDet: true }, agr: { type: "3sing" } },
+            right: [{ head: { type: "verb", form: "base" } }],
+            translationTemplates: {
+                default: [{ path: ["right", 0], key: "default" }, "こと"],
+                base: [{ path: ["right", 0], key: "default" }]
+            }
+        }]
+    }],
+    children: [
+        {
+            id: "head",
+            hidden: false,
+            type: "text",
+            content: "to"
+        },
+        {
+            id: "complement",
+            hidden: false,
+            type: "placeholder", // This is where the user will drop a verb like "swim".
+            content: undefined
+        }
+    ]
+};
+
+export const blockAbleTo: Block = {
+    id: "able_to",
+    x: 0,
+    y: 0,
+    isRound: true,
+    color: "dodgerblue", // Adjective color
+    words: [{
+        token: "",
+        categories: [{
+            head: { type: "adj" },
+            right: [{ head: { type: { type: "nominal", isTo: true } } }],
+            rightModTargets: [
+                { head: { type: noun } },
+                { head: { type: commonNominal, agr: { type: "non-3sing", num: "pl", per: 3 }, determinered: false } },
+                { head: { type: commonNominal, count: false, determinered: false } }
+            ],
+            translationTemplates: {
+                default: [{ path: ["right", 0], key: "default" }, "ができる"],
+                predicative: [{ path: ["right", 0], key: "default" }, "ができる"],
+                past: [{ path: ["right", 0], key: "default" }, "ができた"],
+                predNeg: [{ path: ["right", 0], key: "default" }, "ができない"],
+                pastNeg: [{ path: ["right", 0], key: "default" }, "ができなかった"],
+                predQ: [{ path: ["right", 0], key: "default" }, "ができるのか"],
+                pastQ: [{ path: ["right", 0], key: "default" }, "ができたのか"],
+            }
+        }]
+    }],
+    children: [
+        {
+            id: "head",
+            hidden: false,
+            type: "text",
+            content: "able"
+        },
+        {
+            id: "complement",
+            hidden: false,
+            type: "placeholder",
+            content: blockToInfinitive,
+        }
+    ]
+};
+
+export const blockGoingTo: Block = {
+    id: "going_to",
+    x: 0,
+    y: 0,
+    isRound: true,
+    color: "dodgerblue",
+    words: [{
+        token: "",
+        categories: [{
+            head: { type: "verb", form: "progressive" },
+            right: [{ head: { type: { type: "nominal", isTo: true } } }],
+            translationTemplates: {
+                default: [{ path: ["right", 0], key: "base" }, "予定"]
+            }
+        }]
+    }],
+    children: [
+        {
+            id: "head",
+            hidden: false,
+            type: "text",
+            content: "going"
+        },
+        {
+            id: "complement",
+            hidden: false,
+            type: "placeholder",
+            content: blockToInfinitive,
+        }
+    ]
+};
+
 export const allModalBlocks: Block[] = [
+    blockAbleTo,
+    blockGoingTo,
+    // modals
     blockCan,
     blockCould,
     blockWill,
