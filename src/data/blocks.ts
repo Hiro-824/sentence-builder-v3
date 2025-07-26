@@ -6,7 +6,7 @@ import { allAdjectiveBlocks } from "./adjectives";
 import { blockA, blockS, blockThe } from "./determiners";
 import { allAuxiliaryBlocks } from "./auxiliaries";
 import { allPrepositionBlocks } from "./prepositions";
-import { blockThat, blockWhat, blockWho } from "./complementizers";
+import { blockThat, blockWhat, blockWhatDetSentence, blockWho } from "./complementizers";
 
 export const blockTo: Block = {
     id: "",
@@ -82,6 +82,7 @@ export const blockList = {
     ],
     "疑問詞": [
         blockWhat,
+        blockWhatDetSentence,
         blockWho
     ],
     "名詞": [

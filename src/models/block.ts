@@ -9,6 +9,7 @@ export interface Block {
     words: Word[];
     color: string;
     isRound?: boolean;
+    undraggable?: boolean;
     children: BlockChild[];
     translation?: string;
 }

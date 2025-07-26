@@ -90,12 +90,15 @@ export class Renderer {
             .attr("id", block.id)
             .classed("grab", true).classed("grabbing", false)
             .datum(block)
-            .call(d3.drag()
+
+        if (block.undraggable !== true) {
+            blockGroup.call(d3.drag()
                 .container(this.grid.node())
                 .on("start", (event, d) => this.dragStart(event, d, fromSideBar, sideBarId))
                 .on("drag", (event, d) => this.dragging(event, d, fromSideBar, sideBarId))
                 .on("end", this.dragEnd.bind(this))
             );
+        }
 
         this.renderBlockImage(block, blockGroup);
     }
