@@ -43,9 +43,32 @@ export const blockWhat: Block = {
     id: "",
     x: 0,
     y: 0,
+    isRound: true,
     words: [{
         token: "",
         categories: [{
+            head: { type: "interrogative", nominal: true, determiner: false, number: false },
+        }]
+    }],
+    color: "dodgerblue",
+    children: [{
+        id: "head",
+        hidden: false,
+        type: "text",
+        content: "what"
+    }]
+}
+
+export const blockWhatSentence: Block = {
+    id: "",
+    x: 0,
+    y: 0,
+    words: [{
+        token: "",
+        categories: [{
+            left: [{
+                head: { type: "interrogative", nominal: true },
+            }],
             head: { type: "sentence", finite: true, question: true, inverted: true, wh: true },
             right: [{
                 head: { type: "sentence", inverted: true, wh: false },
@@ -55,10 +78,15 @@ export const blockWhat: Block = {
     }],
     color: "mediumseagreen",
     children: [{
+        id: "complement",
+        hidden: false,
+        type: "placeholder",
+        content: blockWhat
+    }, {
         id: "head",
         hidden: false,
         type: "text",
-        content: "what"
+        content: ""
     }, {
         id: "complement",
         hidden: false,
@@ -76,7 +104,7 @@ export const blockWhatDeterminer: Block = {
     words: [{
         token: "",
         categories: [{
-            head: { type: "what-determiner" },
+            head: { type: "interrogative", nominal: false, determiner: true, number: false },
             right: [{
                 head: { type: noun },
             }]
@@ -104,7 +132,7 @@ export const blockWhatDetSentence: Block = {
         token: "",
         categories: [{
             left: [{
-                head: { type: "what-determiner" },
+                head: { type: "interrogative", nominal: false, determiner: true, number: false },
             }],
             head: { type: "sentence", finite: true, question: true, inverted: true, wh: true },
             right: [{
@@ -132,13 +160,45 @@ export const blockWhatDetSentence: Block = {
     }]
 }
 
-export const blockWho: Block = {
+export const blockHowMany: Block = {
+    id: "",
+    x: 0,
+    y: 0,
+    isRound: true,
+    undraggable: true,
+    words: [{
+        token: "",
+        categories: [{
+            head: { type: "interrogative", nominal: false, determiner: true, number: true },
+            right: [{
+                head: { type: noun, agr: { type: "non-3sing", num: "pl" } },
+            }]
+        }]
+    }],
+    color: "dodgerblue",
+    children: [{
+        id: "head",
+        hidden: false,
+        type: "text",
+        content: "how many"
+    }, {
+        id: "complement",
+        hidden: false,
+        type: "placeholder",
+        content: undefined
+    }]
+}
+
+export const blockHowManySentence: Block = {
     id: "",
     x: 0,
     y: 0,
     words: [{
         token: "",
         categories: [{
+            left: [{
+                head: { type: "interrogative", nominal: false, determiner: true, number: true },
+            }],
             head: { type: "sentence", finite: true, question: true, inverted: true, wh: true },
             right: [{
                 head: { type: "sentence", inverted: true, wh: false },
@@ -148,10 +208,15 @@ export const blockWho: Block = {
     }],
     color: "mediumseagreen",
     children: [{
-        id: "head",
+        id: "complement",
         hidden: false,
+        type: "placeholder",
+        content: blockHowMany,
+    }, {
+        id: "head",
         type: "text",
-        content: "who"
+        content: "",
+        hidden: false,
     }, {
         id: "complement",
         hidden: false,
