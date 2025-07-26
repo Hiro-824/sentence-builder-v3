@@ -1,5 +1,6 @@
 import { Generator } from "@/grammar/generator";
 import { Block } from "@/models/block";
+import { allModalBlocks } from "./modals";
 
 const generator = new Generator();
 export const blockSentence: Block = {
@@ -89,5 +90,6 @@ export const allAuxiliaryBlocks: Block[] = [
     blockBeNot,
     blockInvertedBe,
     blockDoNot,
-    blockInvertedDo
+    blockInvertedDo,
+    ...allModalBlocks
 ];

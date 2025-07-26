@@ -200,7 +200,7 @@ const knowConfig: VerbConfig = {
     gerundSubject: true,
     toSubject: true,
     translations: {
-        present: { default: "知っている" },
+        present: { default: "知っている", imperfective: "知ってい", past: "知っていた" },
         past: { default: "知っていた" },
         progressive: { default: "知っている" },
         perfect: { default: "既に知っている" },
@@ -228,7 +228,7 @@ const playConfig: VerbConfig = {
     gerundSubject: true,
     toSubject: true,
     translations: {
-        present: { default: "する" },
+        present: { default: "する", imperfective: "し", past: "した" },
         past: { default: "した" },
         progressive: { default: "している" },
         perfect: { default: "既にしている" },

@@ -111,6 +111,20 @@ export interface TemporalAdverbialConfig {
     color?: string;
 }
 
+export interface ModalConfig {
+    id: string;
+    word: string;
+    preTranslation?: string;
+    translationKey?: string;
+    translation: string;
+    color?: string;
+}
+
+export interface NegativeModalConfig extends ModalConfig {
+    negativeWord: string;
+    negativeTranslation: string;
+}
+
 export class Generator {
     private getAgrType(person: 1 | 2 | 3, number: 'sing' | 'pl'): '3sing' | 'non-3sing' {
         return person === 3 && number === 'sing' ? '3sing' : 'non-3sing';
@@ -1440,6 +1454,205 @@ export class Generator {
                 type: "placeholder",
                 content: undefined
             }]
+        };
+    }
+
+    createModalBlock(config: ModalConfig): Block {
+        const { id, word, translation, translationKey, preTranslation } = config;
+        const color = config.color || "mediumseagreen";
+
+        return {
+            id: id,
+            x: 0,
+            y: 0,
+            words: [{
+                token: "",
+                categories: [{
+                    head: {
+                        type: "sentence",
+                        finite: true,
+                        inverted: false,
+                        negative: false,
+                        modal: true
+                    },
+                    left: [{
+                        head: { type: { type: "nominal", isDet: true }, case: "nom" }
+                    }],
+                    right: [{
+                        head: { type: "verb", form: "base", finite: false }
+                    }],
+                    translationTemplates: {
+                        default: [
+                            {
+                                path: ["left", 0], // The subject
+                                key: "default",
+                                particle: "は",
+                            },
+                            preTranslation ?? "",
+                            {
+                                path: ["right", 0], // The verb phrase complement
+                                key: translationKey ?? "default",
+                            },
+                            translation
+                        ]
+                    }
+                }]
+            }],
+            color: color,
+            children: [
+                {
+                    id: "specifier",
+                    hidden: false,
+                    type: "placeholder",
+                    content: undefined,
+                },
+                {
+                    id: "head",
+                    hidden: false,
+                    type: "text",
+                    content: word,
+                },
+                {
+                    id: "complement",
+                    hidden: false,
+                    type: "placeholder",
+                    content: undefined,
+                }
+            ]
+        };
+    }
+
+    createNegativeModalBlock(config: NegativeModalConfig): Block {
+        const { id, negativeWord, preTranslation, translationKey, negativeTranslation } = config;
+        const color = config.color || "mediumseagreen";
+
+        return {
+            id: id,
+            x: 0,
+            y: 0,
+            words: [{
+                token: "",
+                categories: [{
+                    // The head indicates this is a finite, but now negative, sentence.
+                    head: {
+                        type: "sentence",
+                        finite: true,
+                        inverted: false,
+                        negative: true, // Key change: this is a negative clause
+                        modal: true
+                    },
+                    // The structure of arguments remains the same as a positive modal.
+                    left: [{
+                        head: { type: { type: "nominal", isDet: true }, case: "nom" }
+                    }],
+                    right: [{
+                        head: { type: "verb", form: "base", finite: false }
+                    }],
+                    translationTemplates: {
+                        default: [
+                            {
+                                path: ["left", 0],
+                                key: "default",
+                                particle: "は",
+                            },
+                            preTranslation ?? "",
+                            {
+                                path: ["right", 0],
+                                key: translationKey ?? "default",
+                            },
+                            // Use the specific negative translation
+                            negativeTranslation
+                        ]
+                    }
+                }]
+            }],
+            color: color,
+            // The visual block structure is identical to the positive modal
+            children: [
+                {
+                    id: "specifier", // Subject
+                    hidden: false,
+                    type: "placeholder",
+                    content: undefined,
+                },
+                {
+                    id: "head", // e.g., "can't", "should not"
+                    hidden: false,
+                    type: "text",
+                    content: negativeWord,
+                },
+                {
+                    id: "complement", // Verb Phrase
+                    hidden: false,
+                    type: "placeholder",
+                    content: undefined,
+                }
+            ]
+        };
+    }
+
+    createInvertedModalBlock(config: ModalConfig): Block {
+        const { id, word, translation, preTranslation, translationKey } = config;
+        const color = config.color || "mediumseagreen";
+
+        return {
+            id: id,
+            x: 0,
+            y: 0,
+            words: [{
+                token: "",
+                categories: [{
+                    head: {
+                        type: "sentence",
+                        finite: true,
+                        inverted: true,
+                        question: true,
+                        negative: false,
+                        modal: true
+                    },
+                    right: [
+                        { head: { type: { type: "nominal", isDet: true }, case: "nom" } },
+                        { head: { type: "verb", form: "base", finite: false } }
+                    ],
+                    translationTemplates: {
+                        default: [
+                            {
+                                path: ["right", 0],
+                                key: "default",
+                                particle: "は",
+                            },
+                            preTranslation ?? "",
+                            {
+                                path: ["right", 1],
+                                key: translationKey ?? "default",
+                            },
+                            translation,
+                            "か？"
+                        ]
+                    }
+                }]
+            }],
+            color: color,
+            children: [
+                {
+                    id: "head",
+                    hidden: false,
+                    type: "text",
+                    content: word,
+                },
+                {
+                    id: "specifier",
+                    hidden: false,
+                    type: "placeholder",
+                    content: undefined,
+                },
+                {
+                    id: "complement",
+                    hidden: false,
+                    type: "placeholder",
+                    content: undefined,
+                }
+            ]
         };
     }
 }
