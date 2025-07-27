@@ -158,24 +158,34 @@ export class Grammar {
                     const translation = (subPhrase as Phrase).translation;
                     if (translation && translation[element.key]) {
                         const subTemplate = translation[element.key];
-                        // IMPORTANT: The recursive call now passes the key from the template element.
+
                         const subResult = Array.isArray(subTemplate)
                             ? this.translate(subTemplate, subPhrase as Phrase)
                             : String(subTemplate);
+
+                        const unresolvedRegex = /\[\[UNRESOLVED:[^:]*:[^:]*:id=(inst_[a-zA-Z0-9]*)\]\]/g;
+                        let match;
+                        while ((match = unresolvedRegex.exec(subResult)) !== null) {
+                            const gapId = match[1]; // match[1] is the captured group for the ID.
+                            if(phrase.resolvedGapIds && phrase.resolvedGapIds.includes(gapId)) {
+                                console.log(`[Grammar.translate] Detected resolved child gap with ID: ${gapId}`);
+                            }
+                        }
+
                         return particle ? `${subResult} ${particle}` : subResult;
                     }
                 }
                 const pathStr = element.path?.join(".") ?? "";
-                
+
                 let unresolvedString = `[[UNRESOLVED:${pathStr}:${element.key}`;
                 if (subPhrase && typeof subPhrase === 'object' && 'head' in subPhrase) {
                     const head = (subPhrase as Phrase).head;
                     if (head && typeof head === 'object' && 'instanceId' in head && head.instanceId) {
-                        unresolvedString += `:id=${head.instanceId}`; 
+                        unresolvedString += `:id=${head.instanceId}`;
                     }
                 }
                 unresolvedString += "]]";
-                
+
                 return unresolvedString + (particle ? ` ${particle}` : "");
             } else {
                 return "[[UNRESOLVED:INVALID_ELEMENT]]";

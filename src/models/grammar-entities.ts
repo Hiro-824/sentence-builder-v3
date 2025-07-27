@@ -4,6 +4,7 @@ export type TranslationElement = string | {
     path: (string | number)[];
     key: string;
     particle?: string;
+    filler?: (string | number)[];
 };
 export interface TranslationTemplates { [key: string]: TranslationElement[] }
 

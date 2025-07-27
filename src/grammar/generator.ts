@@ -1679,7 +1679,15 @@ export class Generator {
                     right: [{
                         head: { type: "sentence", inverted: true, wh: false },
                         gaps: [{ head: { type: { type: "nominal", isDet: true }, isSubject: false } }]
-                    }]
+                    }],
+                    translationTemplates: {
+                        default: [
+                            {
+                                path: ["right", 0],
+                                key: "default",
+                            },
+                        ]
+                    }
                 }]
             }],
             color: color,
