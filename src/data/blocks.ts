@@ -6,7 +6,7 @@ import { allAdjectiveBlocks } from "./adjectives";
 import { blockA, blockS, blockThe } from "./determiners";
 import { allAuxiliaryBlocks } from "./auxiliaries";
 import { allPrepositionBlocks } from "./prepositions";
-import { blockHowManySentence, blockThat, blockWhatDetSentence, blockWhatSentence } from "./complementizers";
+import { blockHowManySentence, blockThat, blockWhatDetSentence, blockWhatSentence, blockWhichDetSentence, blockWhichSentence } from "./complementizers";
 import { blockEvery, blockVery, blockWell } from "./adverbials";
 
 export const blockTo: Block = {
@@ -84,6 +84,8 @@ export const blockList = {
     "疑問詞": [
         blockWhatSentence,
         blockWhatDetSentence,
+        blockWhichSentence,
+        blockWhichDetSentence,
         blockHowManySentence,
     ],
     "名詞": [

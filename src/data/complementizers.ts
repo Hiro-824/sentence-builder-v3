@@ -99,6 +99,42 @@ export const blockHowMany: Block = {
     ]
 };
 
+export const whichPronounFeatures: FeatureStructure = { type: "interrogative", nominal: true, determiner: false, number: false };
+export const blockWhich: Block = {
+    id: "which_pronoun",
+    x: 0, y: 0, isRound: true, undraggable: true,
+    words: [{
+        token: "", categories: [
+            {
+                head: whichPronounFeatures,
+                translationTemplates: {
+                    default: ["どれ"]
+                }
+            }]
+    }],
+    color: "dodgerblue",
+    children: [{ id: "head", hidden: false, type: "text", content: "which" }]
+};
+
+export const whichDeterminerFeatures: FeatureStructure = { type: "interrogative", nominal: false, determiner: true, number: false };
+export const blockWhichDeterminer: Block = {
+    id: "which_determiner",
+    x: 0, y: 0, isRound: true, undraggable: true,
+    words: [{
+        token: "", categories: [{
+            head: whichDeterminerFeatures,
+            right: [{ head: { type: noun } }],
+            translationTemplates: {
+                default: ["どの", { path: ["right", 0], key: "default" }]
+            }
+        }]
+    }],
+    color: "dodgerblue",
+    children: [
+        { id: "head", hidden: false, type: "text", content: "which" },
+        { id: "complement", hidden: false, type: "placeholder", content: undefined }
+    ]
+};
 
 // ===== Part 2: Use the Generator to Build the Final, User-Facing Blocks =====
 
@@ -118,4 +154,16 @@ export const blockHowManySentence = generator.createWhSentenceBlock({
     id: "how_many_question",
     whPhraseBlock: blockHowMany,
     expectedWhFeatures: howManyFeatures
+});
+
+export const blockWhichSentence = generator.createWhSentenceBlock({
+    id: "which_question",
+    whPhraseBlock: blockWhich,
+    expectedWhFeatures: whichPronounFeatures
+});
+
+export const blockWhichDetSentence = generator.createWhSentenceBlock({
+    id: "which_det_question",
+    whPhraseBlock: blockWhichDeterminer,
+    expectedWhFeatures: whichDeterminerFeatures
 });
