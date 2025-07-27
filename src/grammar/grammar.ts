@@ -182,10 +182,17 @@ export class Grammar {
                                             : String(fillerTemplate);
                                         subResult = subResult.replace(fullMatchString, fillerTranslation);
                                     } else {
-                                        subResult = subResult.replace(fullMatchString, "");
+                                        // Fallback: If filler is specified but has no translation, remove the placeholder and its particle.
+                                        const escapedMarker = fullMatchString.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                                        const removalRegex = new RegExp(escapedMarker + '(\\s+\\S+)?');
+                                        subResult = subResult.replace(removalRegex, '');
                                     }
                                 } else {
-                                    subResult = subResult.replace(fullMatchString, "");
+                                    // A resolved gap with no filler means it should be deleted along with its particle.
+                                    const escapedMarker = fullMatchString.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                                    // This regex finds the marker, and optionally a following space and a single "word" (the particle).
+                                    const removalRegex = new RegExp(escapedMarker + '(\\s+\\S+)?');
+                                    subResult = subResult.replace(removalRegex, '');
                                 }
                             }
                         }
