@@ -736,6 +736,7 @@ export class Renderer {
     dragStart(event, d, fromSideBar = false, sideBarId = undefined) {
         this.grabbingCursor(d.id, true);
         this.dragStarted = false;
+        this.svg.node().appendChild(this.dragboard.node()); 
     }
 
     dragging(event, d, fromSideBar = false) {
