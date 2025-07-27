@@ -173,6 +173,58 @@ export const blockWhoseDeterminer: Block = {
     ]
 };
 
+export const howFeaturesPred: FeatureStructure = { type: "interrogative", adverbial: true, pred: true };
+export const howFeaturesAdverbial: FeatureStructure = { type: "interrogative", adverbial: true, pred: false, };
+export const blockHow: Block = {
+    id: "how_adverb",
+    x: 0, y: 0, isRound: true, undraggable: true,
+    words: [{
+        token: "",
+        categories: [
+            {
+                head: howFeaturesAdverbial,
+                translationTemplates: {
+                    default: ["どうやって"]
+                }
+            },
+            {
+                head: howFeaturesPred,
+                translationTemplates: {
+                    default: ["どうか"]
+                }
+            }
+        ]
+    }],
+    color: "dodgerblue",
+    children: [{ id: "head", hidden: false, type: "text", content: "how" }]
+};
+
+export const whereFeaturesPred: FeatureStructure = { type: "interrogative", adverbial: true, pred: true };
+export const whereFeaturesAdverbial: FeatureStructure = { type: "interrogative", adverbial: true, pred: false };
+export const blockWhere: Block = {
+    id: "where_adverb",
+    x: 0, y: 0, isRound: true, undraggable: true,
+    words: [{
+        token: "",
+        categories: [
+            {
+                head: whereFeaturesAdverbial,
+                translationTemplates: {
+                    default: ["どこで"]
+                }
+            },
+            {
+                head: whereFeaturesPred,
+                translationTemplates: {
+                    default: ["どこにあるのか"]
+                }
+            }
+        ]
+    }],
+    color: "dodgerblue",
+    children: [{ id: "head", hidden: false, type: "text", content: "where" }]
+};
+
 // ===== Part 2: Use the Generator to Build the Final, User-Facing Blocks =====
 
 const nominalNonSubjectGap: FeatureStructure = { type: { type: "nominal", isDet: true }, isSubject: false, isPossessor: false };
@@ -241,32 +293,6 @@ export const blockWhoseDetSentence = generator.createWhSentenceBlock({
     subjectGap: nominalSubjectGap
 });
 
-export const whereFeaturesPred: FeatureStructure = { type: "interrogative", adverbial: true, pred: true };
-export const whereFeaturesAdverbial: FeatureStructure = { type: "interrogative", adverbial: true, pred: false };
-export const blockWhere: Block = {
-    id: "where_adverb",
-    x: 0, y: 0, isRound: true, undraggable: true,
-    words: [{
-        token: "",
-        categories: [
-            {
-                head: whereFeaturesAdverbial,
-                translationTemplates: {
-                    default: ["どこで"]
-                }
-            },
-            {
-                head: whereFeaturesPred,
-                translationTemplates: {
-                    default: ["どこにあるのか"]
-                }
-            }
-        ]
-    }],
-    color: "dodgerblue",
-    children: [{ id: "head", hidden: false, type: "text", content: "where" }]
-};
-
 export const blockWhereSentence = generator.createWhSentenceBlock({
     id: "where_question",
     whPhraseBlock: blockWhere,
@@ -276,33 +302,6 @@ export const blockWhereSentence = generator.createWhSentenceBlock({
     nonSubjectGap: { type: "prep" },
     subjectGap: undefined
 });
-
-export const howFeaturesPred: FeatureStructure = { type: "interrogative", adverbial: true, pred: true };
-export const howFeaturesAdverbial: FeatureStructure = { type: "interrogative", adverbial: true, pred: false, };
-
-export const blockHow: Block = {
-    id: "how_adverb",
-    x: 0, y: 0, isRound: true, undraggable: true,
-    words: [{
-        token: "",
-        categories: [
-            {
-                head: howFeaturesAdverbial,
-                translationTemplates: {
-                    default: ["どうやって"]
-                }
-            },
-            {
-                head: howFeaturesPred,
-                translationTemplates: {
-                    default: ["どうか"]
-                }
-            }
-        ]
-    }],
-    color: "dodgerblue",
-    children: [{ id: "head", hidden: false, type: "text", content: "how" }]
-};
 
 export const blockHowSentence = generator.createWhSentenceBlock({
     id: "how_question",
