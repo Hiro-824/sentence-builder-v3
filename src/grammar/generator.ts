@@ -1699,15 +1699,21 @@ export class Generator {
                         left: [{ head: expectedWhFeatures }],
                         right: [{
                             head: { type: "sentence", inverted: false, wh: false },
-                            gaps: [{ head: { type: { type: "nominal", isDet: true }, isSubject: true } }]
+                            gaps: [{ head: { type: { type: "nominal", isDet: true }, isSubject: true, agr: { type: "3sing" } } }]
                         }],
                         translationTemplates: {
                             default: [
                                 {
                                     path: ["right", 0],
                                     key: "default",
-                                    filler: ["left", 0],
+                                    //filler: ["left", 0],
                                 },
+                                "のは",
+                                {
+                                    path: ["left", 0],
+                                    key: "default",
+                                },
+                                "か？"
                             ]
                         }
                     }
