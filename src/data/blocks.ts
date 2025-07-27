@@ -6,7 +6,7 @@ import { allAdjectiveBlocks } from "./adjectives";
 import { blockA, blockS, blockThe } from "./determiners";
 import { allAuxiliaryBlocks } from "./auxiliaries";
 import { allPrepositionBlocks } from "./prepositions";
-import { blockHowManySentence, blockHowSentence, blockThat, blockWhatDetSentence, blockWhatSentence, blockWhereSentence, blockWhichDetSentence, blockWhichSentence, blockWhoseDetSentence, blockWhoseSentence } from "./complementizers";
+import { blockHowManySentence, blockHowSentence, blockThat, blockWhatDetSentence, blockWhatSentence, blockWhereSentence, blockWhichDetSentence, blockWhichSentence, blockWhoseDetSentence, blockWhoSentence, blockWhoseSentence } from "./complementizers";
 import { blockEvery, blockVery, blockWell } from "./adverbials";
 
 export const blockTo: Block = {
@@ -89,6 +89,7 @@ export const blockList = {
         blockWhoseSentence,
         blockWhoseDetSentence,
         blockHowManySentence,
+        blockWhoSentence,
         blockWhereSentence,
         blockHowSentence,
     ],

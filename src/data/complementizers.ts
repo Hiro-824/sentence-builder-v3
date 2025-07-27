@@ -136,6 +136,24 @@ export const blockWhichDeterminer: Block = {
     ]
 };
 
+export const whoPronounFeatures: FeatureStructure = { type: "interrogative", nominal: true, determiner: false, human: true };
+export const blockWho: Block = {
+    id: "who_pronoun",
+    x: 0, y: 0, isRound: true, undraggable: true,
+    words: [{
+        token: "",
+        categories: [
+            {
+                head: whoPronounFeatures,
+                translationTemplates: {
+                    default: ["誰"]
+                }
+            }]
+    }],
+    color: "dodgerblue",
+    children: [{ id: "head", hidden: false, type: "text", content: "who" }]
+};
+
 export const whosePronounFeatures: FeatureStructure = { type: "interrogative", nominal: true, determiner: false, possessive: true };
 export const blockWhose: Block = {
     id: "whose_pronoun",
@@ -270,6 +288,15 @@ export const blockWhichDetSentence = generator.createWhSentenceBlock({
     id: "which_det_question",
     whPhraseBlock: blockWhichDeterminer,
     expectedWhFeatures: whichDeterminerFeatures,
+    adverbial: false,
+    nonSubjectGap: nominalNonSubjectGap,
+    subjectGap: nominalSubjectGap
+});
+
+export const blockWhoSentence = generator.createWhSentenceBlock({
+    id: "who_question",
+    whPhraseBlock: blockWho,
+    expectedWhFeatures: whoPronounFeatures,
     adverbial: false,
     nonSubjectGap: nominalNonSubjectGap,
     subjectGap: nominalSubjectGap
