@@ -136,6 +136,43 @@ export const blockWhichDeterminer: Block = {
     ]
 };
 
+export const whosePronounFeatures: FeatureStructure = { type: "interrogative", nominal: true, determiner: false, possessive: true };
+export const blockWhose: Block = {
+    id: "whose_pronoun",
+    x: 0, y: 0, isRound: true, undraggable: true,
+    words: [{
+        token: "", categories: [
+            {
+                head: whosePronounFeatures,
+                translationTemplates: {
+                    default: ["誰のもの"]
+                }
+            }]
+    }],
+    color: "dodgerblue",
+    children: [{ id: "head", hidden: false, type: "text", content: "whose" }]
+};
+
+export const whoseDeterminerFeatures: FeatureStructure = { type: "interrogative", nominal: false, determiner: true, possessive: true };
+export const blockWhoseDeterminer: Block = {
+    id: "whose_determiner",
+    x: 0, y: 0, isRound: true, undraggable: true,
+    words: [{
+        token: "", categories: [{
+            head: whoseDeterminerFeatures,
+            right: [{ head: { type: noun } }],
+            translationTemplates: {
+                default: ["誰の", { path: ["right", 0], key: "default" }]
+            }
+        }]
+    }],
+    color: "dodgerblue",
+    children: [
+        { id: "head", hidden: false, type: "text", content: "whose" },
+        { id: "complement", hidden: false, type: "placeholder", content: undefined }
+    ]
+};
+
 // ===== Part 2: Use the Generator to Build the Final, User-Facing Blocks =====
 
 export const blockWhatSentence = generator.createWhSentenceBlock({
@@ -166,4 +203,16 @@ export const blockWhichDetSentence = generator.createWhSentenceBlock({
     id: "which_det_question",
     whPhraseBlock: blockWhichDeterminer,
     expectedWhFeatures: whichDeterminerFeatures
+});
+
+export const blockWhoseSentence = generator.createWhSentenceBlock({
+    id: "whose_question",
+    whPhraseBlock: blockWhose,
+    expectedWhFeatures: whosePronounFeatures
+});
+
+export const blockWhoseDetSentence = generator.createWhSentenceBlock({
+    id: "whose_det_question",
+    whPhraseBlock: blockWhoseDeterminer,
+    expectedWhFeatures: whoseDeterminerFeatures
 });
