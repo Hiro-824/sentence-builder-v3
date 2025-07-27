@@ -202,23 +202,26 @@ export class Renderer {
                 blocksToRender.forEach((block) => {
                     y += blockListSpacing + this.renderSideBarBlock(block, this.generateRandomId(), y);
                 });
-            
-                if (blockArray.length > this.categoryState[groupName].displayCount) {
-                    y += blockListSpacing;
-                    this.blockBoard.append("text")
-                        .text("...see more")
-                        .attr("x", 20)
-                        .attr("y", y)
-                        .attr('font-size', `${blockListFontSize * 0.9}pt`)
-                        .style('font-style', 'italic')
-                        .style('cursor', 'pointer')
-                        .attr('fill', 'gray')
-                        .on("click", () => {
-                            // Show all blocks on click
-                            this.categoryState[groupName].displayCount += visiblilityIncrement;
-                            this.renderSideBar();
-                        });
-                    y += 20;
+
+                const displayCount = this.categoryState[groupName].displayCount;
+                const totalCount = blockArray.length;
+
+                if (totalCount > displayCount) {
+                    y += blockListSpacing; // Add some top margin
+                    const seeMoreCallback = () => {
+                        const currentCount = this.categoryState[groupName].displayCount;
+                        this.categoryState[groupName].displayCount = currentCount + visiblilityIncrement;
+                        this.renderSideBar();
+                    };
+                    y = this.renderSidebarButton(y + 40, "See more +", seeMoreCallback);
+                }
+
+                if (displayCount > initialVisibleCount) {
+                    const showLessCallback = () => {
+                        this.categoryState[groupName].displayCount -= visiblilityIncrement;
+                        this.renderSideBar();
+                    };
+                    y = this.renderSidebarButton((totalCount > displayCount) ? y : y + 40, "Show less -", showLessCallback);
                 }
             }
 
@@ -348,6 +351,48 @@ export class Renderer {
         realData.x = 0;
         realData.y = 0;
         this.renderBlock(realData, previewBlockGroup, true, id);
+    }
+
+    renderSidebarButton(y, text, onClickCallback) {
+        const buttonWidth = this.calculateSideBarWidth();
+        const buttonHeight = 80;
+        const buttonCornerRadius = 0;
+        const buttonFontSize = "24pt";
+        const buttonX = -sidebarPadding.left * 2;
+
+        const buttonGroup = this.blockBoard.append("g")
+            .style("cursor", "pointer")
+            .on("click", onClickCallback);
+
+        // Button background rectangle
+        const buttonRect = buttonGroup.append("rect")
+            .attr("x", buttonX)
+            .attr("y", y - (buttonHeight / 2)) // Vertically center the rect around the y-point
+            .attr("width", buttonWidth)
+            .attr("height", buttonHeight)
+            .attr("rx", buttonCornerRadius)
+            .attr("ry", buttonCornerRadius)
+            .attr("fill", "#e9e9e9");
+
+        // Button text label
+        buttonGroup.append("text")
+            .text(text)
+            .attr("x", buttonX + (buttonWidth / 2)) // Horizontally center the text
+            .attr("y", y)
+            .attr("text-anchor", "middle")
+            .attr("dominant-baseline", "middle") // Vertically center the text
+            .style("font-size", buttonFontSize)
+            .style("font-weight", "500")
+            .attr("fill", "#555") // Slightly darker text for better contrast
+            .style("user-select", "none");
+
+        // Hover effect
+        buttonGroup
+            .on("mouseenter", () => buttonRect.attr("fill", "#dcdcdc"))
+            .on("mouseleave", () => buttonRect.attr("fill", "#e9e9e9"));
+
+        // Return the new y-coordinate for the next element
+        return y + buttonHeight + blockListSpacing;
     }
 
     /*ブロックの画像の描画***********************************************************************************************************************************************************************************************************************************************************************************************************************/
