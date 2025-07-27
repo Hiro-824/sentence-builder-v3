@@ -128,7 +128,11 @@ export interface NegativeModalConfig extends ModalConfig {
 export interface WhSentenceConfig {
     id: string;
     whPhraseBlock: Block;
+    adverbial: boolean;
+    nonSubjectGap?: FeatureStructure;
+    subjectGap?: FeatureStructure;
     expectedWhFeatures: FeatureStructure;
+    expectedWhFeaturesAdverbial?: FeatureStructure;
     color?: string;
 }
 
@@ -1664,7 +1668,76 @@ export class Generator {
     }
 
     createWhSentenceBlock(config: WhSentenceConfig): Block {
-        const { id, whPhraseBlock, expectedWhFeatures, color } = config;
+        const { id, whPhraseBlock, expectedWhFeatures, expectedWhFeaturesAdverbial, color } = config;
+
+        const whCategories: Phrase[] = [];
+
+        if (config.nonSubjectGap) {
+            whCategories.push({
+                head: { type: "sentence", finite: true, question: true, inverted: true, wh: true },
+                left: [{ head: expectedWhFeatures }],
+                right: [{
+                    head: { type: "sentence", inverted: true, wh: false },
+                    gaps: [{ head: config.nonSubjectGap }]
+                }],
+                translationTemplates: {
+                    default: [
+                        {
+                            path: ["right", 0],
+                            key: "default",
+                            filler: ["left", 0],
+                        },
+                    ]
+                }
+            })
+        }
+
+        if (config.subjectGap) {
+            whCategories.push({
+                head: { type: "sentence", finite: true, question: true, inverted: false, wh: true },
+                left: [{ head: expectedWhFeatures }],
+                right: [{
+                    head: { type: "sentence", inverted: false, wh: false },
+                    gaps: [{ head: config.subjectGap }]
+                }],
+                translationTemplates: {
+                    default: [
+                        {
+                            path: ["right", 0],
+                            key: "default",
+                        },
+                        "のは",
+                        {
+                            path: ["left", 0],
+                            key: "default",
+                        },
+                        "か？"
+                    ]
+                }
+            })
+        }
+
+        if (config.adverbial) {
+            whCategories.push({
+                head: { type: "sentence", finite: true, question: true, inverted: true, wh: true },
+                left: [{ head: expectedWhFeaturesAdverbial ?? expectedWhFeatures }],
+                right: [{
+                    head: { type: "sentence", inverted: true, wh: false },
+                }],
+                translationTemplates: {
+                    default: [
+                        {
+                            path: ["left", 0],
+                            key: "default",
+                        },
+                        {
+                            path: ["right", 0],
+                            key: "default",
+                        },
+                    ]
+                }
+            });
+        }
 
         return {
             id: id,
@@ -1672,52 +1745,7 @@ export class Generator {
             y: 0,
             words: [{
                 token: "",
-                categories: [
-                    // Category 1: For non-subject wh-questions (e.g., "What did you see?")
-                    // This requires an inverted sentence as a complement.
-                    {
-                        head: { type: "sentence", finite: true, question: true, inverted: true, wh: true },
-                        left: [{ head: expectedWhFeatures }],
-                        right: [{
-                            head: { type: "sentence", inverted: true, wh: false },
-                            gaps: [{ head: { type: { type: "nominal", isDet: true }, isSubject: false, isPossessor: false } }]
-                        }],
-                        translationTemplates: {
-                            default: [
-                                {
-                                    path: ["right", 0],
-                                    key: "default",
-                                    filler: ["left", 0],
-                                },
-                            ]
-                        }
-                    },
-                    // Category 2: For subject wh-questions (e.g., "What happened?")
-                    // This requires a non-inverted sentence with a subject gap.
-                    {
-                        head: { type: "sentence", finite: true, question: true, inverted: false, wh: true },
-                        left: [{ head: expectedWhFeatures }],
-                        right: [{
-                            head: { type: "sentence", inverted: false, wh: false },
-                            gaps: [{ head: { type: { type: "nominal", isDet: true }, isSubject: true, agr: { type: "3sing" } } }]
-                        }],
-                        translationTemplates: {
-                            default: [
-                                {
-                                    path: ["right", 0],
-                                    key: "default",
-                                    //filler: ["left", 0],
-                                },
-                                "のは",
-                                {
-                                    path: ["left", 0],
-                                    key: "default",
-                                },
-                                "か？"
-                            ]
-                        }
-                    }
-                ]
+                categories: whCategories
             }],
             color: color || "mediumseagreen",
             children: [
