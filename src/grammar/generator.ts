@@ -1678,7 +1678,7 @@ export class Generator {
                     left: [{ head: expectedWhFeatures }],
                     right: [{
                         head: { type: "sentence", inverted: true, wh: false },
-                        gaps: [{ head: { type: { type: "nominal", isDet: true }, isSubject: false } }]
+                        gaps: [{ head: { type: { type: "nominal", isDet: true }, isSubject: false, isPossessor: false } }]
                     }],
                     translationTemplates: {
                         default: [
