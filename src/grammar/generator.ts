@@ -1664,8 +1664,7 @@ export class Generator {
     }
 
     createWhSentenceBlock(config: WhSentenceConfig): Block {
-        const { id, whPhraseBlock, expectedWhFeatures } = config;
-        const color = config.color || "mediumseagreen";
+        const { id, whPhraseBlock, expectedWhFeatures, color } = config;
 
         return {
             id: id,
@@ -1673,25 +1672,48 @@ export class Generator {
             y: 0,
             words: [{
                 token: "",
-                categories: [{
-                    head: { type: "sentence", finite: true, question: true, inverted: true, wh: true },
-                    left: [{ head: expectedWhFeatures }],
-                    right: [{
-                        head: { type: "sentence", inverted: true, wh: false },
-                        gaps: [{ head: { type: { type: "nominal", isDet: true }, isSubject: false, isPossessor: false } }]
-                    }],
-                    translationTemplates: {
-                        default: [
-                            {
-                                path: ["right", 0],
-                                key: "default",
-                                filler: ["left", 0],
-                            },
-                        ]
+                categories: [
+                    // Category 1: For non-subject wh-questions (e.g., "What did you see?")
+                    // This requires an inverted sentence as a complement.
+                    {
+                        head: { type: "sentence", finite: true, question: true, inverted: true, wh: true },
+                        left: [{ head: expectedWhFeatures }],
+                        right: [{
+                            head: { type: "sentence", inverted: true, wh: false },
+                            gaps: [{ head: { type: { type: "nominal", isDet: true }, isSubject: false, isPossessor: false } }]
+                        }],
+                        translationTemplates: {
+                            default: [
+                                {
+                                    path: ["right", 0],
+                                    key: "default",
+                                    filler: ["left", 0],
+                                },
+                            ]
+                        }
+                    },
+                    // Category 2: For subject wh-questions (e.g., "What happened?")
+                    // This requires a non-inverted sentence with a subject gap.
+                    {
+                        head: { type: "sentence", finite: true, question: true, inverted: false, wh: true },
+                        left: [{ head: expectedWhFeatures }],
+                        right: [{
+                            head: { type: "sentence", inverted: false, wh: false },
+                            gaps: [{ head: { type: { type: "nominal", isDet: true }, isSubject: true } }]
+                        }],
+                        translationTemplates: {
+                            default: [
+                                {
+                                    path: ["right", 0],
+                                    key: "default",
+                                    filler: ["left", 0],
+                                },
+                            ]
+                        }
                     }
-                }]
+                ]
             }],
-            color: color,
+            color: color || "mediumseagreen",
             children: [
                 {
                     id: "interrogative-complement",
