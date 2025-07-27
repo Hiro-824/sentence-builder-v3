@@ -354,15 +354,18 @@ export class Renderer {
     }
 
     renderSidebarButton(y, text, onClickCallback) {
-        const buttonWidth = this.calculateSideBarWidth();
+        const buttonWidth = this.calculateSideBarWidth() - sidebarPadding.left * 4;
         const buttonHeight = 80;
         const buttonCornerRadius = 0;
         const buttonFontSize = "24pt";
-        const buttonX = -sidebarPadding.left * 2;
+        const buttonX = 0;
 
         const buttonGroup = this.blockBoard.append("g")
             .style("cursor", "pointer")
-            .on("click", onClickCallback);
+            .on("pointerdown", (event) => {
+                event.stopPropagation();
+                onClickCallback();
+            });
 
         // Button background rectangle
         const buttonRect = buttonGroup.append("rect")
