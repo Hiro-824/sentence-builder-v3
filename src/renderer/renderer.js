@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Converter } from "@/grammar/converter";
 import { Grammar } from "@/grammar/grammar";
-import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding, resolvedGapRadius, initialVisibleCount } from "./const.js";
+import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding, resolvedGapRadius, initialVisibleCount, visiblilityIncrement } from "./const.js";
 import * as d3 from "d3";
 
 export class Renderer {
@@ -15,7 +15,7 @@ export class Renderer {
         });
         this.categoryState = {}; // New property
         Object.keys(this.blockList).forEach(groupName => {
-            this.categoryState[groupName] = { isCollapsed: false }; // Default to expanded
+            this.categoryState[groupName] = { isCollapsed: false, displayCount: initialVisibleCount };
         });
         this.svg = svg;
         this.sideBarScrollExtent = 0;
@@ -198,9 +198,28 @@ export class Renderer {
             y += 40;
 
             if (!isCollapsed) {
-                blockArray.forEach((block) => {
+                const blocksToRender = blockArray.slice(0, this.categoryState[groupName].displayCount);
+                blocksToRender.forEach((block) => {
                     y += blockListSpacing + this.renderSideBarBlock(block, this.generateRandomId(), y);
                 });
+            
+                if (blockArray.length > this.categoryState[groupName].displayCount) {
+                    y += blockListSpacing;
+                    this.blockBoard.append("text")
+                        .text("...see more")
+                        .attr("x", 20)
+                        .attr("y", y)
+                        .attr('font-size', `${blockListFontSize * 0.9}pt`)
+                        .style('font-style', 'italic')
+                        .style('cursor', 'pointer')
+                        .attr('fill', 'gray')
+                        .on("click", () => {
+                            // Show all blocks on click
+                            this.categoryState[groupName].displayCount += visiblilityIncrement;
+                            this.renderSideBar();
+                        });
+                    y += 20;
+                }
             }
 
             y += sidebarPadding.bottom;
