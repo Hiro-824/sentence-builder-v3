@@ -169,8 +169,8 @@ export class Renderer {
     }
 
     renderSideBarContent() {
-        this.sidebarContent = this.sidebar.append("g").attr("transform", `translate(${sidebarPadding.left}, 0)`)
-        this.blockBoard = this.sidebarContent.append("g");
+        this.sidebarContent = this.sidebar.append("g");
+        this.blockBoard = this.sidebarContent.append("g").attr("transform", `translate(${sidebarPadding.left * 2}, 0)`);
         let y = sidebarPadding.top;
         Object.entries(this.blockList).forEach(([groupName, blockArray]) => {
             const isCollapsed = this.categoryState[groupName].isCollapsed;
@@ -316,13 +316,13 @@ export class Renderer {
         const zoomExtent = d3.zoomTransform(this.grid.node()).k;
         this.sideBarScrollExtent = Math.max(-(this.sideBarContentHeight * zoomExtent - this.viewportHeight), this.sideBarScrollExtent);
         this.sideBarScrollExtent = Math.min(0, this.sideBarScrollExtent);
-        if (this.blockBoard) {
+        if (this.sidebarContent) {
             // Adjust scroll extent based on zoom change
             if (this.previousZoomExtent) {
                 const zoomRatio = zoomExtent / this.previousZoomExtent;
                 this.sideBarScrollExtent *= zoomRatio;
             }
-            this.blockBoard.attr("transform", `translate(0, ${this.sideBarScrollExtent}), scale(${zoomExtent})`);
+            this.sidebarContent.attr("transform", `translate(0, ${this.sideBarScrollExtent}), scale(${zoomExtent})`);
         }
         // Update sidebar width when zooming
         const newWidth = this.calculateSideBarWidth() * zoomExtent;
@@ -355,8 +355,8 @@ export class Renderer {
 
     renderSidebarButton(y, text, onClickCallback) {
         const buttonWidth = this.calculateSideBarWidth() - sidebarPadding.left * 4;
-        const buttonHeight = 80;
-        const buttonCornerRadius = 0;
+        const buttonHeight = 56;
+        const buttonCornerRadius = 28;
         const buttonFontSize = "24pt";
         const buttonX = 0;
 
