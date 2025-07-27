@@ -176,10 +176,17 @@ export class Renderer {
             const isCollapsed = this.categoryState[groupName].isCollapsed;
             const categoryHeader = this.blockBoard.append("g")
                 .style("cursor", "pointer")
-                .on("click", () => {
+                .on("pointerdown", () => {
                     this.categoryState[groupName].isCollapsed = !this.categoryState[groupName].isCollapsed;
                     this.renderSideBar();
                 });
+
+            categoryHeader.append("rect")
+                .attr("x", 0)
+                .attr("y", y - blockListFontSize * 2)
+                .attr("width", this.calculateSideBarWidth() - sidebarPadding.left * 2)
+                .attr("height", blockListFontSize * 4)
+                .attr("fill", "transparent");
 
             categoryHeader.append("text")
                 .text(isCollapsed ? "►" : "▼")
