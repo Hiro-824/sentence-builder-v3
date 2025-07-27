@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Converter } from "@/grammar/converter";
 import { Grammar } from "@/grammar/grammar";
-import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding, resolvedGapRadius } from "./const.js";
+import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding, resolvedGapRadius, initialVisibleCount } from "./const.js";
 import * as d3 from "d3";
 
 export class Renderer {
@@ -12,6 +12,10 @@ export class Renderer {
         this.converter = new Converter;
         Object.keys(this.blockList).forEach(groupName => {
             this.blockList[groupName] = this.blockList[groupName].map(block => this.converter.formatBlock(block));
+        });
+        this.categoryState = {}; // New property
+        Object.keys(this.blockList).forEach(groupName => {
+            this.categoryState[groupName] = { isCollapsed: false }; // Default to expanded
         });
         this.svg = svg;
         this.sideBarScrollExtent = 0;
@@ -129,8 +133,8 @@ export class Renderer {
     /*サイドバーの描画***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
     renderSideBar() {
-        // Clear existing sidebar content
-        d3.select("#sidebar").selectAll("*").remove();
+        // Remove the entire sidebar group
+        d3.select("#sidebar").remove();
 
         const width = this.calculateSideBarWidth();
         const height = this.viewportHeight;
@@ -168,20 +172,36 @@ export class Renderer {
         this.sidebarContent = this.sidebar.append("g").attr("transform", `translate(${sidebarPadding.left}, 0)`)
         this.blockBoard = this.sidebarContent.append("g");
         let y = sidebarPadding.top;
-        Object.entries(this.blockList).forEach(([groupName, blockArray], groupIndex) => {
-            this.blockBoard.append("text")
+        Object.entries(this.blockList).forEach(([groupName, blockArray]) => {
+            const isCollapsed = this.categoryState[groupName].isCollapsed;
+            const categoryHeader = this.blockBoard.append("g")
+                .style("cursor", "pointer")
+                .on("click", () => {
+                    this.categoryState[groupName].isCollapsed = !this.categoryState[groupName].isCollapsed;
+                    this.renderSideBar();
+                });
+
+            categoryHeader.append("text")
+                .text(isCollapsed ? "►" : "▼")
+                .attr("y", y)
+                .attr('font-size', `${blockListFontSize * 0.8}pt`)
+                .style('user-select', 'none');
+
+            categoryHeader.append("text")
                 .text(groupName)
+                .attr("x", 30) // Indent text to make room for triangle
                 .attr("y", y)
                 .attr('font-size', `${blockListFontSize}pt`)
                 .style('user-select', 'none')
-                .style("font-weight", "bold")
-                .style("margin-bottom", "0.5rem");
+                .style("font-weight", "bold");
 
             y += 40;
 
-            blockArray.forEach((block) => {
-                y += blockListSpacing + this.renderSideBarBlock(block, this.generateRandomId(), y);
-            });
+            if (!isCollapsed) {
+                blockArray.forEach((block) => {
+                    y += blockListSpacing + this.renderSideBarBlock(block, this.generateRandomId(), y);
+                });
+            }
 
             y += sidebarPadding.bottom;
         });

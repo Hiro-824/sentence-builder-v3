@@ -15,3 +15,5 @@ export const sidebarPadding = { top: 80, bottom: 80, right: 80, left: 8 };
 export const blockListSpacing = 16;
 export const blockListFontSize = 24;
 export const scrollMomentumExtent = 20;
+export const initialVisibleCount = 5;
+const visiblilityIncrement = 5;
