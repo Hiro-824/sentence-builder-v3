@@ -46,7 +46,15 @@ export const whatPronounFeatures: FeatureStructure = { type: "interrogative", no
 export const blockWhat: Block = {
     id: "what_pronoun",
     x: 0, y: 0, isRound: true, undraggable: true,
-    words: [{ token: "", categories: [{ head: whatPronounFeatures }] }],
+    words: [{
+        token: "", categories: [
+            {
+                head: whatPronounFeatures,
+                translationTemplates: {
+                    default: ["何"]
+                }
+            }]
+    }],
     color: "dodgerblue",
     children: [{ id: "head", hidden: false, type: "text", content: "what" }]
 };
@@ -55,7 +63,15 @@ export const whatDeterminerFeatures: FeatureStructure = { type: "interrogative",
 export const blockWhatDeterminer: Block = {
     id: "what_determiner",
     x: 0, y: 0, isRound: true, undraggable: true,
-    words: [{ token: "", categories: [{ head: whatDeterminerFeatures, right: [{ head: { type: noun } }] }] }],
+    words: [{
+        token: "", categories: [{
+            head: whatDeterminerFeatures,
+            right: [{ head: { type: noun } }],
+            translationTemplates: {
+                default: ["何の", { path: ["right", 0], key: "default" }]
+            }
+        }]
+    }],
     color: "dodgerblue",
     children: [
         { id: "head", hidden: false, type: "text", content: "what" },
@@ -67,7 +83,15 @@ export const howManyFeatures: FeatureStructure = { type: "interrogative", nomina
 export const blockHowMany: Block = {
     id: "how_many",
     x: 0, y: 0, isRound: true, undraggable: true,
-    words: [{ token: "", categories: [{ head: howManyFeatures, right: [{ head: { type: noun, agr: { type: "non-3sing", num: "pl" } } }] }] }],
+    words: [{
+        token: "", categories: [{
+            head: howManyFeatures,
+            right: [{ head: { type: noun, agr: { type: "non-3sing", num: "pl" } } }],
+            translationTemplates: {
+                default: ["いくつの", { path: ["right", 0], key: "default" }]
+            }
+        }],
+    }],
     color: "dodgerblue",
     children: [
         { id: "head", hidden: false, type: "text", content: "how many" },

@@ -159,20 +159,43 @@ export class Grammar {
                     if (translation && translation[element.key]) {
                         const subTemplate = translation[element.key];
 
-                        const subResult = Array.isArray(subTemplate)
+                        let subResult = Array.isArray(subTemplate)
                             ? this.translate(subTemplate, subPhrase as Phrase)
                             : String(subTemplate);
 
                         const unresolvedRegex = /\[\[UNRESOLVED:[^:]*:[^:]*:id=(inst_[a-zA-Z0-9]*)\]\]/g;
-                        let match;
-                        while ((match = unresolvedRegex.exec(subResult)) !== null) {
-                            const gapId = match[1]; // match[1] is the captured group for the ID.
-                            if(phrase.resolvedGapIds && phrase.resolvedGapIds.includes(gapId)) {
-                                console.log(`[Grammar.translate] Detected resolved child gap with ID: ${gapId}`);
+                        const allMatches = [...subResult.matchAll(unresolvedRegex)];
+
+                        for (const currentMatch of allMatches) {
+                            const fullMatchString = currentMatch[0];
+                            const gapId = currentMatch[1];
+
+                            if (phrase.resolvedGapIds && phrase.resolvedGapIds.includes(gapId)) {
+                                console.log(`[Grammar.translate] Detected RESOLVED child gap with ID: ${gapId}`);
+
+                                if (element.filler) {
+                                    const fillerPhrase = resolveByPath(phrase, element.filler) as Phrase | undefined;
+                                    if (fillerPhrase?.translation?.['default']) {
+                                        const fillerTemplate = fillerPhrase.translation['default'];
+                                        const fillerTranslation = Array.isArray(fillerTemplate)
+                                            ? this.translate(fillerTemplate, fillerPhrase)
+                                            : String(fillerTemplate);
+                                        subResult = subResult.replace(fullMatchString, fillerTranslation);
+                                    } else {
+                                        subResult = subResult.replace(fullMatchString, "");
+                                    }
+                                } else {
+                                    subResult = subResult.replace(fullMatchString, "");
+                                }
                             }
                         }
 
-                        return particle ? `${subResult} ${particle}` : subResult;
+                        const trimmedResult = subResult.trim();
+                        if (trimmedResult === "") {
+                            return "";
+                        }
+
+                        return particle ? `${trimmedResult} ${particle}` : trimmedResult;
                     }
                 }
                 const pathStr = element.path?.join(".") ?? "";

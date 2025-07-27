@@ -1685,6 +1685,7 @@ export class Generator {
                             {
                                 path: ["right", 0],
                                 key: "default",
+                                filler: ["left", 0],
                             },
                         ]
                     }
