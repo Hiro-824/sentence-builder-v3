@@ -744,7 +744,7 @@ export class Generator {
             head: head,
             left: [left],
             right: [{
-                head: { type: { type: "nominal", isDet: true }, case: "acc" }
+                head: { type: { type: "nominal", isDet: true }, case: "acc", isSubject: false }
             }],
             translationTemplates: {
                 default: [
