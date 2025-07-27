@@ -166,7 +166,17 @@ export class Grammar {
                     }
                 }
                 const pathStr = element.path?.join(".") ?? "";
-                return `[[UNRESOLVED:${pathStr}:${element.key}]]` + (particle ? ` ${particle}` : "");
+                
+                let unresolvedString = `[[UNRESOLVED:${pathStr}:${element.key}`;
+                if (subPhrase && typeof subPhrase === 'object' && 'head' in subPhrase) {
+                    const head = (subPhrase as Phrase).head;
+                    if (head && typeof head === 'object' && 'instanceId' in head && head.instanceId) {
+                        unresolvedString += `:id=${head.instanceId}`; 
+                    }
+                }
+                unresolvedString += "]]";
+                
+                return unresolvedString + (particle ? ` ${particle}` : "");
             } else {
                 return "[[UNRESOLVED:INVALID_ELEMENT]]";
             }
