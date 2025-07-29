@@ -184,7 +184,7 @@ export class Renderer {
             categoryHeader.append("rect")
                 .attr("x", 0)
                 .attr("y", y - blockListFontSize * 2)
-                .attr("width", this.calculateSideBarWidth() - sidebarPadding.left * 2)
+                .attr("width", this.calculateSideBarWidth()/2)
                 .attr("height", blockListFontSize * 4)
                 .attr("fill", "transparent");
 
