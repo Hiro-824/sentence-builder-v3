@@ -24,10 +24,29 @@ export class Renderer {
         // Update translation for all initial blocks
         this.blocks.forEach(block => this.updateBlockTranslation(block));
         this.render();
+        
+        // Add resize event listener to handle orientation changes
+        this.handleResize = this.handleResize.bind(this);
+        window.addEventListener('resize', this.handleResize);
     }
 
     generateRandomId() {
         return "b" + crypto.randomUUID().replaceAll(/-/g, '');
+    }
+
+    handleResize() {
+        // Update viewport height
+        this.viewportHeight = window.innerHeight;
+        
+        // Recalculate sidebar scroll bounds
+        this.setBlockBoardTransform();
+    }
+
+    // Cleanup method to remove event listeners
+    destroy() {
+        if (this.handleResize) {
+            window.removeEventListener('resize', this.handleResize);
+        }
     }
 
     /*レンダリング処理***********************************************************************************************************************************************************************************************************************************************************************************************************************/
@@ -41,7 +60,7 @@ export class Renderer {
 
     renderGrid() {
         const width = 1440;
-        const height = this.viewportHeight;
+        const height = window.innerHeight;
 
         this.grid = this.svg.append("g").attr("id", "grid");
 
@@ -137,7 +156,7 @@ export class Renderer {
         d3.select("#sidebar").remove();
 
         const width = this.calculateSideBarWidth();
-        const height = this.viewportHeight;
+        const height = window.innerHeight;
 
         this.sidebar = this.svg.append("g")
             .attr("id", "sidebar")
@@ -321,7 +340,8 @@ export class Renderer {
 
     setBlockBoardTransform() {
         const zoomExtent = d3.zoomTransform(this.grid.node()).k;
-        this.sideBarScrollExtent = Math.max(-(this.sideBarContentHeight * zoomExtent - this.viewportHeight), this.sideBarScrollExtent);
+        const currentViewportHeight = window.innerHeight;
+        this.sideBarScrollExtent = Math.max(-(this.sideBarContentHeight * zoomExtent - currentViewportHeight), this.sideBarScrollExtent);
         this.sideBarScrollExtent = Math.min(0, this.sideBarScrollExtent);
         if (this.sidebarContent) {
             // Adjust scroll extent based on zoom change
