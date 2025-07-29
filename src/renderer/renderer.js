@@ -40,6 +40,7 @@ export class Renderer {
         
         // Recalculate sidebar scroll bounds
         this.setBlockBoardTransform();
+        this.renderTrashCan(); 
     }
 
     // Cleanup method to remove event listeners
@@ -56,6 +57,75 @@ export class Renderer {
         this.renderSideBar();
         this.renderDragboard();
         this.renderBlocks();
+        this.renderTrashCan();
+    }
+    
+    renderTrashCan() {
+        // Remove existing trash can to prevent duplicates on resize
+        d3.select("#trash-can-group").remove();
+
+        const trashSize = 32;
+        const padding = 24;
+        const positionX = window.innerWidth - trashSize - padding * 2;
+        const positionY = window.innerHeight - trashSize - padding * 2;
+
+        const trashGroup = this.svg.append("g")
+            .attr("id", "trash-can-group")
+            .attr("transform", `translate(${positionX}, ${positionY})`);
+
+        // Add a larger, invisible circle for an easier drop target
+        trashGroup.append("circle")
+            .attr("id", "trash-can-droptarget")
+            .attr("cx", trashSize / 2)
+            .attr("cy", trashSize / 2)
+            .attr("r", trashSize)
+            .attr("fill", "#000000")
+            .attr("opacity", 0.1);
+
+        const trashIcon = trashGroup.append("g")
+            .attr("id", "trash-can-icon")
+            .attr("pointer-events", "none"); // Make the icon itself not catch mouse events
+
+        // Trash can body
+        trashIcon.append("rect")
+            .attr("x", trashSize * 0.1)
+            .attr("y", trashSize * 0.2)
+            .attr("width", trashSize * 0.8)
+            .attr("height", trashSize * 0.8)
+            .attr("rx", 4)
+            .attr("ry", 4)
+            .attr("fill", "none")
+            .attr("stroke", "#555555")
+            .attr("stroke-width", 2);
+
+        // Trash can lid
+        trashIcon.append("rect")
+            .attr("x", 0)
+            .attr("y", trashSize * 0.05)
+            .attr("width", trashSize)
+            .attr("height", trashSize * 0.15)
+            .attr("rx", 2)
+            .attr("ry", 2)
+            .attr("fill", "none")
+            .attr("stroke", "#555555")
+            .attr("stroke-width", 2);
+
+        // Lines on the can
+        trashIcon.append("line")
+            .attr("x1", trashSize * 0.35)
+            .attr("y1", trashSize * 0.3)
+            .attr("x2", trashSize * 0.35)
+            .attr("y2", trashSize * 0.9)
+            .attr("stroke", "#555555")
+            .attr("stroke-width", 2);
+            
+        trashIcon.append("line")
+            .attr("x1", trashSize * 0.65)
+            .attr("y1", trashSize * 0.3)
+            .attr("x2", trashSize * 0.65)
+            .attr("y2", trashSize * 0.9)
+            .attr("stroke", "#555555")
+            .attr("stroke-width", 2);
     }
 
     renderGrid() {
@@ -806,6 +876,37 @@ export class Renderer {
         event.sourceEvent.stopPropagation();
         this.grabbingCursor(d.id, false);
         if (!this.dragStarted) return;
+
+        const draggedBlockNode = d3.select(`#${d.id}`).node();
+        const trashTarget = d3.select("#trash-can-droptarget").node();
+        const sidebarNode = d3.select("#sidebar rect").node();
+        
+        if (draggedBlockNode && trashTarget && sidebarNode) {
+            const blockRect = draggedBlockNode.getBoundingClientRect();
+            const trashRect = trashTarget.getBoundingClientRect();
+            const checkIntersection = (rect1, rect2) => {
+                return !(
+                    rect1.right < rect2.left ||
+                    rect1.left > rect2.right ||
+                    rect1.bottom < rect2.top ||
+                    rect1.top > rect2.bottom
+                );
+            };
+            const droppedOnTrash = checkIntersection(blockRect, trashRect);
+
+            const { clientX, clientY } = event.sourceEvent;
+            const sidebarRect = sidebarNode.getBoundingClientRect();
+            const droppedOnSidebar = clientX >= sidebarRect.left && clientX <= sidebarRect.right &&
+                                   clientY >= sidebarRect.top && clientY <= sidebarRect.bottom;
+
+            if (droppedOnTrash || droppedOnSidebar) {
+                this.deleteBlock(d.id);
+                this.dragStarted = false;
+                this.draggedBlockId = null;
+                return;
+            }
+        }
+
         this.dragStarted = false;
         this.grabbingHighlight(d.id, false);
 
@@ -826,7 +927,9 @@ export class Renderer {
         }
 
         this.draggedBlockId = null;
-        this.updateBlock(d.id);
+        if (this.findBlock(d.id).foundBlock) {
+            this.updateBlock(d.id);
+        }
         this.deemphasizeAllPlaceholder();
     }
 
@@ -1006,6 +1109,20 @@ export class Renderer {
     }
 
     /*階層構造に関する処理***********************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+    deleteBlock(blockId) {
+        // Optional: Log this action for your user test
+        // this.logAction('delete_block', { blockId: blockId });
+
+        // First, update the data model by removing the block
+        this.removeBlock(blockId);
+
+        // Then, remove the block's SVG element from the DOM
+        const blockUI = d3.select(`#${blockId}`);
+        if (!blockUI.empty()) {
+            blockUI.remove();
+        }
+    }
 
     // 変更しない
     findBlock(id) {
