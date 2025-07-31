@@ -42,7 +42,7 @@ export const blockThat: Block = {
 }
 const generator = new Generator();
 
-export const whatPronounFeatures: FeatureStructure = { type: "interrogative", nominal: true, determiner: false, number: false };
+export const whatPronounFeatures: FeatureStructure = { type: "interrogative", nominal: true, determiner: false, number: false, agr: { type: "3sing" } };
 export const blockWhat: Block = {
     id: "what_pronoun",
     x: 0, y: 0, isRound: true, undraggable: true,

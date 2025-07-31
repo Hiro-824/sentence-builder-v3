@@ -1700,6 +1700,9 @@ export class Generator {
                     head: { type: "sentence", inverted: false, wh: false },
                     gaps: [{ head: config.subjectGap }]
                 }],
+                customUnification: [
+                    [["left", 0, "head", "agr"], ["right", 0, "gaps", 0, "head", "agr"]]
+                ],
                 translationTemplates: {
                     default: [
                         {
