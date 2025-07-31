@@ -59,7 +59,7 @@ export const blockWhat: Block = {
     children: [{ id: "head", hidden: false, type: "text", content: "what" }]
 };
 
-export const whatDeterminerFeatures: FeatureStructure = { type: "interrogative", nominal: false, determiner: true, number: false };
+export const whatDeterminerFeatures: FeatureStructure = { type: "interrogative", nominal: false, determiner: true, number: false, agr: {} };
 export const blockWhatDeterminer: Block = {
     id: "what_determiner",
     x: 0, y: 0, isRound: true, undraggable: true,
@@ -67,6 +67,9 @@ export const blockWhatDeterminer: Block = {
         token: "", categories: [{
             head: whatDeterminerFeatures,
             right: [{ head: { type: noun } }],
+            customUnification: [
+                [["head", "agr"], ["right", 0, "head", "agr"]]
+            ],
             translationTemplates: {
                 default: ["何の", { path: ["right", 0], key: "default" }]
             }
@@ -79,7 +82,7 @@ export const blockWhatDeterminer: Block = {
     ]
 };
 
-export const howManyFeatures: FeatureStructure = { type: "interrogative", nominal: false, determiner: true, number: true };
+export const howManyFeatures: FeatureStructure = { type: "interrogative", nominal: false, determiner: true, number: true, agr: {} };
 export const blockHowMany: Block = {
     id: "how_many",
     x: 0, y: 0, isRound: true, undraggable: true,
@@ -87,6 +90,9 @@ export const blockHowMany: Block = {
         token: "", categories: [{
             head: howManyFeatures,
             right: [{ head: { type: noun, agr: { type: "non-3sing", num: "pl" } } }],
+            customUnification: [
+                [["head", "agr"], ["right", 0, "head", "agr"]]
+            ],
             translationTemplates: {
                 default: ["いくつの", { path: ["right", 0], key: "default" }]
             }
@@ -99,7 +105,7 @@ export const blockHowMany: Block = {
     ]
 };
 
-export const whichPronounFeatures: FeatureStructure = { type: "interrogative", nominal: true, determiner: false, number: false };
+export const whichPronounFeatures: FeatureStructure = { type: "interrogative", nominal: true, determiner: false, number: false, agr: { type: "3sing" } };
 export const blockWhich: Block = {
     id: "which_pronoun",
     x: 0, y: 0, isRound: true, undraggable: true,
@@ -116,7 +122,7 @@ export const blockWhich: Block = {
     children: [{ id: "head", hidden: false, type: "text", content: "which" }]
 };
 
-export const whichDeterminerFeatures: FeatureStructure = { type: "interrogative", nominal: false, determiner: true, number: false };
+export const whichDeterminerFeatures: FeatureStructure = { type: "interrogative", nominal: false, determiner: true, number: false, agr: {} };
 export const blockWhichDeterminer: Block = {
     id: "which_determiner",
     x: 0, y: 0, isRound: true, undraggable: true,
@@ -124,6 +130,9 @@ export const blockWhichDeterminer: Block = {
         token: "", categories: [{
             head: whichDeterminerFeatures,
             right: [{ head: { type: noun } }],
+            customUnification: [
+                [["head", "agr"], ["right", 0, "head", "agr"]]
+            ],
             translationTemplates: {
                 default: ["どの", { path: ["right", 0], key: "default" }]
             }
@@ -136,7 +145,7 @@ export const blockWhichDeterminer: Block = {
     ]
 };
 
-export const whoPronounFeatures: FeatureStructure = { type: "interrogative", nominal: true, determiner: false, human: true };
+export const whoPronounFeatures: FeatureStructure = { type: "interrogative", nominal: true, determiner: false, human: true, agr: { type: "3sing" } };
 export const blockWho: Block = {
     id: "who_pronoun",
     x: 0, y: 0, isRound: true, undraggable: true,
@@ -154,7 +163,7 @@ export const blockWho: Block = {
     children: [{ id: "head", hidden: false, type: "text", content: "who" }]
 };
 
-export const whosePronounFeatures: FeatureStructure = { type: "interrogative", nominal: true, determiner: false, possessive: true };
+export const whosePronounFeatures: FeatureStructure = { type: "interrogative", nominal: true, determiner: false, possessive: true, agr: { type: "3sing" } };
 export const blockWhose: Block = {
     id: "whose_pronoun",
     x: 0, y: 0, isRound: true, undraggable: true,
@@ -171,7 +180,7 @@ export const blockWhose: Block = {
     children: [{ id: "head", hidden: false, type: "text", content: "whose" }]
 };
 
-export const whoseDeterminerFeatures: FeatureStructure = { type: "interrogative", nominal: false, determiner: true, possessive: true };
+export const whoseDeterminerFeatures: FeatureStructure = { type: "interrogative", nominal: false, determiner: true, possessive: true, agr: {} };
 export const blockWhoseDeterminer: Block = {
     id: "whose_determiner",
     x: 0, y: 0, isRound: true, undraggable: true,
@@ -179,6 +188,9 @@ export const blockWhoseDeterminer: Block = {
         token: "", categories: [{
             head: whoseDeterminerFeatures,
             right: [{ head: { type: noun } }],
+            customUnification: [
+                [["head", "agr"], ["right", 0, "head", "agr"]]
+            ],
             translationTemplates: {
                 default: ["誰の", { path: ["right", 0], key: "default" }]
             }
