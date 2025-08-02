@@ -108,25 +108,20 @@ export class Renderer {
             .attr("id", "trash-can-icon")
             .attr("pointer-events", "none");
 
-        // Create all trash can elements in one batch
-        const trashElements = [
-            // Trash can body
-            { type: 'rect', x: trashSize * 0.1, y: trashSize * 0.2, width: trashSize * 0.8, height: trashSize * 0.8, rx: 4, ry: 4, fill: 'none', stroke: '#666666', 'stroke-width': 1.5 },
-            // Trash can lid
-            { type: 'rect', x: 0, y: trashSize * 0.05, width: trashSize, height: trashSize * 0.15, rx: 2, ry: 2, fill: 'none', stroke: '#666666', 'stroke-width': 1.5 },
-            // Lines on the can
-            { type: 'line', x1: trashSize * 0.35, y1: trashSize * 0.3, x2: trashSize * 0.35, y2: trashSize * 0.9, stroke: '#666666', 'stroke-width': 1.5 },
-            { type: 'line', x1: trashSize * 0.65, y1: trashSize * 0.3, x2: trashSize * 0.65, y2: trashSize * 0.9, stroke: '#666666', 'stroke-width': 1.5 }
-        ];
+        // Scale the SVG path to fit the trash size
+        const scale = trashSize / 105.16; // Original SVG viewBox width is 105.16
+        const scaledHeight = 122.88 * scale; // Original SVG viewBox height is 122.88
+        
+        // Center the scaled SVG within the trash area
+        const offsetX = (trashSize - trashSize) / 2;
+        const offsetY = (trashSize - scaledHeight) / 2;
 
-        trashElements.forEach(element => {
-            const el = trashIcon.append(element.type);
-            Object.keys(element).forEach(key => {
-                if (key !== 'type') {
-                    el.attr(key, element[key]);
-                }
-            });
-        });
+        // Create the trash can using the provided SVG path
+        trashIcon.append("path")
+            .attr("d", "M11.17,37.16H94.65a8.4,8.4,0,0,1,2,.16,5.93,5.93,0,0,1,2.88,1.56,5.43,5.43,0,0,1,1.64,3.34,7.65,7.65,0,0,1-.06,1.44L94,117.31v0l0,.13,0,.28v0a7.06,7.06,0,0,1-.2.9v0l0,.06v0a5.89,5.89,0,0,1-5.47,4.07H17.32a6.17,6.17,0,0,1-1.25-.19,6.17,6.17,0,0,1-1.16-.48h0a6.18,6.18,0,0,1-3.08-4.88l-7-73.49a7.69,7.69,0,0,1-.06-1.66,5.37,5.37,0,0,1,1.63-3.29,6,6,0,0,1,3-1.58,8.94,8.94,0,0,1,1.79-.13ZM5.65,8.8H37.12V6h0a2.44,2.44,0,0,1,0-.27,6,6,0,0,1,1.76-4h0A6,6,0,0,1,43.09,0H62.46l.3,0a6,6,0,0,1,5.7,6V6h0V8.8h32l.39,0a4.7,4.7,0,0,1,4.31,4.43c0,.18,0,.32,0,.5v9.86a2.59,2.59,0,0,1-2.59,2.59H2.59A2.59,2.59,0,0,1,0,23.62V13.53H0a1.56,1.56,0,0,1,0-.31v0A4.72,4.72,0,0,1,3.88,8.88,10.4,10.4,0,0,1,5.65,8.8Zm42.1,52.7a4.77,4.77,0,0,1,9.49,0v37a4.77,4.77,0,0,1-9.49,0v-37Zm23.73-.2a4.58,4.58,0,0,1,5-4.06,4.47,4.47,0,0,1,4.51,4.46l-2,37a4.57,4.57,0,0,1-5,4.06,4.47,4.47,0,0,1-4.51-4.46l2-37ZM25,61.7a4.46,4.46,0,0,1,4.5-4.46,4.58,4.58,0,0,1,5,4.06l2,37a4.47,4.47,0,0,1-4.51,4.46,4.57,4.57,0,0,1-5-4.06l-2-37Z")
+            .attr("fill", "#666666")
+            .attr("fill-rule", "evenodd")
+            .attr("transform", `translate(${offsetX}, ${offsetY}) scale(${scale})`);
     }
 
     renderGrid() {
