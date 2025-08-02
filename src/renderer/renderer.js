@@ -638,7 +638,7 @@ export class Renderer {
             .attr('fill', 'white')
             .attr('font-size', `${labelFontSize}pt`)
             .attr('font-weight', 'bold')
-            .attr('dy', '-0.15em')
+            .attr('dy', '-0.24em')
             .style('user-select', 'none');
         return (box.width + horizontalPadding);
     }
@@ -672,7 +672,7 @@ export class Renderer {
             .attr('fill', 'white')
             .attr('font-size', `${labelFontSize}pt`)
             .attr('font-weight', 'bold')
-            .attr('dy', '-0.15em')
+            .attr('dy', '-0.24em')
             .style('user-select', 'none')
 
         dropdownGroup.append("text")
