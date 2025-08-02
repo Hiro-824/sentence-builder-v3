@@ -5,8 +5,12 @@ import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, pla
 import * as d3 from "d3";
 
 export class Renderer {
-    constructor(blocks, blockList, svg) {
-        this.blocks = blocks;
+    constructor(blocks, blockList, svg, topBarHeight = 0) {
+        const savedState = this.loadState();
+        this.blocks = savedState ? savedState : blocks;
+        this.topBarHeight = topBarHeight;
+        this.canvasHeight = window.innerHeight - this.topBarHeight;
+
         this.blockList = blockList;
         // Format each block in blockList using converter.formatBlock()
         this.converter = new Converter;
@@ -30,13 +34,34 @@ export class Renderer {
         window.addEventListener('resize', this.handleResize);
     }
 
+    saveState() {
+        try {
+            const serializedState = JSON.stringify(this.blocks);
+            localStorage.setItem('sentenceBuilderState', serializedState);
+        } catch (error) {
+            console.error("Could not save state to localStorage:", error);
+        }
+    }
+
+    loadState() {
+        try {
+            const savedState = localStorage.getItem('sentenceBuilderState');
+            return savedState ? JSON.parse(savedState) : null;
+        } catch (error) {
+            console.error("Could not load state from localStorage:", error);
+            // If there's an error (e.g., corrupted data), clear it.
+            localStorage.removeItem('sentenceBuilderState');
+            return null;
+        }
+    }
+
     generateRandomId() {
         return "b" + crypto.randomUUID().replaceAll(/-/g, '');
     }
 
     handleResize() {
         // Update viewport height
-        this.viewportHeight = window.innerHeight;
+        this.canvasHeight = window.innerHeight - this.topBarHeight;
         
         // Recalculate sidebar scroll bounds
         this.setBlockBoardTransform();
@@ -67,7 +92,7 @@ export class Renderer {
         const trashSize = 32;
         const padding = 24;
         const positionX = window.innerWidth - trashSize - padding * 2;
-        const positionY = window.innerHeight - trashSize - padding * 2;
+        const positionY = this.canvasHeight - trashSize - padding * 2;
 
         const trashGroup = this.svg.append("g")
             .attr("id", "trash-can-group")
@@ -410,18 +435,20 @@ export class Renderer {
 
     setBlockBoardTransform() {
         const zoomExtent = d3.zoomTransform(this.grid.node()).k;
-        const currentViewportHeight = window.innerHeight;
-        this.sideBarScrollExtent = Math.max(-(this.sideBarContentHeight * zoomExtent - currentViewportHeight), this.sideBarScrollExtent);
+        
+        const scrollableHeight = this.canvasHeight;
+        
+        this.sideBarScrollExtent = Math.max(-(this.sideBarContentHeight * zoomExtent - scrollableHeight), this.sideBarScrollExtent);
         this.sideBarScrollExtent = Math.min(0, this.sideBarScrollExtent);
+        
         if (this.sidebarContent) {
-            // Adjust scroll extent based on zoom change
             if (this.previousZoomExtent) {
                 const zoomRatio = zoomExtent / this.previousZoomExtent;
                 this.sideBarScrollExtent *= zoomRatio;
             }
             this.sidebarContent.attr("transform", `translate(0, ${this.sideBarScrollExtent}), scale(${zoomExtent})`);
         }
-        // Update sidebar width when zooming
+        
         const newWidth = this.calculateSideBarWidth() * zoomExtent;
         d3.select("#sidebar rect").attr("width", newWidth);
         this.previousZoomExtent = zoomExtent;
@@ -834,6 +861,7 @@ export class Renderer {
 
             if (fromSideBar) {
                 this.blocks.push(d);
+                this.saveState();
                 const blockRect = d3.select(`#${d.id}`).node().getBoundingClientRect();
                 const sideBarX = blockRect.left;
                 const sideBarY = blockRect.top;
@@ -925,6 +953,8 @@ export class Renderer {
             this.moveBlockToGrid(d.id);
             this.formatBlock(d.id);
         }
+
+        this.saveState();
 
         this.draggedBlockId = null;
         if (this.findBlock(d.id).foundBlock) {
@@ -1111,9 +1141,6 @@ export class Renderer {
     /*階層構造に関する処理***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
     deleteBlock(blockId) {
-        // Optional: Log this action for your user test
-        // this.logAction('delete_block', { blockId: blockId });
-
         // First, update the data model by removing the block
         this.removeBlock(blockId);
 
@@ -1122,6 +1149,8 @@ export class Renderer {
         if (!blockUI.empty()) {
             blockUI.remove();
         }
+
+        this.saveState();
     }
 
     // 変更しない
@@ -1393,6 +1422,8 @@ export class Renderer {
         });
         this.updateBlockInData(newBlock);
         this.updateBlock(block.id);
+
+        this.saveState();
     }
 
     /*ハイライト表示***********************************************************************************************************************************************************************************************************************************************************************************************************************/
