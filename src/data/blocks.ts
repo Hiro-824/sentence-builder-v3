@@ -67,7 +67,7 @@ export const blockTo: Block = {
 }
 
 export const blockList = {
-    "文・助動詞": [
+    "助動詞": [
         ...allAuxiliaryBlocks
     ],
     "動詞": [

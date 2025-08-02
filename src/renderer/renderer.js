@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Converter } from "@/grammar/converter";
 import { Grammar } from "@/grammar/grammar";
-import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding, resolvedGapRadius, initialVisibleCount, visiblilityIncrement } from "./const.js";
+// Import all the new navBar constants
+import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding, resolvedGapRadius, initialVisibleCount, visiblilityIncrement, navBarWidth, navBarPadding, navBarItemSpacing, navBarCircleRadius, navBarFontSize } from "./const.js";
 import * as d3 from "d3";
 
 export class Renderer {
@@ -24,10 +25,10 @@ export class Renderer {
         this.sideBarScrollExtent = 0;
         this.viewportHeight = window.innerHeight;
         this.grammar = new Grammar;
-        
+
         // Initialize cache
         this.cachedSidebarWidth = null;
-        
+
         // Update translation for all initial blocks
         this.blocks.forEach(block => this.updateBlockTranslation(block));
         this.render();
@@ -49,6 +50,13 @@ export class Renderer {
 
         // Clear cache on resize
         this.cachedSidebarWidth = null;
+
+        // Update nav bar background height
+        const navBarBackground = d3.select("#nav-bar-background");
+        if (!navBarBackground.empty()) {
+            navBarBackground
+                .attr("height", window.innerHeight);
+        }
 
         // Update sidebar background height
         const sidebarBackground = d3.select("#sidebar-background");
@@ -74,8 +82,9 @@ export class Renderer {
     render() {
         // Clear cache when re-rendering
         this.cachedSidebarWidth = null;
-        
+
         this.renderGrid();
+        this.renderNavBar(); // Render the new navigation bar first
         this.renderSideBar();
         this.renderDragboard();
         this.renderBlocks();
@@ -111,7 +120,7 @@ export class Renderer {
         // Scale the SVG path to fit the trash size
         const scale = trashSize / 105.16; // Original SVG viewBox width is 105.16
         const scaledHeight = 122.88 * scale; // Original SVG viewBox height is 122.88
-        
+
         // Center the scaled SVG within the trash area
         const offsetX = (trashSize - trashSize) / 2;
         const offsetY = (trashSize - scaledHeight) / 2;
@@ -217,6 +226,80 @@ export class Renderer {
 
     /*サイドバーの描画***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
+    renderNavBar() {
+        // Remove existing nav bar to prevent duplicates on re-render
+        d3.select("#nav-bar").remove();
+
+        const height = window.innerHeight;
+
+        const navBar = this.svg.append("g")
+            .attr("id", "nav-bar")
+            .attr("transform", "translate(0, 0)");
+
+        navBar.append("rect")
+            .attr("id", "nav-bar-background")
+            .attr("width", navBarWidth)
+            .attr("height", height)
+            .attr("fill", "#ffffff") // Changed to white for a cleaner look like the example
+            .attr("stroke", "#e0e0e0")
+            .attr("stroke-width", "1")
+            .on("mousedown", (event) => {
+                event.stopPropagation();
+            });
+
+        // --- START: New content rendering logic ---
+
+        // 1. Prepare data for the navigation items
+        const categoryData = Object.keys(this.blockList).map(categoryName => {
+            // Find the first block in the category to get a representative color
+            const firstBlock = this.blockList[categoryName][0];
+            return {
+                name: categoryName,
+                color: firstBlock ? firstBlock.color : '#cccccc' // Use a default color if category is empty
+            };
+        });
+
+        // 2. Use D3's data binding to create the UI elements
+        const navItems = navBar.append("g")
+            .attr("transform", `translate(0, ${navBarPadding.top})`)
+            .selectAll(".nav-item")
+            .data(categoryData)
+            .join("g")
+            .attr("class", "nav-item pointer") // Add 'pointer' class for cursor styling
+            .attr("transform", (d, i) => {
+                const itemHeight = (navBarCircleRadius * 2) + navBarFontSize + navBarItemSpacing;
+                const yPos = i * itemHeight;
+                return `translate(0, ${yPos})`;
+            });
+
+        // Add a background for selection state, similar to the example image
+        navItems.append("rect")
+            .attr("width", navBarWidth)
+            .attr("height", (navBarCircleRadius * 2) + navBarFontSize + navBarItemSpacing - (padding * 2))
+            .attr("y", -padding)
+            .attr("fill", "transparent") // Highlight the item
+            .attr("rx", 8)
+            .attr("ry", 8);
+
+        // 3. Render the colored circle for each item
+        navItems.append("circle")
+            .attr("cx", navBarWidth / 2)
+            .attr("cy", navBarCircleRadius)
+            .attr("r", navBarCircleRadius)
+            .attr("fill", d => d.color)
+
+        // 4. Render the text label for each item
+        navItems.append("text")
+            .text(d => d.name)
+            .attr("x", navBarWidth / 2)
+            .attr("y", (navBarCircleRadius * 2.4) + navBarFontSize)
+            .attr("text-anchor", "middle")
+            .style("font-size", `${navBarFontSize}px`)
+            .style("font-weight", "500")
+            .attr("fill", "#666666")
+            .style("user-select", "none");
+    }
+
     renderSideBar() {
         // Remove the entire sidebar group
         d3.select("#sidebar").remove();
@@ -226,7 +309,7 @@ export class Renderer {
 
         this.sidebar = this.svg.append("g")
             .attr("id", "sidebar")
-            .attr("transform", `translate(0, 0)`);
+            .attr("transform", `translate(${navBarWidth}, 0)`); // Shift sidebar to the right
 
         // Add the sidebar background
         this.sidebar.append("rect")
@@ -249,7 +332,7 @@ export class Renderer {
         if (this.cachedSidebarWidth) {
             return this.cachedSidebarWidth;
         }
-        
+
         let maxWidth = 0;
         Object.values(this.blockList).forEach(blockArray => {
             blockArray.forEach(block => {
@@ -265,12 +348,12 @@ export class Renderer {
     renderSideBarContent() {
         this.sidebarContent = this.sidebar.append("g");
         this.blockBoard = this.sidebarContent.append("g").attr("transform", `translate(${sidebarPadding.left * 2}, 0)`);
-        
+
         // Cache sidebar width calculation
         const sidebarWidth = this.calculateSideBarWidth();
         this.cachedSidebarWidth = sidebarWidth;
         const headerWidth = sidebarWidth / 2;
-        
+
         let y = sidebarPadding.top;
         Object.entries(this.blockList).forEach(([groupName, blockArray]) => {
             const isCollapsed = this.categoryState[groupName].isCollapsed;
@@ -914,10 +997,12 @@ export class Renderer {
         const draggedBlockNode = d3.select(`#${d.id}`).node();
         const trashTarget = d3.select("#trash-can-droptarget").node();
         const sidebarNode = d3.select("#sidebar rect").node();
+        const navBarNode = d3.select("#nav-bar-background").node(); // Get the new nav bar node
 
-        if (draggedBlockNode && trashTarget && sidebarNode) {
+        if (draggedBlockNode && trashTarget && sidebarNode && navBarNode) {
             const blockRect = draggedBlockNode.getBoundingClientRect();
             const trashRect = trashTarget.getBoundingClientRect();
+
             const checkIntersection = (rect1, rect2) => {
                 return !(
                     rect1.right < rect2.left ||
@@ -929,11 +1014,16 @@ export class Renderer {
             const droppedOnTrash = checkIntersection(blockRect, trashRect);
 
             const { clientX, clientY } = event.sourceEvent;
+
             const sidebarRect = sidebarNode.getBoundingClientRect();
             const droppedOnSidebar = clientX >= sidebarRect.left && clientX <= sidebarRect.right &&
                 clientY >= sidebarRect.top && clientY <= sidebarRect.bottom;
 
-            if (droppedOnTrash || droppedOnSidebar) {
+            const navBarRect = navBarNode.getBoundingClientRect();
+            const droppedOnNavBar = clientX >= navBarRect.left && clientX <= navBarRect.right &&
+                clientY >= navBarRect.top && clientY <= navBarRect.bottom;
+
+            if (droppedOnTrash || droppedOnSidebar || droppedOnNavBar) { // Add nav bar check
                 this.deleteBlock(d.id);
                 this.dragStarted = false;
                 this.draggedBlockId = null;
@@ -959,7 +1049,6 @@ export class Renderer {
             this.moveBlockToGrid(d.id);
             this.formatBlock(d.id);
         }
-
 
         this.draggedBlockId = null;
         if (this.findBlock(d.id).foundBlock) {

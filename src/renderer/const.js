@@ -17,3 +17,9 @@ export const blockListFontSize = 26;
 export const scrollMomentumExtent = 20;
 export const initialVisibleCount = 5;
 export const visiblilityIncrement = 5;
+
+export const navBarWidth = 56;
+export const navBarPadding = { top: 32, bottom: 8 };
+export const navBarItemSpacing = 24;
+export const navBarCircleRadius = 8;
+export const navBarFontSize = 10;
