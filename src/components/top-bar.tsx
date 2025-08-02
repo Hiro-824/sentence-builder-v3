@@ -6,9 +6,10 @@ import { User } from '@supabase/supabase-js';
 interface TopBarProps {
     user: User | null;
     onSignOut: () => void;
+    onShowAuthModal?: () => void;
 }
 
-const TopBar = ({ user, onSignOut }: TopBarProps) => {
+const TopBar = ({ user, onSignOut, onShowAuthModal }: TopBarProps) => {
     const [showUserMenu, setShowUserMenu] = useState(false);
     const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -46,8 +47,14 @@ const TopBar = ({ user, onSignOut }: TopBarProps) => {
     }, []);
 
     const handleUserIconClick = useCallback(() => {
-        setShowUserMenu(!showUserMenu);
-    }, [showUserMenu]);
+        if (user) {
+            // If user is authenticated, toggle the user menu
+            setShowUserMenu(!showUserMenu);
+        } else {
+            // If user is not authenticated, show the auth modal
+            onShowAuthModal?.();
+        }
+    }, [showUserMenu, user, onShowAuthModal]);
 
     const handleSignOut = useCallback(() => {
         onSignOut();
@@ -119,10 +126,28 @@ const TopBar = ({ user, onSignOut }: TopBarProps) => {
                         onClick={handleUserIconClick}
                         style={{ cursor: 'pointer' }}
                     >
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" fill="#999999"/>
-                            <path d="M12 14C7.58172 14 4 17.5817 4 22H20C20 17.5817 16.4183 14 12 14Z" fill="#999999"/>
-                        </svg>
+                        {user ? (
+                            <div style={{
+                                width: '30px',
+                                height: '30px',
+                                borderRadius: '50%',
+                                backgroundColor: '#007AFF',
+                                color: '#ffffff',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '16px',
+                                fontWeight: '600',
+                                fontFamily: 'system-ui, -apple-system, sans-serif'
+                            }}>
+                                {(user.email?.split('@')[0] || 'U').charAt(0).toUpperCase()}
+                            </div>
+                        ) : (
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" fill="#999999"/>
+                                <path d="M12 14C7.58172 14 4 17.5817 4 22H20C20 17.5817 16.4183 14 12 14Z" fill="#999999"/>
+                            </svg>
+                        )}
                     </div>
                     
                     {showUserMenu && user && (

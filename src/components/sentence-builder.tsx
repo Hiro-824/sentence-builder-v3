@@ -117,9 +117,17 @@ const SentenceBuilder = () => {
         setShowAuthModal(true);
     };
 
+    const handleShowAuthModal = () => {
+        setShowAuthModal(true);
+    };
+
     return (
         <>
-            <TopBar user={user} onSignOut={handleSignOut} />
+            <TopBar 
+                user={user} 
+                onSignOut={handleSignOut} 
+                onShowAuthModal={handleShowAuthModal}
+            />
 
             {isAuthenticated && (
                 <div
