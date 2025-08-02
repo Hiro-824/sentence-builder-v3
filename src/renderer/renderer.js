@@ -70,6 +70,13 @@ export class Renderer {
         // Clear cache on resize
         this.cachedSidebarWidth = null;
 
+        // Update sidebar background height
+        const sidebarBackground = d3.select("#sidebar-background");
+        if (!sidebarBackground.empty()) {
+            sidebarBackground
+                .attr("height", window.innerHeight);
+        }
+
         // Recalculate sidebar scroll bounds
         this.setBlockBoardTransform();
         this.renderTrashCan();
@@ -248,6 +255,7 @@ export class Renderer {
 
         // Add the sidebar background
         this.sidebar.append("rect")
+            .attr("id", "sidebar-background")
             .attr("width", width)
             .attr("height", height)
             .attr("fill", "#fafafa")
