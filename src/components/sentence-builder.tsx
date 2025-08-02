@@ -1,19 +1,57 @@
 "use client"
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import { Renderer } from "@/renderer/renderer";
 import { blockList } from "@/data/blocks";
 import { Block } from "@/models/block";
 import TopBar from "./top-bar";
+import AuthModal from "./auth-modal";
+import { createClient } from "@/utils/supabase/client";
+import { User } from "@supabase/supabase-js";
 
 const SentenceBuilder = () => {
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [showAuthModal, setShowAuthModal] = useState(false);
+    const [, setUser] = useState<User | null>(null);
 
     const svgContainerRef = useRef(null);
     const rendererRef = useRef<Renderer | null>(null);
+    const supabase = createClient();
 
     useEffect(() => {
-        if (rendererRef.current) return;
+        // Check authentication status on component mount
+        const checkAuth = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                setUser(user);
+                setIsAuthenticated(true);
+            } else {
+                setShowAuthModal(true);
+            }
+        };
+        checkAuth();
+
+        // Listen for auth changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+            async (event, session) => {
+                if (session?.user) {
+                    setUser(session.user);
+                    setIsAuthenticated(true);
+                    setShowAuthModal(false);
+                } else {
+                    setUser(null);
+                    setIsAuthenticated(false);
+                    setShowAuthModal(true);
+                }
+            }
+        );
+
+        return () => subscription.unsubscribe();
+    }, [supabase.auth]);
+
+    useEffect(() => {
+        if (!isAuthenticated || rendererRef.current) return;
 
         const blocks: Block[] = [];
 
@@ -41,19 +79,39 @@ const SentenceBuilder = () => {
             window.removeEventListener("resize", updateSvgSize);
             rendererRef.current?.destroy(); 
         };
-    }, []);
+    }, [isAuthenticated]);
+
+    const handleAuthSuccess = () => {
+        setIsAuthenticated(true);
+        setShowAuthModal(false);
+    };
+
+    const handleAuthModalClose = () => {
+        // Only allow closing if user is authenticated
+        if (isAuthenticated) {
+            setShowAuthModal(false);
+        }
+    };
 
     return (
         <>
             <TopBar />
 
-            <div
-                ref={svgContainerRef}
-                style={{
-                    position: 'fixed',
-                    top: '64px',
-                    left: 0,
-                }}
+            {isAuthenticated && (
+                <div
+                    ref={svgContainerRef}
+                    style={{
+                        position: 'fixed',
+                        top: '64px',
+                        left: 0,
+                    }}
+                />
+            )}
+
+            <AuthModal
+                isOpen={showAuthModal}
+                onClose={handleAuthModalClose}
+                onAuthSuccess={handleAuthSuccess}
             />
         </>
     );
