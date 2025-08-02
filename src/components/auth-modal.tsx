@@ -11,7 +11,7 @@ interface AuthModalProps {
 }
 
 const AuthModal = ({ isOpen, onAuthSuccess, onAnonymousAccess }: AuthModalProps) => {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -51,6 +51,8 @@ const AuthModal = ({ isOpen, onAuthSuccess, onAnonymousAccess }: AuthModalProps)
     setError("");
 
     try {
+      // Convert username to email format for Supabase (username@sentence-builder.app)
+      const email = `${username}@sentence-builder.app`;
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -114,7 +116,7 @@ const AuthModal = ({ isOpen, onAuthSuccess, onAnonymousAccess }: AuthModalProps)
 
         {user ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <p style={{ color: '#666666', margin: 0 }}>You are signed in as: {user.email}</p>
+            <p style={{ color: '#666666', margin: 0 }}>You are signed in as: {user.email?.split('@')[0] || 'User'}</p>
             <button
               onClick={handleSignOut}
               style={{
@@ -139,20 +141,20 @@ const AuthModal = ({ isOpen, onAuthSuccess, onAnonymousAccess }: AuthModalProps)
           <>
             <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
-                <label htmlFor="email" style={{
+                <label htmlFor="username" style={{
                   display: 'block',
                   fontSize: '14px',
                   fontWeight: '500',
                   color: '#374151',
                   marginBottom: '4px'
                 }}>
-                  Email
+                  Username
                 </label>
                 <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   required
                   style={{
                     width: '100%',
@@ -165,7 +167,7 @@ const AuthModal = ({ isOpen, onAuthSuccess, onAnonymousAccess }: AuthModalProps)
                   }}
                   onFocus={(e) => e.target.style.borderColor = '#007AFF'}
                   onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-                  placeholder="Enter your email"
+                  placeholder="Enter your username"
                 />
               </div>
               <div>

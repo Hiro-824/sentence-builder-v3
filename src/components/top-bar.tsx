@@ -113,7 +113,7 @@ const TopBar = ({ user, onSignOut }: TopBarProps) => {
                 >
                     <div 
                         className="top-bar-user-icon" 
-                        title={user ? `Signed in as ${user.email}` : "User Account"}
+                        title={user ? `Signed in as ${user.email?.split('@')[0] || 'User'}` : "User Account"}
                         onMouseEnter={(e) => handleUserIconHover(e, true)}
                         onMouseLeave={(e) => handleUserIconHover(e, false)}
                         onClick={handleUserIconClick}
@@ -153,7 +153,7 @@ const TopBar = ({ user, onSignOut }: TopBarProps) => {
                                 color: '#1f2937',
                                 wordBreak: 'break-all'
                             }}>
-                                {user.email}
+                                {user.email?.split('@')[0] || 'User'}
                             </div>
                             <div style={{
                                 padding: '8px 0',
