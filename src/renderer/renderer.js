@@ -105,7 +105,7 @@ export class Renderer {
             .attr("cy", trashSize / 2)
             .attr("r", trashSize)
             .attr("fill", "#000000")
-            .attr("opacity", 0.1);
+            .attr("opacity", 0.05);
 
         const trashIcon = trashGroup.append("g")
             .attr("id", "trash-can-icon")
@@ -120,8 +120,8 @@ export class Renderer {
             .attr("rx", 4)
             .attr("ry", 4)
             .attr("fill", "none")
-            .attr("stroke", "#555555")
-            .attr("stroke-width", 2);
+            .attr("stroke", "#666666")
+            .attr("stroke-width", 1.5);
 
         // Trash can lid
         trashIcon.append("rect")
@@ -132,8 +132,8 @@ export class Renderer {
             .attr("rx", 2)
             .attr("ry", 2)
             .attr("fill", "none")
-            .attr("stroke", "#555555")
-            .attr("stroke-width", 2);
+            .attr("stroke", "#666666")
+            .attr("stroke-width", 1.5);
 
         // Lines on the can
         trashIcon.append("line")
@@ -141,16 +141,16 @@ export class Renderer {
             .attr("y1", trashSize * 0.3)
             .attr("x2", trashSize * 0.35)
             .attr("y2", trashSize * 0.9)
-            .attr("stroke", "#555555")
-            .attr("stroke-width", 2);
+            .attr("stroke", "#666666")
+            .attr("stroke-width", 1.5);
 
         trashIcon.append("line")
             .attr("x1", trashSize * 0.65)
             .attr("y1", trashSize * 0.3)
             .attr("x2", trashSize * 0.65)
             .attr("y2", trashSize * 0.9)
-            .attr("stroke", "#555555")
-            .attr("stroke-width", 2);
+            .attr("stroke", "#666666")
+            .attr("stroke-width", 1.5);
     }
 
     renderGrid() {
@@ -181,7 +181,7 @@ export class Renderer {
 
         //Initial Zoom Level
         const initialTransform = d3.zoomIdentity.translate(0, 0).scale(0.5);
-        d3.select("svg").transition().duration(300).call(zoom.transform, initialTransform);
+        this.svg.transition().duration(300).call(zoom.transform, initialTransform);
     }
 
     renderDragboard() {
@@ -261,7 +261,9 @@ export class Renderer {
         this.sidebar.append("rect")
             .attr("width", width)
             .attr("height", height)
-            .attr("fill", "#f5f5f5")
+            .attr("fill", "#fafafa")
+            .attr("stroke", "#f0f0f0")
+            .attr("stroke-width", "1")
             .on("mousedown", (event) => {
                 event.stopPropagation();
             });
@@ -309,18 +311,22 @@ export class Renderer {
                 .attr("fill", "transparent");
 
             categoryHeader.append("text")
-                .text(isCollapsed ? "►" : "▼")
+                .text(isCollapsed ? "▶" : "▼")
                 .attr("y", y)
-                .attr('font-size', `${blockListFontSize * 0.8}pt`)
-                .style('user-select', 'none');
+                .attr('font-size', `${blockListFontSize * 0.7}pt`)
+                .attr('fill', '#666666')
+                .style('user-select', 'none')
+                .style('font-weight', '500');
 
             categoryHeader.append("text")
                 .text(groupName)
-                .attr("x", 30) // Indent text to make room for triangle
+                .attr("x", 32) // Indent text to make room for triangle
                 .attr("y", y)
-                .attr('font-size', `${blockListFontSize}pt`)
+                .attr('font-size', `${blockListFontSize * 0.9}pt`)
+                .attr('fill', '#1a1a1a')
                 .style('user-select', 'none')
-                .style("font-weight", "bold");
+                .style("font-weight", "600")
+                .style("letter-spacing", "-0.01em");
 
             y += 40;
 
@@ -505,7 +511,9 @@ export class Renderer {
             .attr("height", buttonHeight)
             .attr("rx", buttonCornerRadius)
             .attr("ry", buttonCornerRadius)
-            .attr("fill", "#e9e9e9");
+            .attr("fill", "#f0f0f0")
+            .attr("stroke", "#e0e0e0")
+            .attr("stroke-width", "1");
 
         // Button text label
         buttonGroup.append("text")
@@ -516,13 +524,19 @@ export class Renderer {
             .attr("dominant-baseline", "middle") // Vertically center the text
             .style("font-size", buttonFontSize)
             .style("font-weight", "500")
-            .attr("fill", "#555") // Slightly darker text for better contrast
+            .attr("fill", "#666666") // Slightly darker text for better contrast
             .style("user-select", "none");
 
         // Hover effect
         buttonGroup
-            .on("mouseenter", () => buttonRect.attr("fill", "#dcdcdc"))
-            .on("mouseleave", () => buttonRect.attr("fill", "#e9e9e9"));
+            .on("mouseenter", () => {
+                buttonRect.attr("fill", "#e8e8e8");
+                buttonRect.attr("stroke", "#d0d0d0");
+            })
+            .on("mouseleave", () => {
+                buttonRect.attr("fill", "#f0f0f0");
+                buttonRect.attr("stroke", "#e0e0e0");
+            });
 
         // Return the new y-coordinate for the next element
         return y + buttonHeight + blockListSpacing;

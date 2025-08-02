@@ -20,12 +20,12 @@ const SentenceBuilder = () => {
         const container = d3.select(svgContainerRef.current);
         container.selectAll("*").remove();
 
-        const topBarHeight = 60;
+        const topBarHeight = 64;
 
         const svg = container
             .append("svg")
             .attr("id", "svg")
-            .style("background-color", "#f9f9f9");
+            .style("background-color", "#ffffff");
 
         const updateSvgSize = () => {
             const width = window.innerWidth;
@@ -51,7 +51,7 @@ const SentenceBuilder = () => {
                 ref={svgContainerRef}
                 style={{
                     position: 'fixed',
-                    top: '60px',
+                    top: '64px',
                     left: 0,
                 }}
             />
