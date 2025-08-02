@@ -110,7 +110,7 @@ const AuthModal = ({ isOpen, onAuthSuccess, onAnonymousAccess }: AuthModalProps)
             color: '#1a1a1a',
             margin: 0
           }}>
-            {user ? "Welcome!" : "Sign In"}
+            {user ? "ようこそ！" : "サインイン"}
           </h2>
         </div>
 
@@ -148,7 +148,7 @@ const AuthModal = ({ isOpen, onAuthSuccess, onAnonymousAccess }: AuthModalProps)
                   color: '#374151',
                   marginBottom: '4px'
                 }}>
-                  Username
+                  ユーザー名
                 </label>
                 <input
                   id="username"
@@ -167,7 +167,7 @@ const AuthModal = ({ isOpen, onAuthSuccess, onAnonymousAccess }: AuthModalProps)
                   }}
                   onFocus={(e) => e.target.style.borderColor = '#007AFF'}
                   onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-                  placeholder="Enter your username"
+                  placeholder="ユーザー名を入力してください"
                 />
               </div>
               <div>
@@ -178,7 +178,7 @@ const AuthModal = ({ isOpen, onAuthSuccess, onAnonymousAccess }: AuthModalProps)
                   color: '#374151',
                   marginBottom: '4px'
                 }}>
-                  Password
+                  パスワード
                 </label>
                 <input
                   id="password"
@@ -197,7 +197,7 @@ const AuthModal = ({ isOpen, onAuthSuccess, onAnonymousAccess }: AuthModalProps)
                   }}
                   onFocus={(e) => e.target.style.borderColor = '#007AFF'}
                   onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-                  placeholder="Enter your password"
+                  placeholder="パスワードを入力してください"
                 />
               </div>
               {error && (
@@ -222,7 +222,7 @@ const AuthModal = ({ isOpen, onAuthSuccess, onAnonymousAccess }: AuthModalProps)
                 onMouseEnter={(e) => !loading && (e.currentTarget.style.backgroundColor = '#0056b3')}
                 onMouseLeave={(e) => !loading && (e.currentTarget.style.backgroundColor = '#007AFF')}
               >
-                {loading ? "Loading..." : "Sign In"}
+                {loading ? "読み込み中..." : "サインイン"}
               </button>
             </form>
             
@@ -241,7 +241,7 @@ const AuthModal = ({ isOpen, onAuthSuccess, onAnonymousAccess }: AuthModalProps)
                 fontSize: '14px',
                 color: '#6b7280'
               }}>
-                or
+                または
               </span>
               <div style={{
                 flex: 1,
@@ -273,7 +273,7 @@ const AuthModal = ({ isOpen, onAuthSuccess, onAnonymousAccess }: AuthModalProps)
                 e.currentTarget.style.borderColor = '#d1d5db';
               }}
             >
-              Continue without signing in
+              サインインせずに使う
             </button>
           </>
         )}

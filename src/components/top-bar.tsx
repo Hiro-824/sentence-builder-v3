@@ -87,14 +87,14 @@ const TopBar = ({ user, onSignOut, onShowAuthModal }: TopBarProps) => {
                     onMouseEnter={(e) => handleButtonHover(e, true)}
                     onMouseLeave={(e) => handleButtonHover(e, false)}
                 >
-                    Projects
+                    プロジェクト一覧
                 </button>
                 <button 
                     className="top-bar-button"
                     onMouseEnter={(e) => handleButtonHover(e, true)}
                     onMouseLeave={(e) => handleButtonHover(e, false)}
                 >
-                    Docs
+                    ドキュメント
                 </button>
             </div>
             <div className="top-bar-right">
@@ -112,7 +112,7 @@ const TopBar = ({ user, onSignOut, onShowAuthModal }: TopBarProps) => {
                         <path d="M17 21V13H7V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         <path d="M7 3V8H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                    Save
+                    保存する
                 </button>
                 <div 
                     ref={userMenuRef}
@@ -200,7 +200,7 @@ const TopBar = ({ user, onSignOut, onShowAuthModal }: TopBarProps) => {
                                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fef2f2'}
                                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                 >
-                                    Sign out
+                                    サインアウト
                                 </button>
                             </div>
                         </div>
