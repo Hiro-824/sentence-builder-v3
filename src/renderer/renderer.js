@@ -383,16 +383,12 @@ export class Renderer {
             const isCollapsed = this.categoryState[groupName].isCollapsed;
             const categoryHeader = this.blockBoard.append("g")
                 .style("cursor", "pointer")
-                // --- START: Modified Logic ---
                 // Add a unique ID and store its y-position in the datum
                 .attr("id", `category-header-${groupName}`)
                 .datum({ y: y })
-                // --- END: Modified Logic ---
                 .on("pointerdown", () => {
-                    // --- START: Modified Logic ---
                     // This now calls the same central function as the nav bar
                     this.scrollToCategory(groupName);
-                    // --- END: Modified Logic ---
                 });
 
             categoryHeader.append("rect")
