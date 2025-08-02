@@ -39,7 +39,7 @@ const TopBar = () => {
     return (
         <nav className="top-bar-nav">
             <div className="top-bar-left">
-                <span className="top-bar-logo">Sentence Builder</span>
+                <span className="top-bar-logo" style={{ userSelect: "none" }}>Sentence Builder</span>
                 <button 
                     className="top-bar-button"
                     onMouseEnter={(e) => handleButtonHover(e, true)}
