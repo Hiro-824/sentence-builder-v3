@@ -1,8 +1,17 @@
 "use client"
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useState, useRef, useEffect } from 'react';
+import { User } from '@supabase/supabase-js';
 
-const TopBar = () => {
+interface TopBarProps {
+    user: User | null;
+    onSignOut: () => void;
+}
+
+const TopBar = ({ user, onSignOut }: TopBarProps) => {
+    const [showUserMenu, setShowUserMenu] = useState(false);
+    const userMenuRef = useRef<HTMLDivElement>(null);
+
     const handleButtonHover = useCallback((e: React.MouseEvent<HTMLButtonElement>, isEnter: boolean) => {
         const target = e.currentTarget;
         if (isEnter) {
@@ -35,6 +44,32 @@ const TopBar = () => {
             target.style.borderColor = '#f0f0f0';
         }
     }, []);
+
+    const handleUserIconClick = useCallback(() => {
+        setShowUserMenu(!showUserMenu);
+    }, [showUserMenu]);
+
+    const handleSignOut = useCallback(() => {
+        onSignOut();
+        setShowUserMenu(false);
+    }, [onSignOut]);
+
+    // Close menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+                setShowUserMenu(false);
+            }
+        };
+
+        if (showUserMenu) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showUserMenu]);
 
     return (
         <nav className="top-bar-nav">
@@ -73,15 +108,78 @@ const TopBar = () => {
                     Save
                 </button>
                 <div 
-                    className="top-bar-user-icon" 
-                    title="User Account"
-                    onMouseEnter={(e) => handleUserIconHover(e, true)}
-                    onMouseLeave={(e) => handleUserIconHover(e, false)}
+                    ref={userMenuRef}
+                    style={{ position: 'relative' }}
                 >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" fill="#999999"/>
-                        <path d="M12 14C7.58172 14 4 17.5817 4 22H20C20 17.5817 16.4183 14 12 14Z" fill="#999999"/>
-                    </svg>
+                    <div 
+                        className="top-bar-user-icon" 
+                        title={user ? `Signed in as ${user.email}` : "User Account"}
+                        onMouseEnter={(e) => handleUserIconHover(e, true)}
+                        onMouseLeave={(e) => handleUserIconHover(e, false)}
+                        onClick={handleUserIconClick}
+                        style={{ cursor: 'pointer' }}
+                    >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" fill="#999999"/>
+                            <path d="M12 14C7.58172 14 4 17.5817 4 22H20C20 17.5817 16.4183 14 12 14Z" fill="#999999"/>
+                        </svg>
+                    </div>
+                    
+                    {showUserMenu && user && (
+                        <div style={{
+                            position: 'absolute',
+                            top: '100%',
+                            right: 0,
+                            marginTop: '8px',
+                            backgroundColor: '#ffffff',
+                            borderRadius: '8px',
+                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                            border: '1px solid #e5e7eb',
+                            minWidth: '200px',
+                            zIndex: 1000
+                        }}>
+                            <div style={{
+                                padding: '12px 16px',
+                                borderBottom: '1px solid #f3f4f6',
+                                fontSize: '14px',
+                                color: '#6b7280'
+                            }}>
+                                Signed in as
+                            </div>
+                            <div style={{
+                                padding: '8px 16px',
+                                fontSize: '14px',
+                                fontWeight: '500',
+                                color: '#1f2937',
+                                wordBreak: 'break-all'
+                            }}>
+                                {user.email}
+                            </div>
+                            <div style={{
+                                padding: '8px 0',
+                                borderTop: '1px solid #f3f4f6'
+                            }}>
+                                <button
+                                    onClick={handleSignOut}
+                                    style={{
+                                        width: '100%',
+                                        padding: '8px 16px',
+                                        backgroundColor: 'transparent',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        fontSize: '14px',
+                                        color: '#dc2626',
+                                        textAlign: 'left',
+                                        transition: 'background-color 0.2s ease'
+                                    }}
+                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fef2f2'}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                >
+                                    Sign out
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </nav>

@@ -13,7 +13,7 @@ import { User } from "@supabase/supabase-js";
 const SentenceBuilder = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [showAuthModal, setShowAuthModal] = useState(false);
-    const [, setUser] = useState<User | null>(null);
+    const [user, setUser] = useState<User | null>(null);
 
     const svgContainerRef = useRef(null);
     const rendererRef = useRef<Renderer | null>(null);
@@ -93,9 +93,16 @@ const SentenceBuilder = () => {
         }
     };
 
+    const handleSignOut = async () => {
+        await supabase.auth.signOut();
+        setUser(null);
+        setIsAuthenticated(false);
+        setShowAuthModal(true);
+    };
+
     return (
         <>
-            <TopBar />
+            <TopBar user={user} onSignOut={handleSignOut} />
 
             {isAuthenticated && (
                 <div
