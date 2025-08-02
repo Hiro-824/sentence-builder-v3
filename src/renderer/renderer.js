@@ -6,8 +6,7 @@ import * as d3 from "d3";
 
 export class Renderer {
     constructor(blocks, blockList, svg, topBarHeight = 0) {
-        const savedState = this.loadState();
-        this.blocks = savedState ? savedState : blocks;
+        this.blocks = blocks;
         this.topBarHeight = topBarHeight;
         this.canvasHeight = window.innerHeight - this.topBarHeight;
 
@@ -38,26 +37,7 @@ export class Renderer {
         window.addEventListener('resize', this.handleResize);
     }
 
-    saveState() {
-        try {
-            const serializedState = JSON.stringify(this.blocks);
-            localStorage.setItem('sentenceBuilderState', serializedState);
-        } catch (error) {
-            console.error("Could not save state to localStorage:", error);
-        }
-    }
 
-    loadState() {
-        try {
-            const savedState = localStorage.getItem('sentenceBuilderState');
-            return savedState ? JSON.parse(savedState) : null;
-        } catch (error) {
-            console.error("Could not load state from localStorage:", error);
-            // If there's an error (e.g., corrupted data), clear it.
-            localStorage.removeItem('sentenceBuilderState');
-            return null;
-        }
-    }
 
     generateRandomId() {
         return "b" + crypto.randomUUID().replaceAll(/-/g, '');
@@ -893,7 +873,6 @@ export class Renderer {
 
             if (fromSideBar) {
                 this.blocks.push(d);
-                this.saveState();
                 const blockRect = d3.select(`#${d.id}`).node().getBoundingClientRect();
                 const sideBarX = blockRect.left;
                 const sideBarY = blockRect.top;
@@ -986,7 +965,6 @@ export class Renderer {
             this.formatBlock(d.id);
         }
 
-        this.saveState();
 
         this.draggedBlockId = null;
         if (this.findBlock(d.id).foundBlock) {
@@ -1181,8 +1159,6 @@ export class Renderer {
         if (!blockUI.empty()) {
             blockUI.remove();
         }
-
-        this.saveState();
     }
 
     // 変更しない
@@ -1454,8 +1430,6 @@ export class Renderer {
         });
         this.updateBlockInData(newBlock);
         this.updateBlock(block.id);
-
-        this.saveState();
     }
 
     /*ハイライト表示***********************************************************************************************************************************************************************************************************************************************************************************************************************/
