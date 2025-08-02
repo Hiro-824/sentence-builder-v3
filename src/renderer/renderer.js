@@ -305,6 +305,8 @@ export class Renderer {
                     const wasOpen = !this.categoryState[groupName].isCollapsed;
                     Object.keys(this.categoryState).forEach(key => {
                         this.categoryState[key].isCollapsed = true;
+                        // Reset displayCount to initial value when collapsing
+                        this.categoryState[key].displayCount = initialVisibleCount;
                     });
                     if (!wasOpen) {
                         this.categoryState[groupName].isCollapsed = false;
