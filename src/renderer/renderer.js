@@ -23,8 +23,12 @@ export class Renderer {
         });
         this.svg = svg;
         this.sideBarScrollExtent = 0;
-        this.viewportHeight = window.innerHeight
+        this.viewportHeight = window.innerHeight;
         this.grammar = new Grammar;
+        
+        // Initialize cache
+        this.cachedSidebarWidth = null;
+        
         // Update translation for all initial blocks
         this.blocks.forEach(block => this.updateBlockTranslation(block));
         this.render();
@@ -63,9 +67,9 @@ export class Renderer {
         // Update viewport height
         this.canvasHeight = window.innerHeight - this.topBarHeight;
 
-        // Re-render sidebar to update its height
-        this.renderSideBar();
-        
+        // Clear cache on resize
+        this.cachedSidebarWidth = null;
+
         // Recalculate sidebar scroll bounds
         this.setBlockBoardTransform();
         this.renderTrashCan();
@@ -81,6 +85,9 @@ export class Renderer {
     /*レンダリング処理***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
     render() {
+        // Clear cache when re-rendering
+        this.cachedSidebarWidth = null;
+        
         this.renderGrid();
         this.renderSideBar();
         this.renderDragboard();
@@ -112,48 +119,27 @@ export class Renderer {
 
         const trashIcon = trashGroup.append("g")
             .attr("id", "trash-can-icon")
-            .attr("pointer-events", "none"); // Make the icon itself not catch mouse events
+            .attr("pointer-events", "none");
 
-        // Trash can body
-        trashIcon.append("rect")
-            .attr("x", trashSize * 0.1)
-            .attr("y", trashSize * 0.2)
-            .attr("width", trashSize * 0.8)
-            .attr("height", trashSize * 0.8)
-            .attr("rx", 4)
-            .attr("ry", 4)
-            .attr("fill", "none")
-            .attr("stroke", "#666666")
-            .attr("stroke-width", 1.5);
+        // Create all trash can elements in one batch
+        const trashElements = [
+            // Trash can body
+            { type: 'rect', x: trashSize * 0.1, y: trashSize * 0.2, width: trashSize * 0.8, height: trashSize * 0.8, rx: 4, ry: 4, fill: 'none', stroke: '#666666', 'stroke-width': 1.5 },
+            // Trash can lid
+            { type: 'rect', x: 0, y: trashSize * 0.05, width: trashSize, height: trashSize * 0.15, rx: 2, ry: 2, fill: 'none', stroke: '#666666', 'stroke-width': 1.5 },
+            // Lines on the can
+            { type: 'line', x1: trashSize * 0.35, y1: trashSize * 0.3, x2: trashSize * 0.35, y2: trashSize * 0.9, stroke: '#666666', 'stroke-width': 1.5 },
+            { type: 'line', x1: trashSize * 0.65, y1: trashSize * 0.3, x2: trashSize * 0.65, y2: trashSize * 0.9, stroke: '#666666', 'stroke-width': 1.5 }
+        ];
 
-        // Trash can lid
-        trashIcon.append("rect")
-            .attr("x", 0)
-            .attr("y", trashSize * 0.05)
-            .attr("width", trashSize)
-            .attr("height", trashSize * 0.15)
-            .attr("rx", 2)
-            .attr("ry", 2)
-            .attr("fill", "none")
-            .attr("stroke", "#666666")
-            .attr("stroke-width", 1.5);
-
-        // Lines on the can
-        trashIcon.append("line")
-            .attr("x1", trashSize * 0.35)
-            .attr("y1", trashSize * 0.3)
-            .attr("x2", trashSize * 0.35)
-            .attr("y2", trashSize * 0.9)
-            .attr("stroke", "#666666")
-            .attr("stroke-width", 1.5);
-
-        trashIcon.append("line")
-            .attr("x1", trashSize * 0.65)
-            .attr("y1", trashSize * 0.3)
-            .attr("x2", trashSize * 0.65)
-            .attr("y2", trashSize * 0.9)
-            .attr("stroke", "#666666")
-            .attr("stroke-width", 1.5);
+        trashElements.forEach(element => {
+            const el = trashIcon.append(element.type);
+            Object.keys(element).forEach(key => {
+                if (key !== 'type') {
+                    el.attr(key, element[key]);
+                }
+            });
+        });
     }
 
     renderGrid() {
@@ -276,6 +262,11 @@ export class Renderer {
     }
 
     calculateSideBarWidth() {
+        // Use cached value if available
+        if (this.cachedSidebarWidth) {
+            return this.cachedSidebarWidth;
+        }
+        
         let maxWidth = 0;
         Object.values(this.blockList).forEach(blockArray => {
             blockArray.forEach(block => {
@@ -284,12 +275,19 @@ export class Renderer {
             });
         });
         // Add padding for the sidebar
-        return maxWidth + sidebarPadding.right + sidebarPadding.left * 2;
+        this.cachedSidebarWidth = maxWidth + sidebarPadding.right + sidebarPadding.left * 2;
+        return this.cachedSidebarWidth;
     }
 
     renderSideBarContent() {
         this.sidebarContent = this.sidebar.append("g");
         this.blockBoard = this.sidebarContent.append("g").attr("transform", `translate(${sidebarPadding.left * 2}, 0)`);
+        
+        // Cache sidebar width calculation
+        const sidebarWidth = this.calculateSideBarWidth();
+        this.cachedSidebarWidth = sidebarWidth;
+        const headerWidth = sidebarWidth / 2;
+        
         let y = sidebarPadding.top;
         Object.entries(this.blockList).forEach(([groupName, blockArray]) => {
             const isCollapsed = this.categoryState[groupName].isCollapsed;
@@ -309,7 +307,7 @@ export class Renderer {
             categoryHeader.append("rect")
                 .attr("x", 0)
                 .attr("y", y - blockListFontSize * 2)
-                .attr("width", this.calculateSideBarWidth() / 2)
+                .attr("width", headerWidth)
                 .attr("height", blockListFontSize * 4)
                 .attr("fill", "transparent");
 
@@ -323,7 +321,7 @@ export class Renderer {
 
             categoryHeader.append("text")
                 .text(groupName)
-                .attr("x", 32) // Indent text to make room for triangle
+                .attr("x", 32)
                 .attr("y", y)
                 .attr('font-size', `${blockListFontSize * 0.9}pt`)
                 .attr('fill', '#1a1a1a')
@@ -343,7 +341,7 @@ export class Renderer {
                 const totalCount = blockArray.length;
 
                 if (totalCount > displayCount) {
-                    y += blockListSpacing; // Add some top margin
+                    y += blockListSpacing;
                     const seeMoreCallback = () => {
                         const currentCount = this.categoryState[groupName].displayCount;
                         this.categoryState[groupName].displayCount = currentCount + visiblilityIncrement;
@@ -493,7 +491,8 @@ export class Renderer {
     }
 
     renderSidebarButton(y, text, onClickCallback) {
-        const buttonWidth = this.calculateSideBarWidth() - sidebarPadding.left * 4;
+        // Cache button width calculation
+        const buttonWidth = this.cachedSidebarWidth ? this.cachedSidebarWidth - sidebarPadding.left * 4 : this.calculateSideBarWidth() - sidebarPadding.left * 4;
         const buttonHeight = 56;
         const buttonCornerRadius = 28;
         const buttonFontSize = "24pt";
@@ -682,7 +681,7 @@ export class Renderer {
             .attr('fill', 'white')
             .attr('font-size', `10pt`)
             .attr('font-weight', 'bold')
-            .attr('dy', '-0.15em')
+            .attr('dy', '-0.24em')
             .style('user-select', 'none');
 
         const optionHeight = dropdownHeight;
