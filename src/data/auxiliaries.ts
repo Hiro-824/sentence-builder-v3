@@ -19,7 +19,7 @@ export const blockSentence: Block = {
             },
             left: [{
                 head: {
-                    type: { type: "nominal" },
+                    type: { type: "nominal", isDet: true },
                     case: "nom"
                 }
             }],
