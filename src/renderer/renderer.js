@@ -19,7 +19,7 @@ export class Renderer {
         });
         this.categoryState = {}; // New property
         Object.keys(this.blockList).forEach(groupName => {
-            this.categoryState[groupName] = { isCollapsed: false, displayCount: initialVisibleCount };
+            this.categoryState[groupName] = { isCollapsed: true, displayCount: initialVisibleCount };
         });
         this.svg = svg;
         this.sideBarScrollExtent = 0;
@@ -28,7 +28,7 @@ export class Renderer {
         // Update translation for all initial blocks
         this.blocks.forEach(block => this.updateBlockTranslation(block));
         this.render();
-        
+
         // Add resize event listener to handle orientation changes
         this.handleResize = this.handleResize.bind(this);
         window.addEventListener('resize', this.handleResize);
@@ -62,10 +62,10 @@ export class Renderer {
     handleResize() {
         // Update viewport height
         this.canvasHeight = window.innerHeight - this.topBarHeight;
-        
+
         // Recalculate sidebar scroll bounds
         this.setBlockBoardTransform();
-        this.renderTrashCan(); 
+        this.renderTrashCan();
     }
 
     // Cleanup method to remove event listeners
@@ -84,7 +84,7 @@ export class Renderer {
         this.renderBlocks();
         this.renderTrashCan();
     }
-    
+
     renderTrashCan() {
         // Remove existing trash can to prevent duplicates on resize
         d3.select("#trash-can-group").remove();
@@ -143,7 +143,7 @@ export class Renderer {
             .attr("y2", trashSize * 0.9)
             .attr("stroke", "#555555")
             .attr("stroke-width", 2);
-            
+
         trashIcon.append("line")
             .attr("x1", trashSize * 0.65)
             .attr("y1", trashSize * 0.3)
@@ -291,14 +291,20 @@ export class Renderer {
             const categoryHeader = this.blockBoard.append("g")
                 .style("cursor", "pointer")
                 .on("pointerdown", () => {
-                    this.categoryState[groupName].isCollapsed = !this.categoryState[groupName].isCollapsed;
+                    const wasOpen = !this.categoryState[groupName].isCollapsed;
+                    Object.keys(this.categoryState).forEach(key => {
+                        this.categoryState[key].isCollapsed = true;
+                    });
+                    if (!wasOpen) {
+                        this.categoryState[groupName].isCollapsed = false;
+                    }
                     this.renderSideBar();
                 });
 
             categoryHeader.append("rect")
                 .attr("x", 0)
                 .attr("y", y - blockListFontSize * 2)
-                .attr("width", this.calculateSideBarWidth()/2)
+                .attr("width", this.calculateSideBarWidth() / 2)
                 .attr("height", blockListFontSize * 4)
                 .attr("fill", "transparent");
 
@@ -435,12 +441,12 @@ export class Renderer {
 
     setBlockBoardTransform() {
         const zoomExtent = d3.zoomTransform(this.grid.node()).k;
-        
+
         const scrollableHeight = this.canvasHeight;
-        
+
         this.sideBarScrollExtent = Math.max(-(this.sideBarContentHeight * zoomExtent - scrollableHeight), this.sideBarScrollExtent);
         this.sideBarScrollExtent = Math.min(0, this.sideBarScrollExtent);
-        
+
         if (this.sidebarContent) {
             if (this.previousZoomExtent) {
                 const zoomRatio = zoomExtent / this.previousZoomExtent;
@@ -448,7 +454,7 @@ export class Renderer {
             }
             this.sidebarContent.attr("transform", `translate(0, ${this.sideBarScrollExtent}), scale(${zoomExtent})`);
         }
-        
+
         const newWidth = this.calculateSideBarWidth() * zoomExtent;
         d3.select("#sidebar rect").attr("width", newWidth);
         this.previousZoomExtent = zoomExtent;
@@ -853,7 +859,7 @@ export class Renderer {
     dragStart(event, d, fromSideBar = false, sideBarId = undefined) {
         this.grabbingCursor(d.id, true);
         this.dragStarted = false;
-        this.svg.node().appendChild(this.dragboard.node()); 
+        this.svg.node().appendChild(this.dragboard.node());
     }
 
     dragging(event, d, fromSideBar = false) {
@@ -908,7 +914,7 @@ export class Renderer {
         const draggedBlockNode = d3.select(`#${d.id}`).node();
         const trashTarget = d3.select("#trash-can-droptarget").node();
         const sidebarNode = d3.select("#sidebar rect").node();
-        
+
         if (draggedBlockNode && trashTarget && sidebarNode) {
             const blockRect = draggedBlockNode.getBoundingClientRect();
             const trashRect = trashTarget.getBoundingClientRect();
@@ -925,7 +931,7 @@ export class Renderer {
             const { clientX, clientY } = event.sourceEvent;
             const sidebarRect = sidebarNode.getBoundingClientRect();
             const droppedOnSidebar = clientX >= sidebarRect.left && clientX <= sidebarRect.right &&
-                                   clientY >= sidebarRect.top && clientY <= sidebarRect.bottom;
+                clientY >= sidebarRect.top && clientY <= sidebarRect.bottom;
 
             if (droppedOnTrash || droppedOnSidebar) {
                 this.deleteBlock(d.id);
