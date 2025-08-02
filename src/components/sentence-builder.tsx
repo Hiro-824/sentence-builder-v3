@@ -86,11 +86,9 @@ const SentenceBuilder = () => {
         setShowAuthModal(false);
     };
 
-    const handleAuthModalClose = () => {
-        // Only allow closing if user is authenticated
-        if (isAuthenticated) {
-            setShowAuthModal(false);
-        }
+    const handleAnonymousAccess = () => {
+        setIsAuthenticated(true);
+        setShowAuthModal(false);
     };
 
     const handleSignOut = async () => {
@@ -117,8 +115,8 @@ const SentenceBuilder = () => {
 
             <AuthModal
                 isOpen={showAuthModal}
-                onClose={handleAuthModalClose}
                 onAuthSuccess={handleAuthSuccess}
+                onAnonymousAccess={handleAnonymousAccess}
             />
         </>
     );

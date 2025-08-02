@@ -6,11 +6,11 @@ import { User } from "@supabase/supabase-js";
 
 interface AuthModalProps {
   isOpen: boolean;
-  onClose: () => void;
   onAuthSuccess: () => void;
+  onAnonymousAccess: () => void;
 }
 
-const AuthModal = ({ isOpen, onClose, onAuthSuccess }: AuthModalProps) => {
+const AuthModal = ({ isOpen, onAuthSuccess, onAnonymousAccess }: AuthModalProps) => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -77,6 +77,10 @@ const AuthModal = ({ isOpen, onClose, onAuthSuccess }: AuthModalProps) => {
     setUser(null);
   };
 
+  const handleAnonymousAccess = () => {
+    onAnonymousAccess();
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -103,7 +107,7 @@ const AuthModal = ({ isOpen, onClose, onAuthSuccess }: AuthModalProps) => {
       }}>
         <div style={{
           display: 'flex',
-          justifyContent: 'space-between',
+          justifyContent: 'center',
           alignItems: 'center',
           marginBottom: '24px'
         }}>
@@ -115,20 +119,6 @@ const AuthModal = ({ isOpen, onClose, onAuthSuccess }: AuthModalProps) => {
           }}>
             {user ? "Welcome!" : (isLogin ? "Sign In" : "Sign Up")}
           </h2>
-          <button
-            onClick={onClose}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: '#666666',
-              padding: '4px'
-            }}
-          >
-            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
         </div>
 
         {user ? (
@@ -155,110 +145,162 @@ const AuthModal = ({ isOpen, onClose, onAuthSuccess }: AuthModalProps) => {
             </button>
           </div>
         ) : (
-          <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div>
-              <label htmlFor="email" style={{
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: '500',
-                color: '#374151',
-                marginBottom: '4px'
-              }}>
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+          <>
+            <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label htmlFor="email" style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#374151',
+                  marginBottom: '4px'
+                }}>
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '15px',
+                    outline: 'none',
+                    transition: 'border-color 0.2s ease'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#007AFF'}
+                  onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                  placeholder="Enter your email"
+                />
+              </div>
+              <div>
+                <label htmlFor="password" style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#374151',
+                  marginBottom: '4px'
+                }}>
+                  Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '15px',
+                    outline: 'none',
+                    transition: 'border-color 0.2s ease'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#007AFF'}
+                  onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                  placeholder="Enter your password"
+                />
+              </div>
+              {error && (
+                <div style={{ color: '#dc2626', fontSize: '14px' }}>{error}</div>
+              )}
+              <button
+                type="submit"
+                disabled={loading}
                 style={{
                   width: '100%',
-                  padding: '12px',
-                  border: '1px solid #d1d5db',
+                  backgroundColor: '#007AFF',
+                  color: 'white',
+                  padding: '12px 16px',
                   borderRadius: '8px',
+                  border: 'none',
+                  cursor: loading ? 'not-allowed' : 'pointer',
                   fontSize: '15px',
-                  outline: 'none',
-                  transition: 'border-color 0.2s ease'
+                  fontWeight: '500',
+                  transition: 'background-color 0.2s ease',
+                  opacity: loading ? 0.5 : 1
                 }}
-                onFocus={(e) => e.target.style.borderColor = '#007AFF'}
-                onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-                placeholder="Enter your email"
-              />
-            </div>
-            <div>
-              <label htmlFor="password" style={{
-                display: 'block',
+                onMouseEnter={(e) => !loading && (e.currentTarget.style.backgroundColor = '#0056b3')}
+                onMouseLeave={(e) => !loading && (e.currentTarget.style.backgroundColor = '#007AFF')}
+              >
+                {loading ? "Loading..." : (isLogin ? "Sign In" : "Sign Up")}
+              </button>
+              <div style={{ textAlign: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsLogin(!isLogin)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: '#007AFF',
+                    fontSize: '14px',
+                    textDecoration: 'underline'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#0056b3'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#007AFF'}
+                >
+                  {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+                </button>
+              </div>
+            </form>
+            
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              margin: '24px 0'
+            }}>
+              <div style={{
+                flex: 1,
+                height: '1px',
+                backgroundColor: '#e5e7eb'
+              }}></div>
+              <span style={{
+                padding: '0 16px',
                 fontSize: '14px',
-                fontWeight: '500',
-                color: '#374151',
-                marginBottom: '4px'
+                color: '#6b7280'
               }}>
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '8px',
-                  fontSize: '15px',
-                  outline: 'none',
-                  transition: 'border-color 0.2s ease'
-                }}
-                onFocus={(e) => e.target.style.borderColor = '#007AFF'}
-                onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-                placeholder="Enter your password"
-              />
+                or
+              </span>
+              <div style={{
+                flex: 1,
+                height: '1px',
+                backgroundColor: '#e5e7eb'
+              }}></div>
             </div>
-            {error && (
-              <div style={{ color: '#dc2626', fontSize: '14px' }}>{error}</div>
-            )}
+            
             <button
-              type="submit"
-              disabled={loading}
+              onClick={handleAnonymousAccess}
               style={{
                 width: '100%',
-                backgroundColor: '#007AFF',
-                color: 'white',
+                backgroundColor: '#f3f4f6',
+                color: '#374151',
                 padding: '12px 16px',
                 borderRadius: '8px',
-                border: 'none',
-                cursor: loading ? 'not-allowed' : 'pointer',
+                border: '1px solid #d1d5db',
+                cursor: 'pointer',
                 fontSize: '15px',
                 fontWeight: '500',
-                transition: 'background-color 0.2s ease',
-                opacity: loading ? 0.5 : 1
+                transition: 'all 0.2s ease'
               }}
-              onMouseEnter={(e) => !loading && (e.currentTarget.style.backgroundColor = '#0056b3')}
-              onMouseLeave={(e) => !loading && (e.currentTarget.style.backgroundColor = '#007AFF')}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#e5e7eb';
+                e.currentTarget.style.borderColor = '#9ca3af';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#f3f4f6';
+                e.currentTarget.style.borderColor = '#d1d5db';
+              }}
             >
-              {loading ? "Loading..." : (isLogin ? "Sign In" : "Sign Up")}
+              Continue without signing in
             </button>
-            <div style={{ textAlign: 'center' }}>
-              <button
-                type="button"
-                onClick={() => setIsLogin(!isLogin)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: '#007AFF',
-                  fontSize: '14px',
-                  textDecoration: 'underline'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.color = '#0056b3'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#007AFF'}
-              >
-                {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
-              </button>
-            </div>
-          </form>
+          </>
         )}
       </div>
     </div>
