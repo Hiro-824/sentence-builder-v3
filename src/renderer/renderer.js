@@ -63,6 +63,9 @@ export class Renderer {
         // Update viewport height
         this.canvasHeight = window.innerHeight - this.topBarHeight;
 
+        // Re-render sidebar to update its height
+        this.renderSideBar();
+        
         // Recalculate sidebar scroll bounds
         this.setBlockBoardTransform();
         this.renderTrashCan();
