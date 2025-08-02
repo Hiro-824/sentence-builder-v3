@@ -18,17 +18,21 @@ export class Renderer {
             this.blockList[groupName] = this.blockList[groupName].map(block => this.converter.formatBlock(block));
         });
         this.categoryState = {}; // New property
+        // --- START: Modified Logic ---
+        this.selectedCategory = Object.keys(this.blockList)[0] || null; // Select the first category by default
         Object.keys(this.blockList).forEach(groupName => {
-            this.categoryState[groupName] = { isCollapsed: true, displayCount: initialVisibleCount };
+            // The default selected category should be expanded
+            this.categoryState[groupName] = { isCollapsed: groupName !== this.selectedCategory, displayCount: initialVisibleCount };
         });
+        // --- END: Modified Logic ---
         this.svg = svg;
         this.sideBarScrollExtent = 0;
         this.viewportHeight = window.innerHeight;
         this.grammar = new Grammar;
-
+        
         // Initialize cache
         this.cachedSidebarWidth = null;
-
+        
         // Update translation for all initial blocks
         this.blocks.forEach(block => this.updateBlockTranslation(block));
         this.render();
@@ -82,7 +86,7 @@ export class Renderer {
     render() {
         // Clear cache when re-rendering
         this.cachedSidebarWidth = null;
-
+        
         this.renderGrid();
         this.renderNavBar(); // Render the new navigation bar first
         this.renderSideBar();
@@ -120,7 +124,7 @@ export class Renderer {
         // Scale the SVG path to fit the trash size
         const scale = trashSize / 105.16; // Original SVG viewBox width is 105.16
         const scaledHeight = 122.88 * scale; // Original SVG viewBox height is 122.88
-
+        
         // Center the scaled SVG within the trash area
         const offsetX = (trashSize - trashSize) / 2;
         const offsetY = (trashSize - scaledHeight) / 2;
@@ -226,73 +230,94 @@ export class Renderer {
 
     /*サイドバーの描画***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
+    scrollToCategory(categoryName) {
+        // Update the selected category state
+        this.selectedCategory = categoryName;
+    
+        // Update the collapsed state for all categories
+        Object.keys(this.categoryState).forEach(key => {
+            this.categoryState[key].isCollapsed = (key !== categoryName);
+            // Reset the display count when collapsing
+            if (this.categoryState[key].isCollapsed) {
+                this.categoryState[key].displayCount = initialVisibleCount;
+            }
+        });
+    
+        // Re-render the UI to reflect changes
+        this.renderNavBar(); // Updates the highlight
+        this.renderSideBar(); // Expands the correct category
+    
+        // Find the y-position of the target category header after it has been rendered
+        const headerGroup = this.blockBoard.select(`#category-header-${categoryName}`);
+        if (headerGroup.empty()) return; // Exit if the header isn't found
+    
+        const headerY = headerGroup.datum().y; // Retrieve the stored y-position
+        const zoomScale = d3.zoomTransform(this.grid.node()).k;
+    
+        // Calculate the target scroll position, accounting for top padding and current zoom
+        let targetScrollY = -(headerY * zoomScale) + (sidebarPadding.top * zoomScale);
+    
+        // Clamp the scroll position within the valid bounds
+        const scrollableHeight = this.canvasHeight;
+        const maxScroll = -(this.sideBarContentHeight * zoomScale - scrollableHeight);
+        targetScrollY = Math.max(maxScroll, Math.min(0, targetScrollY));
+    
+        // Set the new scroll extent and apply a smooth transition
+        this.sideBarScrollExtent = targetScrollY;
+        this.sidebarContent.transition().duration(400) // 400ms animation
+            .attr("transform", `translate(0, ${this.sideBarScrollExtent}) scale(${zoomScale})`);
+    }
+
     renderNavBar() {
-        // Remove existing nav bar to prevent duplicates on re-render
         d3.select("#nav-bar").remove();
-
         const height = window.innerHeight;
-
-        const navBar = this.svg.append("g")
-            .attr("id", "nav-bar")
-            .attr("transform", "translate(0, 0)");
-
+        const navBar = this.svg.append("g").attr("id", "nav-bar").attr("transform", "translate(0, 0)");
+    
         navBar.append("rect")
             .attr("id", "nav-bar-background")
             .attr("width", navBarWidth)
             .attr("height", height)
-            .attr("fill", "#ffffff") // Changed to white for a cleaner look like the example
+            .attr("fill", "#ffffff")
             .attr("stroke", "#e0e0e0")
             .attr("stroke-width", "1")
-            .on("mousedown", (event) => {
-                event.stopPropagation();
-            });
-
-        // --- START: New content rendering logic ---
-
-        // 1. Prepare data for the navigation items
-        const categoryData = Object.keys(this.blockList).map(categoryName => {
-            // Find the first block in the category to get a representative color
-            const firstBlock = this.blockList[categoryName][0];
-            return {
-                name: categoryName,
-                color: firstBlock ? firstBlock.color : '#cccccc' // Use a default color if category is empty
-            };
-        });
-
-        // 2. Use D3's data binding to create the UI elements
+            .on("mousedown", (event) => event.stopPropagation());
+    
+        const categoryData = Object.keys(this.blockList).map(categoryName => ({
+            name: categoryName,
+            color: this.blockList[categoryName][0] ? this.blockList[categoryName][0].color : '#cccccc'
+        }));
+    
         const navItems = navBar.append("g")
             .attr("transform", `translate(0, ${navBarPadding.top})`)
             .selectAll(".nav-item")
             .data(categoryData)
             .join("g")
-            .attr("class", "nav-item pointer") // Add 'pointer' class for cursor styling
-            .attr("transform", (d, i) => {
-                const itemHeight = (navBarCircleRadius * 2) + navBarFontSize + navBarItemSpacing;
-                const yPos = i * itemHeight;
-                return `translate(0, ${yPos})`;
+            .attr("class", "nav-item pointer")
+            .attr("transform", (d, i) => `translate(0, ${i * ((navBarCircleRadius * 2) + navBarFontSize + navBarItemSpacing)})`)
+            .on("pointerdown", (event, d) => {
+                event.stopPropagation();
+                this.scrollToCategory(d.name);
             });
-
-        // Add a background for selection state, similar to the example image
+    
         navItems.append("rect")
             .attr("width", navBarWidth)
             .attr("height", (navBarCircleRadius * 2) + navBarFontSize + navBarItemSpacing - (padding * 2))
             .attr("y", -padding)
-            .attr("fill", "transparent") // Highlight the item
+            .attr("fill", d => d.name === this.selectedCategory ? "#eef2ff" : "transparent")
             .attr("rx", 8)
             .attr("ry", 8);
-
-        // 3. Render the colored circle for each item
+    
         navItems.append("circle")
             .attr("cx", navBarWidth / 2)
             .attr("cy", navBarCircleRadius)
             .attr("r", navBarCircleRadius)
             .attr("fill", d => d.color)
-
-        // 4. Render the text label for each item
+            .attr("stroke", d => this.darkenColor(d.color, 30))
+    
         navItems.append("text")
             .text(d => d.name)
             .attr("x", navBarWidth / 2)
-            .attr("y", (navBarCircleRadius * 2.4) + navBarFontSize)
+            .attr("y", (navBarCircleRadius * 2.5) + navBarFontSize)
             .attr("text-anchor", "middle")
             .style("font-size", `${navBarFontSize}px`)
             .style("font-weight", "500")
@@ -332,7 +357,7 @@ export class Renderer {
         if (this.cachedSidebarWidth) {
             return this.cachedSidebarWidth;
         }
-
+        
         let maxWidth = 0;
         Object.values(this.blockList).forEach(blockArray => {
             blockArray.forEach(block => {
@@ -348,28 +373,26 @@ export class Renderer {
     renderSideBarContent() {
         this.sidebarContent = this.sidebar.append("g");
         this.blockBoard = this.sidebarContent.append("g").attr("transform", `translate(${sidebarPadding.left * 2}, 0)`);
-
-        // Cache sidebar width calculation
+        
         const sidebarWidth = this.calculateSideBarWidth();
         this.cachedSidebarWidth = sidebarWidth;
         const headerWidth = sidebarWidth / 2;
-
+        
         let y = sidebarPadding.top;
         Object.entries(this.blockList).forEach(([groupName, blockArray]) => {
             const isCollapsed = this.categoryState[groupName].isCollapsed;
             const categoryHeader = this.blockBoard.append("g")
                 .style("cursor", "pointer")
+                // --- START: Modified Logic ---
+                // Add a unique ID and store its y-position in the datum
+                .attr("id", `category-header-${groupName}`)
+                .datum({ y: y })
+                // --- END: Modified Logic ---
                 .on("pointerdown", () => {
-                    const wasOpen = !this.categoryState[groupName].isCollapsed;
-                    Object.keys(this.categoryState).forEach(key => {
-                        this.categoryState[key].isCollapsed = true;
-                        // Reset displayCount to initial value when collapsing
-                        this.categoryState[key].displayCount = initialVisibleCount;
-                    });
-                    if (!wasOpen) {
-                        this.categoryState[groupName].isCollapsed = false;
-                    }
-                    this.renderSideBar();
+                    // --- START: Modified Logic ---
+                    // This now calls the same central function as the nav bar
+                    this.scrollToCategory(groupName);
+                    // --- END: Modified Logic ---
                 });
 
             categoryHeader.append("rect")
@@ -993,16 +1016,16 @@ export class Renderer {
         event.sourceEvent.stopPropagation();
         this.grabbingCursor(d.id, false);
         if (!this.dragStarted) return;
-
+    
         const draggedBlockNode = d3.select(`#${d.id}`).node();
         const trashTarget = d3.select("#trash-can-droptarget").node();
         const sidebarNode = d3.select("#sidebar rect").node();
         const navBarNode = d3.select("#nav-bar-background").node(); // Get the new nav bar node
-
+    
         if (draggedBlockNode && trashTarget && sidebarNode && navBarNode) {
             const blockRect = draggedBlockNode.getBoundingClientRect();
             const trashRect = trashTarget.getBoundingClientRect();
-
+    
             const checkIntersection = (rect1, rect2) => {
                 return !(
                     rect1.right < rect2.left ||
@@ -1012,17 +1035,17 @@ export class Renderer {
                 );
             };
             const droppedOnTrash = checkIntersection(blockRect, trashRect);
-
+    
             const { clientX, clientY } = event.sourceEvent;
-
+    
             const sidebarRect = sidebarNode.getBoundingClientRect();
             const droppedOnSidebar = clientX >= sidebarRect.left && clientX <= sidebarRect.right &&
                 clientY >= sidebarRect.top && clientY <= sidebarRect.bottom;
-
+            
             const navBarRect = navBarNode.getBoundingClientRect();
             const droppedOnNavBar = clientX >= navBarRect.left && clientX <= navBarRect.right &&
                 clientY >= navBarRect.top && clientY <= navBarRect.bottom;
-
+    
             if (droppedOnTrash || droppedOnSidebar || droppedOnNavBar) { // Add nav bar check
                 this.deleteBlock(d.id);
                 this.dragStarted = false;
@@ -1030,13 +1053,13 @@ export class Renderer {
                 return;
             }
         }
-
+    
         this.dragStarted = false;
         this.grabbingHighlight(d.id, false);
-
+    
         const placeholderInfo = this.detectPlaceholderOverlap(d, d.x, d.y);
         const overlapInfo = this.detectBlockOverlap(d);
-
+    
         if (placeholderInfo && placeholderInfo.isValid) {
             const info = placeholderInfo.id.split("-");
             const parentId = info[2];
@@ -1049,7 +1072,7 @@ export class Renderer {
             this.moveBlockToGrid(d.id);
             this.formatBlock(d.id);
         }
-
+    
         this.draggedBlockId = null;
         if (this.findBlock(d.id).foundBlock) {
             this.updateBlock(d.id);
