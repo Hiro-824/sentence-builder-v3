@@ -51,7 +51,17 @@ const SentenceBuilder = () => {
     }, [supabase.auth]);
 
     useEffect(() => {
-        if (!isAuthenticated || rendererRef.current) return;
+        if (!isAuthenticated) {
+            // Clean up renderer when not authenticated
+            if (rendererRef.current) {
+                rendererRef.current.destroy();
+                rendererRef.current = null;
+            }
+            return;
+        }
+
+        // Don't reinitialize if renderer already exists
+        if (rendererRef.current) return;
 
         const blocks: Block[] = [];
 
@@ -77,7 +87,10 @@ const SentenceBuilder = () => {
 
         return () => {
             window.removeEventListener("resize", updateSvgSize);
-            rendererRef.current?.destroy(); 
+            if (rendererRef.current) {
+                rendererRef.current.destroy();
+                rendererRef.current = null;
+            }
         };
     }, [isAuthenticated]);
 
@@ -92,6 +105,12 @@ const SentenceBuilder = () => {
     };
 
     const handleSignOut = async () => {
+        // Clean up renderer before signing out
+        if (rendererRef.current) {
+            rendererRef.current.destroy();
+            rendererRef.current = null;
+        }
+        
         await supabase.auth.signOut();
         setUser(null);
         setIsAuthenticated(false);
