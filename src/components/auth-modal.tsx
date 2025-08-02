@@ -11,7 +11,6 @@ interface AuthModalProps {
 }
 
 const AuthModal = ({ isOpen, onAuthSuccess, onAnonymousAccess }: AuthModalProps) => {
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -52,19 +51,11 @@ const AuthModal = ({ isOpen, onAuthSuccess, onAnonymousAccess }: AuthModalProps)
     setError("");
 
     try {
-      if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-        });
-        if (error) throw error;
-      }
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : 'An error occurred');
     } finally {
@@ -117,7 +108,7 @@ const AuthModal = ({ isOpen, onAuthSuccess, onAnonymousAccess }: AuthModalProps)
             color: '#1a1a1a',
             margin: 0
           }}>
-            {user ? "Welcome!" : (isLogin ? "Sign In" : "Sign Up")}
+            {user ? "Welcome!" : "Sign In"}
           </h2>
         </div>
 
@@ -229,26 +220,8 @@ const AuthModal = ({ isOpen, onAuthSuccess, onAnonymousAccess }: AuthModalProps)
                 onMouseEnter={(e) => !loading && (e.currentTarget.style.backgroundColor = '#0056b3')}
                 onMouseLeave={(e) => !loading && (e.currentTarget.style.backgroundColor = '#007AFF')}
               >
-                {loading ? "Loading..." : (isLogin ? "Sign In" : "Sign Up")}
+                {loading ? "Loading..." : "Sign In"}
               </button>
-              <div style={{ textAlign: 'center' }}>
-                <button
-                  type="button"
-                  onClick={() => setIsLogin(!isLogin)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: '#007AFF',
-                    fontSize: '14px',
-                    textDecoration: 'underline'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = '#0056b3'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#007AFF'}
-                >
-                  {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
-                </button>
-              </div>
             </form>
             
             <div style={{
