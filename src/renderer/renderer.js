@@ -867,7 +867,7 @@ export class Renderer {
                 const sideBarY = blockRect.top;
                 const transform = d3.zoomTransform(this.grid.node());
                 const gridX = (sideBarX - transform.x) / transform.k;
-                const gridY = (sideBarY - transform.y) / transform.k;
+                const gridY = (sideBarY - this.topBarHeight - transform.y) / transform.k;
                 d.x = gridX;
                 d.y = gridY;
                 const sideBarId = d3.select(`#${d.id}`).node().parentNode.id;
