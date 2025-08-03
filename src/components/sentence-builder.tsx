@@ -9,11 +9,13 @@ import TopBar from "./top-bar";
 import AuthModal from "./auth-modal";
 import { createClient } from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
+import { saveBlocksToSupabase } from "@/utils/supabase/helpers";
 
 const SentenceBuilder = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [showAuthModal, setShowAuthModal] = useState(false);
     const [user, setUser] = useState<User | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
 
     const svgContainerRef = useRef(null);
     const rendererRef = useRef<Renderer | null>(null);
@@ -94,6 +96,35 @@ const SentenceBuilder = () => {
         };
     }, [isAuthenticated]);
 
+    const handleSave = async () => {
+        if (!user) {
+            alert("Please sign in to save your work.");
+            handleShowAuthModal();
+            return;
+        }
+
+        if (!rendererRef.current) {
+            alert("An error occurred. The renderer is not available.");
+            return;
+        }
+
+        setIsSaving(true);
+        try {
+            const blocksToSave = rendererRef.current.blocks;
+            const result = await saveBlocksToSupabase(user, blocksToSave);
+
+            if (result.success) {
+                alert("プロジェクトが正常に保存されました。"); // Project saved successfully.
+            } else {
+                alert(`保存に失敗しました: ${result.error}`); // Save failed:
+            }
+        } catch (error) {
+            alert(`An unexpected error occurred: ${error}`);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     const handleAuthSuccess = () => {
         setIsAuthenticated(true);
         setShowAuthModal(false);
@@ -110,7 +141,7 @@ const SentenceBuilder = () => {
             rendererRef.current.destroy();
             rendererRef.current = null;
         }
-        
+
         await supabase.auth.signOut();
         setUser(null);
         setIsAuthenticated(false);
@@ -123,10 +154,12 @@ const SentenceBuilder = () => {
 
     return (
         <>
-            <TopBar 
-                user={user} 
-                onSignOut={handleSignOut} 
+            <TopBar
+                user={user}
+                onSignOut={handleSignOut}
                 onShowAuthModal={handleShowAuthModal}
+                onSave={handleSave}
+                isSaving={isSaving}
             />
 
             {isAuthenticated && (
