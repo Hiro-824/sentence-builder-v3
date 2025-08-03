@@ -22,6 +22,7 @@ const SentenceBuilder = () => {
     const [projectList, setProjectList] = useState<string[]>([]);
     const [showProjectListModal, setShowProjectListModal] = useState(false);
     const [isProjectListLoading, setIsProjectListLoading] = useState(false);
+    const [loadingProjectId, setLoadingProjectId] = useState<string | null>(null);
 
     const svgContainerRef = useRef(null);
     const rendererRef = useRef<Renderer | null>(null);
@@ -80,7 +81,7 @@ const SentenceBuilder = () => {
         );
 
         return () => subscription.unsubscribe();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [supabase.auth]);
 
     useEffect(() => {
@@ -117,18 +118,23 @@ const SentenceBuilder = () => {
     };
 
     const handleLoadProject = async (projectId: string) => {
-        if (!user) return;
-        console.log(`Loading project: ${projectId}`);
-        const { blocks, error } = await loadProjectFromSupabase(user, projectId);
-        if (error) {
-            // This is not a critical error; it just means the project doesn't exist yet.
-            console.log(`Could not load project '${projectId}'. Starting new one.`);
-            initializeRenderer([]);
-        } else if (blocks) {
-            initializeRenderer(blocks);
+        if (!user || loadingProjectId) return;
+        setLoadingProjectId(projectId);
+
+        try {
+            const { blocks, error } = await loadProjectFromSupabase(user, projectId);
+            if (error) {
+                handleCreateNewProject(projectId);
+            } else if (blocks) {
+                initializeRenderer(blocks);
+                setCurrentProjectId(projectId);
+            }
+            setShowProjectListModal(false);
+        } catch (e) {
+            alert(`プロジェクトの読み込み中に予期せぬエラーが発生しました。${e}`);
+        } finally {
+            setLoadingProjectId(null);
         }
-        setCurrentProjectId(projectId);
-        setShowProjectListModal(false);
     };
 
     const handleCreateNewProject = (projectId: string) => {
@@ -222,6 +228,7 @@ const SentenceBuilder = () => {
                 isOpen={showProjectListModal}
                 projects={projectList}
                 onClose={() => setShowProjectListModal(false)}
+                loadingProjectId={loadingProjectId}
                 isLoading={isProjectListLoading}
                 onLoadProject={handleLoadProject}
                 onCreateProject={handleCreateNewProject}

@@ -10,14 +10,21 @@ interface ProjectListModalProps {
     onCreateProject: (projectId: string) => void;
     currentProjectId: string;
     isLoading: boolean;
+    loadingProjectId: string | null;
 }
 
 const Spinner = () => (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '40px 0' }}>
         <svg className="animate-spin" width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2.99988V5.99988M12 18.0001V21.0001M6.34315 6.34302L8.46447 8.46434M15.5355 15.5357L17.6569 17.657M2.99997 12H6M18 12H21" stroke="#999" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M12 2.99988V5.99988M12 18.0001V21.0001M6.34315 6.34302L8.46447 8.46434M15.5355 15.5357L17.6569 17.657M2.99997 12H6M18 12H21" stroke="#999" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
     </div>
+);
+
+const SmallSpinner = () => (
+    <svg className="animate-spin" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2.99988V5.99988M12 18.0001V21.0001M6.34315 6.34302L8.46447 8.46434M15.5355 15.5357L17.6569 17.657M2.99997 12H6M18 12H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
 );
 
 const ProjectListModal = ({
@@ -27,7 +34,8 @@ const ProjectListModal = ({
     onLoadProject,
     onCreateProject,
     currentProjectId,
-    isLoading
+    isLoading,
+    loadingProjectId,
 }: ProjectListModalProps) => {
     const [newProjectName, setNewProjectName] = useState("");
 
@@ -65,25 +73,38 @@ const ProjectListModal = ({
                         <Spinner />
                     ) : (
                         <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                            {projects.length > 0 ? projects.map(p => (
-                                <li key={p}
-                                    onClick={() => onLoadProject(p)}
-                                    style={{
-                                        padding: '16px 12px', cursor: 'pointer',
-                                        backgroundColor: p === currentProjectId ? '#eef2ff' : 'transparent',
-                                        fontWeight: p === currentProjectId ? '600' : '500',
-                                        color: p === currentProjectId ? '#007AFF' : '#1a1a1a',
-                                        borderBottom: '1px solid #f0f0f0',
-                                        transition: 'background-color 0.2s ease',
-                                        borderRadius: '8px',
-                                        margin: '4px 0'
-                                    }}
-                                    onMouseEnter={(e) => { if (p !== currentProjectId) e.currentTarget.style.backgroundColor = '#f8f9fa'; }}
-                                    onMouseLeave={(e) => { if (p !== currentProjectId) e.currentTarget.style.backgroundColor = 'transparent'; }}
-                                >
-                                    {p}
-                                </li>
-                            )) : <li style={{ padding: '20px', color: '#666' }}>保存されたプロジェクトはありません。</li>}
+                            {projects.length > 0 ? projects.map(p => {
+                                const isItemLoading = loadingProjectId === p;
+                                return (
+                                    <li key={p}
+                                        // Prevent clicking while this item is loading
+                                        onClick={() => !isItemLoading && onLoadProject(p)}
+                                        style={{
+                                            padding: '16px 12px',
+                                            // Make item non-interactive while loading
+                                            cursor: isItemLoading ? 'not-allowed' : 'pointer',
+                                            opacity: isItemLoading ? 0.7 : 1,
+                                            backgroundColor: p === currentProjectId ? '#eef2ff' : 'transparent',
+                                            fontWeight: p === currentProjectId ? '600' : '500',
+                                            color: p === currentProjectId ? '#007AFF' : '#1a1a1a',
+                                            borderBottom: '1px solid #f0f0f0',
+                                            transition: 'background-color 0.2s ease, opacity 0.2s ease',
+                                            borderRadius: '8px',
+                                            margin: '4px 0',
+                                            // Use flexbox to align text and spinner
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                        }}
+                                        onMouseEnter={(e) => { if (p !== currentProjectId && !isItemLoading) e.currentTarget.style.backgroundColor = '#f8f9fa'; }}
+                                        onMouseLeave={(e) => { if (p !== currentProjectId && !isItemLoading) e.currentTarget.style.backgroundColor = 'transparent'; }}
+                                    >
+                                        <span>{p}</span>
+                                        {/* Render the small spinner if this item is loading */}
+                                        {isItemLoading && <SmallSpinner />}
+                                    </li>
+                                )
+                            }) : <li style={{ padding: '20px', color: '#666' }}>保存されたプロジェクトはありません。</li>}
                         </ul>
                     )}
                 </div>
