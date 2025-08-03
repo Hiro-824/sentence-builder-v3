@@ -18,7 +18,7 @@ const SentenceBuilder = () => {
     const [user, setUser] = useState<User | null>(null);
     const [isSaving, setIsSaving] = useState(false);
 
-    const [currentProjectId, setCurrentProjectId] = useState<string>("default-project");
+    const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
     const [projectList, setProjectList] = useState<string[]>([]);
     const [showProjectListModal, setShowProjectListModal] = useState(false);
     const [isProjectListLoading, setIsProjectListLoading] = useState(false);
@@ -91,23 +91,44 @@ const SentenceBuilder = () => {
     }, [isAuthenticated]);
 
     const handleSave = async () => {
-        if (!user) {
-            alert("Please sign in to save your work.");
-            handleShowAuthModal();
+        if (!user || !rendererRef.current) {
+            alert("An error occurred. Please ensure you are signed in.");
             return;
         }
-        if (!rendererRef.current) return;
+
+        let projectIdToSave = currentProjectId;
+
+        if (projectIdToSave === null) {
+            // Fetch the latest project list to check for duplicates
+            const { projects: existingProjects, error } = await listProjectsForUser(user);
+            if (error) {
+                alert(`Could not verify project name: ${error}`);
+                return;
+            }
+
+            const newName = window.prompt("プロジェクト名を入力してください:", "Untitled Project");
+
+            if (!newName) {
+                return; // User cancelled the prompt
+            }
+            if (existingProjects && existingProjects.includes(newName)) {
+                alert(`プロジェクト名 "${newName}" は既に存在します。別の名前を選択してください。`);
+                return; // Name already exists
+            }
+            projectIdToSave = newName;
+        }
 
         setIsSaving(true);
         try {
             const blocksToSave = rendererRef.current.blocks;
-            const result = await saveBlocksToSupabase(user, blocksToSave, currentProjectId);
+            const result = await saveBlocksToSupabase(user, blocksToSave, projectIdToSave);
 
             if (result.success) {
-                alert(`プロジェクト '${currentProjectId}' が正常に保存されました。`);
-                // Refresh project list if this is a new project
-                if (!projectList.includes(currentProjectId)) {
-                    setProjectList(prev => [...prev, currentProjectId].sort());
+                alert(`プロジェクト '${projectIdToSave}' が正常に保存されました。`);
+                // After a successful save, update the component's state
+                setCurrentProjectId(projectIdToSave);
+                if (!projectList.includes(projectIdToSave)) {
+                    setProjectList(prev => [...prev, projectIdToSave!].sort());
                 }
             } else {
                 alert(`保存に失敗しました: ${result.error}`);
@@ -205,6 +226,7 @@ const SentenceBuilder = () => {
                 onSave={handleSave}
                 isSaving={isSaving}
                 onShowProjects={handleShowProjectList}
+                currentProjectId={currentProjectId}
             />
 
             {isAuthenticated && (
@@ -232,7 +254,7 @@ const SentenceBuilder = () => {
                 isLoading={isProjectListLoading}
                 onLoadProject={handleLoadProject}
                 onCreateProject={handleCreateNewProject}
-                currentProjectId={currentProjectId}
+                currentProjectId={currentProjectId ?? ""}
             />
         </>
     );

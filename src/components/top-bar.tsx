@@ -10,9 +10,10 @@ interface TopBarProps {
     onSave: () => void;
     isSaving: boolean;
     onShowProjects: () => void;
+    currentProjectId: string | null;
 }
 
-const TopBar = ({ user, onSignOut, onShowAuthModal, onSave, isSaving, onShowProjects }: TopBarProps) => {
+const TopBar = ({ user, onSignOut, onShowAuthModal, onSave, isSaving, onShowProjects, currentProjectId }: TopBarProps) => {
     const [showUserMenu, setShowUserMenu] = useState(false);
     const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -87,6 +88,9 @@ const TopBar = ({ user, onSignOut, onShowAuthModal, onSave, isSaving, onShowProj
         <nav className="top-bar-nav">
             <div className="top-bar-left">
                 <span className="top-bar-logo" style={{ userSelect: "none" }}>Sentence Builder</span>
+                <div style={{ borderLeft: '1px solid #e0e0e0', paddingLeft: '24px', color: '#666', fontSize: '15px' }}>
+                    {currentProjectId || "Untitled Project"}
+                </div>
                 <button
                     className="top-bar-button"
                     onMouseEnter={(e) => handleButtonHover(e, true)}
