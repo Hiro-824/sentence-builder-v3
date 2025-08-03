@@ -79,6 +79,7 @@ const SentenceBuilder = () => {
         );
 
         return () => subscription.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [supabase.auth]);
 
     useEffect(() => {
