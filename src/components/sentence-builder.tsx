@@ -21,6 +21,7 @@ const SentenceBuilder = () => {
     const [currentProjectId, setCurrentProjectId] = useState<string>("default-project");
     const [projectList, setProjectList] = useState<string[]>([]);
     const [showProjectListModal, setShowProjectListModal] = useState(false);
+    const [isProjectListLoading, setIsProjectListLoading] = useState(false);
 
     const svgContainerRef = useRef(null);
     const rendererRef = useRef<Renderer | null>(null);
@@ -142,13 +143,24 @@ const SentenceBuilder = () => {
             alert("Please sign in to view projects.");
             return;
         }
+
+        // 1. Show the modal frame and loading state IMMEDIATELY
+        setShowProjectListModal(true);
+        setIsProjectListLoading(true);
+
+        // 2. Fetch the data in the background
         const { projects, error } = await listProjectsForUser(user);
+
         if (error) {
             alert(`プロジェクトの読み込みに失敗しました: ${error}`);
+            setProjectList([]); // Ensure list is empty on error
         } else if (projects) {
+            // 3. Populate the modal with the fetched data
             setProjectList(projects);
-            setShowProjectListModal(true);
         }
+
+        // 4. Turn off the loading indicator
+        setIsProjectListLoading(false);
     };
 
     const handleAuthSuccess = () => {
@@ -210,6 +222,7 @@ const SentenceBuilder = () => {
                 isOpen={showProjectListModal}
                 projects={projectList}
                 onClose={() => setShowProjectListModal(false)}
+                isLoading={isProjectListLoading}
                 onLoadProject={handleLoadProject}
                 onCreateProject={handleCreateNewProject}
                 currentProjectId={currentProjectId}
