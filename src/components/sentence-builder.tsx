@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
 
 import { useEffect, useRef, useState } from "react";
@@ -11,9 +12,16 @@ import { createClient } from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
 
 const SentenceBuilder = () => {
+    // ユーザー認証に関する変数
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [showAuthModal, setShowAuthModal] = useState(false);
     const [user, setUser] = useState<User | null>(null);
+
+    // プロジェクト保存・読み込みに関する変数
+    const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
+    const [isDirty, setIsDirty] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [isProjectListOpen, setIsProjectListOpen] = useState(false);
 
     const svgContainerRef = useRef(null);
     const rendererRef = useRef<Renderer | null>(null);
@@ -110,7 +118,7 @@ const SentenceBuilder = () => {
             rendererRef.current.destroy();
             rendererRef.current = null;
         }
-        
+
         await supabase.auth.signOut();
         setUser(null);
         setIsAuthenticated(false);
@@ -123,9 +131,9 @@ const SentenceBuilder = () => {
 
     return (
         <>
-            <TopBar 
-                user={user} 
-                onSignOut={handleSignOut} 
+            <TopBar
+                user={user}
+                onSignOut={handleSignOut}
                 onShowAuthModal={handleShowAuthModal}
             />
 
