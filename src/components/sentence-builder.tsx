@@ -10,6 +10,7 @@ import TopBar from "./top-bar";
 import AuthModal from "./auth-modal";
 import { createClient } from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
+import { listProjects, getProjectData, saveProjectData } from '@/utils/supabase/projects';
 
 const SentenceBuilder = () => {
     // ユーザー認証に関する変数
@@ -128,6 +129,60 @@ const SentenceBuilder = () => {
     const handleShowAuthModal = () => {
         setShowAuthModal(true);
     };
+
+    /*
+    const runApiTests = async () => {
+        console.log("--- STARTING API TESTS ---");
+
+        // 1. Test saveProjectData
+        console.log("1. Testing saveProjectData...");
+        const testProjectId = `test-project-${new Date().getTime()}`;
+        const testProjectData = { blocks: [{ id: 'block1', x: 10, y: 20, words: [], color: 'red', children: [] }] };
+
+        try {
+            await saveProjectData(testProjectId, testProjectData);
+            console.log(`✅ SUCCESS: saveProjectData completed for project: ${testProjectId}`);
+        } catch (error) {
+            console.error("❌ FAILED: saveProjectData", error);
+            console.log("--- TESTS ABORTED ---");
+            return;
+        }
+
+        // 2. Test listProjects
+        console.log("\n2. Testing listProjects...");
+        try {
+            const projects = await listProjects();
+            console.log("✅ SUCCESS: listProjects returned:", projects);
+            if (projects.length === 0) {
+                console.warn("⚠️  listProjects returned an empty array. Make sure the saved project exists.");
+            } else {
+                console.log("Found projects:", projects.map(p => p.id).join(', '));
+            }
+        } catch (error) {
+            console.error("❌ FAILED: listProjects", error);
+        }
+
+        // 3. Test getProjectData
+        console.log(`\n3. Testing getProjectData for project: ${testProjectId}...`);
+        try {
+            const data = await getProjectData(testProjectId);
+            if (data) {
+                console.log("✅ SUCCESS: getProjectData returned:", data);
+                // Simple validation
+                if (data.blocks && data.blocks[0]?.id === 'block1') {
+                    console.log("Data integrity check passed.");
+                } else {
+                    console.error("Data integrity check FAILED. Retrieved data does not match saved data.");
+                }
+            } else {
+                console.error("❌ FAILED: getProjectData returned null.");
+            }
+        } catch (error) {
+            console.error("❌ FAILED: getProjectData", error);
+        }
+
+        console.log("\n--- API TESTS FINISHED ---");
+    };*/
 
     return (
         <>
