@@ -99,10 +99,10 @@ const SentenceBuilder = () => {
 
         rendererRef.current = new Renderer(blocks, blockList, svg, () => setIsDirty(true), topBarHeight);
 
-        const projectId = searchParams.get('projectId');
-        if (projectId) {
-            handleLoadProject(projectId);
-        } else {
+        const projectIdFromUrl = searchParams.get('projectId');
+        if (projectIdFromUrl && projectIdFromUrl !== currentProjectId) {
+            handleLoadProject(projectIdFromUrl);
+        } else if (!projectIdFromUrl) {
             setIsProjectListOpen(true);
         }
 
@@ -161,6 +161,7 @@ const SentenceBuilder = () => {
     const handleLoadProject = async (projectId: string) => {
         if (!rendererRef.current) return;
         setIsProjectListOpen(false);
+        console.log(`handleLoadProjectがisProjectLoadingをtrueにします`)
         setIsProjectLoading(true);
         try {
             const data = await getProjectData(projectId);
@@ -174,6 +175,7 @@ const SentenceBuilder = () => {
             console.error("Failed to load project:", error);
             alert("プロジェクトの読み込みに失敗しました。");
         } finally {
+            console.log(`handleLoadProjectがisProjectLoadingをfalseにします`)
             setIsProjectLoading(false);
         }
     }
@@ -181,6 +183,7 @@ const SentenceBuilder = () => {
     const handleCreateNewProject = async () => {
         if (!rendererRef.current) return;
         setIsProjectListOpen(false);
+        console.log(`handleCreateNewProjectがisProjectLoadingをtrueにします`)
         setIsProjectLoading(true);
         try {
             const newProjectId = crypto.randomUUID();
@@ -195,6 +198,7 @@ const SentenceBuilder = () => {
             console.error("Failed to load project:", error);
             alert("プロジェクトの作成に失敗しました。");
         } finally {
+            console.log(`handleCreateNewProjectがisProjectLoadingをfalseにします`)
             setIsProjectLoading(false);
         }
     }
