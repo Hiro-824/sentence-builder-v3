@@ -12,6 +12,7 @@ import { User } from "@supabase/supabase-js";
 import { getProjectData, saveProjectData } from '@/utils/supabase/projects';
 import ProjectListModal from "./project-list-modal";
 import { useRouter, useSearchParams } from 'next/navigation';
+import Loader from "./loader";
 
 const SentenceBuilder = () => {
     // ユーザー認証に関する変数
@@ -24,6 +25,7 @@ const SentenceBuilder = () => {
     const [isDirty, setIsDirty] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [isProjectListOpen, setIsProjectListOpen] = useState(false);
+    const [isProjectLoading, setIsProjectLoading] = useState(false);
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -111,7 +113,7 @@ const SentenceBuilder = () => {
                 rendererRef.current = null;
             }
         };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isAuthenticated, searchParams]);
 
     const handleAuthSuccess = () => {
@@ -159,6 +161,7 @@ const SentenceBuilder = () => {
     const handleLoadProject = async (projectId: string) => {
         if (!rendererRef.current) return;
         setIsProjectListOpen(false);
+        setIsProjectLoading(true);
         try {
             const data = await getProjectData(projectId);
             if (!data) return;
@@ -166,24 +169,34 @@ const SentenceBuilder = () => {
             setCurrentProjectId(projectId);
             setIsDirty(false);
             rendererRef.current.renderBlocks();
+            router.push(`/?projectId=${projectId}`, { scroll: false });
         } catch (error) {
             console.error("Failed to load project:", error);
             alert("プロジェクトの読み込みに失敗しました。");
+        } finally {
+            setIsProjectLoading(false);
         }
-        router.push(`/?projectId=${projectId}`, { scroll: false });
     }
 
     const handleCreateNewProject = async () => {
         if (!rendererRef.current) return;
         setIsProjectListOpen(false);
-        const newProjectId = crypto.randomUUID();
-        //const date = new Date().toLocaleString('ja-JP');
-        rendererRef.current.blocks = [];
-        setCurrentProjectId(newProjectId);
-        await saveProjectData(newProjectId, { blocks: [] });
-        setIsDirty(false);
-        rendererRef.current.renderBlocks();
-        router.push(`/?projectId=${newProjectId}`, { scroll: false });
+        setIsProjectLoading(true);
+        try {
+            const newProjectId = crypto.randomUUID();
+            //const date = new Date().toLocaleString('ja-JP');
+            rendererRef.current.blocks = [];
+            setCurrentProjectId(newProjectId);
+            await saveProjectData(newProjectId, { blocks: [] });
+            setIsDirty(false);
+            rendererRef.current.renderBlocks();
+            router.push(`/?projectId=${newProjectId}`, { scroll: false });
+        } catch (error) {
+            console.error("Failed to load project:", error);
+            alert("プロジェクトの作成に失敗しました。");
+        } finally {
+            setIsProjectLoading(false);
+        }
     }
 
     useEffect(() => {
@@ -320,6 +333,8 @@ const SentenceBuilder = () => {
                 onSelectProject={(projectId) => handleLoadProject(projectId)}
                 onCreateNew={() => handleCreateNewProject()}
             />
+
+            {isProjectLoading && <Loader />}
         </>
     );
 }
