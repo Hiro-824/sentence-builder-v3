@@ -130,6 +130,21 @@ const SentenceBuilder = () => {
         setShowAuthModal(true);
     };
 
+    const handleSaveProject = async () => {
+        if (!currentProjectId || !rendererRef.current) return;
+        setIsSaving(true);
+        const projectData = { blocks: rendererRef.current.blocks };
+        try {
+            await saveProjectData(currentProjectId, projectData);
+            setIsDirty(false);
+        } catch (error) {
+            console.error("Failed to save project:", error);
+            alert("プロジェクトの保存に失敗しました。");
+        } finally {
+            setIsSaving(false);
+        }
+    }
+
     useEffect(() => {
         const handleBeforeUnload = (event: BeforeUnloadEvent) => {
             if (isDirty) {
@@ -216,6 +231,25 @@ const SentenceBuilder = () => {
                     Run API Tests
                 </button>
             )*/}
+            {
+            /*To use this test, make sure `currentProjectId` has a value and you are authenticated
+            /*<button
+                onClick={handleSaveProject}
+                style={{
+                    position: 'fixed',
+                    bottom: '20px',
+                    right: '20px',
+                    zIndex: 2000,
+                    padding: '10px 20px',
+                    cursor: 'pointer',
+                    background: 'red',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px'
+                }}
+            >
+                Test Save Function
+            </button>*/}
             {/* --- END OF TEMPORARY CODE --- */}
 
             {isAuthenticated && (
