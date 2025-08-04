@@ -1,7 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
 
-import { SetStateAction, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import { Renderer } from "@/renderer/renderer";
 import { blockList } from "@/data/blocks";
@@ -10,7 +9,7 @@ import TopBar from "./top-bar";
 import AuthModal from "./auth-modal";
 import { createClient } from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
-import { listProjects, getProjectData, saveProjectData } from '@/utils/supabase/projects';
+import { getProjectData, saveProjectData } from '@/utils/supabase/projects';
 import ProjectListModal from "./project-list-modal";
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -178,7 +177,7 @@ const SentenceBuilder = () => {
         if (!rendererRef.current) return;
         setIsProjectListOpen(false);
         const newProjectId = crypto.randomUUID();
-        const date = new Date().toLocaleString('ja-JP');
+        //const date = new Date().toLocaleString('ja-JP');
         rendererRef.current.blocks = [];
         setCurrentProjectId(newProjectId);
         await saveProjectData(newProjectId, { blocks: [] });
