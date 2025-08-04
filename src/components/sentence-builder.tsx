@@ -93,7 +93,7 @@ const SentenceBuilder = () => {
         updateSvgSize();
         window.addEventListener("resize", updateSvgSize);
 
-        rendererRef.current = new Renderer(blocks, blockList, svg, topBarHeight);
+        rendererRef.current = new Renderer(blocks, blockList, svg, () => setIsDirty(true), topBarHeight);
 
         return () => {
             window.removeEventListener("resize", updateSvgSize);

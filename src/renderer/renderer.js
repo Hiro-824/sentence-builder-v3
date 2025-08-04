@@ -5,7 +5,7 @@ import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, pla
 import * as d3 from "d3";
 
 export class Renderer {
-    constructor(blocks, blockList, svg, topBarHeight = 0) {
+    constructor(blocks, blockList, svg, onDirty, topBarHeight = 0) {
         this.blocks = blocks;
         this.topBarHeight = topBarHeight;
         this.canvasHeight = window.innerHeight - this.topBarHeight;
@@ -24,6 +24,7 @@ export class Renderer {
         this.sideBarScrollExtent = 0;
         this.viewportHeight = window.innerHeight;
         this.grammar = new Grammar;
+        this.onDirty = onDirty;
         
         // Initialize cache
         this.cachedSidebarWidth = null;
@@ -36,8 +37,6 @@ export class Renderer {
         this.handleResize = this.handleResize.bind(this);
         window.addEventListener('resize', this.handleResize);
     }
-
-
 
     generateRandomId() {
         return "b" + crypto.randomUUID().replaceAll(/-/g, '');
@@ -724,6 +723,7 @@ export class Renderer {
                             this.updateBlock(block.id);
                             setTimeout(() => d3.select(`#${block.id}`).raise(), 0);
                         }
+                        this.onDirty();
                     }
                 });
 
@@ -966,6 +966,7 @@ export class Renderer {
             this.updateBlock(d.id);
         }
         this.deemphasizeAllPlaceholder();
+        this.onDirty();
     }
 
     /*当たり判定***********************************************************************************************************************************************************************************************************************************************************************************************************************/
@@ -1154,6 +1155,7 @@ export class Renderer {
         if (!blockUI.empty()) {
             blockUI.remove();
         }
+        this.onDirty();
     }
 
     // 変更しない
