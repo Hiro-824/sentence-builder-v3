@@ -11,6 +11,7 @@ import AuthModal from "./auth-modal";
 import { createClient } from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { listProjects, getProjectData, saveProjectData } from '@/utils/supabase/projects';
+import ProjectListModal from "./project-list-modal";
 
 const SentenceBuilder = () => {
     // ユーザー認証に関する変数
@@ -271,6 +272,17 @@ const SentenceBuilder = () => {
                 isOpen={showAuthModal}
                 onAuthSuccess={handleAuthSuccess}
                 onAnonymousAccess={handleAnonymousAccess}
+            />
+
+            <ProjectListModal
+                isOpen={isProjectListOpen}
+                onClose={() => setIsProjectListOpen(false)}
+                onSelectProject={function (projectId: string): void {
+                    throw new Error("Function not implemented.");
+                }}
+                onCreateNew={function (): void {
+                    throw new Error("Function not implemented.");
+                }}
             />
         </>
     );
