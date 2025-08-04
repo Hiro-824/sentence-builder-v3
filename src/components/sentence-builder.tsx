@@ -192,6 +192,17 @@ const SentenceBuilder = () => {
                 onShowAuthModal={handleShowAuthModal}
             />
 
+            {/* --- TEMPORARY TEST BUTTON --- */}
+            {/*isAuthenticated && (
+                <button
+                    onClick={runApiTests}
+                    style={{ position: 'fixed', top: '80px', left: '20px', zIndex: 9999, padding: '10px', background: 'orange' }}
+                >
+                    Run API Tests
+                </button>
+            )*/}
+            {/* --- END OF TEMPORARY CODE --- */}
+
             {isAuthenticated && (
                 <div
                     ref={svgContainerRef}
