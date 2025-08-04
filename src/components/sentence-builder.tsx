@@ -162,6 +162,18 @@ const SentenceBuilder = () => {
         }
     }
 
+    const handleCreateNewProject = async () => {
+        if (!rendererRef.current) return;
+        setIsProjectListOpen(false);
+        const newProjectId = crypto.randomUUID();
+        const date = new Date().toLocaleString('ja-JP');
+        rendererRef.current.blocks = [];
+        setCurrentProjectId(newProjectId);
+        await saveProjectData(newProjectId, { blocks: [] });
+        setIsDirty(false);
+        rendererRef.current.renderBlocks();
+    }
+
     useEffect(() => {
         const handleBeforeUnload = (event: BeforeUnloadEvent) => {
             if (isDirty) {
@@ -294,9 +306,7 @@ const SentenceBuilder = () => {
                 isOpen={isProjectListOpen}
                 onClose={() => setIsProjectListOpen(false)}
                 onSelectProject={(projectId) => handleLoadProject(projectId)}
-                onCreateNew={function (): void {
-                    throw new Error("Function not implemented.");
-                }}
+                onCreateNew={() => handleCreateNewProject()}
             />
         </>
     );
