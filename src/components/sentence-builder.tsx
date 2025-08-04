@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
 
-import { useEffect, useRef, useState } from "react";
+import { SetStateAction, useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import { Renderer } from "@/renderer/renderer";
 import { blockList } from "@/data/blocks";
@@ -146,6 +146,22 @@ const SentenceBuilder = () => {
         }
     }
 
+    const handleLoadProject = async (projectId: string) => {
+        if (!rendererRef.current) return;
+        setIsProjectListOpen(false);
+        try {
+            const data = await getProjectData(projectId);
+            if (!data) return;
+            rendererRef.current.blocks = data.blocks;
+            setCurrentProjectId(projectId);
+            setIsDirty(false);
+            rendererRef.current.renderBlocks();
+        } catch (error) {
+            console.error("Failed to load project:", error);
+            alert("プロジェクトの読み込みに失敗しました。");
+        }
+    }
+
     useEffect(() => {
         const handleBeforeUnload = (event: BeforeUnloadEvent) => {
             if (isDirty) {
@@ -277,9 +293,7 @@ const SentenceBuilder = () => {
             <ProjectListModal
                 isOpen={isProjectListOpen}
                 onClose={() => setIsProjectListOpen(false)}
-                onSelectProject={function (projectId: string): void {
-                    throw new Error("Function not implemented.");
-                }}
+                onSelectProject={(projectId) => handleLoadProject(projectId)}
                 onCreateNew={function (): void {
                     throw new Error("Function not implemented.");
                 }}

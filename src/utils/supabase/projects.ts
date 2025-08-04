@@ -1,5 +1,5 @@
 import { createClient } from "@/utils/supabase/client";
-import { Project, ProjectData } from "@/models/project";
+import { Project } from "@/models/project";
 import { Block } from "@/models/block";
 
 export async function listProjects(): Promise<Project[]> {
@@ -43,35 +43,34 @@ export async function listProjects(): Promise<Project[]> {
     }
 }
 
-export async function getProjectData(projectId: string): Promise<ProjectData | null> {
-    if (!projectId) {
-        console.error("getProjectData: No project ID provided.");
-        return null;
-    }
+export async function getProjectData(projectId: string) {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) {
-        console.error("getProjectData: User not authenticated.");
-        return null;
+    if (!user) throw new Error("User not authenticated");
+
+    const filePath = `${user.id}/${projectId}.json`;
+    const { data: urlData } = supabase.storage
+        .from('projects')
+        .getPublicUrl(filePath);
+
+    if (!urlData) {
+        throw new Error("Could not get public URL for project.");
+    }
+    const urlWithCacheBust = `${urlData.publicUrl}?t=${Date.now()}`;
+    const { data: { session } } = await supabase.auth.getSession();
+    const response = await fetch(urlWithCacheBust, {
+        headers: {
+            'Authorization': `Bearer ${session?.access_token}`,
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to download project: ${response.statusText}`);
     }
 
-    try {
-        const { data: blob, error } = await supabase.storage
-            .from('projects')
-            .download(`${user.id}/${projectId}.json`);
-
-        if (error) {
-            throw error;
-        }
-
-        const text = await blob.text();
-        const projectData = JSON.parse(text) as ProjectData;
-        return projectData;
-    } catch (error) {
-        console.error(`Error fetching project data for ${projectId}:`, error);
-        return null;
-    }
+    const projectData = await response.json();
+    return projectData;
 }
 
 export async function saveProjectData(projectId: string, projectData: { blocks: Block[] }): Promise<void> {
