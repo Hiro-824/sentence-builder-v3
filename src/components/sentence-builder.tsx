@@ -12,6 +12,7 @@ import { createClient } from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { listProjects, getProjectData, saveProjectData } from '@/utils/supabase/projects';
 import ProjectListModal from "./project-list-modal";
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const SentenceBuilder = () => {
     // ユーザー認証に関する変数
@@ -24,6 +25,8 @@ const SentenceBuilder = () => {
     const [isDirty, setIsDirty] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [isProjectListOpen, setIsProjectListOpen] = useState(false);
+    const router = useRouter();
+    const searchParams = useSearchParams();
 
     const svgContainerRef = useRef(null);
     const rendererRef = useRef<Renderer | null>(null);
@@ -95,6 +98,13 @@ const SentenceBuilder = () => {
 
         rendererRef.current = new Renderer(blocks, blockList, svg, () => setIsDirty(true), topBarHeight);
 
+        const projectId = searchParams.get('projectId');
+        if (projectId) {
+            handleLoadProject(projectId);
+        } else {
+            setIsProjectListOpen(true);
+        }
+
         return () => {
             window.removeEventListener("resize", updateSvgSize);
             if (rendererRef.current) {
@@ -102,7 +112,8 @@ const SentenceBuilder = () => {
                 rendererRef.current = null;
             }
         };
-    }, [isAuthenticated]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isAuthenticated, searchParams]);
 
     const handleAuthSuccess = () => {
         setIsAuthenticated(true);
@@ -160,6 +171,7 @@ const SentenceBuilder = () => {
             console.error("Failed to load project:", error);
             alert("プロジェクトの読み込みに失敗しました。");
         }
+        router.push(`/?projectId=${projectId}`, { scroll: false });
     }
 
     const handleCreateNewProject = async () => {
@@ -172,6 +184,7 @@ const SentenceBuilder = () => {
         await saveProjectData(newProjectId, { blocks: [] });
         setIsDirty(false);
         rendererRef.current.renderBlocks();
+        router.push(`/?projectId=${newProjectId}`, { scroll: false });
     }
 
     useEffect(() => {
