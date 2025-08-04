@@ -19,7 +19,7 @@ const SentenceBuilder = () => {
     const [user, setUser] = useState<User | null>(null);
 
     // プロジェクト保存・読み込みに関する変数
-    const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
+    const [currentProjectId, setCurrentProjectId] = useState<string | null>("top-bar-button-test");
     const [isDirty, setIsDirty] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [isProjectListOpen, setIsProjectListOpen] = useState(false);
@@ -220,6 +220,10 @@ const SentenceBuilder = () => {
                 user={user}
                 onSignOut={handleSignOut}
                 onShowAuthModal={handleShowAuthModal}
+                isDirty={isDirty}
+                isSaving={isSaving}
+                onSave={handleSaveProject}
+                onShowProjects={() => setIsProjectListOpen(true)}
             />
 
             {/* --- TEMPORARY TEST BUTTON --- */}

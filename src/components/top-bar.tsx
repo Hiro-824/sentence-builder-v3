@@ -7,9 +7,13 @@ interface TopBarProps {
     user: User | null;
     onSignOut: () => void;
     onShowAuthModal?: () => void;
+    isDirty: boolean;
+    isSaving: boolean;
+    onSave: () => void;
+    onShowProjects: () => void;
 }
 
-const TopBar = ({ user, onSignOut, onShowAuthModal }: TopBarProps) => {
+const TopBar = ({ user, onSignOut, onShowAuthModal, isDirty, isSaving, onSave, onShowProjects }: TopBarProps) => {
     const [showUserMenu, setShowUserMenu] = useState(false);
     const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -86,6 +90,7 @@ const TopBar = ({ user, onSignOut, onShowAuthModal }: TopBarProps) => {
                     className="top-bar-button"
                     onMouseEnter={(e) => handleButtonHover(e, true)}
                     onMouseLeave={(e) => handleButtonHover(e, false)}
+                    onClick={onShowProjects}
                 >
                     プロジェクト一覧
                 </button>
@@ -100,18 +105,17 @@ const TopBar = ({ user, onSignOut, onShowAuthModal }: TopBarProps) => {
             <div className="top-bar-right">
                 <button
                     className="top-bar-save-button"
+                    disabled={!isDirty || isSaving}
                     onMouseEnter={(e) => handleSaveButtonHover(e, true)}
                     onMouseLeave={(e) => handleSaveButtonHover(e, false)}
-                    onClick={() => {
-
-                    }}
+                    onClick={onSave}
                 >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H16L21 8V19C21 20.1046 20.1046 21 19 21Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         <path d="M17 21V13H7V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         <path d="M7 3V8H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
-                    保存する
+                    {isSaving ? "保存中…" : isDirty ? "保存する" : "保存されました"}
                 </button>
                 <div
                     ref={userMenuRef}
