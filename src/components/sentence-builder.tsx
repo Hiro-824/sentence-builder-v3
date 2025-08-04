@@ -20,7 +20,7 @@ const SentenceBuilder = () => {
 
     // プロジェクト保存・読み込みに関する変数
     const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
-    const [isDirty, setIsDirty] = useState(false);
+    const [isDirty, setIsDirty] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [isProjectListOpen, setIsProjectListOpen] = useState(false);
 
@@ -130,8 +130,23 @@ const SentenceBuilder = () => {
         setShowAuthModal(true);
     };
 
-    /*
-    const runApiTests = async () => {
+    useEffect(() => {
+        const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+            if (isDirty) {
+                event.preventDefault();
+                event.returnValue = '';
+            } else {
+                console.log("NOT DIRTY! YOU CAN LEAVE!")
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
+    }, [isDirty]);
+
+    /*const runApiTests = async () => {
         console.log("--- STARTING API TESTS ---");
 
         // 1. Test saveProjectData
