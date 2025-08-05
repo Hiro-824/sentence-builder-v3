@@ -1,10 +1,11 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client"
 
 import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import { Renderer } from "@/renderer/renderer";
 import { blockList } from "@/data/blocks";
-import { Block } from "@/models/block";
+//import { Block } from "@/models/block";
 import TopBar from "./top-bar";
 import AuthModal from "./auth-modal";
 import { createClient } from "@/utils/supabase/client";
@@ -77,8 +78,6 @@ const SentenceBuilder = () => {
         // Don't reinitialize if renderer already exists
         if (rendererRef.current) return;
 
-        const blocks: Block[] = [];
-
         const container = d3.select(svgContainerRef.current);
         container.selectAll("*").remove();
 
@@ -97,15 +96,10 @@ const SentenceBuilder = () => {
         updateSvgSize();
         window.addEventListener("resize", updateSvgSize);
 
-        rendererRef.current = new Renderer(blocks, blockList, svg, () => setIsDirty(true), topBarHeight);
+        // Initialize with an empty blocks array. Loading is handled by the next effect.
+        rendererRef.current = new Renderer([], blockList, svg, () => setIsDirty(true), topBarHeight);
 
-        const projectIdFromUrl = searchParams.get('projectId');
-        if (projectIdFromUrl && projectIdFromUrl !== currentProjectId) {
-            handleLoadProject(projectIdFromUrl);
-        } else if (!projectIdFromUrl) {
-            setIsProjectListOpen(true);
-        }
-
+        // The cleanup function for THIS effect.
         return () => {
             window.removeEventListener("resize", updateSvgSize);
             if (rendererRef.current) {
@@ -113,8 +107,22 @@ const SentenceBuilder = () => {
                 rendererRef.current = null;
             }
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isAuthenticated, searchParams]);
+    }, [isAuthenticated]);
+
+    useEffect(() => {
+        // Don't run if the user isn't authenticated or the renderer hasn't been created yet.
+        if (!isAuthenticated || !rendererRef.current) return;
+
+        const projectIdFromUrl = searchParams.get('projectId');
+
+        if (projectIdFromUrl && projectIdFromUrl !== currentProjectId) {
+            handleLoadProject(projectIdFromUrl);
+        } else if (!projectIdFromUrl) {
+            // If the URL has no project ID, show the selection modal.
+            setIsProjectListOpen(true);
+        }
+
+    }, [isAuthenticated, searchParams, currentProjectId]);
 
     const handleAuthSuccess = () => {
         setIsAuthenticated(true);
@@ -170,7 +178,9 @@ const SentenceBuilder = () => {
             setCurrentProjectId(projectId);
             setIsDirty(false);
             rendererRef.current.renderBlocks();
-            router.push(`/?projectId=${projectId}`, { scroll: false });
+            if (searchParams.get('projectId') !== projectId) {
+                router.push(`/?projectId=${projectId}`, { scroll: false });
+            }
         } catch (error) {
             console.error("Failed to load project:", error);
             alert("プロジェクトの読み込みに失敗しました。");
@@ -334,7 +344,10 @@ const SentenceBuilder = () => {
             <ProjectListModal
                 isOpen={isProjectListOpen}
                 onClose={() => setIsProjectListOpen(false)}
-                onSelectProject={(projectId) => handleLoadProject(projectId)}
+                onSelectProject={(projectId) => {
+                    router.push(`/?projectId=${projectId}`, { scroll: false });
+                    setIsProjectListOpen(false);
+                }}
                 onCreateNew={() => handleCreateNewProject()}
             />
 
