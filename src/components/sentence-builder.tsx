@@ -190,25 +190,19 @@ const SentenceBuilder = () => {
         }
     }
 
+    // Inside the SentenceBuilder component in sentence-builder.tsx
+
     const handleCreateNewProject = async () => {
         if (!rendererRef.current) return;
         setIsProjectListOpen(false);
-        console.log(`handleCreateNewProjectがisProjectLoadingをtrueにします`)
         setIsProjectLoading(true);
         try {
             const newProjectId = crypto.randomUUID();
-            //const date = new Date().toLocaleString('ja-JP');
-            rendererRef.current.blocks = [];
-            setCurrentProjectId(newProjectId);
             await saveProjectData(newProjectId, { blocks: [] });
-            setIsDirty(false);
-            rendererRef.current.renderBlocks();
             router.push(`/?projectId=${newProjectId}`, { scroll: false });
         } catch (error) {
-            console.error("Failed to load project:", error);
+            console.error("Failed to create new project:", error);
             alert("プロジェクトの作成に失敗しました。");
-        } finally {
-            console.log(`handleCreateNewProjectがisProjectLoadingをfalseにします`)
             setIsProjectLoading(false);
         }
     }
