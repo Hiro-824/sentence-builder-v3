@@ -329,6 +329,8 @@ const SentenceBuilder = () => {
                 />
             )}
 
+            {isProjectLoading && <Loader />}
+
             <AuthModal
                 isOpen={showAuthModal}
                 onAuthSuccess={handleAuthSuccess}
@@ -344,8 +346,6 @@ const SentenceBuilder = () => {
                 }}
                 onCreateNew={() => handleCreateNewProject()}
             />
-
-            {isProjectLoading && <Loader />}
         </>
     );
 }
