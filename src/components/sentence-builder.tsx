@@ -223,59 +223,6 @@ const SentenceBuilder = () => {
         };
     }, [isDirty]);
 
-    /*const runApiTests = async () => {
-        console.log("--- STARTING API TESTS ---");
-
-        // 1. Test saveProjectData
-        console.log("1. Testing saveProjectData...");
-        const testProjectId = `test-project-${new Date().getTime()}`;
-        const testProjectData = { blocks: [{ id: 'block1', x: 10, y: 20, words: [], color: 'red', children: [] }] };
-
-        try {
-            await saveProjectData(testProjectId, testProjectData);
-            console.log(`✅ SUCCESS: saveProjectData completed for project: ${testProjectId}`);
-        } catch (error) {
-            console.error("❌ FAILED: saveProjectData", error);
-            console.log("--- TESTS ABORTED ---");
-            return;
-        }
-
-        // 2. Test listProjects
-        console.log("\n2. Testing listProjects...");
-        try {
-            const projects = await listProjects();
-            console.log("✅ SUCCESS: listProjects returned:", projects);
-            if (projects.length === 0) {
-                console.warn("⚠️  listProjects returned an empty array. Make sure the saved project exists.");
-            } else {
-                console.log("Found projects:", projects.map(p => p.id).join(', '));
-            }
-        } catch (error) {
-            console.error("❌ FAILED: listProjects", error);
-        }
-
-        // 3. Test getProjectData
-        console.log(`\n3. Testing getProjectData for project: ${testProjectId}...`);
-        try {
-            const data = await getProjectData(testProjectId);
-            if (data) {
-                console.log("✅ SUCCESS: getProjectData returned:", data);
-                // Simple validation
-                if (data.blocks && data.blocks[0]?.id === 'block1') {
-                    console.log("Data integrity check passed.");
-                } else {
-                    console.error("Data integrity check FAILED. Retrieved data does not match saved data.");
-                }
-            } else {
-                console.error("❌ FAILED: getProjectData returned null.");
-            }
-        } catch (error) {
-            console.error("❌ FAILED: getProjectData", error);
-        }
-
-        console.log("\n--- API TESTS FINISHED ---");
-    };*/
-
     return (
         <>
             <TopBar
@@ -287,36 +234,6 @@ const SentenceBuilder = () => {
                 onSave={handleSaveProject}
                 onShowProjects={() => setIsProjectListOpen(true)}
             />
-
-            {/* --- TEMPORARY TEST BUTTON --- */}
-            {/*isAuthenticated && (
-                <button
-                    onClick={runApiTests}
-                    style={{ position: 'fixed', top: '80px', left: '20px', zIndex: 9999, padding: '10px', background: 'orange' }}
-                >
-                    Run API Tests
-                </button>
-            )*/}
-            {
-            /*To use this test, make sure `currentProjectId` has a value and you are authenticated
-            /*<button
-                onClick={handleSaveProject}
-                style={{
-                    position: 'fixed',
-                    bottom: '20px',
-                    right: '20px',
-                    zIndex: 2000,
-                    padding: '10px 20px',
-                    cursor: 'pointer',
-                    background: 'red',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px'
-                }}
-            >
-                Test Save Function
-            </button>*/}
-            {/* --- END OF TEMPORARY CODE --- */}
 
             {isAuthenticated && (
                 <div
