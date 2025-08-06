@@ -5,7 +5,7 @@ import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, pla
 import * as d3 from "d3";
 
 export class Renderer {
-    constructor(blocks, blockList, svg, onDirty, topBarHeight = 0) {
+    constructor(blocks, blockList, svg, onDirty, topBarHeight = 0, onLogEvent = (string, object) => {}) {
         this.blocks = blocks;
         this.topBarHeight = topBarHeight;
         this.canvasHeight = window.innerHeight - this.topBarHeight;
@@ -25,6 +25,7 @@ export class Renderer {
         this.viewportHeight = window.innerHeight;
         this.grammar = new Grammar;
         this.onDirty = onDirty;
+        this.onLogEvent = onLogEvent;
         
         // Initialize cache
         this.cachedSidebarWidth = null;
