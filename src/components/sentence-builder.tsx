@@ -32,7 +32,7 @@ const SentenceBuilder = () => {
 
     const svgContainerRef = useRef(null);
     const rendererRef = useRef<Renderer | null>(null);
-    const loggingServiceRef = useRef<LoggingService | null>(null); // ADDED
+    const loggingServiceRef = useRef<LoggingService | null>(null);
     const supabase = createClient();
 
     useEffect(() => {
@@ -189,10 +189,10 @@ const SentenceBuilder = () => {
         try {
             await saveProjectData(currentProjectId, projectData);
             setIsDirty(false);
-            loggingServiceRef.current?.logEvent('PROJECT_SAVE_SUCCESS', { projectId: currentProjectId }); // ADDED
+            loggingServiceRef.current?.logEvent('PROJECT_SAVE_SUCCESS', { projectId: currentProjectId });
         } catch (error) {
             console.error("Failed to save project:", error);
-            loggingServiceRef.current?.logEvent('PROJECT_SAVE_FAIL', { projectId: currentProjectId, error: (error as Error).message }); // ADDED
+            loggingServiceRef.current?.logEvent('PROJECT_SAVE_FAIL', { projectId: currentProjectId, error: (error as Error).message });
             alert("プロジェクトの保存に失敗しました。");
         } finally {
             setIsSaving(false);
@@ -223,7 +223,6 @@ const SentenceBuilder = () => {
         }
     }
 
-    // MODIFIED: handleCreateNewProject
     const handleCreateNewProject = async () => {
         if (!rendererRef.current) return;
         setIsProjectListOpen(false);
