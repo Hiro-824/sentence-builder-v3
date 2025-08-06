@@ -141,7 +141,6 @@ const SentenceBuilder = () => {
 
             window.addEventListener('beforeunload', handleSessionEnd);
 
-            // Cleanup function for when component unmounts or dependencies change
             return () => {
                 service.logEvent('SESSION_END', { reason: 'cleanup' });
                 service.endSession();
@@ -149,7 +148,7 @@ const SentenceBuilder = () => {
                 window.removeEventListener('beforeunload', handleSessionEnd);
             };
         }
-    }, [user, currentProjectId]);
+    }, [user?.id, currentProjectId]);
 
     const handleAuthSuccess = () => {
         setIsAuthenticated(true);
