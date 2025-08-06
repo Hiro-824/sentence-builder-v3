@@ -8,7 +8,7 @@ export class LoggingService {
   async startSession(userId: string, projectId: string) {
     this.eventSequence = 0;
     const { data, error } = await this.supabase
-      .from('research_sessions')
+      .from('sessions')
       .insert({ user_id: userId, project_id: projectId })
       .select('id')
       .single();
@@ -42,7 +42,7 @@ export class LoggingService {
     if (!this.sessionId) return;
     
     await this.supabase
-        .from('research_sessions')
+        .from('sessions')
         .update({ end_time: new Date().toISOString() })
         .eq('id', this.sessionId);
     
