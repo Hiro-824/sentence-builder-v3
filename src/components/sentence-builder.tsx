@@ -256,6 +256,7 @@ const SentenceBuilder = () => {
             <ProjectListModal
                 isOpen={isProjectListOpen}
                 onClose={() => setIsProjectListOpen(false)}
+                isDismissible={!!currentProjectId && currentProjectId !== "top-bar-button-test"}
                 onSelectProject={(projectId) => {
                     router.push(`/?projectId=${projectId}`, { scroll: false });
                     setIsProjectListOpen(false);

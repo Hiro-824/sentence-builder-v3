@@ -6,12 +6,13 @@ import { listProjects } from "@/utils/supabase/projects"; // We will create this
 
 interface ProjectListModalProps {
   isOpen: boolean;
+  isDismissible: boolean;
   onClose: () => void;
   onSelectProject: (projectId: string) => void;
   onCreateNew: () => void;
 }
 
-const ProjectListModal = ({ isOpen, onClose, onSelectProject, onCreateNew }: ProjectListModalProps) => {
+const ProjectListModal = ({ isOpen, isDismissible, onClose, onSelectProject, onCreateNew }: ProjectListModalProps) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -49,9 +50,9 @@ const ProjectListModal = ({ isOpen, onClose, onSelectProject, onCreateNew }: Pro
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        zIndex: 1000
+        zIndex: 1000,
       }}
-      onClick={onClose}
+      onClick={isDismissible ? onClose : undefined}
     >
       <div
         style={{
@@ -98,7 +99,7 @@ const ProjectListModal = ({ isOpen, onClose, onSelectProject, onCreateNew }: Pro
         >
           新しいプロジェクトを作成
         </button>
-        
+
         <div style={{
           flex: 1,
           overflowY: 'auto',
