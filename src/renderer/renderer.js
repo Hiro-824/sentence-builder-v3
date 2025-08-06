@@ -2,6 +2,7 @@
 import { Converter } from "@/grammar/converter";
 import { Grammar } from "@/grammar/grammar";
 import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding, resolvedGapRadius, initialVisibleCount, visiblilityIncrement } from "./const.js";
+import { createBlockSnapshot, createBlockSnapshotList } from "@/utils/supabase/logging_helpers";
 import * as d3 from "d3";
 
 export class Renderer {
@@ -24,8 +25,12 @@ export class Renderer {
         this.sideBarScrollExtent = 0;
         this.viewportHeight = window.innerHeight;
         this.grammar = new Grammar;
+        
         this.onDirty = onDirty;
+        
         this.onLogEvent = onLogEvent;
+        this.dragLogContext = null;
+        this.lastHoverTargetId = null;
         
         // Initialize cache
         this.cachedSidebarWidth = null;
