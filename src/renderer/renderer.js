@@ -6,7 +6,7 @@ import { createBlockSnapshot, createBlockSnapshotList } from "@/utils/supabase/l
 import * as d3 from "d3";
 
 export class Renderer {
-    constructor(blocks, blockList, svg, onDirty, topBarHeight = 0, onLogEvent = (string, object) => {}) {
+    constructor(blocks, blockList, svg, onDirty, topBarHeight = 0, onLogEvent = (string, object) => { }) {
         this.blocks = blocks;
         this.topBarHeight = topBarHeight;
         this.canvasHeight = window.innerHeight - this.topBarHeight;
@@ -25,16 +25,16 @@ export class Renderer {
         this.sideBarScrollExtent = 0;
         this.viewportHeight = window.innerHeight;
         this.grammar = new Grammar;
-        
+
         this.onDirty = onDirty;
-        
+
         this.onLogEvent = onLogEvent;
         this.dragLogContext = null;
         this.lastHoverTargetId = null;
-        
+
         // Initialize cache
         this.cachedSidebarWidth = null;
-        
+
         // Update translation for all initial blocks
         this.blocks.forEach(block => this.updateBlockTranslation(block));
         this.render();
@@ -79,7 +79,7 @@ export class Renderer {
     render() {
         // Clear cache when re-rendering
         this.cachedSidebarWidth = null;
-        
+
         this.renderGrid();
         this.renderSideBar();
         this.renderDragboard();
@@ -116,7 +116,7 @@ export class Renderer {
         // Scale the SVG path to fit the trash size
         const scale = trashSize / 105.16; // Original SVG viewBox width is 105.16
         const scaledHeight = 122.88 * scale; // Original SVG viewBox height is 122.88
-        
+
         // Center the scaled SVG within the trash area
         const offsetX = (trashSize - trashSize) / 2;
         const offsetY = (trashSize - scaledHeight) / 2;
@@ -254,7 +254,7 @@ export class Renderer {
         if (this.cachedSidebarWidth) {
             return this.cachedSidebarWidth;
         }
-        
+
         let maxWidth = 0;
         Object.values(this.blockList).forEach(blockArray => {
             blockArray.forEach(block => {
@@ -270,12 +270,12 @@ export class Renderer {
     renderSideBarContent() {
         this.sidebarContent = this.sidebar.append("g");
         this.blockBoard = this.sidebarContent.append("g").attr("transform", `translate(${sidebarPadding.left * 2}, 0)`);
-        
+
         // Cache sidebar width calculation
         const sidebarWidth = this.calculateSideBarWidth();
         this.cachedSidebarWidth = sidebarWidth;
         const headerWidth = sidebarWidth / 2;
-        
+
         let y = sidebarPadding.top;
         Object.entries(this.blockList).forEach(([groupName, blockArray]) => {
             const isCollapsed = this.categoryState[groupName].isCollapsed;
@@ -867,6 +867,19 @@ export class Renderer {
         this.grabbingCursor(d.id, true);
         this.dragStarted = false;
         this.svg.node().appendChild(this.dragboard.node());
+
+        if (fromSideBar) {
+            this.dragLogContext = { eventType: 'creation' };
+        } else {
+            const { rootParent } = this.findBlock(d.id);
+            if (rootParent) {
+                this.dragLogContext = {
+                    eventType: 'detachment',
+                    before_root_snapshot: createBlockSnapshot(rootParent),
+                    dragged_block_snapshot: createBlockSnapshot(d)
+                };
+            }
+        }
     }
 
     dragging(event, d, fromSideBar = false) {
@@ -884,6 +897,18 @@ export class Renderer {
                 d.y = gridY;
                 const sideBarId = d3.select(`#${d.id}`).node().parentNode.id;
                 this.renderPreviewBlock(sideBarId);
+
+                if (this.dragLogContext?.eventType === 'creation') {
+                    const newBlockSnapshot = createBlockSnapshot(d);
+                    this.onLogEvent('BLOCK_LIFECYCLE', {
+                        type: 'creation',
+                        description: `Created block '${newBlockSnapshot.type}'.`,
+                        before: { blocks: [] },
+                        after: { blocks: [newBlockSnapshot] },
+                        context: {}
+                    });
+                    this.dragLogContext = null;
+                }
             }
 
             this.moveBlockToTopLevel(d.id);
