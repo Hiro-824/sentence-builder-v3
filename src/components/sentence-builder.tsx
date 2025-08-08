@@ -162,7 +162,11 @@ const SentenceBuilder = () => {
 
     const handleSignOut = async () => {
         loggingServiceRef.current?.logEvent('SIGN_OUT', {});
-        loggingServiceRef.current?.endSession();
+
+        if (loggingServiceRef.current) {
+            await loggingServiceRef.current.endSession();
+        }
+
         loggingServiceRef.current = null;
 
         // Clean up renderer before signing out
