@@ -11,9 +11,10 @@ interface TopBarProps {
     isSaving: boolean;
     onSave: () => void;
     onShowProjects: () => void;
+    currentProjectId: string | null;
 }
 
-const TopBar = ({ user, onSignOut, onShowAuthModal, isDirty, isSaving, onSave, onShowProjects }: TopBarProps) => {
+const TopBar = ({ user, onSignOut, onShowAuthModal, isDirty, isSaving, onSave, onShowProjects, currentProjectId }: TopBarProps) => {
     const [showUserMenu, setShowUserMenu] = useState(false);
     const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -86,14 +87,33 @@ const TopBar = ({ user, onSignOut, onShowAuthModal, isDirty, isSaving, onSave, o
         <nav className="top-bar-nav">
             <div className="top-bar-left">
                 <span className="top-bar-logo" style={{ userSelect: "none" }}>Sentence Builder</span>
-                <button
-                    className="top-bar-button"
-                    onMouseEnter={(e) => handleButtonHover(e, true)}
-                    onMouseLeave={(e) => handleButtonHover(e, false)}
-                    onClick={onShowProjects}
-                >
-                    プロジェクト一覧
-                </button>
+                {user && currentProjectId && (
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        backgroundColor: '#f5f5f5',
+                        padding: '4px 10px',
+                        borderRadius: '6px',
+                        fontSize: '13px',
+                        color: '#666666'
+                    }}>
+                        <span style={{ fontWeight: 500, color: '#1a1a1a' }}>Project</span>
+                        <span style={{ fontFamily: 'var(--font-geist-mono)' }}>
+                            {currentProjectId.split('-')[0]}
+                        </span>
+                    </div>
+                )}
+                {user && (
+                    <button
+                        className="top-bar-button"
+                        onMouseEnter={(e) => handleButtonHover(e, true)}
+                        onMouseLeave={(e) => handleButtonHover(e, false)}
+                        onClick={onShowProjects}
+                    >
+                        プロジェクト一覧
+                    </button>
+                )}
                 <button
                     className="top-bar-button"
                     onMouseEnter={(e) => handleButtonHover(e, true)}
@@ -103,7 +123,7 @@ const TopBar = ({ user, onSignOut, onShowAuthModal, isDirty, isSaving, onSave, o
                 </button>
             </div>
             <div className="top-bar-right">
-                <button
+                {user && <button
                     className="top-bar-save-button"
                     disabled={!isDirty || isSaving}
                     onMouseEnter={(e) => handleSaveButtonHover(e, true)}
@@ -116,7 +136,7 @@ const TopBar = ({ user, onSignOut, onShowAuthModal, isDirty, isSaving, onSave, o
                         <path d="M7 3V8H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                     {isSaving ? "保存中…" : isDirty ? "保存する" : "保存されました"}
-                </button>
+                </button>}
                 <div
                     ref={userMenuRef}
                     style={{ position: 'relative' }}
