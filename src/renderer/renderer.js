@@ -714,6 +714,21 @@ export class Renderer {
                 .on("mousedown", (event) => {
                     event.stopPropagation();
                     const isFromSidebar = event.currentTarget.closest("#sidebar") !== null;
+
+                    // ログ出力
+                    const fromText = child.content[child.selected];
+                    const toText = option;
+                    if (!isFromSidebar && fromText !== toText) {
+                        const blockSnapshot = createBlockSnapshot(block);
+                        this.onLogEvent('BLOCK_INTERACTION', {
+                            sub_type: 'dropdown_select',
+                            description: `Changed dropdown in '${blockSnapshot.string_rep}' from '${fromText}' to '${toText}'.`,
+                            block: blockSnapshot,
+                            from: fromText,
+                            to: toText
+                        });
+                    }
+
                     child.selected = index;
                     if (isFromSidebar) {
                         this.closeAllDropdowns();
@@ -868,16 +883,16 @@ export class Renderer {
         this.dragStarted = false;
         this.svg.node().appendChild(this.dragboard.node());
 
-        if (fromSideBar) {
-            this.dragLogContext = { eventType: 'creation' };
-        } else {
-            const { rootParent } = this.findBlock(d.id);
-            if (rootParent) {
-                this.dragLogContext = {
-                    eventType: 'detachment',
-                    before_root_snapshot: createBlockSnapshot(rootParent),
-                    dragged_block_snapshot: createBlockSnapshot(d)
-                };
+        // ログ出力
+        if (!fromSideBar) {
+            const { rootParent, parentBlock } = this.findBlock(d.id);
+            if (parentBlock && rootParent) {
+                this.onLogEvent('BLOCK_INTERACTION', {
+                    sub_type: 'detachment',
+                    description: `Detached block '${createBlockSnapshot(d).string_rep}' from '${createBlockSnapshot(rootParent).string_rep}'.`,
+                    detached_block: createBlockSnapshot(d),
+                    original_parent: createBlockSnapshot(rootParent)
+                });
             }
         }
     }
@@ -886,6 +901,14 @@ export class Renderer {
         if (!this.dragStarted) {
 
             if (fromSideBar) {
+                // ログ出力
+                const newBlockSnapshot = createBlockSnapshot(d);
+                this.onLogEvent('BLOCK_INTERACTION', {
+                    sub_type: 'creation',
+                    description: `Created block '${newBlockSnapshot.string_rep}' from sidebar.`,
+                    block: newBlockSnapshot
+                });
+
                 this.blocks.push(d);
                 const blockRect = d3.select(`#${d.id}`).node().getBoundingClientRect();
                 const sideBarX = blockRect.left;
@@ -897,18 +920,6 @@ export class Renderer {
                 d.y = gridY;
                 const sideBarId = d3.select(`#${d.id}`).node().parentNode.id;
                 this.renderPreviewBlock(sideBarId);
-
-                if (this.dragLogContext?.eventType === 'creation') {
-                    const newBlockSnapshot = createBlockSnapshot(d);
-                    this.onLogEvent('BLOCK_LIFECYCLE', {
-                        type: 'creation',
-                        description: `Created block '${newBlockSnapshot.type}'.`,
-                        before: { blocks: [] },
-                        after: { blocks: [newBlockSnapshot] },
-                        context: {}
-                    });
-                    this.dragLogContext = null;
-                }
             }
 
             this.moveBlockToTopLevel(d.id);
@@ -987,6 +998,16 @@ export class Renderer {
             const targetBlockId = overlapInfo.id.split("-")[1];
             this.attachBlock(d.id, targetBlockId, overlapInfo.side)
         } else {
+            // ログ出力
+            const { foundBlock } = this.findBlock(d.id);
+            if (foundBlock) {
+                this.onLogEvent('BLOCK_INTERACTION', {
+                    sub_type: 'move',
+                    description: `Moved block '${createBlockSnapshot(foundBlock).string_rep}'.`,
+                    block: createBlockSnapshot(foundBlock),
+                    position: { x: Math.round(foundBlock.x), y: Math.round(foundBlock.y) }
+                });
+            }
             this.moveBlockToGrid(d.id);
             this.formatBlock(d.id);
         }
@@ -1178,6 +1199,17 @@ export class Renderer {
     /*階層構造に関する処理***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
     deleteBlock(blockId) {
+        // ログ出力
+        const { foundBlock } = this.findBlock(blockId);
+        if (foundBlock) {
+            const deletedSnapshot = createBlockSnapshot(foundBlock);
+            this.onLogEvent('BLOCK_INTERACTION', {
+                sub_type: 'deletion',
+                description: `Deleted block '${deletedSnapshot.string_rep}'.`,
+                block: deletedSnapshot
+            });
+        }
+
         // First, update the data model by removing the block
         this.removeBlock(blockId);
 
@@ -1419,7 +1451,18 @@ export class Renderer {
     }
 
     insertBlock(id, targetParentId, index) {
-        // LOGGING: Log insertion call
+        // ログ出力
+        const { foundBlock: draggedBlock } = this.findBlock(id);
+        const { rootParent: targetParentBefore } = this.findBlock(targetParentId);
+        if (draggedBlock && targetParentBefore) {
+            this.onLogEvent('BLOCK_INTERACTION', {
+                sub_type: 'insertion',
+                description: `Inserted block '${createBlockSnapshot(draggedBlock).string_rep}' into '${createBlockSnapshot(targetParentBefore).string_rep}'.`,
+                dragged_block: createBlockSnapshot(draggedBlock),
+                target_parent: createBlockSnapshot(targetParentBefore)
+            });
+        }
+
         const updatedParent = this.previewInsertion(id, targetParentId, index);
         if (!updatedParent) {
             console.error("Insertion failed, preview returned nothing. Aborting.");
@@ -1436,6 +1479,18 @@ export class Renderer {
     }
 
     attachBlock(id, targetParentId, side) {
+        // ログ出力
+        const { foundBlock: draggedBlock } = this.findBlock(id);
+        const { rootParent: targetParentBefore } = this.findBlock(targetParentId);
+        if (draggedBlock && targetParentBefore) {
+            this.onLogEvent('BLOCK_INTERACTION', {
+                sub_type: 'attachment',
+                description: `Attached block '${createBlockSnapshot(draggedBlock).string_rep}' to '${createBlockSnapshot(targetParentBefore).string_rep}'.`,
+                dragged_block: createBlockSnapshot(draggedBlock),
+                target_parent: createBlockSnapshot(targetParentBefore)
+            });
+        }
+
         const updatedParent = this.previewAttachment(id, targetParentId, side);
         this.removeBlock(id);
         this.updateBlockInData(updatedParent);
