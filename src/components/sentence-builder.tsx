@@ -178,6 +178,8 @@ const SentenceBuilder = () => {
         await supabase.auth.signOut();
         setUser(null);
         setIsAuthenticated(false);
+        setCurrentProjectId(null);
+        router.push('/', { scroll: false });
         setShowAuthModal(true);
     };
 
