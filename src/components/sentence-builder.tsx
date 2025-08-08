@@ -274,6 +274,7 @@ const SentenceBuilder = () => {
                 onSave={handleSaveProject}
                 onShowProjects={() => setIsProjectListOpen(true)}
                 currentProjectId={currentProjectId}
+                documentURL="https://sentence-builder-docs.hirodevs.com/docs/Introduction/intro"
             />
 
             {isAuthenticated && (

@@ -12,13 +12,14 @@ interface TopBarProps {
     onSave: () => void;
     onShowProjects: () => void;
     currentProjectId: string | null;
+    documentURL: string;
 }
 
-const TopBar = ({ user, onSignOut, onShowAuthModal, isDirty, isSaving, onSave, onShowProjects, currentProjectId }: TopBarProps) => {
+const TopBar = ({ user, onSignOut, onShowAuthModal, isDirty, isSaving, onSave, onShowProjects, currentProjectId, documentURL }: TopBarProps) => {
     const [showUserMenu, setShowUserMenu] = useState(false);
     const userMenuRef = useRef<HTMLDivElement>(null);
 
-    const handleButtonHover = useCallback((e: React.MouseEvent<HTMLButtonElement>, isEnter: boolean) => {
+    const handleButtonHover = useCallback((e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>, isEnter: boolean) => {
         const target = e.currentTarget;
         if (isEnter) {
             target.style.backgroundColor = '#f8f9fa';
@@ -114,13 +115,17 @@ const TopBar = ({ user, onSignOut, onShowAuthModal, isDirty, isSaving, onSave, o
                         プロジェクト一覧
                     </button>
                 )}
-                <button
+                <a
+                    href={documentURL}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="top-bar-button"
+                    style={{ textDecoration: 'none' }} // Prevents the default underline
                     onMouseEnter={(e) => handleButtonHover(e, true)}
                     onMouseLeave={(e) => handleButtonHover(e, false)}
                 >
                     ドキュメント
-                </button>
+                </a>
             </div>
             <div className="top-bar-right">
                 {user && <button
