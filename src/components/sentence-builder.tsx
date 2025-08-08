@@ -118,14 +118,16 @@ const SentenceBuilder = () => {
 
         const projectIdFromUrl = searchParams.get('projectId');
 
-        if (projectIdFromUrl && projectIdFromUrl !== currentProjectId) {
-            handleLoadProject(projectIdFromUrl);
-        } else if (!projectIdFromUrl) {
-            // If the URL has no project ID, show the selection modal.
-            setIsProjectListOpen(true);
+        if (user) {
+            if (projectIdFromUrl && projectIdFromUrl !== currentProjectId) {
+                handleLoadProject(projectIdFromUrl);
+            } else if (!projectIdFromUrl) {
+                // If the URL has no project ID, show the selection modal.
+                setIsProjectListOpen(true);
+            }
         }
 
-    }, [isAuthenticated, searchParams, currentProjectId]);
+    }, [isAuthenticated, user, searchParams, currentProjectId]);
 
     useEffect(() => {
         // Only start a session if we have a user and a definitive project ID
