@@ -44,6 +44,32 @@ export class Renderer {
         window.addEventListener('resize', this.handleResize);
     }
 
+    getSnapshotAfterDetachment(rootParent, blockToDetachId) {
+        if (!rootParent || !blockToDetachId) return null;
+
+        // Work on a deep copy to avoid side effects
+        const rootCopy = JSON.parse(JSON.stringify(rootParent));
+
+        // Recursive function to find and nullify the block's content in the copied structure
+        const findAndNullifyInCopy = (current) => {
+            if (!current.children) return false;
+            for (let i = 0; i < current.children.length; i++) {
+                const child = current.children[i];
+                if (child.content && child.content.id === blockToDetachId) {
+                    child.content = null; // Detach by nullifying content
+                    return true; // Found and detached
+                }
+                if (child.content && findAndNullifyInCopy(child.content)) {
+                    return true; // Found and detached in a deeper level
+                }
+            }
+            return false;
+        };
+
+        findAndNullifyInCopy(rootCopy);
+        return createBlockSnapshot(rootCopy);
+    }
+
     generateRandomId() {
         return "b" + crypto.randomUUID().replaceAll(/-/g, '');
     }
@@ -887,11 +913,21 @@ export class Renderer {
         if (!fromSideBar) {
             const { rootParent, parentBlock } = this.findBlock(d.id);
             if (parentBlock && rootParent) {
+                const detachedBlockSnapshot = createBlockSnapshot(d);
+                const originalParentSnapshot = createBlockSnapshot(rootParent);
+                const resultParentSnapshot = this.getSnapshotAfterDetachment(rootParent, d.id);
+
+                let description = `Detached block '${detachedBlockSnapshot.string_rep}' from '${originalParentSnapshot.string_rep}'.`;
+                if (resultParentSnapshot) {
+                    description += ` Result: ${resultParentSnapshot.string_rep}`;
+                }
+
                 this.onLogEvent('BLOCK_INTERACTION', {
                     sub_type: 'detachment',
-                    description: `Detached block '${createBlockSnapshot(d).string_rep}' from '${createBlockSnapshot(rootParent).string_rep}'.`,
-                    detached_block: createBlockSnapshot(d),
-                    original_parent: createBlockSnapshot(rootParent)
+                    description: description,
+                    detached_block: detachedBlockSnapshot,
+                    original_parent: originalParentSnapshot,
+                    result_parent: resultParentSnapshot // Add result state
                 });
             }
         }
@@ -1451,19 +1487,28 @@ export class Renderer {
     }
 
     insertBlock(id, targetParentId, index) {
+        const updatedParent = this.previewInsertion(id, targetParentId, index);
+
         // ログ出力
         const { foundBlock: draggedBlock } = this.findBlock(id);
         const { rootParent: targetParentBefore } = this.findBlock(targetParentId);
-        if (draggedBlock && targetParentBefore) {
+        if (draggedBlock && targetParentBefore && updatedParent) {
+            const draggedBlockSnapshot = createBlockSnapshot(draggedBlock);
+            const originalParentSnapshot = createBlockSnapshot(targetParentBefore);
+            const resultParentSnapshot = createBlockSnapshot(updatedParent);
+
+            let description = `Inserted block '${draggedBlockSnapshot.string_rep}' into '${originalParentSnapshot.string_rep}'.`;
+            description += ` Result: ${resultParentSnapshot.string_rep}`;
+
             this.onLogEvent('BLOCK_INTERACTION', {
                 sub_type: 'insertion',
-                description: `Inserted block '${createBlockSnapshot(draggedBlock).string_rep}' into '${createBlockSnapshot(targetParentBefore).string_rep}'.`,
-                dragged_block: createBlockSnapshot(draggedBlock),
-                target_parent: createBlockSnapshot(targetParentBefore)
+                description: description,
+                dragged_block: draggedBlockSnapshot,
+                original_parent: originalParentSnapshot,
+                result_parent: resultParentSnapshot,
             });
         }
 
-        const updatedParent = this.previewInsertion(id, targetParentId, index);
         if (!updatedParent) {
             console.error("Insertion failed, preview returned nothing. Aborting.");
             // We might need to move the block back to the grid if insertion fails.
@@ -1479,19 +1524,28 @@ export class Renderer {
     }
 
     attachBlock(id, targetParentId, side) {
+        const updatedParent = this.previewAttachment(id, targetParentId, side);
+
         // ログ出力
         const { foundBlock: draggedBlock } = this.findBlock(id);
         const { rootParent: targetParentBefore } = this.findBlock(targetParentId);
-        if (draggedBlock && targetParentBefore) {
+        if (draggedBlock && targetParentBefore && updatedParent) {
+            const draggedBlockSnapshot = createBlockSnapshot(draggedBlock);
+            const originalParentSnapshot = createBlockSnapshot(targetParentBefore);
+            const resultParentSnapshot = createBlockSnapshot(updatedParent);
+
+            let description = `Attached block '${draggedBlockSnapshot.string_rep}' to '${originalParentSnapshot.string_rep}'.`;
+            description += ` Result: ${resultParentSnapshot.string_rep}`;
+
             this.onLogEvent('BLOCK_INTERACTION', {
                 sub_type: 'attachment',
-                description: `Attached block '${createBlockSnapshot(draggedBlock).string_rep}' to '${createBlockSnapshot(targetParentBefore).string_rep}'.`,
-                dragged_block: createBlockSnapshot(draggedBlock),
-                target_parent: createBlockSnapshot(targetParentBefore)
+                description: description,
+                dragged_block: draggedBlockSnapshot,
+                original_parent: originalParentSnapshot,
+                result_parent: resultParentSnapshot // Add result state
             });
         }
 
-        const updatedParent = this.previewAttachment(id, targetParentId, side);
         this.removeBlock(id);
         this.updateBlockInData(updatedParent);
         // Update translation for the updated parent/root
