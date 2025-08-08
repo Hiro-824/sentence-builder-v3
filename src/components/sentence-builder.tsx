@@ -273,6 +273,7 @@ const SentenceBuilder = () => {
                 isSaving={isSaving}
                 onSave={handleSaveProject}
                 onShowProjects={() => setIsProjectListOpen(true)}
+                currentProjectId={currentProjectId}
             />
 
             {isAuthenticated && (
