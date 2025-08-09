@@ -2,10 +2,11 @@
 import { Converter } from "@/grammar/converter";
 import { Grammar } from "@/grammar/grammar";
 import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding, resolvedGapRadius, initialVisibleCount, visiblilityIncrement } from "./const.js";
+import { createBlockSnapshot, createBlockSnapshotList } from "@/utils/supabase/logging_helpers";
 import * as d3 from "d3";
 
 export class Renderer {
-    constructor(blocks, blockList, svg, onDirty, topBarHeight = 0) {
+    constructor(blocks, blockList, svg, onDirty, topBarHeight = 0, onLogEvent = (string, object) => { }) {
         this.blocks = blocks;
         this.topBarHeight = topBarHeight;
         this.canvasHeight = window.innerHeight - this.topBarHeight;
@@ -24,11 +25,17 @@ export class Renderer {
         this.sideBarScrollExtent = 0;
         this.viewportHeight = window.innerHeight;
         this.grammar = new Grammar;
+
         this.onDirty = onDirty;
-        
+
+        this.onLogEvent = onLogEvent;
+        this.dragLogContext = null;
+        this.lastHoverTargetId = null;
+        this.hoverLogContext = null;
+
         // Initialize cache
         this.cachedSidebarWidth = null;
-        
+
         // Update translation for all initial blocks
         this.blocks.forEach(block => this.updateBlockTranslation(block));
         this.render();
@@ -36,6 +43,32 @@ export class Renderer {
         // Add resize event listener to handle orientation changes
         this.handleResize = this.handleResize.bind(this);
         window.addEventListener('resize', this.handleResize);
+    }
+
+    getSnapshotAfterDetachment(rootParent, blockToDetachId) {
+        if (!rootParent || !blockToDetachId) return null;
+
+        // Work on a deep copy to avoid side effects
+        const rootCopy = JSON.parse(JSON.stringify(rootParent));
+
+        // Recursive function to find and nullify the block's content in the copied structure
+        const findAndNullifyInCopy = (current) => {
+            if (!current.children) return false;
+            for (let i = 0; i < current.children.length; i++) {
+                const child = current.children[i];
+                if (child.content && child.content.id === blockToDetachId) {
+                    child.content = null; // Detach by nullifying content
+                    return true; // Found and detached
+                }
+                if (child.content && findAndNullifyInCopy(child.content)) {
+                    return true; // Found and detached in a deeper level
+                }
+            }
+            return false;
+        };
+
+        findAndNullifyInCopy(rootCopy);
+        return createBlockSnapshot(rootCopy);
     }
 
     generateRandomId() {
@@ -73,7 +106,7 @@ export class Renderer {
     render() {
         // Clear cache when re-rendering
         this.cachedSidebarWidth = null;
-        
+
         this.renderGrid();
         this.renderSideBar();
         this.renderDragboard();
@@ -110,7 +143,7 @@ export class Renderer {
         // Scale the SVG path to fit the trash size
         const scale = trashSize / 105.16; // Original SVG viewBox width is 105.16
         const scaledHeight = 122.88 * scale; // Original SVG viewBox height is 122.88
-        
+
         // Center the scaled SVG within the trash area
         const offsetX = (trashSize - trashSize) / 2;
         const offsetY = (trashSize - scaledHeight) / 2;
@@ -248,7 +281,7 @@ export class Renderer {
         if (this.cachedSidebarWidth) {
             return this.cachedSidebarWidth;
         }
-        
+
         let maxWidth = 0;
         Object.values(this.blockList).forEach(blockArray => {
             blockArray.forEach(block => {
@@ -264,12 +297,12 @@ export class Renderer {
     renderSideBarContent() {
         this.sidebarContent = this.sidebar.append("g");
         this.blockBoard = this.sidebarContent.append("g").attr("transform", `translate(${sidebarPadding.left * 2}, 0)`);
-        
+
         // Cache sidebar width calculation
         const sidebarWidth = this.calculateSideBarWidth();
         this.cachedSidebarWidth = sidebarWidth;
         const headerWidth = sidebarWidth / 2;
-        
+
         let y = sidebarPadding.top;
         Object.entries(this.blockList).forEach(([groupName, blockArray]) => {
             const isCollapsed = this.categoryState[groupName].isCollapsed;
@@ -708,6 +741,21 @@ export class Renderer {
                 .on("mousedown", (event) => {
                     event.stopPropagation();
                     const isFromSidebar = event.currentTarget.closest("#sidebar") !== null;
+
+                    // ログ出力
+                    const fromText = child.content[child.selected];
+                    const toText = option;
+                    if (!isFromSidebar && fromText !== toText) {
+                        const blockSnapshot = createBlockSnapshot(block);
+                        this.onLogEvent('BLOCK_INTERACTION', {
+                            sub_type: 'dropdown_select',
+                            description: `Changed dropdown in '${blockSnapshot.string_rep}' from '${fromText}' to '${toText}'.`,
+                            block: blockSnapshot,
+                            from: fromText,
+                            to: toText
+                        });
+                    }
+
                     child.selected = index;
                     if (isFromSidebar) {
                         this.closeAllDropdowns();
@@ -860,13 +908,49 @@ export class Renderer {
     dragStart(event, d, fromSideBar = false, sideBarId = undefined) {
         this.grabbingCursor(d.id, true);
         this.dragStarted = false;
+        this.hoverLogContext = {
+            currentPlaceholderId: null,
+            timerId: null,
+            loggedPlaceholdersForThisDrag: new Set()
+        };
         this.svg.node().appendChild(this.dragboard.node());
+
+        // ログ出力
+        if (!fromSideBar) {
+            const { rootParent, parentBlock } = this.findBlock(d.id);
+            if (parentBlock && rootParent) {
+                const detachedBlockSnapshot = createBlockSnapshot(d);
+                const originalParentSnapshot = createBlockSnapshot(rootParent);
+                const resultParentSnapshot = this.getSnapshotAfterDetachment(rootParent, d.id);
+
+                let description = `Detached block '${detachedBlockSnapshot.string_rep}' from '${originalParentSnapshot.string_rep}'.`;
+                if (resultParentSnapshot) {
+                    description += ` Result: ${resultParentSnapshot.string_rep}`;
+                }
+
+                this.onLogEvent('BLOCK_INTERACTION', {
+                    sub_type: 'detachment',
+                    description: description,
+                    detached_block: detachedBlockSnapshot,
+                    original_parent: originalParentSnapshot,
+                    result_parent: resultParentSnapshot // Add result state
+                });
+            }
+        }
     }
 
     dragging(event, d, fromSideBar = false) {
         if (!this.dragStarted) {
 
             if (fromSideBar) {
+                // ログ出力
+                const newBlockSnapshot = createBlockSnapshot(d);
+                this.onLogEvent('BLOCK_INTERACTION', {
+                    sub_type: 'creation',
+                    description: `Created block '${newBlockSnapshot.string_rep}' from sidebar.`,
+                    block: newBlockSnapshot
+                });
+
                 this.blocks.push(d);
                 const blockRect = d3.select(`#${d.id}`).node().getBoundingClientRect();
                 const sideBarX = blockRect.left;
@@ -903,6 +987,70 @@ export class Renderer {
             d.y = this.dragStartBlockY + dy;
             d3.select(`#${d.id}`).attr("transform", `translate(${d.x}, ${d.y})`);
             this.detectOverlapAndHighlight(d);
+
+            // ログ出力
+            const placeholderInfo = this.detectPlaceholderOverlap(d, event.x, event.y);
+            const currentHoverId = placeholderInfo && !placeholderInfo.isValid ? placeholderInfo.id : null;
+            const prevHoverId = this.hoverLogContext.currentPlaceholderId;
+
+            // Case 1: Moved away from a previously hovered invalid placeholder
+            if (prevHoverId && prevHoverId !== currentHoverId) {
+                if (this.hoverLogContext.timerId) {
+                    clearTimeout(this.hoverLogContext.timerId);
+
+                    if (!this.hoverLogContext.loggedPlaceholdersForThisDrag.has(prevHoverId)) {
+                        const blockSnapshot = createBlockSnapshot(d);
+                        const info = prevHoverId.split("-");
+                        const parentId = info[2];
+                        const index = info[1];
+                        const { foundBlock: parentBlock } = this.findBlock(parentId);
+                        const parentSnapshot = createBlockSnapshot(parentBlock);
+                        const hypotheticalBlock = this.previewInsertion(d.id, parentId, index);
+                        const dismissedResultSnapshot = createBlockSnapshot(hypotheticalBlock);
+                        this.onLogEvent('BLOCK_INTERACTION', {
+                            sub_type: 'invalid_insertion_pass_by',
+                            description: `Passed by an incompatible placeholder with block '${blockSnapshot.string_rep}'.`,
+                            block: blockSnapshot,
+                            placeholder_id: prevHoverId,
+                            parent_block: parentSnapshot,
+                            dismissed_result: dismissedResultSnapshot
+                        });
+                        this.hoverLogContext.loggedPlaceholdersForThisDrag.add(prevHoverId);
+                    }
+                }
+                this.hoverLogContext.currentPlaceholderId = null;
+                this.hoverLogContext.timerId = null;
+            }
+
+            // Case 2: Hovering over a new invalid placeholder
+            if (currentHoverId && currentHoverId !== prevHoverId) {
+                if (!this.hoverLogContext.loggedPlaceholdersForThisDrag.has(currentHoverId)) {
+                    this.hoverLogContext.currentPlaceholderId = currentHoverId;
+
+                    this.hoverLogContext.timerId = setTimeout(() => {
+                        const blockSnapshot = createBlockSnapshot(d);
+                        const info = currentHoverId.split("-");
+                        const parentId = info[2];
+                        const index = info[1];
+                        const { foundBlock: parentBlock } = this.findBlock(parentId);
+                        const parentSnapshot = createBlockSnapshot(parentBlock);
+                        const hypotheticalBlock = this.previewInsertion(d.id, parentId, index);
+                        const dismissedResultSnapshot = createBlockSnapshot(hypotheticalBlock);
+
+                        this.onLogEvent('BLOCK_INTERACTION', {
+                            sub_type: 'invalid_insertion_attempt',
+                            description: `Attempted to insert block '${blockSnapshot.string_rep}' into an incompatible placeholder in '${parentSnapshot.string_rep}'. Dismissed possible result: '${dismissedResultSnapshot.string_rep}'`,
+                            block: blockSnapshot,
+                            placeholder_id: currentHoverId,
+                            duration_ms: 500,
+                            parent_block: parentSnapshot,
+                            dismissed_result: dismissedResultSnapshot
+                        });
+                        this.hoverLogContext.loggedPlaceholdersForThisDrag.add(currentHoverId);
+                        this.hoverLogContext.timerId = null;
+                    }, 500);
+                }
+            }
         }
     }
 
@@ -941,6 +1089,31 @@ export class Renderer {
             }
         }
 
+        // ログ出力
+        const prevHoverId = this.hoverLogContext.currentPlaceholderId;
+        if (prevHoverId && this.hoverLogContext.timerId) {
+            clearTimeout(this.hoverLogContext.timerId);
+            if (!this.hoverLogContext.loggedPlaceholdersForThisDrag.has(prevHoverId)) {
+                const blockSnapshot = createBlockSnapshot(d);
+                const info = prevHoverId.split("-");
+                const parentId = info[2];
+                const index = info[1];
+                const { foundBlock: parentBlock } = this.findBlock(parentId);
+                const parentSnapshot = createBlockSnapshot(parentBlock);
+                const hypotheticalBlock = this.previewInsertion(d.id, parentId, index);
+                const dismissedResultSnapshot = createBlockSnapshot(hypotheticalBlock);
+
+                this.onLogEvent('BLOCK_INTERACTION', {
+                    sub_type: 'invalid_insertion_pass_by',
+                    block: blockSnapshot,
+                    placeholder_id: prevHoverId,
+                    description: `Ended drag after passing by an incompatible placeholder for block '${blockSnapshot.string_rep}' in '${parentSnapshot.string_rep}'. Dismissed possible result: '${dismissedResultSnapshot.string_rep}'`,
+                    block: blockSnapshot, placeholder_id: prevHoverId, parent_block: parentSnapshot, dismissed_result: dismissedResultSnapshot
+                });
+                this.hoverLogContext.loggedPlaceholdersForThisDrag.add(prevHoverId);
+            }
+        }
+
         this.dragStarted = false;
         this.grabbingHighlight(d.id, false);
 
@@ -956,6 +1129,16 @@ export class Renderer {
             const targetBlockId = overlapInfo.id.split("-")[1];
             this.attachBlock(d.id, targetBlockId, overlapInfo.side)
         } else {
+            // ログ出力
+            const { foundBlock } = this.findBlock(d.id);
+            if (foundBlock) {
+                this.onLogEvent('BLOCK_INTERACTION', {
+                    sub_type: 'move',
+                    description: `Moved block '${createBlockSnapshot(foundBlock).string_rep}'.`,
+                    block: createBlockSnapshot(foundBlock),
+                    position: { x: Math.round(foundBlock.x), y: Math.round(foundBlock.y) }
+                });
+            }
             this.moveBlockToGrid(d.id);
             this.formatBlock(d.id);
         }
@@ -1147,6 +1330,17 @@ export class Renderer {
     /*階層構造に関する処理***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
     deleteBlock(blockId) {
+        // ログ出力
+        const { foundBlock } = this.findBlock(blockId);
+        if (foundBlock) {
+            const deletedSnapshot = createBlockSnapshot(foundBlock);
+            this.onLogEvent('BLOCK_INTERACTION', {
+                sub_type: 'deletion',
+                description: `Deleted block '${deletedSnapshot.string_rep}'.`,
+                block: deletedSnapshot
+            });
+        }
+
         // First, update the data model by removing the block
         this.removeBlock(blockId);
 
@@ -1388,8 +1582,28 @@ export class Renderer {
     }
 
     insertBlock(id, targetParentId, index) {
-        // LOGGING: Log insertion call
         const updatedParent = this.previewInsertion(id, targetParentId, index);
+
+        // ログ出力
+        const { foundBlock: draggedBlock } = this.findBlock(id);
+        const { rootParent: targetParentBefore } = this.findBlock(targetParentId);
+        if (draggedBlock && targetParentBefore && updatedParent) {
+            const draggedBlockSnapshot = createBlockSnapshot(draggedBlock);
+            const originalParentSnapshot = createBlockSnapshot(targetParentBefore);
+            const resultParentSnapshot = createBlockSnapshot(updatedParent);
+
+            let description = `Inserted block '${draggedBlockSnapshot.string_rep}' into '${originalParentSnapshot.string_rep}'.`;
+            description += ` Result: ${resultParentSnapshot.string_rep}`;
+
+            this.onLogEvent('BLOCK_INTERACTION', {
+                sub_type: 'insertion',
+                description: description,
+                dragged_block: draggedBlockSnapshot,
+                original_parent: originalParentSnapshot,
+                result_parent: resultParentSnapshot,
+            });
+        }
+
         if (!updatedParent) {
             console.error("Insertion failed, preview returned nothing. Aborting.");
             // We might need to move the block back to the grid if insertion fails.
@@ -1406,6 +1620,27 @@ export class Renderer {
 
     attachBlock(id, targetParentId, side) {
         const updatedParent = this.previewAttachment(id, targetParentId, side);
+
+        // ログ出力
+        const { foundBlock: draggedBlock } = this.findBlock(id);
+        const { rootParent: targetParentBefore } = this.findBlock(targetParentId);
+        if (draggedBlock && targetParentBefore && updatedParent) {
+            const draggedBlockSnapshot = createBlockSnapshot(draggedBlock);
+            const originalParentSnapshot = createBlockSnapshot(targetParentBefore);
+            const resultParentSnapshot = createBlockSnapshot(updatedParent);
+
+            let description = `Attached block '${draggedBlockSnapshot.string_rep}' to '${originalParentSnapshot.string_rep}'.`;
+            description += ` Result: ${resultParentSnapshot.string_rep}`;
+
+            this.onLogEvent('BLOCK_INTERACTION', {
+                sub_type: 'attachment',
+                description: description,
+                dragged_block: draggedBlockSnapshot,
+                original_parent: originalParentSnapshot,
+                result_parent: resultParentSnapshot // Add result state
+            });
+        }
+
         this.removeBlock(id);
         this.updateBlockInData(updatedParent);
         // Update translation for the updated parent/root

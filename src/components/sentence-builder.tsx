@@ -13,6 +13,7 @@ import { getProjectData, saveProjectData } from '@/utils/supabase/projects';
 import ProjectListModal from "./project-list-modal";
 import { useRouter, useSearchParams } from 'next/navigation';
 import Loader from "./loader";
+import { LoggingService } from "@/utils/supabase/logging";
 
 const SentenceBuilder = () => {
     // ユーザー認証に関する変数
@@ -31,6 +32,7 @@ const SentenceBuilder = () => {
 
     const svgContainerRef = useRef(null);
     const rendererRef = useRef<Renderer | null>(null);
+    const loggingServiceRef = useRef<LoggingService | null>(null);
     const supabase = createClient();
 
     useEffect(() => {
@@ -95,8 +97,10 @@ const SentenceBuilder = () => {
         updateSvgSize();
         window.addEventListener("resize", updateSvgSize);
 
-        // Initialize with an empty blocks array. Loading is handled by the next effect.
-        rendererRef.current = new Renderer([], blockList, svg, () => setIsDirty(true), topBarHeight);
+        const logEvent = (eventType: string, eventData: object) => {
+            loggingServiceRef.current?.logEvent(eventType, eventData);
+        };
+        rendererRef.current = new Renderer([], blockList, svg, () => setIsDirty(true), topBarHeight, logEvent);
 
         // The cleanup function for THIS effect.
         return () => {
@@ -114,14 +118,39 @@ const SentenceBuilder = () => {
 
         const projectIdFromUrl = searchParams.get('projectId');
 
-        if (projectIdFromUrl && projectIdFromUrl !== currentProjectId) {
-            handleLoadProject(projectIdFromUrl);
-        } else if (!projectIdFromUrl) {
-            // If the URL has no project ID, show the selection modal.
-            setIsProjectListOpen(true);
+        if (user) {
+            if (projectIdFromUrl && projectIdFromUrl !== currentProjectId) {
+                handleLoadProject(projectIdFromUrl);
+            } else if (!projectIdFromUrl) {
+                // If the URL has no project ID, show the selection modal.
+                setIsProjectListOpen(true);
+            }
         }
 
-    }, [isAuthenticated, searchParams, currentProjectId]);
+    }, [isAuthenticated, user, searchParams, currentProjectId]);
+
+    useEffect(() => {
+        // Only start a session if we have a user and a definitive project ID
+        if (user && currentProjectId && currentProjectId !== "top-bar-button-test") {
+            const service = new LoggingService();
+            loggingServiceRef.current = service;
+            service.startSession(user.id, currentProjectId);
+
+            const handleSessionEnd = () => {
+                service.logEvent('SESSION_END_UNLOAD', { reason: 'beforeunload' });
+                service.endSession();
+            };
+
+            window.addEventListener('beforeunload', handleSessionEnd);
+
+            return () => {
+                service.logEvent('SESSION_END', { reason: 'cleanup' });
+                service.endSession();
+                loggingServiceRef.current = null;
+                window.removeEventListener('beforeunload', handleSessionEnd);
+            };
+        }
+    }, [user?.id, currentProjectId]);
 
     const handleAuthSuccess = () => {
         setIsAuthenticated(true);
@@ -134,6 +163,14 @@ const SentenceBuilder = () => {
     };
 
     const handleSignOut = async () => {
+        loggingServiceRef.current?.logEvent('SIGN_OUT', {});
+
+        if (loggingServiceRef.current) {
+            await loggingServiceRef.current.endSession();
+        }
+
+        loggingServiceRef.current = null;
+
         // Clean up renderer before signing out
         if (rendererRef.current) {
             rendererRef.current.destroy();
@@ -143,6 +180,8 @@ const SentenceBuilder = () => {
         await supabase.auth.signOut();
         setUser(null);
         setIsAuthenticated(false);
+        setCurrentProjectId(null);
+        router.push('/', { scroll: false });
         setShowAuthModal(true);
     };
 
@@ -157,8 +196,10 @@ const SentenceBuilder = () => {
         try {
             await saveProjectData(currentProjectId, projectData);
             setIsDirty(false);
+            loggingServiceRef.current?.logEvent('PROJECT_SAVE_SUCCESS', { projectId: currentProjectId });
         } catch (error) {
             console.error("Failed to save project:", error);
+            loggingServiceRef.current?.logEvent('PROJECT_SAVE_FAIL', { projectId: currentProjectId, error: (error as Error).message });
             alert("プロジェクトの保存に失敗しました。");
         } finally {
             setIsSaving(false);
@@ -168,7 +209,6 @@ const SentenceBuilder = () => {
     const handleLoadProject = async (projectId: string) => {
         if (!rendererRef.current) return;
         setIsProjectListOpen(false);
-        console.log(`handleLoadProjectがisProjectLoadingをtrueにします`)
         setIsProjectLoading(true);
         try {
             const data = await getProjectData(projectId);
@@ -180,16 +220,15 @@ const SentenceBuilder = () => {
             if (searchParams.get('projectId') !== projectId) {
                 router.push(`/?projectId=${projectId}`, { scroll: false });
             }
+            loggingServiceRef.current?.logEvent('PROJECT_LOAD_SUCCESS', { projectId });
         } catch (error) {
             console.error("Failed to load project:", error);
+            loggingServiceRef.current?.logEvent('PROJECT_LOAD_FAIL', { projectId, error: (error as Error).message });
             alert("プロジェクトの読み込みに失敗しました。");
         } finally {
-            console.log(`handleLoadProjectがisProjectLoadingをfalseにします`)
             setIsProjectLoading(false);
         }
     }
-
-    // Inside the SentenceBuilder component in sentence-builder.tsx
 
     const handleCreateNewProject = async () => {
         if (!rendererRef.current) return;
@@ -198,9 +237,11 @@ const SentenceBuilder = () => {
         try {
             const newProjectId = crypto.randomUUID();
             await saveProjectData(newProjectId, { blocks: [] });
+            loggingServiceRef.current?.logEvent('PROJECT_CREATE_SUCCESS', { newProjectId: newProjectId });
             router.push(`/?projectId=${newProjectId}`, { scroll: false });
         } catch (error) {
             console.error("Failed to create new project:", error);
+            loggingServiceRef.current?.logEvent('PROJECT_CREATE_FAIL', { error: (error as Error).message });
             alert("プロジェクトの作成に失敗しました。");
             setIsProjectLoading(false);
         }
@@ -232,6 +273,8 @@ const SentenceBuilder = () => {
                 isSaving={isSaving}
                 onSave={handleSaveProject}
                 onShowProjects={() => setIsProjectListOpen(true)}
+                currentProjectId={currentProjectId}
+                documentURL="https://sentence-builder-docs.hirodevs.com/docs/Introduction/intro"
             />
 
             {isAuthenticated && (
