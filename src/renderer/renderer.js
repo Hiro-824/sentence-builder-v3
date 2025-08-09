@@ -31,6 +31,7 @@ export class Renderer {
         this.onLogEvent = onLogEvent;
         this.dragLogContext = null;
         this.lastHoverTargetId = null;
+        this.hoverLogContext = null;
 
         // Initialize cache
         this.cachedSidebarWidth = null;
@@ -907,6 +908,11 @@ export class Renderer {
     dragStart(event, d, fromSideBar = false, sideBarId = undefined) {
         this.grabbingCursor(d.id, true);
         this.dragStarted = false;
+        this.hoverLogContext = {
+            currentPlaceholderId: null,
+            timerId: null,
+            loggedPlaceholdersForThisDrag: new Set()
+        };
         this.svg.node().appendChild(this.dragboard.node());
 
         // ログ出力
@@ -981,6 +987,51 @@ export class Renderer {
             d.y = this.dragStartBlockY + dy;
             d3.select(`#${d.id}`).attr("transform", `translate(${d.x}, ${d.y})`);
             this.detectOverlapAndHighlight(d);
+
+            // ログ出力
+            const placeholderInfo = this.detectPlaceholderOverlap(d, event.x, event.y);
+            const currentHoverId = placeholderInfo && !placeholderInfo.isValid ? placeholderInfo.id : null;
+            const prevHoverId = this.hoverLogContext.currentPlaceholderId;
+
+            // Case 1: Moved away from a previously hovered invalid placeholder
+            if (prevHoverId && prevHoverId !== currentHoverId) {
+                if (this.hoverLogContext.timerId) {
+                    clearTimeout(this.hoverLogContext.timerId);
+
+                    if (!this.hoverLogContext.loggedPlaceholdersForThisDrag.has(prevHoverId)) {
+                        const blockSnapshot = createBlockSnapshot(d);
+                        this.onLogEvent('BLOCK_INTERACTION', {
+                            sub_type: 'invalid_insertion_pass_by',
+                            description: `Passed by an incompatible placeholder with block '${blockSnapshot.string_rep}'.`,
+                            block: blockSnapshot,
+                            placeholder_id: prevHoverId
+                        });
+                        this.hoverLogContext.loggedPlaceholdersForThisDrag.add(prevHoverId);
+                    }
+                }
+                this.hoverLogContext.currentPlaceholderId = null;
+                this.hoverLogContext.timerId = null;
+            }
+
+            // Case 2: Hovering over a new invalid placeholder
+            if (currentHoverId && currentHoverId !== prevHoverId) {
+                if (!this.hoverLogContext.loggedPlaceholdersForThisDrag.has(currentHoverId)) {
+                    this.hoverLogContext.currentPlaceholderId = currentHoverId;
+
+                    this.hoverLogContext.timerId = setTimeout(() => {
+                        const blockSnapshot = createBlockSnapshot(d);
+                        this.onLogEvent('BLOCK_INTERACTION', {
+                            sub_type: 'invalid_insertion_attempt',
+                            description: `Attempted to insert block '${blockSnapshot.string_rep}' into an incompatible placeholder.`,
+                            block: blockSnapshot,
+                            placeholder_id: currentHoverId,
+                            duration_ms: 500
+                        });
+                        this.hoverLogContext.loggedPlaceholdersForThisDrag.add(currentHoverId);
+                        this.hoverLogContext.timerId = null;
+                    }, 500);
+                }
+            }
         }
     }
 
@@ -1016,6 +1067,22 @@ export class Renderer {
                 this.dragStarted = false;
                 this.draggedBlockId = null;
                 return;
+            }
+        }
+
+        // ログ出力
+        const prevHoverId = this.hoverLogContext.currentPlaceholderId;
+        if (prevHoverId && this.hoverLogContext.timerId) {
+            clearTimeout(this.hoverLogContext.timerId);
+            if (!this.hoverLogContext.loggedPlaceholdersForThisDrag.has(prevHoverId)) {
+                const blockSnapshot = createBlockSnapshot(d);
+                this.onLogEvent('BLOCK_INTERACTION', {
+                    sub_type: 'invalid_insertion_pass_by',
+                    description: `Ended drag after passing by an incompatible placeholder with block '${blockSnapshot.string_rep}'.`,
+                    block: blockSnapshot,
+                    placeholder_id: prevHoverId
+                });
+                this.hoverLogContext.loggedPlaceholdersForThisDrag.add(prevHoverId);
             }
         }
 
