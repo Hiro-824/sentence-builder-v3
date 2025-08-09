@@ -1000,11 +1000,20 @@ export class Renderer {
 
                     if (!this.hoverLogContext.loggedPlaceholdersForThisDrag.has(prevHoverId)) {
                         const blockSnapshot = createBlockSnapshot(d);
+                        const info = prevHoverId.split("-");
+                        const parentId = info[2];
+                        const index = info[1];
+                        const { foundBlock: parentBlock } = this.findBlock(parentId);
+                        const parentSnapshot = createBlockSnapshot(parentBlock);
+                        const hypotheticalBlock = this.previewInsertion(d.id, parentId, index);
+                        const dismissedResultSnapshot = createBlockSnapshot(hypotheticalBlock);
                         this.onLogEvent('BLOCK_INTERACTION', {
                             sub_type: 'invalid_insertion_pass_by',
                             description: `Passed by an incompatible placeholder with block '${blockSnapshot.string_rep}'.`,
                             block: blockSnapshot,
-                            placeholder_id: prevHoverId
+                            placeholder_id: prevHoverId,
+                            parent_block: parentSnapshot,
+                            dismissed_result: dismissedResultSnapshot
                         });
                         this.hoverLogContext.loggedPlaceholdersForThisDrag.add(prevHoverId);
                     }
@@ -1020,12 +1029,22 @@ export class Renderer {
 
                     this.hoverLogContext.timerId = setTimeout(() => {
                         const blockSnapshot = createBlockSnapshot(d);
+                        const info = currentHoverId.split("-");
+                        const parentId = info[2];
+                        const index = info[1];
+                        const { foundBlock: parentBlock } = this.findBlock(parentId);
+                        const parentSnapshot = createBlockSnapshot(parentBlock);
+                        const hypotheticalBlock = this.previewInsertion(d.id, parentId, index);
+                        const dismissedResultSnapshot = createBlockSnapshot(hypotheticalBlock);
+
                         this.onLogEvent('BLOCK_INTERACTION', {
                             sub_type: 'invalid_insertion_attempt',
-                            description: `Attempted to insert block '${blockSnapshot.string_rep}' into an incompatible placeholder.`,
+                            description: `Attempted to insert block '${blockSnapshot.string_rep}' into an incompatible placeholder in '${parentSnapshot.string_rep}'. Dismissed possible result: '${dismissedResultSnapshot.string_rep}'`,
                             block: blockSnapshot,
                             placeholder_id: currentHoverId,
-                            duration_ms: 500
+                            duration_ms: 500,
+                            parent_block: parentSnapshot,
+                            dismissed_result: dismissedResultSnapshot
                         });
                         this.hoverLogContext.loggedPlaceholdersForThisDrag.add(currentHoverId);
                         this.hoverLogContext.timerId = null;
@@ -1076,11 +1095,20 @@ export class Renderer {
             clearTimeout(this.hoverLogContext.timerId);
             if (!this.hoverLogContext.loggedPlaceholdersForThisDrag.has(prevHoverId)) {
                 const blockSnapshot = createBlockSnapshot(d);
+                const info = prevHoverId.split("-");
+                const parentId = info[2];
+                const index = info[1];
+                const { foundBlock: parentBlock } = this.findBlock(parentId);
+                const parentSnapshot = createBlockSnapshot(parentBlock);
+                const hypotheticalBlock = this.previewInsertion(d.id, parentId, index);
+                const dismissedResultSnapshot = createBlockSnapshot(hypotheticalBlock);
+
                 this.onLogEvent('BLOCK_INTERACTION', {
                     sub_type: 'invalid_insertion_pass_by',
-                    description: `Ended drag after passing by an incompatible placeholder with block '${blockSnapshot.string_rep}'.`,
                     block: blockSnapshot,
-                    placeholder_id: prevHoverId
+                    placeholder_id: prevHoverId,
+                    description: `Ended drag after passing by an incompatible placeholder for block '${blockSnapshot.string_rep}' in '${parentSnapshot.string_rep}'. Dismissed possible result: '${dismissedResultSnapshot.string_rep}'`,
+                    block: blockSnapshot, placeholder_id: prevHoverId, parent_block: parentSnapshot, dismissed_result: dismissedResultSnapshot
                 });
                 this.hoverLogContext.loggedPlaceholdersForThisDrag.add(prevHoverId);
             }
