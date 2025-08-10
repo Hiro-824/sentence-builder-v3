@@ -77,7 +77,7 @@ export const blockToInfinitive: Block = {
     x: 0,
     y: 0,
     undraggable: true,
-    color: "mediumseagreen",
+    color: "orange",
     isRound: true,
     words: [{
         token: "",
@@ -111,7 +111,7 @@ export const blockAbleTo: Block = {
     x: 0,
     y: 0,
     isRound: true,
-    color: "dodgerblue", // Adjective color
+    color: "CornflowerBlue", // Adjective color
     words: [{
         token: "",
         categories: [{
@@ -154,7 +154,7 @@ export const blockGoingTo: Block = {
     x: 0,
     y: 0,
     isRound: true,
-    color: "dodgerblue",
+    color: "CornflowerBlue",
     words: [{
         token: "",
         categories: [{

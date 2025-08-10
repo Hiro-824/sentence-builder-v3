@@ -225,7 +225,7 @@ export const blockHow: Block = {
             }
         ]
     }],
-    color: "dodgerblue",
+    color: "coral",
     children: [{ id: "head", hidden: false, type: "text", content: "how" }]
 };
 
@@ -251,7 +251,7 @@ export const blockWhere: Block = {
             }
         ]
     }],
-    color: "dodgerblue",
+    color: "coral",
     children: [{ id: "head", hidden: false, type: "text", content: "where" }]
 };
 

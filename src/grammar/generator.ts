@@ -704,7 +704,7 @@ export class Generator {
                     }]
                 }
             ],
-            color: config.color ?? "dodgerblue",
+            color: config.color ?? "CornflowerBlue",
             isRound: true,
             children: [{
                 id: "head",
@@ -1017,7 +1017,7 @@ export class Generator {
                 token: "",
                 categories: [...this.createBeCategory("ing")]
             }],
-            color: "tomato",
+            color: "orange",
             children: [{
                 id: "specifier",
                 hidden: false,
@@ -1078,7 +1078,7 @@ export class Generator {
                     ...this.createBeNotCategory("were", { type: "non-3sing", num: "sing", per: 2 })
                 ]
             }],
-            color: "tomato",
+            color: "orange",
             children: [{
                 id: "specifier",
                 hidden: false,
@@ -1135,7 +1135,7 @@ export class Generator {
                     ...this.createInvertedBeCategory("were", { type: "non-3sing", num: "sing", per: 2 })
                 ]
             }],
-            color: "tomato",
+            color: "orange",
             children: [{
                 id: "head",
                 hidden: false,
@@ -1360,7 +1360,7 @@ export class Generator {
                 token: "",
                 categories: [...this.createDoNotCategory("did", {})]
             }],
-            color: "tomato",
+            color: "orange",
             children: [{
                 id: "specifier",
                 hidden: false,
@@ -1400,7 +1400,7 @@ export class Generator {
                 token: "",
                 categories: [...this.createInvertedDoCategory("did", {})]
             }],
-            color: "tomato",
+            color: "orange",
             children: [{
                 id: "head",
                 hidden: false,
@@ -1453,7 +1453,7 @@ export class Generator {
                     }
                 }]
             }],
-            color: config.color ?? "orange",
+            color: config.color ?? "Coral",
             children: [{
                 id: "head",
                 hidden: false,
@@ -1470,7 +1470,7 @@ export class Generator {
 
     createModalBlock(config: ModalConfig): Block {
         const { id, word, translation, translationKey, preTranslation } = config;
-        const color = config.color || "mediumseagreen";
+        const color = config.color || "orange";
 
         return {
             id: id,
@@ -1535,7 +1535,7 @@ export class Generator {
 
     createNegativeModalBlock(config: NegativeModalConfig): Block {
         const { id, negativeWord, preTranslation, translationKey, negativeTranslation } = config;
-        const color = config.color || "mediumseagreen";
+        const color = config.color || "orange";
 
         return {
             id: id,
@@ -1604,7 +1604,7 @@ export class Generator {
 
     createInvertedModalBlock(config: ModalConfig): Block {
         const { id, word, translation, preTranslation, translationKey } = config;
-        const color = config.color || "mediumseagreen";
+        const color = config.color || "orange";
 
         return {
             id: id,
@@ -1750,7 +1750,7 @@ export class Generator {
                 token: "",
                 categories: whCategories
             }],
-            color: color || "mediumseagreen",
+            color: color || "orange",
             children: [
                 {
                     id: "interrogative-complement",

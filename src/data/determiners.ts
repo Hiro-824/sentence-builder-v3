@@ -8,7 +8,7 @@ export const blockThe: Block = {
     words: [{
         token: "",
         categories: [{
-            head: { type: det, agr: {}, determinered: true },
+            head: { type: det, agr: { per: 3 }, determinered: true },
             right: [{
                 head: { type: noun, agr: {} }
             }],

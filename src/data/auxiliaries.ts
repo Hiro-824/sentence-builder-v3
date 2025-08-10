@@ -7,7 +7,7 @@ export const blockSentence: Block = {
     id: "",
     x: 0,
     y: 0,
-    color: "lightBlue",
+    color: "orange",
     words: [{
         token: "",
         categories: [{

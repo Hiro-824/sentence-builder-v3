@@ -66,7 +66,7 @@ export const blockWell: Block = {
         }
     ],
 
-    color: "orange",
+    color: "Coral",
 
     children: [{
         id: "head",
@@ -97,7 +97,7 @@ export const blockVery: Block = {
             }
         }]
     }],
-    color: "orange",
+    color: "Coral",
     children: [{
         id: "head",
         hidden: false,

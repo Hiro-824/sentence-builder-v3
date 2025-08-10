@@ -16,26 +16,8 @@ export const blockTo: Block = {
     isRound: true,
     words: [{
         token: "",
-        categories: [{
-            head: {
-                type: {
-                    type: "nominal",
-                    isTo: true,
-                }
-            },
-            right: [{
-                head: { type: "verb", finite: false, form: "base" }
-            }],
-            translationTemplates: {
-                default: [
-                    {
-                        path: ["right", 0],
-                        key: "default",
-                    },
-                    "こと"
-                ]
-            }
-        }, {
+        categories: [
+        {
             head: { type: "adverbial", isTo: true },
             right: [{
                 head: { type: "verb", finite: false, form: "base" }
@@ -50,9 +32,16 @@ export const blockTo: Block = {
                     "ために"
                 ]
             }
+        }, {
+            head: { type: { type: "nominal", isTo: true, isDet: true }, agr: { type: "3sing" } },
+            right: [{ head: { type: "verb", form: "base" } }],
+            translationTemplates: {
+                default: [{ path: ["right", 0], key: "default" }, "こと"],
+                base: [{ path: ["right", 0], key: "default" }]
+            }
         }]
     }],
-    color: "dodgerblue",
+    color: "orange",
     children: [{
         id: "head",
         hidden: false,
@@ -73,13 +62,33 @@ export const blockList = {
     "動詞": [
         ...allVerbBlocks,
     ],
-    "代名詞": [
-        ...allPronounBlocks,
+    "副詞": [
+        blockEvery,
+        blockWell,
+        blockVery,
+    ],
+    "形容詞": [
+        ...allAdjectiveBlocks,
     ],
     "冠詞": [
         blockA,
         blockThe,
         blockS,
+    ],
+    "名詞": [
+        ...allNounBlocks
+    ],
+    "代名詞": [
+        ...allPronounBlocks,
+    ],
+    "前置詞": [
+        ...allPrepositionBlocks,
+    ],
+    "不定詞": [
+        blockTo
+    ],
+    "接続詞": [
+        blockThat,
     ],
     "疑問詞": [
         blockWhatSentence,
@@ -92,26 +101,6 @@ export const blockList = {
         blockWhoSentence,
         blockWhereSentence,
         blockHowSentence,
-    ],
-    "名詞": [
-        ...allNounBlocks
-    ],
-    "前置詞": [
-        ...allPrepositionBlocks,
-    ],
-    "形容詞": [
-        ...allAdjectiveBlocks,
-    ],
-    "接続詞": [
-        blockThat,
-    ],
-    "不定詞": [
-        blockTo
-    ],
-    "副詞": [
-        blockEvery,
-        blockWell,
-        blockVery,
     ],
     "関係詞": []
 }
