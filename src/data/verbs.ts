@@ -26,7 +26,8 @@ const configRun: VerbConfig = {
             default: "走った"
         },
         progressive: {
-            default: "走っているところ"
+            default: "走っているところ",
+            nonPredicate: "走っている",
         },
         perfect: {
             default: "既に走っている"
@@ -68,7 +69,8 @@ const configRead: VerbConfig = {
             default: "読んだ"
         },
         progressive: {
-            default: "読んでいるところ"
+            default: "読んでいるところ",
+            nonPredicate: "読んでいる",
         },
         perfect: {
             default: "既に読んでいる"
@@ -113,7 +115,8 @@ const configHave: VerbConfig = {
             default: "持っていた"
         },
         progressive: {
-            default: "食べている"
+            default: "持っているところ",
+            nonPredicate: "持っている",
         },
         perfect: {
             default: "すでに持っている"
@@ -163,7 +166,8 @@ const configGive: VerbConfig = {
             default: "あげた"
         },
         progressive: {
-            default: "あげているところ"
+            default: "あげているところ",
+            nonPredicate: "あげている",
         },
         perfect: {
             default: "既にあげている"
@@ -202,7 +206,10 @@ const knowConfig: VerbConfig = {
     translations: {
         present: { default: "知っている", imperfective: "知ってい", past: "知っていた" },
         past: { default: "知っていた" },
-        progressive: { default: "知っている" },
+        progressive: {
+            default: "知っているところ",
+            nonPredicate: "知っている",
+        },
         perfect: { default: "既に知っている" },
         passive: { default: "知られている" },
         noun: { default: "知っていること" }
@@ -230,7 +237,10 @@ const playConfig: VerbConfig = {
     translations: {
         present: { default: "する", imperfective: "し", past: "した" },
         past: { default: "した" },
-        progressive: { default: "している" },
+        progressive: {
+            default: "しているところ",
+            nonPredicate: "している",
+        },
         perfect: { default: "既にしている" },
         passive: { default: "される" },
         noun: { default: "すること" }

@@ -909,6 +909,10 @@ export class Generator {
         if (tense) head.tense = tense;
         if (finite) left.head.case = "nom";
         if (agr) left.head.agr = agr;
+
+        const defaultTenseEnding = tense === "present" ? "だ" : tense === "past" ? "だった" : "である";
+        const nominalTenseEnding = tense === "present" ? "" : tense === "past" ? "ところだった" : "である";
+
         return [{
             head: head,
             left: [{ head: { type: { type: "nominal", isDet: true, isTo: false, isGerund: false }, case: "nom", agr: agr ?? {} } }],
@@ -928,7 +932,19 @@ export class Generator {
                         path: ["right", 0],
                         key: "default",
                     },
-                    tense === "present" ? "だ" : tense === "past" ? "だった" : "である"
+                    defaultTenseEnding
+                ],
+                nominal: [
+                    ...finite ? [{
+                        path: ["left", 0],
+                        key: "default",
+                        particle: "が",
+                    }] : [],
+                    {
+                        path: ["right", 0],
+                        key: "nonPredicate",
+                    },
+                    nominalTenseEnding
                 ]
             }
         }, {
@@ -948,7 +964,19 @@ export class Generator {
                         path: ["right", 0],
                         key: "default",
                     },
-                    tense === "present" ? "だ" : tense === "past" ? "だった" : "である"
+                    defaultTenseEnding
+                ],
+                nominal: [
+                    ...finite ? [{
+                        path: ["left", 0],
+                        key: "default",
+                        particle: "が",
+                    }] : [],
+                    {
+                        path: ["right", 0],
+                        key: "default",
+                    },
+                    nominalTenseEnding
                 ]
             }
         }, {
@@ -967,6 +995,17 @@ export class Generator {
                     {
                         path: ["right", 0],
                         key: tense === "present" ? "predicative" : "past",
+                    },
+                ],
+                nominal: [
+                    ...finite ? [{
+                        path: ["left", 0],
+                        key: "default",
+                        particle: "が",
+                    }] : [],
+                    {
+                        path: ["right", 0],
+                        key: "default",
                     },
                 ]
             }
@@ -987,6 +1026,17 @@ export class Generator {
                         path: ["right", 0],
                         key: tense === "present" ? "default" : "past",
                     },
+                ],
+                nominal: [
+                    ...finite ? [{
+                        path: ["left", 0],
+                        key: "default",
+                        particle: "が",
+                    }] : [],
+                    {
+                        path: ["right", 0],
+                        key: tense === "present" ? "default" : "past",
+                    },
                 ]
             }
         }]
@@ -998,6 +1048,9 @@ export class Generator {
         const left: Phrase = { head: { type: { type: "nominal", isDet: true }, case: "nom" } };
         if (tense) head.tense = tense;
         if (agr) left.head.agr = agr;
+
+        const tenseEnding = tense === "present" ? "ではない" : "ではなかった";
+
         return [{
             head: head,
             left: [{ head: { type: { type: "nominal", isDet: true, isTo: false, isGerund: false }, case: "nom", agr: agr ?? {} } }],
@@ -1008,16 +1061,14 @@ export class Generator {
             customUnification: this.getSubjectGapUnification(),
             translationTemplates: {
                 default: [
-                    {
-                        path: ["left", 0],
-                        key: "default",
-                        particle: "は",
-                    },
-                    {
-                        path: ["right", 0],
-                        key: "default",
-                    },
-                    tense === "present" ? "ではない" : "ではなかった"
+                    { path: ["left", 0], key: "default", particle: "は" },
+                    { path: ["right", 0], key: "default" },
+                    tenseEnding
+                ],
+                nominal: [
+                    { path: ["left", 0], key: "default", particle: "が" },
+                    { path: ["right", 0], key: "default" },
+                    tenseEnding
                 ]
             }
         }, {
@@ -1028,16 +1079,14 @@ export class Generator {
             }],
             translationTemplates: {
                 default: [
-                    {
-                        path: ["left", 0],
-                        key: "default",
-                        particle: "は",
-                    },
-                    {
-                        path: ["right", 0],
-                        key: "default",
-                    },
-                    tense === "present" ? "ではない" : "ではなかった"
+                    { path: ["left", 0], key: "default", particle: "は" },
+                    { path: ["right", 0], key: "default" },
+                    tenseEnding
+                ],
+                nominal: [
+                    { path: ["left", 0], key: "default", particle: "が" },
+                    { path: ["right", 0], key: "default" },
+                    tenseEnding
                 ]
             }
         }, {
@@ -1048,15 +1097,12 @@ export class Generator {
             }],
             translationTemplates: {
                 default: [
-                    {
-                        path: ["left", 0],
-                        key: "default",
-                        particle: "は",
-                    },
-                    {
-                        path: ["right", 0],
-                        key: tense === "present" ? "predNeg" : "pastNeg",
-                    },
+                    { path: ["left", 0], key: "default", particle: "は" },
+                    { path: ["right", 0], key: tense === "present" ? "predNeg" : "pastNeg" },
+                ],
+                nominal: [
+                    { path: ["left", 0], key: "default", particle: "が" },
+                    { path: ["right", 0], key: tense === "present" ? "predNeg" : "pastNeg" },
                 ]
             }
         }, {
@@ -1067,15 +1113,12 @@ export class Generator {
             }],
             translationTemplates: {
                 default: [
-                    {
-                        path: ["left", 0],
-                        key: "default",
-                        particle: "は",
-                    },
-                    {
-                        path: ["right", 0],
-                        key: tense === "present" ? "predNeg" : "pastNeg",
-                    },
+                    { path: ["left", 0], key: "default", particle: "は" },
+                    { path: ["right", 0], key: tense === "present" ? "predNeg" : "pastNeg" },
+                ],
+                nominal: [
+                    { path: ["left", 0], key: "default", particle: "が" },
+                    { path: ["right", 0], key: tense === "present" ? "predNeg" : "pastNeg" },
                 ]
             }
         }]
@@ -1087,6 +1130,10 @@ export class Generator {
         const subject: Phrase = { head: { type: { type: "nominal", isDet: true }, case: "nom", isSubject: true } };
         if (tense) head.tense = tense;
         if (agr) subject.head.agr = agr;
+
+        const defaultTenseEnding = tense === "present" ? "なのか？" : "だったのか？";
+        const nominalTenseEnding = tense === "present" ? "なのか" : "だったのか";
+
         return [{
             head: head,
             right: [
@@ -1095,16 +1142,14 @@ export class Generator {
             ],
             translationTemplates: {
                 default: [
-                    {
-                        path: ["right", 0],
-                        key: "default",
-                        particle: "は",
-                    },
-                    {
-                        path: ["right", 1],
-                        key: "default",
-                    },
-                    tense === "present" ? "なのか？" : "だったのか？"
+                    { path: ["right", 0], key: "default", particle: "は" },
+                    { path: ["right", 1], key: "default" },
+                    defaultTenseEnding
+                ],
+                nominal: [
+                    { path: ["right", 0], key: "default", particle: "が" },
+                    { path: ["right", 1], key: "default" },
+                    nominalTenseEnding
                 ]
             }
         }, {
@@ -1114,16 +1159,14 @@ export class Generator {
             }],
             translationTemplates: {
                 default: [
-                    {
-                        path: ["right", 0],
-                        key: "default",
-                        particle: "は",
-                    },
-                    {
-                        path: ["right", 1],
-                        key: "default",
-                    },
-                    tense === "present" ? "なのか？" : "だったのか？"
+                    { path: ["right", 0], key: "default", particle: "は" },
+                    { path: ["right", 1], key: "default" },
+                    defaultTenseEnding
+                ],
+                nominal: [
+                    { path: ["right", 0], key: "default", particle: "が" },
+                    { path: ["right", 1], key: "default" },
+                    nominalTenseEnding
                 ]
             }
         }, {
@@ -1133,16 +1176,13 @@ export class Generator {
             }],
             translationTemplates: {
                 default: [
-                    {
-                        path: ["right", 0],
-                        key: "default",
-                        particle: "は",
-                    },
-                    {
-                        path: ["right", 1],
-                        key: tense === "present" ? "predQ" : "pastQ",
-                    },
+                    { path: ["right", 0], key: "default", particle: "は" },
+                    { path: ["right", 1], key: tense === "present" ? "predQ" : "pastQ" },
                     "？"
+                ],
+                nominal: [
+                    { path: ["right", 0], key: "default", particle: "が" },
+                    { path: ["right", 1], key: tense === "present" ? "predQ" : "pastQ" },
                 ]
             }
         }, {
@@ -1152,16 +1192,13 @@ export class Generator {
             }],
             translationTemplates: {
                 default: [
-                    {
-                        path: ["right", 0],
-                        key: "default",
-                        particle: "は",
-                    },
-                    {
-                        path: ["right", 1],
-                        key: tense === "present" ? "predQ" : "pastQ",
-                    },
+                    { path: ["right", 0], key: "default", particle: "は" },
+                    { path: ["right", 1], key: tense === "present" ? "predQ" : "pastQ" },
                     "？"
+                ],
+                nominal: [
+                    { path: ["right", 0], key: "default", particle: "が" },
+                    { path: ["right", 1], key: tense === "present" ? "predQ" : "pastQ" },
                 ]
             }
         }]
@@ -1357,6 +1394,9 @@ export class Generator {
         const left: Phrase = { head: { type: { type: "nominal", isDet: true }, case: "nom" } };
         if (tense) head.tense = tense;
         if (agr) left.head.agr = agr;
+
+        const tenseEnding = tense === "present" ? "ない" : "なかった";
+
         return [{
             head: head,
             left: [{ head: { type: { type: "nominal", isDet: true }, case: "nom", agr: agr ?? {} } }],
@@ -1367,16 +1407,14 @@ export class Generator {
             customUnification: this.getSubjectGapUnification(),
             translationTemplates: {
                 default: [
-                    {
-                        path: ["left", 0],
-                        key: "default",
-                        particle: "は",
-                    },
-                    {
-                        path: ["right", 0],
-                        key: "imperfective",
-                    },
-                    tense === "present" ? "ない" : "なかった"
+                    { path: ["left", 0], key: "default", particle: "は" },
+                    { path: ["right", 0], key: "imperfective" },
+                    tenseEnding
+                ],
+                nominal: [
+                    { path: ["left", 0], key: "default", particle: "が" },
+                    { path: ["right", 0], key: "imperfective" },
+                    tenseEnding
                 ]
             }
         }]
@@ -1396,16 +1434,14 @@ export class Generator {
             right: [subject, verb],
             translationTemplates: {
                 default: [
-                    {
-                        path: ["right", 0],
-                        key: "default",
-                        particle: "は",
-                    },
-                    {
-                        path: ["right", 1],
-                        key: tense === "present" ? "default" : "past",
-                    },
+                    { path: ["right", 0], key: "default", particle: "は" },
+                    { path: ["right", 1], key: tense === "present" ? "default" : "past" },
                     "のか？",
+                ],
+                nominal: [
+                    { path: ["right", 0], key: "default", particle: "が" },
+                    { path: ["right", 1], key: tense === "present" ? "default" : "past" },
+                    "のか",
                 ]
             }
         }]
@@ -1530,6 +1566,19 @@ export class Generator {
                                 key: translationKey ?? "default",
                             },
                             translation
+                        ],
+                        nominal: [
+                            {
+                                path: ["left", 0], // The subject
+                                key: "default",
+                                particle: "が",
+                            },
+                            preTranslation ?? "",
+                            {
+                                path: ["right", 0], // The verb phrase complement
+                                key: translationKey ?? "default",
+                            },
+                            translation
                         ]
                     }
                 }]
@@ -1592,6 +1641,20 @@ export class Generator {
                                 path: ["left", 0],
                                 key: "default",
                                 particle: "は",
+                            },
+                            preTranslation ?? "",
+                            {
+                                path: ["right", 0],
+                                key: translationKey ?? "default",
+                            },
+                            // Use the specific negative translation
+                            negativeTranslation
+                        ],
+                        nominal: [
+                            {
+                                path: ["left", 0],
+                                key: "default",
+                                particle: "が",
                             },
                             preTranslation ?? "",
                             {
@@ -1666,6 +1729,20 @@ export class Generator {
                             },
                             translation,
                             "か？"
+                        ],
+                        nominal: [
+                            {
+                                path: ["right", 0],
+                                key: "default",
+                                particle: "が",
+                            },
+                            preTranslation ?? "",
+                            {
+                                path: ["right", 1],
+                                key: translationKey ?? "default",
+                            },
+                            translation,
+                            "か"
                         ]
                     }
                 }]
@@ -1830,7 +1907,7 @@ export class Generator {
             ],
             translationTemplates: {
                 default: [
-                    { path: ["right", 0], key: "default" },
+                    { path: ["right", 0], key: "nominal" },
                     { path: ["left", 0], key: "default" },
                 ]
             }
