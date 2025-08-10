@@ -1,5 +1,5 @@
 import { Block, BlockChild } from "@/models/block";
-import { Phrase, Word, TranslationTemplates, det, noun, FeatureStructure, pronoun, commonNominal } from "@/models/grammar-entities";
+import { Phrase, Word, TranslationTemplates, det, noun, FeatureStructure, pronoun, commonNominal, CustomUnificationPath } from "@/models/grammar-entities";
 
 export interface PronounForms {
     nominative: string;
@@ -133,6 +133,14 @@ export interface WhSentenceConfig {
     subjectGap?: FeatureStructure;
     expectedWhFeatures: FeatureStructure;
     expectedWhFeaturesAdverbial?: FeatureStructure;
+    color?: string;
+}
+
+export interface RelativePronounConfig {
+    id: string;
+    word: string;
+    antecedentFeatures: FeatureStructure;
+    gapCase?: 'acc';
     color?: string;
 }
 
@@ -716,6 +724,183 @@ export class Generator {
         }
     }
 
+    createPrepositionBlock(config: PrepositionConfig): Block {
+        const categories = [];
+
+        if (config.adv) {
+            categories.push({
+                head: { type: "prep", pred: false },
+                right: [{
+                    head: { type: { type: "nominal", isDet: true }, case: "acc" }
+                }],
+                leftModTargets: [
+                    { head: { type: "verb" } },
+                    { head: { type: "sentence" } },
+                ],
+                translationTemplates: {
+                    default: [
+                        {
+                            path: ["right", 0],
+                            key: "default",
+                        },
+                        config.adv
+                    ]
+                }
+            });
+        }
+
+
+        if (config.modAdj) {
+            categories.push({
+                head: { type: "prep", pred: false },
+                right: [{
+                    head: { type: { type: "nominal", isDet: true }, case: "acc" }
+                }],
+                leftModTargets: [
+                    { head: { type: noun } },
+                    { head: { type: commonNominal, agr: { type: "non-3sing", num: "pl", per: 3 }, determinered: false } },
+                    { head: { type: commonNominal, count: false, determinered: false } }
+                ],
+                translationTemplates: {
+                    default: [
+                        {
+                            path: ["right", 0],
+                            key: "default",
+                        },
+                        config.modAdj
+                    ]
+                }
+            });
+        }
+
+        if (config.pred) {
+            categories.push({
+                head: { type: "prep", pred: true },
+                right: [{
+                    head: { type: { type: "nominal", isDet: true }, case: "acc" }
+                }],
+                translationTemplates: {
+                    default: [
+                        {
+                            path: ["right", 0],
+                            key: "default",
+                        },
+                        config.pred.predAdj
+                    ],
+                    past: [
+                        {
+                            path: ["right", 0],
+                            key: "default",
+                        },
+                        config.pred.past
+                    ],
+                    predNeg: [
+                        {
+                            path: ["right", 0],
+                            key: "default",
+                        },
+                        config.pred.predNeg
+                    ],
+                    predQ: [
+                        {
+                            path: ["right", 0],
+                            key: "default",
+                        },
+                        config.pred.predQ
+                    ],
+                    pastNeg: [
+                        {
+                            path: ["right", 0],
+                            key: "default",
+                        },
+                        config.pred.pastNeg
+                    ],
+                    pastQ: [
+                        {
+                            path: ["right", 0],
+                            key: "default",
+                        },
+                        config.pred.pastQ
+                    ]
+                }
+            });
+        }
+        return {
+            id: "",
+            x: 0,
+            y: 0,
+            isRound: true,
+            words: [{
+                token: "",
+                categories: categories,
+            }],
+            color: config.color ?? "orange",
+            children: [{
+                id: "head",
+                hidden: false,
+                type: "text",
+                content: config.word
+            }, {
+                id: "complement",
+                hidden: false,
+                type: "placeholder",
+                content: undefined
+            }]
+        }
+    }
+
+    createTemporalAdverbialBlock(config: TemporalAdverbialConfig): Block {
+        return {
+            id: config.id,
+            x: 0,
+            y: 0,
+            isRound: true,
+            words: [{
+                token: config.word,
+                categories: [{
+                    // This is the definition for the combined phrase, e.g., "every day"
+                    head: { type: "temporal-adv" }, // A custom type for this kind of adverbial
+                    right: [{
+                        // It expects one argument on its right: a noun.
+                        head: { type: noun, agr: { type: "3sing" } }
+                    }],
+                    // This defines what the resulting phrase can modify.
+                    // It can be a right-hand modifier for a sentence or a verb.
+                    leftModTargets: [
+                        { head: { type: "sentence" } },
+                        { head: { type: "verb" } },
+                    ],
+                    translationTemplates: {
+                        // The translation prepends the prefix to the complement's translation.
+                        // e.g., "毎" + "日" -> "毎日"
+                        default: [config.translationPrefix, { path: ["right", 0], key: "default" }]
+                    }
+                }]
+            }],
+            color: config.color ?? "Coral",
+            children: [{
+                id: "head",
+                hidden: false,
+                type: "text",
+                content: config.word
+            }, {
+                id: "complement",
+                hidden: false,
+                type: "placeholder",
+                content: undefined
+            }]
+        };
+    }
+
+    private getSubjectGapUnification(): CustomUnificationPath[][] {
+        return [
+            [
+                ['left', 0, 'head'],
+                ['right', 0, 'gaps', 0, 'head']
+            ]
+        ];
+    }
+
     private createBeCategory(form: "base" | "am" | "are" | "is" | "was" | "were" | "en" | "ing", agr?: FeatureStructure): Phrase[] {
         const finite = (["base", "en", "ing"].includes(form)) ? false : true;
         const tense = (finite && ["am", "are", "is"].includes(form)) ? "present" : finite ? "past" : undefined;
@@ -728,8 +913,10 @@ export class Generator {
             head: head,
             left: [{ head: { type: { type: "nominal", isDet: true, isTo: false, isGerund: false }, case: "nom", agr: agr ?? {} } }],
             right: [{
-                head: { type: "verb", form: "progressive" }
+                head: { type: "verb", form: "progressive" },
+                gaps: [{ head: { type: { type: "nominal", isDet: true } } }]
             }],
+            customUnification: this.getSubjectGapUnification(),
             translationTemplates: {
                 default: [
                     ...finite ? [{
@@ -815,8 +1002,10 @@ export class Generator {
             head: head,
             left: [{ head: { type: { type: "nominal", isDet: true, isTo: false, isGerund: false }, case: "nom", agr: agr ?? {} } }],
             right: [{
-                head: { type: "verb", form: "progressive" }
+                head: { type: "verb", form: "progressive" },
+                gaps: [{ head: { type: { type: "nominal", isDet: true } } }]
             }],
+            customUnification: this.getSubjectGapUnification(),
             translationTemplates: {
                 default: [
                     {
@@ -1162,131 +1351,6 @@ export class Generator {
         }
     }
 
-    createPrepositionBlock(config: PrepositionConfig): Block {
-        const categories = [];
-
-        if (config.adv) {
-            categories.push({
-                head: { type: "prep", pred: false },
-                right: [{
-                    head: { type: { type: "nominal", isDet: true }, case: "acc" }
-                }],
-                leftModTargets: [
-                    { head: { type: "verb" } },
-                    { head: { type: "sentence" } },
-                ],
-                translationTemplates: {
-                    default: [
-                        {
-                            path: ["right", 0],
-                            key: "default",
-                        },
-                        config.adv
-                    ]
-                }
-            });
-        }
-
-
-        if (config.modAdj) {
-            categories.push({
-                head: { type: "prep", pred: false },
-                right: [{
-                    head: { type: { type: "nominal", isDet: true }, case: "acc" }
-                }],
-                leftModTargets: [
-                    { head: { type: noun } },
-                    { head: { type: commonNominal, agr: { type: "non-3sing", num: "pl", per: 3 }, determinered: false } },
-                    { head: { type: commonNominal, count: false, determinered: false } }
-                ],
-                translationTemplates: {
-                    default: [
-                        {
-                            path: ["right", 0],
-                            key: "default",
-                        },
-                        config.modAdj
-                    ]
-                }
-            });
-        }
-
-        if (config.pred) {
-            categories.push({
-                head: { type: "prep", pred: true },
-                right: [{
-                    head: { type: { type: "nominal", isDet: true }, case: "acc" }
-                }],
-                translationTemplates: {
-                    default: [
-                        {
-                            path: ["right", 0],
-                            key: "default",
-                        },
-                        config.pred.predAdj
-                    ],
-                    past: [
-                        {
-                            path: ["right", 0],
-                            key: "default",
-                        },
-                        config.pred.past
-                    ],
-                    predNeg: [
-                        {
-                            path: ["right", 0],
-                            key: "default",
-                        },
-                        config.pred.predNeg
-                    ],
-                    predQ: [
-                        {
-                            path: ["right", 0],
-                            key: "default",
-                        },
-                        config.pred.predQ
-                    ],
-                    pastNeg: [
-                        {
-                            path: ["right", 0],
-                            key: "default",
-                        },
-                        config.pred.pastNeg
-                    ],
-                    pastQ: [
-                        {
-                            path: ["right", 0],
-                            key: "default",
-                        },
-                        config.pred.pastQ
-                    ]
-                }
-            });
-        }
-        return {
-            id: "",
-            x: 0,
-            y: 0,
-            isRound: true,
-            words: [{
-                token: "",
-                categories: categories,
-            }],
-            color: config.color ?? "orange",
-            children: [{
-                id: "head",
-                hidden: false,
-                type: "text",
-                content: config.word
-            }, {
-                id: "complement",
-                hidden: false,
-                type: "placeholder",
-                content: undefined
-            }]
-        }
-    }
-
     private createDoNotCategory(form: "do" | "does" | "did", agr?: FeatureStructure) {
         const tense = ["do", "does"].includes(form) ? "present" : "past";
         const head: FeatureStructure = { type: "sentence", inverted: false, negative: true, finite: true, form: form };
@@ -1297,8 +1361,10 @@ export class Generator {
             head: head,
             left: [{ head: { type: { type: "nominal", isDet: true }, case: "nom", agr: agr ?? {} } }],
             right: [{
-                head: { type: "verb", form: "base" }
+                head: { type: "verb", form: "base" },
+                gaps: [{ head: { type: { type: "nominal", isDet: true } } }]
             }],
+            customUnification: this.getSubjectGapUnification(),
             translationTemplates: {
                 default: [
                     {
@@ -1425,49 +1491,6 @@ export class Generator {
         }
     }
 
-    createTemporalAdverbialBlock(config: TemporalAdverbialConfig): Block {
-        return {
-            id: config.id,
-            x: 0,
-            y: 0,
-            isRound: true,
-            words: [{
-                token: config.word,
-                categories: [{
-                    // This is the definition for the combined phrase, e.g., "every day"
-                    head: { type: "temporal-adv" }, // A custom type for this kind of adverbial
-                    right: [{
-                        // It expects one argument on its right: a noun.
-                        head: { type: noun, agr: { type: "3sing" } }
-                    }],
-                    // This defines what the resulting phrase can modify.
-                    // It can be a right-hand modifier for a sentence or a verb.
-                    leftModTargets: [
-                        { head: { type: "sentence" } },
-                        { head: { type: "verb" } },
-                    ],
-                    translationTemplates: {
-                        // The translation prepends the prefix to the complement's translation.
-                        // e.g., "毎" + "日" -> "毎日"
-                        default: [config.translationPrefix, { path: ["right", 0], key: "default" }]
-                    }
-                }]
-            }],
-            color: config.color ?? "Coral",
-            children: [{
-                id: "head",
-                hidden: false,
-                type: "text",
-                content: config.word
-            }, {
-                id: "complement",
-                hidden: false,
-                type: "placeholder",
-                content: undefined
-            }]
-        };
-    }
-
     createModalBlock(config: ModalConfig): Block {
         const { id, word, translation, translationKey, preTranslation } = config;
         const color = config.color || "orange";
@@ -1490,8 +1513,10 @@ export class Generator {
                         head: { type: { type: "nominal", isDet: true }, case: "nom" }
                     }],
                     right: [{
-                        head: { type: "verb", form: "base", finite: false }
+                        head: { type: "verb", form: "base", finite: false },
+                        gaps: [{ head: { type: { type: "nominal", isDet: true } } }]
                     }],
+                    customUnification: this.getSubjectGapUnification(),
                     translationTemplates: {
                         default: [
                             {
@@ -1557,8 +1582,10 @@ export class Generator {
                         head: { type: { type: "nominal", isDet: true }, case: "nom" }
                     }],
                     right: [{
-                        head: { type: "verb", form: "base", finite: false }
+                        head: { type: "verb", form: "base", finite: false },
+                        gaps: [{ head: { type: { type: "nominal", isDet: true } } }]
                     }],
+                    customUnification: this.getSubjectGapUnification(),
                     translationTemplates: {
                         default: [
                             {
@@ -1771,6 +1798,72 @@ export class Generator {
                     content: undefined
                 }
             ]
+        };
+    }
+
+    createRelativePronounBlock(config: RelativePronounConfig): Block {
+        const { id, word, antecedentFeatures, gapCase, color } = config;
+
+        const gapHeadFeatures: FeatureStructure = {};
+        if (gapCase) {
+            gapHeadFeatures.case = gapCase;
+        }
+
+        const relativeClauseCategory: Phrase = {
+            head: {},
+            left: [{
+                head: { type: commonNominal, ...antecedentFeatures }
+            }],
+            right: [{
+                head: { type: "sentence", finite: true, inverted: false },
+                gaps: [{ head: gapHeadFeatures }]
+            }],
+            customUnification: [
+                [
+                    ["head"],
+                    ["left", 0, "head"]
+                ],
+                [
+                    ["left", 0, "head"],
+                    ["right", 0, "gaps", 0, "head"]
+                ]
+            ],
+            translationTemplates: {
+                default: [
+                    { path: ["right", 0], key: "default" },
+                    { path: ["left", 0], key: "default" },
+                ]
+            }
+        };
+
+        return {
+            id: id,
+            x: 0,
+            y: 0,
+            words: [{
+                token: "",
+                categories: [relativeClauseCategory],
+            }],
+            color: color || "mediumseagreen",
+            isRound: true,
+            children: [{
+                id: "antecedent-complement",
+                hidden: false,
+                type: "placeholder",
+                content: undefined,
+            },
+            {
+                id: "head",
+                hidden: false,
+                type: "text",
+                content: word,
+            },
+            {
+                id: "sentence-complement",
+                hidden: false,
+                type: "placeholder",
+                content: undefined,
+            }]
         };
     }
 }

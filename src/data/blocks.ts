@@ -8,6 +8,7 @@ import { allAuxiliaryBlocks } from "./auxiliaries";
 import { allPrepositionBlocks } from "./prepositions";
 import { blockHowManySentence, blockHowSentence, blockThat, blockWhatDetSentence, blockWhatSentence, blockWhereSentence, blockWhichDetSentence, blockWhichSentence, blockWhoseDetSentence, blockWhoSentence, blockWhoseSentence } from "./complementizers";
 import { blockEvery, blockVery, blockWell } from "./adverbials";
+import { allRelativePronounBlocks } from "./relatives";
 
 export const blockTo: Block = {
     id: "",
@@ -102,5 +103,7 @@ export const blockList = {
         blockWhereSentence,
         blockHowSentence,
     ],
-    "関係詞": []
+    "関係詞": [
+        ...allRelativePronounBlocks
+    ]
 }
