@@ -166,9 +166,9 @@ export class Converter {
         for (const child of block.children) {
             child.hidden = false;
             child.resolved = false;
-            if (child.content && typeof child.content === 'object' && 'children' in child.content) {
+            /*if (child.content && typeof child.content === 'object' && 'children' in child.content) {
                 this.unhideAll(child.content as Block);
-            }
+            }*/
         }
     }
 
