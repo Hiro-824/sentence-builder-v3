@@ -46,6 +46,17 @@ export const blockSentence: Block = {
                     {
                         path: ["left", 0],
                         key: "default",
+                        particle: "は",
+                    },
+                    {
+                        path: ["right", 0],
+                        key: "default",
+                    }
+                ],
+                nominal: [
+                    {
+                        path: ["left", 0],
+                        key: "default",
                         particle: "が",
                     },
                     {
