@@ -1081,7 +1081,7 @@ export class Renderer {
             const droppedOnSidebar = clientX >= sidebarRect.left && clientX <= sidebarRect.right &&
                 clientY >= sidebarRect.top && clientY <= sidebarRect.bottom;
 
-            if (droppedOnTrash || droppedOnSidebar) {
+            if (droppedOnTrash /*|| droppedOnSidebar*/) {
                 this.deleteBlock(d.id);
                 this.dragStarted = false;
                 this.draggedBlockId = null;
