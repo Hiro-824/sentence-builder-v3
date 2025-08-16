@@ -4,7 +4,7 @@ Sentence Builder is a web-based English learning application designed to teach s
 
 At its core, the application is powered by a custom, client-side, unification-based grammar engine that validates sentence structures in real-time and generates corresponding Japanese translations.
 
-**Live Demo:** https://sentence-builder.hirodevs.com/
+**Live Demo:** [https://sentence-builder.hirodevs.com](https://sentence-builder.hirodevs.com)
 
 ---
 
@@ -47,7 +47,7 @@ The project leverages a modern, robust, and type-safe technology stack.
 
 | Category      | Technology                                                                                                                              |
 | :------------ | :-------------------------------------------------------------------------------------------------------------------------------------- |
-| **Frontend**  | **Next.js 14** (App Router), **React 18**, **TypeScript**                                                                               |
+| **Frontend**  | **Next.js 15** (App Router), **React 19**, **TypeScript**                                                                               |
 | **Rendering** | **D3.js** (for SVG rendering, drag-and-drop, and zoom/pan functionality)                                                                  |
 | **Backend**   | **Supabase** (Authentication, PostgreSQL Database for logging, Storage for project files)                                               |
 | **Styling**   | **CSS Modules** & global CSS                                                                                                            |
