@@ -298,9 +298,18 @@ export class Converter {
         if (!block) {
             return block;
         }
-
+    
         const newBlock = structuredClone(block);
-
+    
+        // Recursively format any nested blocks first (bottom-up approach).
+        if (newBlock.children) {
+            for (const child of newBlock.children) {
+                if (child.content && typeof child.content === 'object' && 'children' in child.content) {
+                    child.content = this.formatBlock(child.content as Block);
+                }
+            }
+        }
+    
         // 1. Reset visibility and assign unique instance IDs for tracking.
         this.unhideAll(newBlock);
         const assignIds = (current: Block) => {
@@ -313,19 +322,19 @@ export class Converter {
             }
         };
         assignIds(newBlock);
-
+    
         // 2. Apply visibility rules based on dropdown selections.
         this.applyHeadIndexVisibility(newBlock);
-
+    
         // 3. Perform basic, word-level text cleaning.
         this._cleanBlockText(newBlock);
-
+    
         // 4. Hide placeholders that have been linguistically filled by gaps.
         this.hideResolvedGapPlaceholders(newBlock);
-
+    
         // 5. Apply sentence-level formatting (capitalization and punctuation).
         this.applyPunctuationAndCapitalization(newBlock);
-
+    
         return newBlock;
     }
 }
