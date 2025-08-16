@@ -115,6 +115,24 @@ const configStation: NounConfig = {
     translation: "駅"
 };
 
+const configBoy: NounConfig = {
+    id: "noun_boy",
+    isCountable: true,
+    singularForm: "boy",
+    pluralForm: "boys",
+    translation: "少年",
+    pluralTranslation: "少年たち"
+};
+
+const configGirl: NounConfig = {
+    id: "noun_girl",
+    isCountable: true,
+    singularForm: "girl",
+    pluralForm: "girls",
+    translation: "少女",
+    pluralTranslation: "少女たち"
+};
+
 const configMan: NounConfig = {
     id: "noun_man",
     isCountable: true,
@@ -147,6 +165,8 @@ export const blockPen = generator.createNounBlock(configPen);
 export const blockTeacher = generator.createNounBlock(configTeacher);
 export const blockBus = generator.createNounBlock(configBus);
 export const blockStation = generator.createNounBlock(configStation);
+export const blockBoy = generator.createNounBlock(configBoy);
+export const blockGirl = generator.createNounBlock(configGirl);
 export const blockMan = generator.createNounBlock(configMan);
 export const blockWoman = generator.createNounBlock(configWoman);
 
@@ -166,6 +186,8 @@ export const allNounBlocks: Block[] = [
     blockTeacher,
     blockBus,
     blockStation,
+    blockBoy,
+    blockGirl,
     blockMan,
     blockWoman,
     blockInformation,

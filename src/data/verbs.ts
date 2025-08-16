@@ -38,6 +38,23 @@ const configRead: VerbConfig = {
     toSubject: false
 };
 
+const configSee: VerbConfig = {
+    id: "see_verb",
+    forms: { base: "see", es: "sees", ed: "saw", en: "seen", ing: "seeing" },
+    complements: [{ expected: { head: { type: det, case: "acc" } }, particle: "を" }],
+    transitive: true,
+    translations: {
+        present: { default: "見る", imperfective: "見な", past: "見た" },
+        past: { default: "見た" },
+        progressive: { default: "見ているところ", nonPredicate: "見ている", },
+        perfect: { default: "既に見ている" },
+        passive: { default: "見られる" },
+        noun: { default: "見ること", no: "見るの", past: "見たこと", pastNo: "見たの" }
+    },
+    gerundSubject: false,
+    toSubject: false
+};
+
 const configHave: VerbConfig = {
     id: "have_verb",
     forms: { base: "have", es: "has", ed: "had", en: "had", ing: "having" },
@@ -64,12 +81,12 @@ const configGive: VerbConfig = {
     ],
     transitive: true,
     translations: {
-        present: { default: "あげる", imperfective: "あげ", past: "あげた" },
-        past: { default: "あげた" },
-        progressive: { default: "あげているところ", nonPredicate: "あげている", },
-        perfect: { default: "既にあげている" },
+        present: { default: "与える", imperfective: "与え", past: "与えた" },
+        past: { default: "与えた" },
+        progressive: { default: "与えているところ", nonPredicate: "与えている", },
+        perfect: { default: "既に与えている" },
         passive: { default: "あたえられる" },
-        noun: { default: "あげること", no: "あげるの", past: "あげたこと", pastNo: "あげたの" }
+        noun: { default: "与えること", no: "与えるの", past: "与えたこと", pastNo: "与えたの" }
     },
     gerundSubject: true,
     toSubject: true
@@ -153,7 +170,7 @@ const configGo: VerbConfig = {
     id: "go_verb",
     forms: { base: "go", es: "goes", ed: "went", en: "gone", ing: "going" },
     adv_manner_type: 'skill',
-    complements: [{ expected: { head: { type: det, case: "acc" } }, particle: "に" }],
+    complements: [],
     transitive: false,
     gerundSubject: true,
     toSubject: true,
@@ -187,6 +204,7 @@ const configWant: VerbConfig = {
 export const verbRun = generator.createVerbBlock(configRun);
 export const verbHave = generator.createVerbBlock(configHave);
 export const verbRead = generator.createVerbBlock(configRead);
+export const verbSee = generator.createVerbBlock(configSee);
 export const verbGive = generator.createVerbBlock(configGive);
 export const blockKnow: Block = generator.createVerbBlock(knowConfig);
 export const blockPlay: Block = generator.createVerbBlock(playConfig);
@@ -196,14 +214,15 @@ export const verbGo = generator.createVerbBlock(configGo);
 export const verbWant = generator.createVerbBlock(configWant);
 
 export const allVerbBlocks: Block[] = [
+    verbGo,
     verbRun,
     verbHave,
     verbRead,
-    verbGive,
+    verbSee,
     blockKnow,
     blockPlay,
     verbLike,
     verbBuy,
-    verbGo,
-    verbWant
+    verbWant,
+    verbGive
 ];
