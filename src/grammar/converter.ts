@@ -166,9 +166,15 @@ export class Converter {
         for (const child of block.children) {
             child.hidden = false;
             child.resolved = false;
-            /*if (child.content && typeof child.content === 'object' && 'children' in child.content) {
-                this.unhideAll(child.content as Block);
-            }*/
+            if (child.content && typeof child.content === 'object' && 'children' in child.content) {
+                const contentBlock = child.content as Block;
+                if (contentBlock.children) {
+                    for (const grandChild of contentBlock.children) {
+                        grandChild.hidden = false;
+                        grandChild.resolved = false;
+                    }
+                }
+            }
         }
     }
 
@@ -212,8 +218,8 @@ export class Converter {
                     child.content = basicProcess(child.content as string);
                     break;
                 case "dropdown":
-                    if(Array.isArray(child.content)){
-                         child.content = child.content.map(option => basicProcess(option));
+                    if (Array.isArray(child.content)) {
+                        child.content = child.content.map(option => basicProcess(option));
                     }
                     break;
                 case "placeholder":
@@ -246,7 +252,7 @@ export class Converter {
             const _flattenVisibleChildren = (currentBlock: Block) => {
                 if (this.isProperNounBlock(currentBlock)) {
                     const head = currentBlock.children.find(c => c.id === 'head');
-                    if(head) flatList.push(head);
+                    if (head) flatList.push(head);
                     return;
                 }
                 for (const child of currentBlock.children) {
@@ -259,21 +265,21 @@ export class Converter {
                 }
             };
             _flattenVisibleChildren(block);
-            
+
             const firstElement = flatList[0];
             if (firstElement) {
                 const content = firstElement.content;
                 if (typeof content === 'string' && content.length > 0) {
                     firstElement.content = content.charAt(0).toUpperCase() + content.slice(1);
                 } else if (Array.isArray(content)) {
-                     firstElement.content = content.map((option: string) => {
-                         if(option.length > 0) return option.charAt(0).toUpperCase() + option.slice(1);
-                         return option;
-                     });
+                    firstElement.content = content.map((option: string) => {
+                        if (option.length > 0) return option.charAt(0).toUpperCase() + option.slice(1);
+                        return option;
+                    });
                 }
             }
         }
-        
+
         if (isFinite) {
             block.isRound = false;
             block.children = block.children.filter(child => child.id !== 'punctuation');
