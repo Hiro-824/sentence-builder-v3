@@ -208,11 +208,8 @@ export class Grammar {
                 const pathStr = element.path?.join(".") ?? "";
 
                 let unresolvedString = `[[UNRESOLVED:${pathStr}:${element.key}`;
-                if (subPhrase && typeof subPhrase === 'object' && 'head' in subPhrase) {
-                    const head = (subPhrase as Phrase).head;
-                    if (head && typeof head === 'object' && 'instanceId' in head && head.instanceId) {
-                        unresolvedString += `:id=${head.instanceId}`;
-                    }
+                if (subPhrase && typeof subPhrase === 'object' && 'instanceId' in subPhrase && (subPhrase as Phrase).instanceId) {
+                    unresolvedString += `:id=${(subPhrase as Phrase).instanceId}`;
                 }
                 unresolvedString += "]]";
 
@@ -253,7 +250,7 @@ export class Grammar {
                 const placeholder = this.deepCopy(expected);
                 placeholder.head.isGap = true;
                 if (actualWord.instanceId) {
-                    (placeholder.head).instanceId = actualWord.instanceId;
+                    placeholder.instanceId = actualWord.instanceId;
                 }
                 unifiedArgs.push(placeholder);
                 argSatisfied = true;
@@ -270,7 +267,7 @@ export class Grammar {
                         const foundIndex = availableGaps.findIndex(availGap => this.unify(availGap.head, reqGap.head) !== null);
                         if (foundIndex > -1) {
                             const resolvedGap = availableGaps[foundIndex];
-                            const resolvedId = (resolvedGap.head)?.instanceId;
+                            const resolvedId = resolvedGap.instanceId;
                             if (resolvedId) {
                                 newPhrase.resolvedGapIds.push(resolvedId as string);
                             }
