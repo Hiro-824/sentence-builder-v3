@@ -91,7 +91,7 @@ export class Renderer {
 
         // Recalculate sidebar scroll bounds
         this.setBlockBoardTransform();
-        this.renderTrashCan();
+        //this.renderTrashCan();
     }
 
     // Cleanup method to remove event listeners
