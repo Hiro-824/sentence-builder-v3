@@ -111,7 +111,7 @@ export class Renderer {
         this.renderSideBar();
         this.renderDragboard();
         this.renderBlocks();
-        this.renderTrashCan();
+        //this.renderTrashCan();
     }
 
     renderTrashCan() {
