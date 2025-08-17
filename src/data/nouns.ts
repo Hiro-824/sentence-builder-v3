@@ -43,6 +43,22 @@ const configBird: NounConfig = {
     translation: "鳥"
 };
 
+const configDog: NounConfig = {
+    id: "noun_dog",
+    isCountable: true,
+    singularForm: "dog",
+    pluralForm: "dogs",
+    translation: "犬"
+};
+
+const configCat: NounConfig = {
+    id: "noun_cat",
+    isCountable: true,
+    singularForm: "cat",
+    pluralForm: "cats",
+    translation: "猫"
+};
+
 const configHand: NounConfig = {
     id: "noun_hand",
     isCountable: true,
@@ -155,6 +171,8 @@ export const blockBook = generator.createNounBlock(configBook);
 export const blockChild = generator.createNounBlock(configChild);
 export const blockInformation = generator.createNounBlock(configInformation);
 export const blockWater = generator.createNounBlock(configWater);
+export const blockDog = generator.createNounBlock(configDog);
+export const blockCat = generator.createNounBlock(configCat);
 export const blockBird = generator.createNounBlock(configBird);
 export const blockHand = generator.createNounBlock(configHand);
 export const blockBag = generator.createNounBlock(configBag);
@@ -176,6 +194,8 @@ export const blockMary = generator.createProperNounBlock("Mary", "メアリー")
 export const allNounBlocks: Block[] = [
     blockBook,
     blockChild,
+    blockDog,
+    blockCat,
     blockBird,
     blockHand,
     blockStudent,

@@ -7,7 +7,7 @@ import { blockA, blockS, blockThe } from "./determiners";
 import { allAuxiliaryBlocks } from "./auxiliaries";
 import { allPrepositionBlocks } from "./prepositions";
 import { blockHowManySentence, blockHowSentence, blockThat, blockWhatDetSentence, blockWhatSentence, blockWhereSentence, blockWhichDetSentence, blockWhichSentence, blockWhoseDetSentence, blockWhoSentence, blockWhoseSentence } from "./complementizers";
-import { blockEvery, blockVery, blockWell } from "./adverbials";
+import { blockEvery, blockFast, blockVery, blockWell } from "./adverbials";
 import { allRelativePronounBlocks } from "./relatives";
 
 export const blockTo: Block = {
@@ -65,8 +65,9 @@ export const blockList = {
     ],
     "副詞": [
         blockEvery,
-        blockWell,
         blockVery,
+        blockWell,
+        blockFast,
     ],
     "形容詞": [
         ...allAdjectiveBlocks,

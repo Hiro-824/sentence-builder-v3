@@ -77,6 +77,55 @@ export const blockWell: Block = {
     }]
 };
 
+export const blockFast: Block = {
+    id: "fast",
+    x: 0,
+    y: 0,
+    isRound: true,
+    words: [
+        {
+            token: "fast",
+            categories: [
+                {
+                    head: { type: "adverb", manner: true, form: "base", isGradable: true },
+                    leftModTargets: [{ head: { type: "verb", adv_manner_type: "skill" } }],
+                    translationTemplates: { default: ["速く"] }
+                },
+            ]
+        },
+        {
+            token: "faster",
+            categories: [
+                {
+                    head: { type: "adverb", manner: true, form: "comparative" },
+                    leftModTargets: [{ head: { type: "verb", adv_manner_type: "skill" } }],
+                    translationTemplates: { default: ["もっと速く"] }
+                },
+            ]
+        },
+        {
+            token: "fastest",
+            categories: [
+                {
+                    head: { type: "adverb", manner: true, form: "superlative" },
+                    leftModTargets: [{ head: { type: "verb", adv_manner_type: "degree" } }],
+                    translationTemplates: { default: ["いちばん速く"] }
+                }
+            ]
+        }
+    ],
+
+    color: "Coral",
+
+    children: [{
+        id: "head",
+        hidden: false,
+        type: "dropdown",
+        content: ["fast", "faster", "fastest"],
+        selected: 0,
+    }]
+};
+
 export const blockVery: Block = {
     id: "very_adverb",
     x: 0,
@@ -86,12 +135,12 @@ export const blockVery: Block = {
         token: "very",
         categories: [{
             head: { type: "adverb", degree: true },
-            
+
             rightModTargets: [
                 { head: { type: "adj", form: "base", isGradable: true } },
                 { head: { type: "adverb", form: "base", isGradable: true } }
             ],
-            
+
             translationTemplates: {
                 default: ["とても"]
             }
