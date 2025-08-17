@@ -167,7 +167,13 @@ export class Converter {
             child.hidden = false;
             child.resolved = false;
             if (child.content && typeof child.content === 'object' && 'children' in child.content) {
-                this.unhideAll(child.content as Block);
+                const contentBlock = child.content as Block;
+                if (contentBlock.children) {
+                    for (const grandChild of contentBlock.children) {
+                        grandChild.hidden = false;
+                        grandChild.resolved = false;
+                    }
+                }
             }
         }
     }
@@ -212,8 +218,8 @@ export class Converter {
                     child.content = basicProcess(child.content as string);
                     break;
                 case "dropdown":
-                    if(Array.isArray(child.content)){
-                         child.content = child.content.map(option => basicProcess(option));
+                    if (Array.isArray(child.content)) {
+                        child.content = child.content.map(option => basicProcess(option));
                     }
                     break;
                 case "placeholder":
@@ -246,7 +252,7 @@ export class Converter {
             const _flattenVisibleChildren = (currentBlock: Block) => {
                 if (this.isProperNounBlock(currentBlock)) {
                     const head = currentBlock.children.find(c => c.id === 'head');
-                    if(head) flatList.push(head);
+                    if (head) flatList.push(head);
                     return;
                 }
                 for (const child of currentBlock.children) {
@@ -259,21 +265,21 @@ export class Converter {
                 }
             };
             _flattenVisibleChildren(block);
-            
+
             const firstElement = flatList[0];
             if (firstElement) {
                 const content = firstElement.content;
                 if (typeof content === 'string' && content.length > 0) {
                     firstElement.content = content.charAt(0).toUpperCase() + content.slice(1);
                 } else if (Array.isArray(content)) {
-                     firstElement.content = content.map((option: string) => {
-                         if(option.length > 0) return option.charAt(0).toUpperCase() + option.slice(1);
-                         return option;
-                     });
+                    firstElement.content = content.map((option: string) => {
+                        if (option.length > 0) return option.charAt(0).toUpperCase() + option.slice(1);
+                        return option;
+                    });
                 }
             }
         }
-        
+
         if (isFinite) {
             block.isRound = false;
             block.children = block.children.filter(child => child.id !== 'punctuation');
@@ -292,9 +298,18 @@ export class Converter {
         if (!block) {
             return block;
         }
-
+    
         const newBlock = structuredClone(block);
-
+    
+        // Recursively format any nested blocks first (bottom-up approach).
+        if (newBlock.children) {
+            for (const child of newBlock.children) {
+                if (child.content && typeof child.content === 'object' && 'children' in child.content) {
+                    child.content = this.formatBlock(child.content as Block);
+                }
+            }
+        }
+    
         // 1. Reset visibility and assign unique instance IDs for tracking.
         this.unhideAll(newBlock);
         const assignIds = (current: Block) => {
@@ -307,19 +322,19 @@ export class Converter {
             }
         };
         assignIds(newBlock);
-
+    
         // 2. Apply visibility rules based on dropdown selections.
         this.applyHeadIndexVisibility(newBlock);
-
+    
         // 3. Perform basic, word-level text cleaning.
         this._cleanBlockText(newBlock);
-
+    
         // 4. Hide placeholders that have been linguistically filled by gaps.
         this.hideResolvedGapPlaceholders(newBlock);
-
+    
         // 5. Apply sentence-level formatting (capitalization and punctuation).
         this.applyPunctuationAndCapitalization(newBlock);
-
+    
         return newBlock;
     }
 }

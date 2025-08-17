@@ -22,6 +22,7 @@ export interface Phrase {
     translation?: FeatureStructure;
     translationTemplates?: TranslationTemplates;
     resolvedGapIds?: string[];
+    instanceId?: string;
 }
 
 export type CustomUnificationPath = (string | number)[];
