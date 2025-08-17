@@ -180,13 +180,13 @@ const configHappy: AdjectiveConfig = {
     superlative: "happiest",
     isGradable: true,
     translation: {
-        default: "嬉しい",
-        predicative: "嬉しい",
-        past: "嬉しかった",
-        predNeg: "嬉しくない",
-        pastNeg: "嬉しくなかった",
-        predQ: "嬉しいのか",
-        pastQ: "嬉しかったのか"
+        default: "幸せな",
+        predicative: "幸せだ",
+        past: "幸せだった",
+        predNeg: "幸せではない",
+        pastNeg: "幸せではなかった",
+        predQ: "幸せなのか",
+        pastQ: "幸せだったのか"
     }
 };
 
