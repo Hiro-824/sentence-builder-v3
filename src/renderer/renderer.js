@@ -1652,15 +1652,18 @@ export class Renderer {
         const block = this.findBlock(id).rootParent;
         if (!block) return;
         const originalHiddenStates = block.children.map(child => child.hidden);
-        const newBlock = this.converter.formatBlock(block);
-        newBlock.children.forEach((child, index) => {
+        const targetStateBlock = this.converter.formatBlock(block);
+        targetStateBlock.children.forEach((child, index) => {
             const wasVisible = !originalHiddenStates[index];
             const isNowHidden = child.hidden;
-            if (wasVisible && isNowHidden && child.type === "placeholder" && child.content) {
-                this.moveBlockToTopLevel(child.content.id, true);
+            const originalChild = block.children.find(c => c.id === child.id);
+
+            if (wasVisible && isNowHidden && originalChild && originalChild.content) {
+                this.moveBlockToTopLevel(originalChild.content.id, true);
             }
         });
-        this.updateBlockInData(newBlock);
+        const finalNewBlock = this.converter.formatBlock(block);
+        this.updateBlockInData(finalNewBlock);
         this.updateBlock(block.id);
     }
 
