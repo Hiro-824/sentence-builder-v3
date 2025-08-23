@@ -139,7 +139,7 @@ const configLike: VerbConfig = {
     gerundSubject: true,
     toSubject: true,
     translations: {
-        present: { default: "好きです", imperfective: "好きで", past: "好きだった" },
+        present: { default: "好きである", imperfective: "好きで", past: "好きだった" },
         past: { default: "好きだった" },
         progressive: { default: "好きになっているところ", nonPredicate: "好きになっている", },
         perfect: { default: "好きでいた" },
