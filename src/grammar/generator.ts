@@ -1543,6 +1543,110 @@ export class Generator {
         }
     }
 
+    private createHaveCategory(form: "base" | "present" | "es" | "past" | "ing", finite: boolean, agr?: FeatureStructure): Phrase[] {
+        const tense = finite ? (form === "past" ? "past" : "present") : undefined;
+        const isFiniteSentence = finite && (form === "present" || form === "es" || form === "past");
+
+        const head: FeatureStructure = {
+            type: isFiniteSentence ? "sentence" : "verb",
+            finite: finite,
+            form: form,
+        };
+        if (tense) head.tense = tense;
+
+        const left: Phrase | undefined = finite ? { head: { type: { type: "nominal", isDet: true }, case: "nom", agr: agr ?? {} } } : undefined;
+
+        const right: Phrase = {
+            head: { type: "verb", form: "perfect" },
+            gaps: [{ head: { type: { type: "nominal", isDet: true } } }]
+        };
+
+        const translationTemplates: TranslationTemplates = {
+            default: [
+                ...finite ? [{ path: ["left", 0], key: "default", particle: "は" }] : [],
+                { path: ["right", 0], key: "default" },
+                tense === 'past' ? "た" : "る"
+            ],
+            nominal: [
+                ...finite ? [{ path: ["left", 0], key: "default", particle: "が" }] : [],
+                { path: ["right", 0], key: "default" },
+                tense === 'past' ? "た" : "る"
+            ]
+        };
+
+        const category: Phrase = {
+            head: head,
+            right: [right],
+            translationTemplates: translationTemplates
+        };
+
+        if (left) {
+            category.left = [left];
+            category.customUnification = this.getSubjectGapUnification();
+        }
+
+        return [category];
+    }
+
+    createBlockHave(): Block {
+        return {
+            id: "have_aux",
+            x: 0,
+            y: 0,
+            words: [
+                {
+                    token: "have_base",
+                    categories: this.createHaveCategory("base", false)
+                },
+                {
+                    token: "have_present",
+                    categories: this.createHaveCategory("present", true, { type: "non-3sing" })
+                },
+                {
+                    token: "has_present",
+                    categories: this.createHaveCategory("es", true, { type: "3sing" })
+                },
+                {
+                    token: "had_past",
+                    categories: this.createHaveCategory("past", true, {})
+                },
+                {
+                    token: "having_ing",
+                    categories: this.createHaveCategory("ing", false)
+                }
+            ],
+            color: "orange",
+            children: [
+                {
+                    id: "specifier",
+                    hidden: false,
+                    type: "placeholder",
+                    content: undefined,
+                    headIndex: [1, 2, 3],
+                },
+                {
+                    id: "head",
+                    hidden: false,
+                    type: "dropdown",
+                    selected: 1,
+                    content: [
+                        "have",
+                        "have",
+                        "has", 
+                        "had", 
+                        "having"
+                    ]
+                },
+                {
+                    id: "complement",
+                    hidden: false,
+                    type: "placeholder",
+                    content: undefined,
+                }
+            ]
+        };
+    }
+
     createModalBlock(config: ModalConfig): Block {
         const { id, word, translation, translationKey, preTranslation } = config;
         const color = config.color || "orange";

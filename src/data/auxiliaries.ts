@@ -95,6 +95,8 @@ export const blockInvertedBe = generator.createBlockInvertedBe();
 export const blockDoNot = generator.createBlockDoNot();
 export const blockInvertedDo = generator.createBlockInvertedDo();
 
+export const blockHave = generator.createBlockHave();
+
 export const allAuxiliaryBlocks: Block[] = [
     blockSentence,
     blockBe,
@@ -102,5 +104,6 @@ export const allAuxiliaryBlocks: Block[] = [
     blockInvertedBe,
     blockDoNot,
     blockInvertedDo,
+    blockHave,
     ...allModalBlocks
 ];

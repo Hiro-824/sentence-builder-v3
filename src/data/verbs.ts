@@ -14,7 +14,7 @@ const configRun: VerbConfig = {
         present: { default: "走る", imperfective: "走ら", past: "走った" },
         past: { default: "走った" },
         progressive: { default: "走っているところ", nonPredicate: "走っている", },
-        perfect: { default: "既に走っている" },
+        perfect: { default: "既に走ってい" },
         noun: { default: "走ること", no: "走るの", past: "走ったこと", pastNo: "走ったの" }
     },
     gerundSubject: false,
@@ -30,7 +30,7 @@ const configRead: VerbConfig = {
         present: { default: "読む", imperfective: "読ま", past: "読んだ" },
         past: { default: "読んだ" },
         progressive: { default: "読んでいるところ", nonPredicate: "読んでいる", },
-        perfect: { default: "既に読んでいる" },
+        perfect: { default: "既に読んでい" },
         passive: { default: "読まれ" },
         noun: { default: "読むこと", no: "読むの", past: "読んだこと", pastNo: "読んだの" }
     },
@@ -47,7 +47,7 @@ const configSee: VerbConfig = {
         present: { default: "見る", imperfective: "見な", past: "見た" },
         past: { default: "見た" },
         progressive: { default: "見ているところ", nonPredicate: "見ている", },
-        perfect: { default: "既に見ている" },
+        perfect: { default: "既に見てい" },
         passive: { default: "見られ" },
         noun: { default: "見ること", no: "見るの", past: "見たこと", pastNo: "見たの" }
     },
@@ -64,7 +64,7 @@ const configHave: VerbConfig = {
         present: { default: "持っている", imperfective: "持ってい", past: "持っていた" },
         past: { default: "持っていた" },
         progressive: { default: "持っているところ", nonPredicate: "持っている", },
-        perfect: { default: "すでに持っている" },
+        perfect: { default: "既に持ってい" },
         passive: { default: "所有されてい" },
         noun: { default: "持っていること", no: "持っているの", past: "持っていたこと", pastNo: "持っていたの" }
     },
@@ -84,7 +84,7 @@ const configGive: VerbConfig = {
         present: { default: "与える", imperfective: "与え", past: "与えた" },
         past: { default: "与えた" },
         progressive: { default: "与えているところ", nonPredicate: "与えている", },
-        perfect: { default: "既に与えている" },
+        perfect: { default: "既に与えてい" },
         passive: { default: "あたえられ" },
         noun: { default: "与えること", no: "与えるの", past: "与えたこと", pastNo: "与えたの" }
     },
@@ -104,7 +104,7 @@ const knowConfig: VerbConfig = {
         present: { default: "知っている", imperfective: "知ってい", past: "知っていた" },
         past: { default: "知っていた" },
         progressive: { default: "知っているところ", nonPredicate: "知っている", },
-        perfect: { default: "既に知っている" },
+        perfect: { default: "既に知ってい" },
         passive: { default: "知られてい" },
         noun: { default: "知っていること" }
     },
@@ -123,7 +123,7 @@ const playConfig: VerbConfig = {
         present: { default: "する", imperfective: "し", past: "した" },
         past: { default: "した" },
         progressive: { default: "しているところ", nonPredicate: "している", },
-        perfect: { default: "既にしている" },
+        perfect: { default: "既にしてい" },
         passive: { default: "され" },
         noun: { default: "すること" }
     },
@@ -160,7 +160,7 @@ const configBuy: VerbConfig = {
         present: { default: "買う", imperfective: "買わ", past: "買った" },
         past: { default: "買った" },
         progressive: { default: "買っているところ", nonPredicate: "買っている", },
-        perfect: { default: "既に買った" },
+        perfect: { default: "既に買ってい" },
         passive: { default: "買われ" },
         noun: { default: "買うこと", no: "買うの", past: "買ったこと", pastNo: "買ったの" }
     }
@@ -178,7 +178,7 @@ const configGo: VerbConfig = {
         present: { default: "行く", imperfective: "行か", past: "行った" },
         past: { default: "行った" },
         progressive: { default: "行っているところ", nonPredicate: "行っている", },
-        perfect: { default: "既に行った" },
+        perfect: { default: "既に行ってい" },
         noun: { default: "行くこと", no: "行くの", past: "行ったこと", pastNo: "行ったの" }
     }
 };
