@@ -1588,6 +1588,83 @@ export class Generator {
         return [category];
     }
 
+    private createHaveNotCategory(form: "present" | "es" | "past", agr?: FeatureStructure): Phrase[] {
+        const tense = form === "past" ? "past" : "present";
+        const head: FeatureStructure = {
+            type: "sentence",
+            finite: true,
+            negative: true, // Key feature for negation
+            inverted: false,
+            form: form
+        };
+        if (tense) head.tense = tense;
+
+        const left: Phrase = { head: { type: { type: "nominal", isDet: true }, case: "nom", agr: agr ?? {} } };
+
+        // The complement MUST be a verb in its perfect form (e.g., "seen", "done").
+        const right: Phrase = {
+            head: { type: "verb", form: "perfect" },
+            gaps: [{ head: { type: { type: "nominal", isDet: true } } }]
+        };
+
+        const translationTemplates: TranslationTemplates = {
+            default: [
+                { path: ["left", 0], key: "default", particle: "は" },
+                { path: ["right", 0], key: "default" },
+                tense === 'past' ? "なかった" : "ない"
+            ],
+            nominal: [
+                { path: ["left", 0], key: "default", particle: "が" },
+                { path: ["right", 0], key: "default" },
+                tense === 'past' ? "なかった" : "ない"
+            ]
+        };
+
+        return [{
+            head: head,
+            left: [left],
+            right: [right],
+            customUnification: this.getSubjectGapUnification(),
+            translationTemplates: translationTemplates
+        }];
+    }
+
+    private createInvertedHaveCategory(form: "present" | "es" | "past", agr?: FeatureStructure): Phrase[] {
+        const tense = form === "past" ? "past" : "present";
+        const head: FeatureStructure = {
+            type: "sentence",
+            finite: true,
+            negative: false,
+            inverted: true, // Key feature for Subject-Auxiliary Inversion
+            question: true,
+            form: form
+        };
+        if (tense) head.tense = tense;
+
+        // In inverted structures, both subject and complement are on the right.
+        const subject: Phrase = { head: { type: { type: "nominal", isDet: true }, case: "nom", agr: agr ?? {} } };
+        const complement: Phrase = { head: { type: "verb", form: "perfect" } };
+
+        const translationTemplates: TranslationTemplates = {
+            default: [
+                { path: ["right", 0], key: "default", particle: "は" },
+                { path: ["right", 1], key: "default" },
+                tense === 'past' ? "ましたか？" : "ますか？"
+            ],
+            nominal: [
+                { path: ["right", 0], key: "default", particle: "が" },
+                { path: ["right", 1], key: "default" },
+                tense === 'past' ? "ましたか" : "ますか"
+            ]
+        };
+
+        return [{
+            head: head,
+            right: [subject, complement], // Argument order: Subject, then VP
+            translationTemplates: translationTemplates
+        }];
+    }
+
     createBlockHave(): Block {
         return {
             id: "have_aux",
@@ -1632,13 +1709,109 @@ export class Generator {
                     content: [
                         "have",
                         "have",
-                        "has", 
-                        "had", 
+                        "has",
+                        "had",
                         "having"
                     ]
                 },
                 {
                     id: "complement",
+                    hidden: false,
+                    type: "placeholder",
+                    content: undefined,
+                }
+            ]
+        };
+    }
+
+    createBlockHaveNot(): Block {
+        return {
+            id: "have_not_aux",
+            x: 0,
+            y: 0,
+            words: [
+                {
+                    token: "have_not",
+                    categories: this.createHaveNotCategory("present", { type: "non-3sing" })
+                },
+                {
+                    token: "has_not",
+                    categories: this.createHaveNotCategory("es", { type: "3sing" })
+                },
+                {
+                    token: "had_not",
+                    categories: this.createHaveNotCategory("past", {})
+                }
+            ],
+            color: "orange",
+            children: [
+                {
+                    id: "specifier", // Subject
+                    hidden: false,
+                    type: "placeholder",
+                    content: undefined,
+                },
+                {
+                    id: "head",
+                    hidden: false,
+                    type: "dropdown",
+                    selected: 0,
+                    content: [
+                        "have not",
+                        "has not",
+                        "had not"
+                    ]
+                },
+                {
+                    id: "complement", // Verb in perfect form
+                    hidden: false,
+                    type: "placeholder",
+                    content: undefined,
+                }
+            ]
+        };
+    }
+
+    createBlockInvertedHave(): Block {
+        return {
+            id: "inverted_have_aux",
+            x: 0,
+            y: 0,
+            words: [
+                {
+                    token: "have_inverted",
+                    categories: this.createInvertedHaveCategory("present", { type: "non-3sing" })
+                },
+                {
+                    token: "has_inverted",
+                    categories: this.createInvertedHaveCategory("es", { type: "3sing" })
+                },
+                {
+                    token: "had_inverted",
+                    categories: this.createInvertedHaveCategory("past", {})
+                }
+            ],
+            color: "orange",
+            children: [
+                {
+                    id: "head", // The auxiliary itself
+                    hidden: false,
+                    type: "dropdown",
+                    selected: 0,
+                    content: [
+                        "Have",
+                        "Has",
+                        "Had"
+                    ]
+                },
+                {
+                    id: "specifier", // The subject, which appears second
+                    hidden: false,
+                    type: "placeholder",
+                    content: undefined,
+                },
+                {
+                    id: "complement", // The main verb phrase
                     hidden: false,
                     type: "placeholder",
                     content: undefined,
