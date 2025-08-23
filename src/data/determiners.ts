@@ -26,7 +26,7 @@ export const blockThe: Block = {
         id: "head",
         hidden: false,
         type: "text",
-        content: ["the"],
+        content: "the",
     },
     {
         id: "complement",
@@ -58,7 +58,7 @@ export const blockA: Block = {
         id: "head",
         hidden: false,
         type: "text",
-        content: ["a/an"],
+        content: "a/an",
     },
     {
         id: "complement",
