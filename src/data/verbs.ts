@@ -31,7 +31,7 @@ const configRead: VerbConfig = {
         past: { default: "読んだ" },
         progressive: { default: "読んでいるところ", nonPredicate: "読んでいる", },
         perfect: { default: "既に読んでいる" },
-        passive: { default: "読まれる" },
+        passive: { default: "読まれ" },
         noun: { default: "読むこと", no: "読むの", past: "読んだこと", pastNo: "読んだの" }
     },
     gerundSubject: false,
@@ -48,7 +48,7 @@ const configSee: VerbConfig = {
         past: { default: "見た" },
         progressive: { default: "見ているところ", nonPredicate: "見ている", },
         perfect: { default: "既に見ている" },
-        passive: { default: "見られる" },
+        passive: { default: "見られ" },
         noun: { default: "見ること", no: "見るの", past: "見たこと", pastNo: "見たの" }
     },
     gerundSubject: false,
@@ -65,7 +65,7 @@ const configHave: VerbConfig = {
         past: { default: "持っていた" },
         progressive: { default: "持っているところ", nonPredicate: "持っている", },
         perfect: { default: "すでに持っている" },
-        passive: { default: "所有されている" },
+        passive: { default: "所有されてい" },
         noun: { default: "持っていること", no: "持っているの", past: "持っていたこと", pastNo: "持っていたの" }
     },
     gerundSubject: false,
@@ -85,7 +85,7 @@ const configGive: VerbConfig = {
         past: { default: "与えた" },
         progressive: { default: "与えているところ", nonPredicate: "与えている", },
         perfect: { default: "既に与えている" },
-        passive: { default: "あたえられる" },
+        passive: { default: "あたえられ" },
         noun: { default: "与えること", no: "与えるの", past: "与えたこと", pastNo: "与えたの" }
     },
     gerundSubject: true,
@@ -105,7 +105,7 @@ const knowConfig: VerbConfig = {
         past: { default: "知っていた" },
         progressive: { default: "知っているところ", nonPredicate: "知っている", },
         perfect: { default: "既に知っている" },
-        passive: { default: "知られている" },
+        passive: { default: "知られてい" },
         noun: { default: "知っていること" }
     },
     color: "tomato",
@@ -124,7 +124,7 @@ const playConfig: VerbConfig = {
         past: { default: "した" },
         progressive: { default: "しているところ", nonPredicate: "している", },
         perfect: { default: "既にしている" },
-        passive: { default: "される" },
+        passive: { default: "され" },
         noun: { default: "すること" }
     },
     color: "tomato",
@@ -143,7 +143,7 @@ const configLike: VerbConfig = {
         past: { default: "好きだった" },
         progressive: { default: "好きになっているところ", nonPredicate: "好きになっている", },
         perfect: { default: "好きでいた" },
-        passive: { default: "好まれる" },
+        passive: { default: "好まれ" },
         noun: { default: "好きなこと" }
     }
 };
@@ -161,7 +161,7 @@ const configBuy: VerbConfig = {
         past: { default: "買った" },
         progressive: { default: "買っているところ", nonPredicate: "買っている", },
         perfect: { default: "既に買った" },
-        passive: { default: "買われる" },
+        passive: { default: "買われ" },
         noun: { default: "買うこと", no: "買うの", past: "買ったこと", pastNo: "買ったの" }
     }
 };
@@ -196,7 +196,7 @@ const configWant: VerbConfig = {
         past: { default: "欲しかった" },
         progressive: { default: "欲しがっているところ", nonPredicate: "欲しがっている", },
         perfect: { default: "欲しがってきた" },
-        passive: { default: "欲しがられる" },
+        passive: { default: "欲しがられ" },
         noun: { default: "欲しいこと" }
     }
 };

@@ -1039,6 +1039,38 @@ export class Generator {
                     },
                 ]
             }
+        }, {
+            head: head,
+            left: [left],
+            right: [{
+                head: { type: "verb", form: "passive" }
+            }],
+            translationTemplates: {
+                default: [
+                    ...finite ? [{
+                        path: ["left", 0],
+                        key: "default",
+                        particle: "は",
+                    }] : [],
+                    {
+                        path: ["right", 0],
+                        key: "default",
+                        particle: tense === "present" ? "る" : "た",
+                    },
+                ],
+                nominal: [
+                    ...finite ? [{
+                        path: ["left", 0],
+                        key: "default",
+                        particle: "が",
+                    }] : [],
+                    {
+                        path: ["right", 0],
+                        key: tense === "present" ? "default" : "past",
+                        particle: tense === "present" ? "る" : "た",
+                    },
+                ]
+            }
         }]
     }
 
@@ -1094,22 +1126,6 @@ export class Generator {
             left: [left],
             right: [{
                 head: { type: "adj" }
-            }],
-            translationTemplates: {
-                default: [
-                    { path: ["left", 0], key: "default", particle: "は" },
-                    { path: ["right", 0], key: tense === "present" ? "predNeg" : "pastNeg" },
-                ],
-                nominal: [
-                    { path: ["left", 0], key: "default", particle: "が" },
-                    { path: ["right", 0], key: tense === "present" ? "predNeg" : "pastNeg" },
-                ]
-            }
-        }, {
-            head: head,
-            left: [left],
-            right: [{
-                head: { type: "prep", pred: true }
             }],
             translationTemplates: {
                 default: [
