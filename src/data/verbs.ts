@@ -134,7 +134,7 @@ const configLike: VerbConfig = {
     id: "like_verb",
     forms: { base: "like", es: "likes", ed: "liked", en: "liked", ing: "liking" },
     adv_manner_type: 'degree',
-    complements: [{ expected: { head: { type: det, case: "acc" } }, particle: "が" }],
+    complements: [{ expected: { head: { type: { type: "nominal" }, case: "acc" } }, particle: "が" }],
     transitive: true,
     gerundSubject: true,
     toSubject: true,
