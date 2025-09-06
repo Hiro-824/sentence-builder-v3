@@ -9,6 +9,7 @@ import {
   converter
 } from '@/renderer/block-renderer-utils';
 import type { Block } from '@/models/block';
+import styles from './markdown-block-renderer.module.css';
 
 interface MarkdownBlockRendererProps {
   jsonString: string;
@@ -61,12 +62,7 @@ const MarkdownBlockRenderer = ({ jsonString }: MarkdownBlockRendererProps) => {
   return (
     <div
       ref={containerRef}
-      style={{
-        display: 'inline-block',
-        verticalAlign: 'middle',
-        margin: '8px 0',
-        lineHeight: 0,
-      }}
+      className={styles.container}
     >
       <svg ref={svgRef}></svg>
     </div>
