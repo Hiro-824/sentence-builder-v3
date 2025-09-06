@@ -4,6 +4,7 @@ import { useState } from 'react';
 import styles from './activity-panel.module.css';
 import { BookIcon, ImageIcon, AiIcon } from '@/components/activity-panel/icons/icons';
 import { LessonsTabContent } from './tabs/lessons';
+import { Lesson } from '@/utils/lessons';
 
 // Tab Definitions
 const TABS = [
@@ -21,7 +22,11 @@ const TabContent = ({ title }: { title: string }) => (
   </div>
 );
 
-const ActivityPanel = () => {
+interface ActivityPanelProps {
+  lessons: Lesson[];
+}
+
+const ActivityPanel = ({ lessons }: ActivityPanelProps) => {
   const [activeTab, setActiveTab] = useState(TABS[0].id);
 
   return (
@@ -40,7 +45,7 @@ const ActivityPanel = () => {
         ))}
       </nav>
       <div className={styles.content}>
-        {activeTab === 'lessons' && <LessonsTabContent />}
+        {activeTab === 'lessons' && <LessonsTabContent lessons={lessons} />}
         {activeTab === 'picture' && <TabContent title="写真描写トレーニング" />}
         {activeTab === 'ai_tutor' && <TabContent title="AI講師と英会話" />}
       </div>

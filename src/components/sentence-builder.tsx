@@ -14,9 +14,14 @@ import ProjectListModal from "./project-list-modal";
 import { useRouter, useSearchParams } from 'next/navigation';
 import Loader from "./loader";
 import { LoggingService } from "@/utils/supabase/logging";
-import ActivityPanel from "./activity-panel/activity-panel"; // Import the new component
+import ActivityPanel from "./activity-panel/activity-panel";
+import { Lesson } from "@/utils/lessons";
 
-const SentenceBuilder = () => {
+interface SentenceBuilderProps {
+    lessons: Lesson[];
+}
+
+const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
     // ユーザー認証に関する変数
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [showAuthModal, setShowAuthModal] = useState(false);
@@ -288,7 +293,7 @@ const SentenceBuilder = () => {
                             left: 0,
                         }}
                     />
-                    <ActivityPanel />
+                    <ActivityPanel lessons={lessons} />
                 </>
             )}
 

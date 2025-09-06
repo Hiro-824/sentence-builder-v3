@@ -1,20 +1,107 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import LessonViewer from '../components/lesson-viewer';
+import { Lesson } from '@/utils/lessons';
+import styles from './lessons.module.css';
 
-export const LessonsTabContent = () => {
-    const [content, setContent] = useState("");
+// A simple chevron icon component
+const ChevronIcon = ({ isOpen }: { isOpen: boolean }) => (
+    <svg 
+        width="16" 
+        height="16" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        strokeWidth="2" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+        className={`${styles.tocToggleIcon} ${!isOpen ? styles.closed : ''}`}
+    >
+        <polyline points="6 9 12 15 18 9"></polyline>
+    </svg>
+);
 
-    useEffect(() => {
-        fetch("/lessons/test.md")
-            .then(res => res.text())
-            .then(setContent);
-    }, []);
+
+interface LessonsTabContentProps {
+  lessons: Lesson[];
+}
+
+export const LessonsTabContent = ({ lessons }: LessonsTabContentProps) => {
+    const [currentLessonIndex, setCurrentLessonIndex] = useState(0);
+    // Add state for the TOC's visibility, defaulting to open
+    const [isTocOpen, setIsTocOpen] = useState(true);
+
+    if (!lessons || lessons.length === 0) {
+        return <div className={styles.container}>No lessons found.</div>;
+    }
+
+    const currentLesson = lessons[currentLessonIndex];
     
+    // Function to toggle the TOC state
+    const toggleToc = () => {
+        setIsTocOpen(prev => !prev);
+    };
+
+    const goToNextLesson = () => {
+        setCurrentLessonIndex(prev => Math.min(prev + 1, lessons.length - 1));
+    };
+
+    const goToPrevLesson = () => {
+        setCurrentLessonIndex(prev => Math.max(prev - 1, 0));
+    };
+
+    const goToLesson = (index: number) => {
+        setCurrentLessonIndex(index);
+    }
+
     return (
-        <div>
-            <LessonViewer content={content} />
+        <div className={styles.container}>
+            {/* Add a conditional class to the TOC container */}
+            <div className={`${styles.tableOfContents} ${!isTocOpen ? styles.tocCollapsed : ''}`}>
+                {/* Make the header a clickable button */}
+                <div className={styles.tocHeader} onClick={toggleToc}>
+                    <h3 className={styles.tocTitle}>目次</h3>
+                    <ChevronIcon isOpen={isTocOpen} />
+                </div>
+                
+                {/* Add a conditional class to the list for the animation */}
+                <ul className={`${styles.tocList} ${!isTocOpen ? styles.tocListClosed : ''}`}>
+                    {lessons.map((lesson, index) => (
+                        <li
+                            key={lesson.slug}
+                            className={`${styles.tocItem} ${index === currentLessonIndex ? styles.active : ''}`}
+                            onClick={() => goToLesson(index)}
+                        >
+                            {lesson.title}
+                        </li>
+                    ))}
+                </ul>
+            </div>
+            
+            <div className={styles.lessonContent}>
+                <LessonViewer content={currentLesson.content} />
+            </div>
+
+            <div className={styles.navigation}>
+                <button 
+                    onClick={goToPrevLesson} 
+                    disabled={currentLessonIndex === 0}
+                    className={styles.navButton}
+                >
+                    &larr; 前へ
+                </button>
+                <span className={styles.navCounter}>
+                    {currentLessonIndex + 1} / {lessons.length}
+                </span>
+                <button 
+                    onClick={goToNextLesson} 
+                    disabled={currentLessonIndex === lessons.length - 1}
+                    className={styles.navButton}
+                >
+                    次へ &rarr;
+                </button>
+            </div>
         </div>
     );
 };

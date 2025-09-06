@@ -1,0 +1,132 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Make container fill the space */
+    padding-top: 0;
+}
+
+.tableOfContents {
+    padding: 24px 24px 12px 24px;
+    border-bottom: 1px solid #f0f0f0;
+    flex-shrink: 0;
+    transition: padding 0.3s ease-in-out;
+}
+
+.tableOfContents.tocCollapsed {
+    padding-bottom: 16px;
+}
+
+/* New styles for the TOC header */
+.tocHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    user-select: none; /* Prevent text selection on double click */
+}
+
+.tocHeader:hover .tocTitle {
+    color: #007AFF;
+}
+
+.tocTitle {
+    margin: 0 0 12px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    transition: color 0.2s ease;
+}
+
+/* New styles for the toggle icon */
+.tocToggleIcon {
+    margin-bottom: 12px;
+    color: #888;
+    transition: transform 0.3s ease-in-out;
+}
+
+.tocToggleIcon.closed {
+    transform: rotate(-90deg);
+}
+
+
+/* Renamed from '.tableOfContents ul' to '.tocList' */
+.tocList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    /* Animate max-height for a smooth transition */
+    max-height: 150px; 
+    overflow-y: auto;
+    transition: all 0.3s ease-in-out;
+}
+
+/* New style to hide the list when closed */
+.tocListClosed {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden; /* Important to hide content */
+    margin-top: 0;
+}
+
+.tocItem {
+    padding: 8px 12px;
+    font-size: 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    color: #666;
+}
+
+.tocItem:hover {
+    background-color: #f0f0f0;
+    color: #1a1a1a;
+}
+
+.tocItem.active {
+    background-color: #e6f2ff;
+    color: #007AFF;
+    font-weight: 500;
+}
+
+.lessonContent {
+    flex-grow: 1; 
+    overflow-y: auto;
+}
+
+.navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    border-top: 1px solid #f0f0f0;
+    background-color: rgba(255, 255, 255, 0.7);
+    flex-shrink: 0;
+}
+
+.navButton {
+    background-color: #f0f0f0;
+    border: 1px solid #e0e0e0;
+    color: #333;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.navButton:hover:not(:disabled) {
+    background-color: #e0e0e0;
+    border-color: #c1c1c1;
+}
+
+.navButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.navCounter {
+    font-size: 14px;
+    color: #666;
+    font-variant-numeric: tabular-nums;
+}

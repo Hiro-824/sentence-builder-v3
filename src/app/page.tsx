@@ -1,12 +1,15 @@
 import SentenceBuilder from "@/components/sentence-builder";
+import { getSortedLessonsData } from "@/utils/lessons";
 import { Suspense } from 'react';
 
 export default function Home() {
 
+  const lessons = getSortedLessonsData();
+
   return (
     <>
       <Suspense fallback={<Loading />}>
-        <SentenceBuilder />
+        <SentenceBuilder lessons={lessons} />
       </Suspense>
     </>
   );
