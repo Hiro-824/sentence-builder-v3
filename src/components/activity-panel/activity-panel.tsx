@@ -8,8 +8,8 @@ import { LessonsTabContent } from './tabs/lessons';
 // Tab Definitions
 const TABS = [
   { id: 'lessons', label: 'テキスト教材', icon: <BookIcon /> },
-  { id: 'picture', label: '画像の説明', icon: <ImageIcon /> },
-  { id: 'ai_tutor', label: 'AI先生', icon: <AiIcon /> },
+  { id: 'picture', label: '写真描写', icon: <ImageIcon /> },
+  { id: 'ai_tutor', label: 'AI講師', icon: <AiIcon /> },
 ];
 
 const TabContent = ({ title }: { title: string }) => (
@@ -41,8 +41,8 @@ const ActivityPanel = () => {
       </nav>
       <div className={styles.content}>
         {activeTab === 'lessons' && <LessonsTabContent />}
-        {activeTab === 'picture' && <TabContent title="Picture Description Practice" />}
-        {activeTab === 'ai_tutor' && <TabContent title="AI English Tutor" />}
+        {activeTab === 'picture' && <TabContent title="写真描写トレーニング" />}
+        {activeTab === 'ai_tutor' && <TabContent title="AI講師と英会話" />}
       </div>
     </aside>
   );
