@@ -1,0 +1,81 @@
+.panel {
+    position: fixed;
+    top: 64px; /* Height of the TopBar */
+    right: 0;
+    width: 400px;
+    height: calc(100vh - 64px);
+    background-color: rgba(250, 250, 250, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-left: 1px solid #f0f0f0;
+    box-shadow: -3px 0px 15px rgba(0, 0, 0, 0.04);
+    z-index: 5; /* Below modals (1000) but above the canvas */
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease-in-out;
+}
+
+/* Tab Navigation Styles */
+.tabNav {
+    display: flex;
+    border-bottom: 1px solid #f0f0f0;
+    flex-shrink: 0;
+    background-color: rgba(255, 255, 255, 0.5);
+}
+
+.tabButton {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 12px 8px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    color: #888888;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.tabButton:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+    color: #333333;
+}
+
+.tabButton.active {
+    color: #007AFF; /* Use the brand's primary blue color */
+    border-bottom-color: #007AFF;
+    background-color: rgba(0, 122, 255, 0.05);
+}
+
+.tabLabel {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* Content Area Styles */
+.content {
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.tabContent {
+    padding: 24px;
+}
+
+.title {
+    margin: 0 0 16px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.placeholderText {
+    color: #888888;
+    font-size: 15px;
+    text-align: center;
+    margin-top: 40px;
+}

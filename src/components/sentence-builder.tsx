@@ -14,6 +14,7 @@ import ProjectListModal from "./project-list-modal";
 import { useRouter, useSearchParams } from 'next/navigation';
 import Loader from "./loader";
 import { LoggingService } from "@/utils/supabase/logging";
+import ActivityPanel from "./activity-panel/activity-panel"; // Import the new component
 
 const SentenceBuilder = () => {
     // ユーザー認証に関する変数
@@ -278,14 +279,17 @@ const SentenceBuilder = () => {
             />
 
             {isAuthenticated && (
-                <div
-                    ref={svgContainerRef}
-                    style={{
-                        position: 'fixed',
-                        top: '64px',
-                        left: 0,
-                    }}
-                />
+                <>
+                    <div
+                        ref={svgContainerRef}
+                        style={{
+                            position: 'fixed',
+                            top: '64px',
+                            left: 0,
+                        }}
+                    />
+                    <ActivityPanel />
+                </>
             )}
 
             {isProjectLoading && <Loader />}

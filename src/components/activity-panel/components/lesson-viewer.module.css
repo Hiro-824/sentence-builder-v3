@@ -1,0 +1,73 @@
+.viewer {
+    padding: 24px 24px 24px 24px;
+    font-size: 15px;
+    line-height: 1.7;
+    color: #333;
+}
+
+.viewer > *:first-child {
+    margin-top: 0;
+}
+
+.viewer h1,
+.viewer h2,
+.viewer h3 {
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-top: 1.5em;
+    margin-bottom: 0.8em;
+    line-height: 1.3;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 0.3em;
+}
+
+.viewer h1 {
+    font-size: 1.6em;
+}
+
+.viewer h2 {
+    font-size: 1.4em;
+}
+
+.viewer h3 {
+    font-size: 1.2em;
+}
+
+.viewer p {
+    margin-bottom: 1em;
+}
+
+.viewer ul,
+.viewer ol {
+    padding-left: 20px;
+    margin-bottom: 1em;
+}
+
+.viewer li > p {
+    margin-bottom: 0.2em;
+}
+
+.viewer a {
+    color: #007AFF;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.viewer a:hover {
+    text-decoration: underline;
+}
+
+.viewer code {
+    background-color: #f0f0f0;
+    padding: 0.2em 0.4em;
+    border-radius: 4px;
+    font-family: var(--font-geist-mono);
+    font-size: 0.9em;
+}
+
+.viewer blockquote {
+    border-left: 4px solid #e0e0e0;
+    padding-left: 16px;
+    color: #666;
+    margin: 0 0 1em 0;
+}
