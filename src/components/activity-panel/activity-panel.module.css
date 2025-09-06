@@ -2,7 +2,7 @@
     position: fixed;
     top: 64px; /* Height of the TopBar */
     right: 0;
-    width: 400px;
+    width: 448px;
     height: calc(100vh - 64px);
     background-color: rgba(250, 250, 250, 0.85);
     backdrop-filter: blur(10px);
