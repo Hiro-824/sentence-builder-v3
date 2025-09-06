@@ -14,7 +14,7 @@ import ProjectListModal from "./project-list-modal";
 import { useRouter, useSearchParams } from 'next/navigation';
 import Loader from "./loader";
 import { LoggingService } from "@/utils/supabase/logging";
-import ActivityPanel from "./activity-panel"; // Import the new component
+import ActivityPanel from "./activity-panel/activity-panel"; // Import the new component
 
 const SentenceBuilder = () => {
     // ユーザー認証に関する変数

@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import styles from './activity-panel.module.css';
-import { BookIcon, ImageIcon, AiIcon } from './icons/icons';
+import { BookIcon, ImageIcon, AiIcon } from '@/components/activity-panel/icons/icons';
+import { LessonsTabContent } from './tabs/lessons';
 
 // Tab Definitions
 const TABS = [
@@ -39,7 +40,7 @@ const ActivityPanel = () => {
         ))}
       </nav>
       <div className={styles.content}>
-        {activeTab === 'lessons' && <TabContent title="Lessons & Textbook" />}
+        {activeTab === 'lessons' && <LessonsTabContent />}
         {activeTab === 'picture' && <TabContent title="Picture Description Practice" />}
         {activeTab === 'ai_tutor' && <TabContent title="AI English Tutor" />}
       </div>
