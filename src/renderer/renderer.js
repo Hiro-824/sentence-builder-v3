@@ -610,17 +610,10 @@ export class Renderer {
             }
         }
 
-        // After rendering the block contents, optionally render a Send button for finite sentences
-        try {
-            const isFinite = this.isFiniteSentence(block);
-            // MODIFICATION START: Add a check to ensure the block is not in the sidebar
-            if (isFinite && !fromSideBar) {
-            // MODIFICATION END
-                const isComplete = this.isBlockComplete(block);
-                this.renderSendButton(block, blockGroup, width, height, !isComplete);
-            }
-        } catch (e) {
-            // fail-safe: never break rendering if check fails
+        const isFinite = this.isFiniteSentence(block);
+        if (isFinite && !fromSideBar) {
+            const isComplete = this.isBlockComplete(block);
+            this.renderSendButton(block, blockGroup, width, height, !isComplete);
         }
 
         return { width: width, height: height };
