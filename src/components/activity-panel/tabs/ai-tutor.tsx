@@ -2,13 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import styles from './ai-tutor.module.css';
-
-// A simple Send icon component, placed here for locality
-const SendIcon = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
-    </svg>
-);
+import { SendIcon } from '../icons/icons';
 
 // Define the structure for a chat message
 interface Message {
