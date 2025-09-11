@@ -610,7 +610,136 @@ export class Renderer {
             }
         }
 
+        // After rendering the block contents, optionally render a Send button for finite sentences
+        try {
+            if (this.isFiniteSentenceBlock(block)) {
+                this.renderSendButton(block, blockGroup, width, height);
+            }
+        } catch (e) {
+            // fail-safe: never break rendering if check fails
+        }
+
         return { width: width, height: height };
+    }
+
+    // Determine if a block is a finite sentence based on its head category, not visuals
+    isFiniteSentenceBlock(block) {
+        if (!block || !Array.isArray(block.children) || !Array.isArray(block.words) || block.words.length === 0) return false;
+        const headChild = block.children.find(c => c.id === 'head');
+        if (!headChild) return false;
+        const headIndex = headChild.type === 'dropdown' ? (headChild.selected ?? 0) : 0;
+        const headWord = block.words[headIndex];
+        const headCategory = headWord && Array.isArray(headWord.categories) ? headWord.categories[0] : undefined;
+        const isSentence = headCategory && headCategory.head && headCategory.head.type === 'sentence';
+        const isFinite = isSentence && headCategory.head.finite === true;
+        // Also require that there are no visible, unfilled placeholders remaining
+        const hasUnfilled = block.children.some(ch => !ch.hidden && ch.type === 'placeholder' && !ch.content && !ch.resolved);
+        return Boolean(isFinite && !hasUnfilled);
+    }
+
+    // Simple string representation to send to AI (matches logging helper semantics)
+    generateFlatString(block) {
+        if (!block) return '';
+        const parts = block.children
+            .filter(child => !child.hidden)
+            .map(child => {
+                if (child.id === 'head') {
+                    if (child.type === 'text') return child.content;
+                    if (child.type === 'dropdown') {
+                        const idx = child.selected ?? 0;
+                        return child.content && child.content[idx] ? child.content[idx] : '';
+                    }
+                    return block.id;
+                }
+                if ((child.type === 'placeholder' || child.type === 'attachment') && child.content) {
+                    return this.generateFlatString(child.content);
+                }
+                return null;
+            })
+            .filter(Boolean);
+        return parts.join(' ');
+    }
+
+    // Render a small button to the right of the block
+    renderSendButton(block, blockGroup, width, height) {
+        const buttonPaddingX = 8;
+        const buttonPaddingY = 4;
+        const label = 'Send';
+        const labelBox = this.calculateTextHeightAndWidth(label);
+        const btnWidth = labelBox.width + buttonPaddingX * 2;
+        const btnHeight = labelBox.height + buttonPaddingY * 2;
+        const gap = 8;
+
+        const group = blockGroup.append('g')
+            .attr('id', `send-${block.id}`)
+            .classed('pointer', true);
+
+        const x = width + gap;
+        const y = (height - btnHeight) / 2;
+
+        const rect = group.append('rect')
+            .attr('x', x)
+            .attr('y', y)
+            .attr('width', btnWidth)
+            .attr('height', btnHeight)
+            .attr('rx', blockCornerRadius)
+            .attr('ry', blockCornerRadius)
+            .attr('fill', '#f0f0f0')
+            .attr('stroke', '#e0e0e0')
+            .attr('stroke-width', 1);
+
+        group.append('text')
+            .text(label)
+            .attr('x', x + btnWidth / 2)
+            .attr('y', y + btnHeight / 2)
+            .attr('text-anchor', 'middle')
+            .attr('dominant-baseline', 'middle')
+            .attr('fill', '#333')
+            .style('font-size', '10pt')
+            .style('font-weight', '600')
+            .style('user-select', 'none');
+
+        group
+            .on('mouseenter', () => {
+                rect.attr('fill', '#e8e8e8');
+            })
+            .on('mouseleave', () => {
+                rect.attr('fill', '#f0f0f0');
+            })
+            .on('mousedown', async (event) => {
+                event.stopPropagation();
+                try {
+                    // Gather sentence string
+                    const text = this.generateFlatString(block);
+                    // Call API
+                    const res = await fetch('/api/ai-tutor', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ prompt: text })
+                    });
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    // Display the response in translation bubble temporarily
+                    const original = block.translation || '';
+                    block.translation = data && data.text ? String(data.text) : original;
+                    // Re-render this block image to show updated bubble
+                    this.renderBlockImage(block, blockGroup);
+                    // Restore original translation shortly after
+                    setTimeout(() => {
+                        block.translation = original;
+                        const groupNow = d3.select(`#${block.id}`);
+                        if (!groupNow.empty()) this.renderBlockImage(block, groupNow);
+                    }, 2500);
+                } catch (err) {
+                    // swallow errors for now
+                }
+            });
+
+        // extend the hit area to include the button when dragging around the block
+        // no-op functionally, but ensures order
+        group.raise();
+
+        return { x: x + btnWidth, y: y + btnHeight };
     }
 
     renderPlaceholder(child, height, block, blockGroup, count, x) {
