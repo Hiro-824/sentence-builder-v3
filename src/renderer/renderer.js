@@ -707,31 +707,10 @@ export class Renderer {
                 })
                 .on('mousedown', async (event) => {
                     event.stopPropagation();
-                    try {
-                        // Gather sentence string
-                        const text = this.generateFlatString(block);
-                        // Call API
-                        const res = await fetch('/api/ai-tutor', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ prompt: text })
-                        });
-                        if (!res.ok) return;
-                        const data = await res.json();
-                        // Display the response in translation bubble temporarily
-                        const original = block.translation || '';
-                        block.translation = data && data.text ? String(data.text) : original;
-                        // Re-render this block image to show updated bubble
-                        this.renderBlockImage(block, blockGroup);
-                        // Restore original translation shortly after
-                        setTimeout(() => {
-                            block.translation = original;
-                            const groupNow = d3.select(`#${block.id}`);
-                            if (!groupNow.empty()) this.renderBlockImage(block, groupNow);
-                        }, 2500);
-                    } catch (err) {
-                        // swallow errors for now
-                    }
+                    // Gather sentence string and dispatch to AI Tutor chat tab
+                    const text = this.generateFlatString(block);
+                    const eventToDispatch = new CustomEvent('aiTutorSend', { detail: text });
+                    window.dispatchEvent(eventToDispatch);
                 });
         }
         // extend the hit area to include the button when dragging around the block

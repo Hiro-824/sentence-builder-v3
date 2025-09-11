@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from './activity-panel.module.css';
 import { BookIcon, AiIcon } from '@/components/activity-panel/icons/icons';
 import { LessonsTabContent } from './tabs/lessons';
@@ -19,6 +19,15 @@ interface ActivityPanelProps {
 
 const ActivityPanel = ({ lessons }: ActivityPanelProps) => {
   const [activeTab, setActiveTab] = useState(TABS[0].id);
+
+	// Switch to AI tab when a message is sent from elsewhere (e.g., renderer send button)
+	// We listen to a custom DOM event `aiTutorSend` dispatched on window.
+	// The AI tab component will handle actually sending the message.
+	useEffect(() => {
+		const handleAiTutorSend = () => setActiveTab('ai_tutor');
+		window.addEventListener('aiTutorSend', handleAiTutorSend as EventListener);
+		return () => window.removeEventListener('aiTutorSend', handleAiTutorSend as EventListener);
+	}, []);
 
   return (
     <aside className={styles.panel}>

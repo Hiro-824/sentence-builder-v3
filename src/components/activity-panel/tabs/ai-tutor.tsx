@@ -33,18 +33,16 @@ export const AiTutorTabContent = () => {
         }
     }, [messages]);
 
-    const handleSendMessage = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (inputValue.trim() === '' || isLoading) return;
+    const sendTextToAi = async (text: string) => {
+        if (text.trim() === '' || isLoading) return;
 
         const userMessage: Message = {
             id: Date.now(),
-            text: inputValue,
+            text,
             sender: 'user',
         };
 
         setMessages(prev => [...prev, userMessage]);
-        setInputValue('');
         setIsLoading(true);
 
         /*
@@ -70,6 +68,27 @@ export const AiTutorTabContent = () => {
             setIsLoading(false);
         }
     };
+
+    const handleSendMessage = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (inputValue.trim() === '' || isLoading) return;
+        const text = inputValue;
+        setInputValue('');
+        await sendTextToAi(text);
+    };
+
+    // Listen for external send requests (from renderer send button)
+    useEffect(() => {
+        const handler = (ev: Event) => {
+            const custom = ev as CustomEvent<string>;
+            const text = typeof custom.detail === 'string' ? custom.detail : '';
+            if (text) {
+                sendTextToAi(text);
+            }
+        };
+        window.addEventListener('aiTutorSend', handler as EventListener);
+        return () => window.removeEventListener('aiTutorSend', handler as EventListener);
+    }, [isLoading]);
 
     return (
         <div className={styles.container}>
