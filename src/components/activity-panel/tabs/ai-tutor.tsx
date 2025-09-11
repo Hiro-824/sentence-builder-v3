@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import styles from './ai-tutor.module.css';
 import { SendIcon } from '../icons/icons';
+import { requestAiTutor } from '@/utils/ai-tutor';
 
 // Define the structure for a chat message
 interface Message {
@@ -11,11 +12,11 @@ interface Message {
     sender: 'user' | 'ai';
 }
 
-const MOCK_AI_RESPONSES = [
+/*const MOCK_AI_RESPONSES = [
     "That's a great question! Let's break it down.",
     "Could you please rephrase that? I want to make sure I understand.",
     "Interesting point. Can you give me an example?",
-];
+];*/
 
 export const AiTutorTabContent = () => {
     const [messages, setMessages] = useState<Message[]>([
@@ -32,7 +33,7 @@ export const AiTutorTabContent = () => {
         }
     }, [messages]);
 
-    const handleSendMessage = (e: React.FormEvent) => {
+    const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
         if (inputValue.trim() === '' || isLoading) return;
 
@@ -46,8 +47,7 @@ export const AiTutorTabContent = () => {
         setInputValue('');
         setIsLoading(true);
 
-        // --- Mock AI Response Logic ---
-        // This is where you would make a real API call in the future.
+        /*
         setTimeout(() => {
             const randomResponse = MOCK_AI_RESPONSES[Math.floor(Math.random() * MOCK_AI_RESPONSES.length)];
             const aiMessage: Message = {
@@ -57,7 +57,18 @@ export const AiTutorTabContent = () => {
             };
             setMessages(prev => [...prev, aiMessage]);
             setIsLoading(false);
-        }, 1200); // Simulate network delay
+        }, 1200);
+        */
+
+        try {
+            const aiText = await requestAiTutor(userMessage.text);
+            setMessages(prev => [...prev, { id: Date.now() + 1, text: aiText, sender: 'ai' }]);
+        } catch (e) {
+            console.log(e);
+            setMessages(prev => [...prev, { id: Date.now() + 1, text: 'Sorry, something went wrong.', sender: 'ai' }]);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
