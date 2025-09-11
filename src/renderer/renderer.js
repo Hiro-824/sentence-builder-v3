@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Converter } from "@/grammar/converter";
 import { Grammar } from "@/grammar/grammar";
-import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding, resolvedGapRadius, initialVisibleCount, visiblilityIncrement } from "./const.js";
+import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding, resolvedGapRadius, initialVisibleCount, visiblilityIncrement, buttonRadius, iconSize } from "./const.js";
 import { createBlockSnapshot, createBlockSnapshotList } from "@/utils/supabase/logging_helpers";
 import * as d3 from "d3";
 
@@ -612,8 +612,10 @@ export class Renderer {
 
         // After rendering the block contents, optionally render a Send button for finite sentences
         try {
-            if (this.isFiniteSentenceBlock(block)) {
-                this.renderSendButton(block, blockGroup, width, height);
+            const isFinite = this.isFiniteSentence(block);
+            if (isFinite) {
+                const isComplete = this.isBlockComplete(block);
+                this.renderSendButton(block, blockGroup, width, height, !isComplete);
             }
         } catch (e) {
             // fail-safe: never break rendering if check fails
@@ -622,8 +624,8 @@ export class Renderer {
         return { width: width, height: height };
     }
 
-    // Determine if a block is a finite sentence based on its head category, not visuals
-    isFiniteSentenceBlock(block) {
+    // Determine if a block is a finite sentence type, regardless of completion
+    isFiniteSentence(block) {
         if (!block || !Array.isArray(block.children) || !Array.isArray(block.words) || block.words.length === 0) return false;
         const headChild = block.children.find(c => c.id === 'head');
         if (!headChild) return false;
@@ -632,9 +634,14 @@ export class Renderer {
         const headCategory = headWord && Array.isArray(headWord.categories) ? headWord.categories[0] : undefined;
         const isSentence = headCategory && headCategory.head && headCategory.head.type === 'sentence';
         const isFinite = isSentence && headCategory.head.finite === true;
-        // Also require that there are no visible, unfilled placeholders remaining
+        return Boolean(isFinite);
+    }
+
+    // Determine if a block has any unfilled placeholders
+    isBlockComplete(block) {
+        if (!block || !Array.isArray(block.children)) return true; // Default to complete if no children array
         const hasUnfilled = block.children.some(ch => !ch.hidden && ch.type === 'placeholder' && !ch.content && !ch.resolved);
-        return Boolean(isFinite && !hasUnfilled);
+        return !hasUnfilled;
     }
 
     // Simple string representation to send to AI (matches logging helper semantics)
@@ -660,86 +667,82 @@ export class Renderer {
         return parts.join(' ');
     }
 
-    // Render a small button to the right of the block
-    renderSendButton(block, blockGroup, width, height) {
-        const buttonPaddingX = 8;
-        const buttonPaddingY = 4;
-        const label = 'Send';
-        const labelBox = this.calculateTextHeightAndWidth(label);
-        const btnWidth = labelBox.width + buttonPaddingX * 2;
-        const btnHeight = labelBox.height + buttonPaddingY * 2;
+    // Render a small icon button to the left of the block
+    renderSendButton(block, blockGroup, width, height, isDisabled = false) {
         const gap = 8;
 
         const group = blockGroup.append('g')
             .attr('id', `send-${block.id}`)
-            .classed('pointer', true);
+            .classed('pointer', !isDisabled);
 
-        const x = width + gap;
-        const y = (height - btnHeight) / 2;
+        if (isDisabled) {
+            group.style('opacity', 0.5);
+        }
 
-        const rect = group.append('rect')
-            .attr('x', x)
-            .attr('y', y)
-            .attr('width', btnWidth)
-            .attr('height', btnHeight)
-            .attr('rx', blockCornerRadius)
-            .attr('ry', blockCornerRadius)
+        const cx = -gap - buttonRadius;
+        const cy = height / 2;
+
+        const circle = group.append('circle')
+            .attr('cx', cx)
+            .attr('cy', cy)
+            .attr('r', buttonRadius)
             .attr('fill', '#f0f0f0')
             .attr('stroke', '#e0e0e0')
             .attr('stroke-width', 1);
 
-        group.append('text')
-            .text(label)
-            .attr('x', x + btnWidth / 2)
-            .attr('y', y + btnHeight / 2)
-            .attr('text-anchor', 'middle')
-            .attr('dominant-baseline', 'middle')
+        // SVG path for the send icon. Its original viewBox is 24x24.
+        const iconPath = "M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z";
+        const scale = iconSize / 24;
+        const transform = `translate(${cx}, ${cy}) scale(${scale}) translate(-12, -12)`;
+
+        group.append('path')
+            .attr('d', iconPath)
             .attr('fill', '#333')
-            .style('font-size', '10pt')
-            .style('font-weight', '600')
-            .style('user-select', 'none');
+            .attr('transform', transform)
+            .style('pointer-events', 'none');
 
-        group
-            .on('mouseenter', () => {
-                rect.attr('fill', '#e8e8e8');
-            })
-            .on('mouseleave', () => {
-                rect.attr('fill', '#f0f0f0');
-            })
-            .on('mousedown', async (event) => {
-                event.stopPropagation();
-                try {
-                    // Gather sentence string
-                    const text = this.generateFlatString(block);
-                    // Call API
-                    const res = await fetch('/api/ai-tutor', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ prompt: text })
-                    });
-                    if (!res.ok) return;
-                    const data = await res.json();
-                    // Display the response in translation bubble temporarily
-                    const original = block.translation || '';
-                    block.translation = data && data.text ? String(data.text) : original;
-                    // Re-render this block image to show updated bubble
-                    this.renderBlockImage(block, blockGroup);
-                    // Restore original translation shortly after
-                    setTimeout(() => {
-                        block.translation = original;
-                        const groupNow = d3.select(`#${block.id}`);
-                        if (!groupNow.empty()) this.renderBlockImage(block, groupNow);
-                    }, 2500);
-                } catch (err) {
-                    // swallow errors for now
-                }
-            });
-
+        if (!isDisabled) {
+            group
+                .on('mouseenter', () => {
+                    circle.attr('fill', '#e8e8e8');
+                })
+                .on('mouseleave', () => {
+                    circle.attr('fill', '#f0f0f0');
+                })
+                .on('mousedown', async (event) => {
+                    event.stopPropagation();
+                    try {
+                        // Gather sentence string
+                        const text = this.generateFlatString(block);
+                        // Call API
+                        const res = await fetch('/api/ai-tutor', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ prompt: text })
+                        });
+                        if (!res.ok) return;
+                        const data = await res.json();
+                        // Display the response in translation bubble temporarily
+                        const original = block.translation || '';
+                        block.translation = data && data.text ? String(data.text) : original;
+                        // Re-render this block image to show updated bubble
+                        this.renderBlockImage(block, blockGroup);
+                        // Restore original translation shortly after
+                        setTimeout(() => {
+                            block.translation = original;
+                            const groupNow = d3.select(`#${block.id}`);
+                            if (!groupNow.empty()) this.renderBlockImage(block, groupNow);
+                        }, 2500);
+                    } catch (err) {
+                        // swallow errors for now
+                    }
+                });
+        }
         // extend the hit area to include the button when dragging around the block
         // no-op functionally, but ensures order
         group.raise();
 
-        return { x: x + btnWidth, y: y + btnHeight };
+        return { x: cx - buttonRadius, y: cy + buttonRadius };
     }
 
     renderPlaceholder(child, height, block, blockGroup, count, x) {

@@ -17,3 +17,6 @@ export const blockListFontSize = 26;
 export const scrollMomentumExtent = 20;
 export const initialVisibleCount = 5;
 export const visiblilityIncrement = 5;
+
+export const buttonRadius = 32;
+export const iconSize = 32;
