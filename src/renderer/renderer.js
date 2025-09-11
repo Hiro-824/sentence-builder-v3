@@ -676,7 +676,8 @@ export class Renderer {
             .classed('pointer', !isDisabled);
 
         if (isDisabled) {
-            group.style('opacity', 0.5);
+            group.style('opacity', 0.5)
+                .style('cursor', 'not-allowed');
         }
 
         const cx = -gap - buttonRadius;
@@ -686,7 +687,7 @@ export class Renderer {
             .attr('cx', cx)
             .attr('cy', cy)
             .attr('r', buttonRadius)
-            .attr('fill', '#f0f0f0')
+            .attr('fill', isDisabled ? '#cdd2d7' : '#007AFF')  // gray when disabled, blue when enabled
             .attr('stroke', '#e0e0e0')
             .attr('stroke-width', 1);
 
@@ -697,17 +698,17 @@ export class Renderer {
 
         group.append('path')
             .attr('d', iconPath)
-            .attr('fill', '#333')
+            .attr('fill', '#FFFFFF')  // icon always white
             .attr('transform', transform)
             .style('pointer-events', 'none');
 
         if (!isDisabled) {
             group
                 .on('mouseenter', () => {
-                    circle.attr('fill', '#e8e8e8');
+                    circle.attr('fill', '#0056b3');  // darker blue on hover
                 })
                 .on('mouseleave', () => {
-                    circle.attr('fill', '#f0f0f0');
+                    circle.attr('fill', '#007AFF');  // restore normal blue
                 })
                 .on('mousedown', async (event) => {
                     event.stopPropagation();
@@ -739,7 +740,6 @@ export class Renderer {
                 });
         }
         // extend the hit area to include the button when dragging around the block
-        // no-op functionally, but ensures order
         group.raise();
 
         return { x: cx - buttonRadius, y: cy + buttonRadius };
