@@ -632,10 +632,26 @@ export class Renderer {
         return Boolean(isFinite);
     }
 
-    // Determine if a block has any unfilled placeholders
     isBlockComplete(block) {
         if (!block || !Array.isArray(block.children)) return true; // Default to complete if no children array
-        const hasUnfilled = block.children.some(ch => !ch.hidden && ch.type === 'placeholder' && !ch.content && !ch.resolved);
+        
+        // Check immediate children for unfilled placeholders
+        const hasUnfilled = block.children.some(ch => {
+            if (ch.hidden) return false;
+            
+            // Check if this child is an unfilled placeholder
+            if (ch.type === 'placeholder' && !ch.content && !ch.resolved) {
+                return true;
+            }
+            
+            // If this child has content (is a block), recursively check it
+            if ((ch.type === 'placeholder' || ch.type === 'attachment') && ch.content) {
+                return !this.isBlockComplete(ch.content);
+            }
+            
+            return false;
+        });
+        
         return !hasUnfilled;
     }
 
