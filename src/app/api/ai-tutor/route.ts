@@ -9,23 +9,28 @@ const openrouter = new OpenAI({
 
 export async function POST(req: Request) {
   try {
-    const { prompt } = await req.json();
+    const { messages } = await req.json();
 
     // System prompt with constraints for the AI tutor
     const systemPrompt = `
-      Act as a friendly English tutor for a young learner.
-      Your goal is to have a simple, encouraging chat conversation. For every message you send, you must follow these rules:
-      Simplicity: Use plain words and simple sentence structures.
-      Brevity: Limit your response to a maximum of 3 sentences.
-      Tone: Be warm, friendly, and human.
+    Act as a friendly English tutor for a young learner.  
+    Your goal is to have a simple, encouraging chat conversation.  
+    For every message you send, you must follow these rules:  
+    Simplicity: Use plain words and simple sentence structures.  
+    Brevity: Limit your response to a maximum of 3 sentences.  
+    Tone: Be warm, friendly, and human.  
+    Line Breaks: Write each sentence on a new line. 
     `;
+
+    // Build the messages array with system prompt and conversation history
+    const apiMessages = [
+      { role: "system", content: systemPrompt },
+      ...messages
+    ];
 
     const completion = await openrouter.chat.completions.create({
       model: "openai/gpt-oss-120b:free", // Or any other model from OpenRouter
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: prompt }
-      ],
+      messages: apiMessages,
     });
 
     const aiText = completion.choices[0].message.content;

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import styles from './ai-tutor.module.css';
 import { SendIcon } from '../icons/icons';
-import { requestAiTutor } from '@/utils/ai-tutor';
+import { requestAiTutor, ChatMessage } from '@/utils/ai-tutor';
 
 // Define the structure for a chat message
 interface Message {
@@ -36,11 +36,18 @@ export const AiTutorTabContent = () => {
             sender: 'user',
         };
 
-        setMessages(prev => [...prev, userMessage]);
+        const updatedMessages = [...messages, userMessage];
+        setMessages(updatedMessages);
         setIsLoading(true);
 
         try {
-            const aiText = await requestAiTutor(userMessage.text);
+            // Convert messages to ChatMessage format for API
+            const chatMessages: ChatMessage[] = updatedMessages.map(msg => ({
+                role: msg.sender === 'user' ? 'user' : 'assistant',
+                content: msg.text
+            }));
+
+            const aiText = await requestAiTutor(chatMessages);
             setMessages(prev => [...prev, { id: Date.now() + 1, text: aiText, sender: 'ai' }]);
         } catch (e) {
             console.log(e);

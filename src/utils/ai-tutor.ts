@@ -1,8 +1,13 @@
-export async function requestAiTutor(prompt: string): Promise<string> {
+export interface ChatMessage {
+    role: 'user' | 'assistant';
+    content: string;
+}
+
+export async function requestAiTutor(messages: ChatMessage[]): Promise<string> {
     const res = await fetch('/api/ai-tutor', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ messages }),
     });
 
     if (!res.ok) {
