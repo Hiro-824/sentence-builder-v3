@@ -12,12 +12,6 @@ interface Message {
     sender: 'user' | 'ai';
 }
 
-/*const MOCK_AI_RESPONSES = [
-    "That's a great question! Let's break it down.",
-    "Could you please rephrase that? I want to make sure I understand.",
-    "Interesting point. Can you give me an example?",
-];*/
-
 export const AiTutorTabContent = () => {
     const [messages, setMessages] = useState<Message[]>([
         { id: 1, text: "Hello! How can I help you with your English practice today?", sender: 'ai' }
@@ -44,19 +38,6 @@ export const AiTutorTabContent = () => {
 
         setMessages(prev => [...prev, userMessage]);
         setIsLoading(true);
-
-        /*
-        setTimeout(() => {
-            const randomResponse = MOCK_AI_RESPONSES[Math.floor(Math.random() * MOCK_AI_RESPONSES.length)];
-            const aiMessage: Message = {
-                id: Date.now() + 1, // Ensure unique ID
-                text: randomResponse,
-                sender: 'ai',
-            };
-            setMessages(prev => [...prev, aiMessage]);
-            setIsLoading(false);
-        }, 1200);
-        */
 
         try {
             const aiText = await requestAiTutor(userMessage.text);
