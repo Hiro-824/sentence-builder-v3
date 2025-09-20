@@ -13,7 +13,7 @@ export const resolvedGapRadius = 12;
 
 export const sidebarPadding = { top: 100, bottom: 100, right: 80, left: 12 };
 export const blockListSpacing = 20;
-export const blockListFontSize = 26;
+export const blockListFontSize = 22;
 export const scrollMomentumExtent = 20;
 export const initialVisibleCount = 5;
 export const visiblilityIncrement = 5;

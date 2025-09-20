@@ -19,7 +19,7 @@ export class Renderer {
         });
         this.categoryState = {}; // New property
         Object.keys(this.blockList).forEach(groupName => {
-            this.categoryState[groupName] = { isCollapsed: true, displayCount: initialVisibleCount };
+            this.categoryState[groupName] = { displayCount: initialVisibleCount };
         });
         this.svg = svg;
         this.sideBarScrollExtent = 0;
@@ -35,6 +35,11 @@ export class Renderer {
 
         // Initialize cache
         this.cachedSidebarWidth = null;
+        this.navPanelWidth = 120;
+        this.categoryOffsets = {};
+        this.sidebarNavItems = {};
+        this.sidebarScrollGroup = null;
+        this.activeCategory = null;
 
         // Update translation for all initial blocks
         this.blocks.forEach(block => this.updateBlockTranslation(block));
@@ -86,6 +91,18 @@ export class Renderer {
         const sidebarBackground = d3.select("#sidebar-background");
         if (!sidebarBackground.empty()) {
             sidebarBackground
+                .attr("height", window.innerHeight);
+        }
+
+        const sidebarNavBackground = d3.select("#sidebar-nav-background");
+        if (!sidebarNavBackground.empty()) {
+            sidebarNavBackground
+                .attr("height", window.innerHeight);
+        }
+
+        const sidebarDivider = d3.select("#sidebar-divider");
+        if (!sidebarDivider.empty()) {
+            sidebarDivider
                 .attr("height", window.innerHeight);
         }
 
@@ -252,8 +269,12 @@ export class Renderer {
     renderSideBar() {
         // Remove the entire sidebar group
         d3.select("#sidebar").remove();
+        this.sidebarNavItems = {};
+        this.sidebarScrollGroup = null;
+        this.categoryOffsets = {};
 
-        const width = this.calculateSideBarWidth();
+        const blockAreaWidth = this.calculateSideBarWidth();
+        const totalWidth = this.navPanelWidth + blockAreaWidth;
         const height = window.innerHeight;
 
         this.sidebar = this.svg.append("g")
@@ -263,7 +284,7 @@ export class Renderer {
         // Add the sidebar background
         this.sidebar.append("rect")
             .attr("id", "sidebar-background")
-            .attr("width", width)
+            .attr("width", totalWidth)
             .attr("height", height)
             .attr("fill", "#fafafa")
             .attr("stroke", "#f0f0f0")
@@ -272,7 +293,20 @@ export class Renderer {
                 event.stopPropagation();
             });
 
-        this.renderSideBarContent();
+        this.sidebar.append("rect")
+            .attr("id", "sidebar-divider")
+            .attr("x", this.navPanelWidth - 0.5)
+            .attr("y", 0)
+            .attr("width", 1)
+            .attr("height", height)
+            .attr("fill", "#e3e3e3");
+
+        this.sidebarNav = this.sidebar.append("g")
+            .attr("id", "sidebar-nav");
+
+        this.renderSideBarContent(blockAreaWidth);
+        this.renderSidebarNavLinks(height);
+        this.sidebarNav.raise();
         this.enableSideBarScroll();
     }
 
@@ -294,32 +328,27 @@ export class Renderer {
         return this.cachedSidebarWidth;
     }
 
-    renderSideBarContent() {
-        this.sidebarContent = this.sidebar.append("g");
-        this.blockBoard = this.sidebarContent.append("g").attr("transform", `translate(${sidebarPadding.left * 2}, 0)`);
+    renderSideBarContent(blockAreaWidth) {
+        this.sidebarContent = this.sidebar.append("g")
+            .attr("class", "sidebar-content")
+            .attr("transform", `translate(${this.navPanelWidth}, 0)`);
+        this.sidebarScrollGroup = this.sidebarContent.append("g")
+            .attr("class", "sidebar-scroll-group");
+        this.blockBoard = this.sidebarScrollGroup.append("g")
+            .attr("transform", `translate(${sidebarPadding.left * 2}, 0)`);
+
+        this.categoryOffsets = {};
 
         // Cache sidebar width calculation
-        const sidebarWidth = this.calculateSideBarWidth();
+        const sidebarWidth = blockAreaWidth ?? this.calculateSideBarWidth();
         this.cachedSidebarWidth = sidebarWidth;
-        const headerWidth = sidebarWidth / 2;
+        const headerWidth = sidebarWidth - sidebarPadding.right;
 
         let y = sidebarPadding.top;
         Object.entries(this.blockList).forEach(([groupName, blockArray]) => {
-            const isCollapsed = this.categoryState[groupName].isCollapsed;
+            this.categoryOffsets[groupName] = y - sidebarPadding.top;
             const categoryHeader = this.blockBoard.append("g")
-                .style("cursor", "pointer")
-                .on("pointerdown", () => {
-                    const wasOpen = !this.categoryState[groupName].isCollapsed;
-                    Object.keys(this.categoryState).forEach(key => {
-                        this.categoryState[key].isCollapsed = true;
-                        // Reset displayCount to initial value when collapsing
-                        this.categoryState[key].displayCount = initialVisibleCount;
-                    });
-                    if (!wasOpen) {
-                        this.categoryState[groupName].isCollapsed = false;
-                    }
-                    this.renderSideBar();
-                });
+                .style("cursor", "default");
 
             categoryHeader.append("rect")
                 .attr("x", 0)
@@ -327,14 +356,6 @@ export class Renderer {
                 .attr("width", headerWidth)
                 .attr("height", blockListFontSize * 4)
                 .attr("fill", "transparent");
-
-            categoryHeader.append("text")
-                .text(isCollapsed ? "▶" : "▼")
-                .attr("y", y)
-                .attr('font-size', `${blockListFontSize * 0.7}pt`)
-                .attr('fill', '#666666')
-                .style('user-select', 'none')
-                .style('font-weight', '500');
 
             categoryHeader.append("text")
                 .text(groupName)
@@ -348,38 +369,165 @@ export class Renderer {
 
             y += 40;
 
-            if (!isCollapsed) {
-                const blocksToRender = blockArray.slice(0, this.categoryState[groupName].displayCount);
-                blocksToRender.forEach((block) => {
-                    y += blockListSpacing + this.renderSideBarBlock(block, this.generateRandomId(), y);
-                });
+            const blocksToRender = blockArray.slice(0, this.categoryState[groupName].displayCount);
+            blocksToRender.forEach((block) => {
+                y += blockListSpacing + this.renderSideBarBlock(block, this.generateRandomId(), y);
+            });
 
-                const displayCount = this.categoryState[groupName].displayCount;
-                const totalCount = blockArray.length;
+            const displayCount = this.categoryState[groupName].displayCount;
+            const totalCount = blockArray.length;
 
-                if (totalCount > displayCount) {
-                    y += blockListSpacing;
-                    const seeMoreCallback = () => {
-                        const currentCount = this.categoryState[groupName].displayCount;
-                        this.categoryState[groupName].displayCount = currentCount + visiblilityIncrement;
-                        this.renderSideBar();
-                    };
-                    y = this.renderSidebarButton(y + 40, "See more +", seeMoreCallback);
-                }
+            if (totalCount > displayCount) {
+                y += blockListSpacing;
+                const seeMoreCallback = () => {
+                    const currentCount = this.categoryState[groupName].displayCount;
+                    this.categoryState[groupName].displayCount = currentCount + visiblilityIncrement;
+                    this.renderSideBar();
+                };
+                y = this.renderSidebarButton(y + 40, "See more +", seeMoreCallback);
+            }
 
-                if (displayCount > initialVisibleCount) {
-                    const showLessCallback = () => {
-                        this.categoryState[groupName].displayCount -= visiblilityIncrement;
-                        this.renderSideBar();
-                    };
-                    y = this.renderSidebarButton((totalCount > displayCount) ? y : y + 40, "Show less -", showLessCallback);
-                }
+            if (displayCount > initialVisibleCount) {
+                const showLessCallback = () => {
+                    this.categoryState[groupName].displayCount -= visiblilityIncrement;
+                    this.renderSideBar();
+                };
+                y = this.renderSidebarButton((totalCount > displayCount) ? y : y + 40, "Show less -", showLessCallback);
             }
 
             y += sidebarPadding.bottom;
         });
         this.sideBarContentHeight = y;
         this.setBlockBoardTransform();
+    }
+
+    renderSidebarNavLinks(height) {
+        if (!this.sidebarNav) {
+            return;
+        }
+
+        this.sidebarNav.selectAll("*").remove();
+
+        this.sidebarNav.append("rect")
+            .attr("id", "sidebar-nav-background")
+            .attr("width", this.navPanelWidth)
+            .attr("height", height)
+            .attr("fill", "#f2f2f2")
+            .attr("stroke", "#f0f0f0")
+            .attr("stroke-width", "1");
+
+        const navList = this.sidebarNav.append("g")
+            .attr("id", "sidebar-nav-list");
+
+        const navPaddingX = sidebarPadding.left;
+        const navItemHeight = blockListFontSize * 1.6;
+        const navPaddingTop = sidebarPadding.top;
+        const navItemWidth = this.navPanelWidth - navPaddingX * 2;
+        const highlightPadding = navPaddingX * 0.5;
+        const highlightHeight = navItemHeight * 0.75;
+
+        this.sidebarNavItems = {};
+
+        Object.keys(this.blockList).forEach((groupName, index) => {
+            const y = navPaddingTop + index * navItemHeight;
+            const navItem = navList.append("g")
+                .attr("class", "sidebar-nav-item")
+                .attr("data-category", groupName)
+                .attr("transform", `translate(${navPaddingX}, ${y})`)
+                .style("cursor", "pointer")
+                .on("pointerdown", (event) => {
+                    event.stopPropagation();
+                    event.preventDefault();
+                    this.scrollToCategory(groupName);
+                });
+
+            const highlight = navItem.append("rect")
+                .attr("class", "sidebar-nav-highlight")
+                .attr("x", -highlightPadding)
+                .attr("y", -highlightHeight / 2)
+                .attr("width", navItemWidth + highlightPadding * 2)
+                .attr("height", highlightHeight)
+                .attr("rx", highlightHeight / 2)
+                .attr("ry", highlightHeight / 2)
+                .attr("fill", "#ffffff")
+                .attr("stroke", "#d9d9d9")
+                .attr("stroke-width", "1")
+                .attr("opacity", 0);
+
+            navItem.append("text")
+                .text(groupName)
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("dominant-baseline", "middle")
+                .attr("font-size", `${blockListFontSize * 0.75}pt`)
+                .attr("fill", "#666666")
+                .style("font-weight", "500")
+                .style("letter-spacing", "-0.01em")
+                .style("user-select", "none");
+
+            navItem
+                .on("mouseenter", () => {
+                    const isActive = this.activeCategory === groupName;
+                    highlight.attr("opacity", isActive ? 1 : 0.4);
+                    navItem.select("text").style("font-weight", isActive ? "700" : "600");
+                })
+                .on("mouseleave", () => {
+                    const isActive = this.activeCategory === groupName;
+                    highlight.attr("opacity", isActive ? 1 : 0);
+                    navItem.select("text").style("font-weight", isActive ? "700" : "500");
+                });
+
+            this.sidebarNavItems[groupName] = navItem;
+        });
+
+        this.updateActiveNavCategory();
+    }
+
+    scrollToCategory(groupName) {
+        if (!this.categoryOffsets || this.categoryOffsets[groupName] === undefined) {
+            return;
+        }
+
+        this.closeAllDropdowns();
+
+        const zoomExtent = d3.zoomTransform(this.grid.node()).k;
+        const targetOffset = -this.categoryOffsets[groupName] * zoomExtent;
+        const minScroll = -(this.sideBarContentHeight * zoomExtent - this.canvasHeight);
+
+        this.sideBarScrollExtent = Math.max(minScroll, Math.min(0, targetOffset));
+        this.activeCategory = groupName;
+        this.setBlockBoardTransform();
+    }
+
+    updateActiveNavCategory() {
+        if (!this.sidebarNavItems || Object.keys(this.sidebarNavItems).length === 0) {
+            return;
+        }
+
+        const zoomExtent = d3.zoomTransform(this.grid.node()).k;
+        const currentOffset = -this.sideBarScrollExtent / (zoomExtent || 1);
+
+        let active = null;
+        Object.keys(this.blockList).forEach((groupName) => {
+            const categoryOffset = this.categoryOffsets[groupName] ?? 0;
+            if (currentOffset >= categoryOffset - 1) {
+                active = groupName;
+            }
+        });
+
+        if (!active) {
+            active = Object.keys(this.blockList)[0];
+        }
+
+        this.activeCategory = active;
+
+        Object.entries(this.sidebarNavItems).forEach(([groupName, navItem]) => {
+            const isActive = groupName === active;
+            navItem.select(".sidebar-nav-highlight").attr("opacity", isActive ? 1 : 0);
+            navItem.select("text")
+                .attr("fill", isActive ? "#1a1a1a" : "#666666")
+                .style("font-weight", isActive ? "700" : "500");
+        });
     }
 
     enableSideBarScroll() {
@@ -465,23 +613,32 @@ export class Renderer {
 
     setBlockBoardTransform() {
         const zoomExtent = d3.zoomTransform(this.grid.node()).k;
-
         const scrollableHeight = this.canvasHeight;
+        const minScroll = -(this.sideBarContentHeight * zoomExtent - scrollableHeight);
 
-        this.sideBarScrollExtent = Math.max(-(this.sideBarContentHeight * zoomExtent - scrollableHeight), this.sideBarScrollExtent);
-        this.sideBarScrollExtent = Math.min(0, this.sideBarScrollExtent);
+        if (Number.isFinite(minScroll)) {
+            this.sideBarScrollExtent = Math.max(minScroll, this.sideBarScrollExtent);
+            this.sideBarScrollExtent = Math.min(0, this.sideBarScrollExtent);
+        } else {
+            this.sideBarScrollExtent = 0;
+        }
 
-        if (this.sidebarContent) {
+        if (this.sidebarScrollGroup) {
             if (this.previousZoomExtent) {
                 const zoomRatio = zoomExtent / this.previousZoomExtent;
                 this.sideBarScrollExtent *= zoomRatio;
+                if (Number.isFinite(minScroll)) {
+                    this.sideBarScrollExtent = Math.max(minScroll, this.sideBarScrollExtent);
+                    this.sideBarScrollExtent = Math.min(0, this.sideBarScrollExtent);
+                }
             }
-            this.sidebarContent.attr("transform", `translate(0, ${this.sideBarScrollExtent}), scale(${zoomExtent})`);
+            this.sidebarScrollGroup.attr("transform", `translate(0, ${this.sideBarScrollExtent}) scale(${zoomExtent})`);
         }
 
-        const newWidth = this.calculateSideBarWidth() * zoomExtent;
-        d3.select("#sidebar rect").attr("width", newWidth);
+        const newBlockWidth = this.calculateSideBarWidth() * zoomExtent;
+        d3.select("#sidebar-background").attr("width", this.navPanelWidth + newBlockWidth);
         this.previousZoomExtent = zoomExtent;
+        this.updateActiveNavCategory();
     }
 
     renderSideBarBlock(block, id, y) {
