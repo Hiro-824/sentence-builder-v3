@@ -49,6 +49,7 @@ export class Renderer {
         this.sidebarContentContainer = null;
         this.blockBoard = null;
         this.searchAreaHeight = this.getSidebarSearchAreaHeight();
+        this.navBackgroundRect = null;
 
         // Update translation for all initial blocks
         this.blocks.forEach(block => this.updateBlockTranslation(block));
@@ -101,6 +102,10 @@ export class Renderer {
         if (!sidebarBackground.empty()) {
             sidebarBackground
                 .attr("height", window.innerHeight);
+        }
+
+        if (this.sidebarNavGroup) {
+            this.renderNavBar(this.sidebarNavGroup);
         }
 
         // Recalculate sidebar scroll bounds
@@ -334,6 +339,18 @@ export class Renderer {
     renderNavBar(navBarGroup) {
         if (!navBarGroup) return;
         navBarGroup.selectAll("*").remove();
+
+        this.navBackgroundRect = navBarGroup.append("rect")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", navBarWidth)
+            .attr("height", this.canvasHeight)
+            .attr("rx", 0)
+            .attr("ry", 0)
+            .attr("fill", "#ffffff")
+            .attr("stroke", "#e0e0e0")
+            .attr("stroke-width", 1)
+            .attr("pointer-events", "none");
 
         let y = navBarPadding.top;
         const centerX = navBarWidth / 2;
