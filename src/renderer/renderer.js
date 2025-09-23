@@ -1432,7 +1432,6 @@ export class Renderer {
                     event.stopPropagation();
                     const isFromSidebar = event.currentTarget.closest("#sidebar") !== null;
 
-                    // ログ出力
                     const fromText = child.content[child.selected];
                     const toText = option;
                     if (!isFromSidebar && fromText !== toText) {
@@ -1605,7 +1604,6 @@ export class Renderer {
         };
         this.svg.node().appendChild(this.dragboard.node());
 
-        // ログ出力
         if (!fromSideBar) {
             const { rootParent, parentBlock } = this.findBlock(d.id);
             if (parentBlock && rootParent) {
@@ -1633,7 +1631,6 @@ export class Renderer {
         if (!this.dragStarted) {
 
             if (fromSideBar) {
-                // ログ出力
                 const newBlockSnapshot = createBlockSnapshot(d);
                 this.onLogEvent('BLOCK_INTERACTION', {
                     sub_type: 'creation',
@@ -1678,7 +1675,6 @@ export class Renderer {
             d3.select(`#${d.id}`).attr("transform", `translate(${d.x}, ${d.y})`);
             this.detectOverlapAndHighlight(d);
 
-            // ログ出力
             const placeholderInfo = this.detectPlaceholderOverlap(d, event.x, event.y);
             const currentHoverId = placeholderInfo && !placeholderInfo.isValid ? placeholderInfo.id : null;
             const prevHoverId = this.hoverLogContext.currentPlaceholderId;
@@ -1779,7 +1775,6 @@ export class Renderer {
             }
         }
 
-        // ログ出力
         const prevHoverId = this.hoverLogContext.currentPlaceholderId;
         if (prevHoverId && this.hoverLogContext.timerId) {
             clearTimeout(this.hoverLogContext.timerId);
@@ -1819,7 +1814,6 @@ export class Renderer {
             const targetBlockId = overlapInfo.id.split("-")[1];
             this.attachBlock(d.id, targetBlockId, overlapInfo.side)
         } else {
-            // ログ出力
             const { foundBlock } = this.findBlock(d.id);
             if (foundBlock) {
                 this.onLogEvent('BLOCK_INTERACTION', {
@@ -2020,7 +2014,6 @@ export class Renderer {
     /*階層構造に関する処理***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
     deleteBlock(blockId) {
-        // ログ出力
         const { foundBlock } = this.findBlock(blockId);
         if (foundBlock) {
             const deletedSnapshot = createBlockSnapshot(foundBlock);
@@ -2274,7 +2267,6 @@ export class Renderer {
     insertBlock(id, targetParentId, index) {
         const updatedParent = this.previewInsertion(id, targetParentId, index);
 
-        // ログ出力
         const { foundBlock: draggedBlock } = this.findBlock(id);
         const { rootParent: targetParentBefore } = this.findBlock(targetParentId);
         if (draggedBlock && targetParentBefore && updatedParent) {
@@ -2311,7 +2303,6 @@ export class Renderer {
     attachBlock(id, targetParentId, side) {
         const updatedParent = this.previewAttachment(id, targetParentId, side);
 
-        // ログ出力
         const { foundBlock: draggedBlock } = this.findBlock(id);
         const { rootParent: targetParentBefore } = this.findBlock(targetParentId);
         if (draggedBlock && targetParentBefore && updatedParent) {

@@ -82,13 +82,13 @@ export const blockWell: Block = {
             token: "better",
             tags: ["comparative", "improvement"],
             categories: [
-                // "skill" meaning
+                // Skill meaning
                 {
                     head: { type: "adverb", manner: true, meaning: "skill", form: "comparative" },
                     leftModTargets: [{ head: { type: "verb", adv_manner_type: "skill" } }],
                     translationTemplates: { default: ["もっと上手に"] }
                 },
-                // "degree" meaning
+                // Degree meaning
                 {
                     head: { type: "adverb", manner: true, meaning: "degree", form: "comparative" },
                     leftModTargets: [{ head: { type: "verb", adv_manner_type: "degree" } }],
@@ -100,13 +100,13 @@ export const blockWell: Block = {
             token: "best",
             tags: ["superlative", "top"],
             categories: [
-                // "skill" meaning
+                // Skill meaning
                 {
                     head: { type: "adverb", manner: true, meaning: "skill", form: "superlative" },
                     leftModTargets: [{ head: { type: "verb", adv_manner_type: "degree" } }],
                     translationTemplates: { default: ["いちばん上手に"] }
                 },
-                // "degree" meaning
+                // Degree meaning
                 {
                     head: { type: "adverb", manner: true, meaning: "degree", form: "superlative" },
                     leftModTargets: [{ head: { type: "verb", adv_manner_type: "degree" } }],

@@ -5,7 +5,6 @@ import styles from './ai-tutor.module.css';
 import { SendIcon } from '../icons/icons';
 import { requestAiTutor, ChatMessage } from '@/utils/ai-tutor';
 
-// Define the structure for a chat message
 interface Message {
     id: number;
     text: string;
@@ -20,7 +19,6 @@ export const AiTutorTabContent = () => {
     const [isLoading, setIsLoading] = useState(false);
     const messageListRef = useRef<HTMLDivElement>(null);
 
-    // Effect to scroll to the bottom when new messages are added
     useEffect(() => {
         if (messageListRef.current) {
             messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
@@ -41,7 +39,6 @@ export const AiTutorTabContent = () => {
         setIsLoading(true);
 
         try {
-            // Convert messages to ChatMessage format for API
             const chatMessages: ChatMessage[] = updatedMessages.map(msg => ({
                 role: msg.sender === 'user' ? 'user' : 'assistant',
                 content: msg.text
@@ -65,7 +62,6 @@ export const AiTutorTabContent = () => {
         await sendTextToAi(text);
     };
 
-    // Listen for external send requests (from renderer send button)
     useEffect(() => {
         const handler = (ev: Event) => {
             const custom = ev as CustomEvent<string>;

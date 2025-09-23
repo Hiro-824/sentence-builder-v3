@@ -116,27 +116,21 @@ export class Grammar {
                 return "";
             }
             return modifiers.map(mod => {
-                // A modifier is itself a Phrase. We need to find its own translation
-                // for the same key we are currently processing.
                 const modTranslation = mod.translation?.["default"];
                 if (Array.isArray(modTranslation)) {
-                    // If the modifier's translation is complex (i.e., a template),
-                    // we recursively call `translate`. This correctly handles
-                    // modifiers that have their own modifiers (e.g., "very big").
-                    return this.translate(modTranslation, mod);
-                } else if (typeof modTranslation === 'string') {
-                    // If it's a simple string, just return it.
+                    return this.translate(modTranslation, mod); // Recurse for nested templates
+                }
+                if (typeof modTranslation === 'string') {
                     return modTranslation;
                 }
-                // If the modifier has no translation for this key, return an empty string.
                 return "";
             }).join(" ");
         };
 
-        // --- STAGE 1: Translate Left Modifiers ---
+        // Stage 1: translate left modifiers
         const leftModsTranslation = translateModifiers(phrase.leftModifiers);
 
-        // --- STAGE 2: Translate the main template (Original Logic) ---
+        // Stage 2: translate the main template
         const mainParts = template.map((element) => {
             if (typeof element === "string") {
                 return element;
@@ -175,6 +169,7 @@ export class Grammar {
 
                                 if (element.filler) {
                                     const fillerPhrase = resolveByPath(phrase, element.filler) as Phrase | undefined;
+
                                     if (fillerPhrase?.translation?.['default']) {
                                         const fillerTemplate = fillerPhrase.translation['default'];
                                         const fillerTranslation = Array.isArray(fillerTemplate)
@@ -182,15 +177,14 @@ export class Grammar {
                                             : String(fillerTemplate);
                                         subResult = subResult.replace(fullMatchString, fillerTranslation);
                                     } else {
-                                        // Fallback: If filler is specified but has no translation, remove the placeholder and its particle.
+                                        // Remove unresolved filler markers and their particles.
                                         const escapedMarker = fullMatchString.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
                                         const removalRegex = new RegExp(escapedMarker + '(\\s+\\S+)?');
                                         subResult = subResult.replace(removalRegex, '');
                                     }
                                 } else {
-                                    // A resolved gap with no filler means it should be deleted along with its particle.
+                                    // Remove resolved gaps with no filler.
                                     const escapedMarker = fullMatchString.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                                    // This regex finds the marker, and optionally a following space and a single "word" (the particle).
                                     const removalRegex = new RegExp(escapedMarker + '(\\s+\\S+)?');
                                     subResult = subResult.replace(removalRegex, '');
                                 }
@@ -220,16 +214,15 @@ export class Grammar {
         });
         const mainTranslation = mainParts.join(" ");
 
-        // --- STAGE 3: Translate Right Modifiers ---
+        // Stage 3: translate right modifiers
         const rightModsTranslation = translateModifiers(phrase.rightModifiers);
 
-        // --- FINAL ASSEMBLY ---
-        // Combine all parts, filtering out empty strings to avoid extra spaces.
+        // Final assembly: combine non-empty segments.
         const finalResult = [
             rightModsTranslation,
             leftModsTranslation,
             mainTranslation
-        ].filter(Boolean).join(" "); // filter(Boolean) is a concise way to remove empty strings
+        ].filter(Boolean).join(" "); // Drop empty segments
 
         return finalResult.replace(/ +/g, " ").trim();
     }
@@ -239,7 +232,7 @@ export class Grammar {
         if (!newPhrase.gaps) newPhrase.gaps = [];
         if (!newPhrase.resolvedGapIds) newPhrase.resolvedGapIds = [];
 
-        const unifiedArgs: Phrase[] = []; // This will be built up with placeholders for missing args
+        const unifiedArgs: Phrase[] = []; // Placeholders for missing args
 
         for (let i = 0; i < expectedPhrases.length; i++) {
             const expected = expectedPhrases[i];
@@ -255,7 +248,7 @@ export class Grammar {
                 unifiedArgs.push(placeholder);
                 argSatisfied = true;
             } else if (actualWord) {
-                // Original logic for when an argument is present
+                // Handle provided arguments
                 for (const cat of actualWord.categories) {
                     const unifiedHead = this.unify(cat.head, expected.head);
                     if (unifiedHead === null) continue;
@@ -287,7 +280,6 @@ export class Grammar {
                 }
             }
 
-            // This check now correctly handles both found and missing arguments
             if (!argSatisfied) return null;
         }
 
@@ -299,7 +291,6 @@ export class Grammar {
     processModifiers(currentPhrase: Phrase, modifierWords: Word[], side: "left" | "right"): Phrase | null {
         const phrase = this.deepCopy(currentPhrase);
 
-        // Initialize modifier arrays if they don't exist
         if (side === "left" && !phrase.leftModifiers) {
             phrase.leftModifiers = [];
         }
@@ -310,14 +301,13 @@ export class Grammar {
         for (const modifierWord of modifierWords) {
             let wordApplied = false;
             for (const modCat of modifierWord.categories) {
-                // Determine which set of targets to use
                 const targets = (side === 'left') ? modCat.rightModTargets : modCat.leftModTargets;
 
                 if (targets) {
                     for (const target of targets) {
                         const unifiedHead = this.unify(phrase.head, target.head);
                         if (unifiedHead !== null) {
-                            // On success, update the head AND store the modifier
+                            // Merge head and capture the modifier
                             phrase.head = unifiedHead;
                             const modifierPhrase = this.deepCopy(modCat);
 
@@ -328,11 +318,11 @@ export class Grammar {
                             }
 
                             wordApplied = true;
-                            break; // Move to the next modifier word
+                            break;
                         }
                     }
                 }
-                if (wordApplied) break; // Found a valid category for this word
+                if (wordApplied) break;
             }
             if (!wordApplied) {
                 // If any modifier word cannot be applied, the parse fails
@@ -428,7 +418,7 @@ export class Grammar {
             if (!currentPhrase) return null;
         }
 
-        // Step 7: Finalize Gaps.
+        // Step 7: finalize gaps
         const finalizeGaps = (phrase: Phrase): Phrase => {
             const finalPhrase = this.deepCopy(phrase);
             finalPhrase.gaps = finalPhrase.gaps || [];
@@ -460,7 +450,7 @@ export class Grammar {
         currentPhrase = finalizeGaps(currentPhrase);
         this.logState("7. After Finalizing Gaps", currentPhrase);
 
-        // Step 8: Perform translation on the finalized structure.
+        // Step 8: translate the finalized structure
         let finalTranslation: FeatureStructure | undefined = undefined;
         if (initialPhrase.translationTemplates) {
             finalTranslation = this.processTranslation(currentPhrase, initialPhrase.translationTemplates);
@@ -468,7 +458,7 @@ export class Grammar {
             this.logState("8. After Translation", phraseForLog);
         }
 
-        // Step 9: Create the final result.
+        // Step 9: build the final result
         const finalResult: Phrase = {
             head: currentPhrase.head,
             gaps: currentPhrase.gaps,

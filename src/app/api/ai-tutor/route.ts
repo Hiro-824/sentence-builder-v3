@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
-// Initialize the OpenAI client with your OpenRouter credentials
 const openrouter = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
   apiKey: process.env.OPENROUTER_API_KEY,
@@ -11,7 +10,6 @@ export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
 
-    // System prompt with constraints for the AI tutor
     const systemPrompt = `
     Act as a friendly English tutor for a young learner.  
     Your goal is to have a simple, encouraging chat conversation.  
@@ -22,14 +20,13 @@ export async function POST(req: Request) {
     Line Breaks: Write each sentence on a new line. 
     `;
 
-    // Build the messages array with system prompt and conversation history
     const apiMessages = [
       { role: "system", content: systemPrompt },
       ...messages
     ];
 
     const completion = await openrouter.chat.completions.create({
-      model: "x-ai/grok-4-fast:free", // Or any other model from OpenRouter
+      model: "x-ai/grok-4-fast:free",
       messages: apiMessages,
     });
 

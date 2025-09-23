@@ -255,7 +255,7 @@ export const blockWhere: Block = {
     children: [{ id: "head", hidden: false, type: "text", content: "where" }]
 };
 
-// ===== Part 2: Use the Generator to Build the Final, User-Facing Blocks =====
+// Part 2: use the generator to build user-facing blocks
 
 const nominalNonSubjectGap: FeatureStructure = { type: { type: "nominal", isDet: true }, isSubject: false, isPossessor: false };
 const nominalSubjectGap: FeatureStructure = { type: { type: "nominal", isDet: true }, isSubject: true };

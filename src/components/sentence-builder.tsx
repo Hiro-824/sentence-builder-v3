@@ -22,12 +22,10 @@ interface SentenceBuilderProps {
 }
 
 const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
-    // ユーザー認証に関する変数
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [showAuthModal, setShowAuthModal] = useState(false);
     const [user, setUser] = useState<User | null>(null);
 
-    // プロジェクト保存・読み込みに関する変数
     const [currentProjectId, setCurrentProjectId] = useState<string | null>("top-bar-button-test");
     const [isDirty, setIsDirty] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -42,7 +40,6 @@ const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
     const supabase = createClient();
 
     useEffect(() => {
-        // Check authentication status on component mount
         const checkAuth = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
@@ -54,7 +51,6 @@ const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
         };
         checkAuth();
 
-        // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
                 if (session?.user) {
@@ -74,7 +70,6 @@ const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
 
     useEffect(() => {
         if (!isAuthenticated) {
-            // Clean up renderer when not authenticated
             if (rendererRef.current) {
                 rendererRef.current.destroy();
                 rendererRef.current = null;
@@ -82,7 +77,6 @@ const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
             return;
         }
 
-        // Don't reinitialize if renderer already exists
         if (rendererRef.current) return;
 
         const container = d3.select(svgContainerRef.current);
@@ -108,7 +102,6 @@ const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
         };
         rendererRef.current = new Renderer([], blockList, svg, () => setIsDirty(true), topBarHeight, logEvent);
 
-        // The cleanup function for THIS effect.
         return () => {
             window.removeEventListener("resize", updateSvgSize);
             if (rendererRef.current) {
@@ -119,7 +112,6 @@ const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
     }, [isAuthenticated]);
 
     useEffect(() => {
-        // Don't run if the user isn't authenticated or the renderer hasn't been created yet.
         if (!isAuthenticated || !rendererRef.current) return;
 
         const projectIdFromUrl = searchParams.get('projectId');
@@ -128,7 +120,6 @@ const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
             if (projectIdFromUrl && projectIdFromUrl !== currentProjectId) {
                 handleLoadProject(projectIdFromUrl);
             } else if (!projectIdFromUrl) {
-                // If the URL has no project ID, show the selection modal.
                 setIsProjectListOpen(true);
             }
         }
@@ -136,7 +127,6 @@ const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
     }, [isAuthenticated, user, searchParams, currentProjectId]);
 
     useEffect(() => {
-        // Only start a session if we have a user and a definitive project ID
         if (user && currentProjectId && currentProjectId !== "top-bar-button-test") {
             const service = new LoggingService();
             loggingServiceRef.current = service;
@@ -177,7 +167,6 @@ const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
 
         loggingServiceRef.current = null;
 
-        // Clean up renderer before signing out
         if (rendererRef.current) {
             rendererRef.current.destroy();
             rendererRef.current = null;

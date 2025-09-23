@@ -5,7 +5,6 @@ import LessonViewer from '../components/lesson-viewer';
 import { Lesson } from '@/utils/lessons';
 import styles from './lessons.module.css';
 
-// A simple chevron icon component
 const ChevronIcon = ({ isOpen }: { isOpen: boolean }) => (
     <svg 
         width="16" 
@@ -29,7 +28,6 @@ interface LessonsTabContentProps {
 
 export const LessonsTabContent = ({ lessons }: LessonsTabContentProps) => {
     const [currentLessonIndex, setCurrentLessonIndex] = useState(0);
-    // Add state for the TOC's visibility, defaulting to open
     const [isTocOpen, setIsTocOpen] = useState(true);
 
     if (!lessons || lessons.length === 0) {
@@ -38,7 +36,6 @@ export const LessonsTabContent = ({ lessons }: LessonsTabContentProps) => {
 
     const currentLesson = lessons[currentLessonIndex];
     
-    // Function to toggle the TOC state
     const toggleToc = () => {
         setIsTocOpen(prev => !prev);
     };
@@ -57,15 +54,11 @@ export const LessonsTabContent = ({ lessons }: LessonsTabContentProps) => {
 
     return (
         <div className={styles.container}>
-            {/* Add a conditional class to the TOC container */}
             <div className={`${styles.tableOfContents} ${!isTocOpen ? styles.tocCollapsed : ''}`}>
-                {/* Make the header a clickable button */}
                 <div className={styles.tocHeader} onClick={toggleToc}>
                     <h3 className={styles.tocTitle}>目次</h3>
                     <ChevronIcon isOpen={isTocOpen} />
                 </div>
-                
-                {/* Add a conditional class to the list for the animation */}
                 <ul className={`${styles.tocList} ${!isTocOpen ? styles.tocListClosed : ''}`}>
                     {lessons.map((lesson, index) => (
                         <li

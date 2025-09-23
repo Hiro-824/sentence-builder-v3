@@ -184,7 +184,7 @@ export const blockGoingTo: Block = {
 export const allModalBlocks: Block[] = [
     blockAbleTo,
     blockGoingTo,
-    // modals
+    // Base modals
     blockCan,
     blockCould,
     blockWill,
@@ -193,7 +193,7 @@ export const allModalBlocks: Block[] = [
     blockMust,
     blockMay,
     blockMight,
-    // Negative
+    // Negative forms
     blockCannot,
     blockCouldNot,
     blockWont,
@@ -202,7 +202,7 @@ export const allModalBlocks: Block[] = [
     blockMustNot,
     blockMayNot,
     blockMightNot,
-    // Inverted (Questions)
+    // Inverted forms
     blockInvertedCan,
     blockInvertedCould,
     blockInvertedWill,

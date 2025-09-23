@@ -189,8 +189,7 @@ export class Generator {
             right: [{
                 head: { type: noun, agr: {} }
             }],
-            // This unification ensures the determiner phrase inherits the
-            // agreement features of the noun it modifies.
+            // Keep determiner agreement in sync with the noun.
             customUnification: [
                 [["head", "agr"], ["right", 0, "head", "agr"]]
             ],
@@ -215,8 +214,7 @@ export class Generator {
         return {
             head: {
                 type: pronoun,
-                // A standalone possessive pronoun often behaves as a 3rd person nominal.
-                // e.g., "Mine *is* red." not "Mine *am* red."
+                // Standalone possessive pronouns act like 3rd-person nominals (e.g., "Mine is red.")
                 agr: { per: 3, num: number },
             },
             translationTemplates: {
@@ -276,8 +274,7 @@ export class Generator {
             forms.reflexive
         ];
 
-        // The placeholder for the noun (e.g., for "my book") should only be visible
-        // when the possessive determiner is selected in the dropdown.
+        // Only show the noun slot when the possessive determiner is selected.
         const possessiveDetIndex = dropdownContent.indexOf(forms.possessiveDet);
 
         return {
@@ -298,8 +295,8 @@ export class Generator {
                 id: "complement",
                 type: "placeholder",
                 content: null,
-                hidden: true, // Hide by default, logic will show it
-                headIndex: [possessiveDetIndex], // Link to the 'my' form
+                hidden: true, // Revealed by selection logic
+                headIndex: [possessiveDetIndex], // Link to the possessive form
             }]
         };
     }
@@ -359,12 +356,12 @@ export class Generator {
         const sharedAgr = { type: "non-3sing", num: "pl", per: 3 };
         const sharedTranslation = { default: [translation] };
         return [
-            // Category 1: A full determiner phrase (can be a subject/object)
+            // Determiner phrase form
             {
                 head: { type: det, agr: sharedAgr },
                 translationTemplates: sharedTranslation
             },
-            // Category 2: A simple noun (can be modified by another determiner)
+            // Bare noun form
             {
                 head: { type: noun, agr: sharedAgr },
                 translationTemplates: sharedTranslation
@@ -376,12 +373,12 @@ export class Generator {
         const sharedAgr = { type: "3sing" };
         const sharedTranslation = { default: [translation] };
         return [
-            // Category 1: A full determiner phrase (can be a subject/object)
+            // Determiner phrase form
             {
                 head: { type: det, agr: sharedAgr, count: false },
                 translationTemplates: sharedTranslation
             },
-            // Category 2: A simple noun (can be modified by another determiner)
+            // Bare noun form
             {
                 head: { type: noun, agr: sharedAgr, count: false },
                 translationTemplates: sharedTranslation
@@ -541,7 +538,7 @@ export class Generator {
             const translationTemplates: TranslationTemplates = {};
             if (category.translation) {
                 Object.entries(category.translation).forEach(([key, translationWord]) => {
-                    const complementsToUse = form === "passive" ? config.complements.slice(1) : config.complements; //受動態は訳の目的語が消える
+                    const complementsToUse = form === "passive" ? config.complements.slice(1) : config.complements; // Passive forms drop the translation's object
                     translationTemplates[key] = [
                         ...complementsToUse.map((complement, index) => ({
                             path: ["right", index],
@@ -858,21 +855,19 @@ export class Generator {
             words: [{
                 token: config.word,
                 categories: [{
-                    // This is the definition for the combined phrase, e.g., "every day"
-                    head: { type: "temporal-adv" }, // A custom type for this kind of adverbial
+                    // Combined phrase, e.g., "every day"
+                    head: { type: "temporal-adv" }, // Custom type for these adverbials
                     right: [{
-                        // It expects one argument on its right: a noun.
+                        // Expects a noun complement
                         head: { type: noun, agr: { type: "3sing" } }
                     }],
-                    // This defines what the resulting phrase can modify.
-                    // It can be a right-hand modifier for a sentence or a verb.
+                    // Can modify sentences or verbs
                     leftModTargets: [
                         { head: { type: "sentence" } },
                         { head: { type: "verb" } },
                     ],
                     translationTemplates: {
-                        // The translation prepends the prefix to the complement's translation.
-                        // e.g., "毎" + "日" -> "毎日"
+                        // Prefix the complement translation (e.g., "毎" + "日" -> "毎日")
                         default: [config.translationPrefix, { path: ["right", 0], key: "default" }]
                     }
                 }]
@@ -1441,7 +1436,7 @@ export class Generator {
         const head: FeatureStructure = { type: "sentence", inverted: true, question: true, negative: false, finite: true, form: form };
         if (tense) head.tense = tense;
 
-        // The subject is the first argument to the right, and the base verb is the second.
+        // Subject and base verb both sit on the right.
         const subject: Phrase = { head: { type: { type: "nominal", isDet: true, isTo: false, isGerund: false }, case: "nom", isSubject: true, agr: agr ?? {} } };
         const verb: Phrase = { head: { type: "verb", form: "base" } };
 
@@ -1530,12 +1525,12 @@ export class Generator {
                     "did",
                 ]
             }, {
-                id: "specifier", // Placeholder for the subject
+                id: "specifier", // Subject slot
                 hidden: false,
                 type: "placeholder",
                 content: undefined,
             }, {
-                id: "complement", // Placeholder for the main verb (in base form)
+                id: "complement", // Base verb slot
                 hidden: false,
                 type: "placeholder",
                 content: undefined,
@@ -1593,7 +1588,7 @@ export class Generator {
         const head: FeatureStructure = {
             type: "sentence",
             finite: true,
-            negative: true, // Key feature for negation
+            negative: true, // Mark as negative
             inverted: false,
             form: form
         };
@@ -1601,7 +1596,7 @@ export class Generator {
 
         const left: Phrase = { head: { type: { type: "nominal", isDet: true }, case: "nom", agr: agr ?? {} } };
 
-        // The complement MUST be a verb in its perfect form (e.g., "seen", "done").
+        // Require a perfect-form verb (e.g., "seen")
         const right: Phrase = {
             head: { type: "verb", form: "perfect" },
             gaps: [{ head: { type: { type: "nominal", isDet: true } } }]
@@ -1635,13 +1630,13 @@ export class Generator {
             type: "sentence",
             finite: true,
             negative: false,
-            inverted: true, // Key feature for Subject-Auxiliary Inversion
+            inverted: true, // Subject-aux inversion
             question: true,
             form: form
         };
         if (tense) head.tense = tense;
 
-        // In inverted structures, both subject and complement are on the right.
+        // Inverted forms place subject and complement on the right.
         const subject: Phrase = { head: { type: { type: "nominal", isDet: true }, case: "nom", agr: agr ?? {} } };
         const complement: Phrase = { head: { type: "verb", form: "perfect" } };
 
@@ -1660,7 +1655,7 @@ export class Generator {
 
         return [{
             head: head,
-            right: [subject, complement], // Argument order: Subject, then VP
+            right: [subject, complement], // Subject followed by VP
             translationTemplates: translationTemplates
         }];
     }
@@ -1911,15 +1906,15 @@ export class Generator {
             words: [{
                 token: "",
                 categories: [{
-                    // The head indicates this is a finite, but now negative, sentence.
+                    // Negative finite modal sentence
                     head: {
                         type: "sentence",
                         finite: true,
                         inverted: false,
-                        negative: true, // Key change: this is a negative clause
+                        negative: true, // Negative clause marker
                         modal: true
                     },
-                    // The structure of arguments remains the same as a positive modal.
+                    // Arguments mirror the positive modal
                     left: [{
                         head: { type: { type: "nominal", isDet: true }, case: "nom" }
                     }],
@@ -1940,7 +1935,7 @@ export class Generator {
                                 path: ["right", 0],
                                 key: translationKey ?? "default",
                             },
-                            // Use the specific negative translation
+                            // Use modal-specific negative string
                             negativeTranslation
                         ],
                         nominal: [
@@ -1954,14 +1949,14 @@ export class Generator {
                                 path: ["right", 0],
                                 key: translationKey ?? "default",
                             },
-                            // Use the specific negative translation
+                            // Use modal-specific negative string
                             negativeTranslation
                         ]
                     }
                 }]
             }],
             color: color,
-            // The visual block structure is identical to the positive modal
+            // Share layout with the positive modal
             children: [
                 {
                     id: "specifier", // Subject
