@@ -473,6 +473,58 @@ export const blockMaybe = createSimpleAdverbBlock({
     advType: "degree",
 });
 
+export const blockReally = createSimpleAdverbBlock({
+    id: "adverb_really",
+    word: "really",
+    translation: "本当に",
+    advType: "degree",
+});
+
+export const blockJust = createSimpleAdverbBlock({
+    id: "adverb_just",
+    word: "just",
+    translation: "ちょうど",
+    advType: "both",
+    gradable: false,
+});
+
+export const blockThen = createSimpleAdverbBlock({
+    id: "adverb_then",
+    word: "then",
+    translation: "それから",
+    advType: "both",
+    gradable: false,
+});
+
+export const blockLater = createSimpleAdverbBlock({
+    id: "adverb_later",
+    word: "later",
+    translation: "あとで",
+    advType: "both",
+    gradable: false,
+});
+
+export const blockEarlyAdv = createSimpleAdverbBlock({
+    id: "adverb_early",
+    word: "early",
+    translation: "早く",
+    advType: "both",
+});
+
+export const blockLateAdv = createSimpleAdverbBlock({
+    id: "adverb_late",
+    word: "late",
+    translation: "遅く",
+    advType: "both",
+});
+
+export const blockBadly = createSimpleAdverbBlock({
+    id: "adverb_badly",
+    word: "badly",
+    translation: "ひどく",
+    advType: "degree",
+});
+
 export const blockLoudly = createSimpleAdverbBlock({
     id: "adverb_loudly",
     word: "loudly",

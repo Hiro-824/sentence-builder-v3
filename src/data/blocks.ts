@@ -7,7 +7,7 @@ import { blockA, blockS, blockThe } from "./determiners";
 import { allAuxiliaryBlocks } from "./auxiliaries";
 import { allPrepositionBlocks } from "./prepositions";
 import { blockHowManySentence, blockHowSentence, blockThat, blockWhatDetSentence, blockWhatSentence, blockWhereSentence, blockWhichDetSentence, blockWhichSentence, blockWhoseDetSentence, blockWhoSentence, blockWhoseSentence } from "./complementizers";
-import { blockActively, blockAggressively, blockAlready, blockAlways, blockAround, blockCarefully, blockCalmly, blockClearly, blockEasily, blockEfficiently, blockEnergetically, blockEvery, blockEverywhere, blockFar, blockFast, blockFinally, blockHardAdv, blockHere, blockHappily, blockIndoors, blockLoudly, blockMaybe, blockNear, blockNever, blockNow, blockOften, blockOnline, blockOutdoors, blockPolitelyAdv, blockProbably, blockProfessionally, blockQuickly, blockQuietly, blockRarely, blockRegularly, blockSafely, blockSeriouslyAdv, blockSlowly, blockSmoothly, blockSometimes, blockSoon, blockStill, blockThere, blockTogether, blockTomorrow, blockToday, blockUsually, blockVery, blockWell, blockYesterday } from "./adverbials";
+import { blockActively, blockAggressively, blockAlready, blockAlways, blockAround, blockBadly, blockCarefully, blockCalmly, blockClearly, blockEasily, blockEfficiently, blockEnergetically, blockEvery, blockEverywhere, blockFar, blockFast, blockFinally, blockHardAdv, blockHere, blockHappily, blockIndoors, blockJust, blockLateAdv, blockLater, blockLoudly, blockMaybe, blockNear, blockNever, blockNow, blockOften, blockOnline, blockOutdoors, blockPolitelyAdv, blockProbably, blockProfessionally, blockQuickly, blockQuietly, blockRarely, blockReally, blockRegularly, blockSafely, blockSeriouslyAdv, blockSlowly, blockSmoothly, blockSometimes, blockSoon, blockStill, blockThen, blockThere, blockTogether, blockTomorrow, blockToday, blockUsually, blockVery, blockWell, blockYesterday, blockEarlyAdv } from "./adverbials";
 import { allRelativePronounBlocks } from "./relatives";
 
 export const blockTo: Block = {
@@ -72,13 +72,18 @@ export const blockList = {
         blockRarely,
         blockNever,
         blockRegularly,
+        blockReally,
         blockProbably,
         blockMaybe,
         blockNow,
+        blockEarlyAdv,
         blockSoon,
         blockAlready,
+        blockJust,
         blockStill,
         blockFinally,
+        blockThen,
+        blockLater,
         blockYesterday,
         blockToday,
         blockTomorrow,
@@ -93,6 +98,7 @@ export const blockList = {
         blockQuickly,
         blockSlowly,
         blockCarefully,
+        blockBadly,
         blockQuietly,
         blockLoudly,
         blockCalmly,
@@ -111,6 +117,7 @@ export const blockList = {
         blockAggressively,
         blockEnergetically,
         blockPolitelyAdv,
+        blockLateAdv,
         blockVery,
         blockWell,
         blockFast,

@@ -1448,6 +1448,193 @@ const configSunny: AdjectiveConfig = {
     }
 };
 
+const configNice: AdjectiveConfig = {
+    id: "adjective_nice",
+    base: "nice",
+    comparative: "nicer",
+    superlative: "nicest",
+    isGradable: true,
+    translation: {
+        default: "素敵な",
+        predicative: "素敵だ",
+        past: "素敵だった",
+        predNeg: "素敵ではない",
+        pastNeg: "素敵ではなかった",
+        predQ: "素敵なのか",
+        pastQ: "素敵だったのか"
+    }
+};
+
+const configKindAdj: AdjectiveConfig = {
+    id: "adjective_kind",
+    base: "kind",
+    comparative: "kinder",
+    superlative: "kindest",
+    isGradable: true,
+    translation: {
+        default: "親切な",
+        predicative: "親切だ",
+        past: "親切だった",
+        predNeg: "親切ではない",
+        pastNeg: "親切ではなかった",
+        predQ: "親切なのか",
+        pastQ: "親切だったのか"
+    }
+};
+
+const configHelpful: AdjectiveConfig = {
+    id: "adjective_helpful",
+    base: "helpful",
+    comparative: "more helpful",
+    superlative: "most helpful",
+    isGradable: true,
+    translation: {
+        default: "役に立つ",
+        predicative: "役に立つ",
+        past: "役に立った",
+        predNeg: "役に立たない",
+        pastNeg: "役に立たなかった",
+        predQ: "役に立つのか",
+        pastQ: "役に立ったのか"
+    }
+};
+
+const configFunny: AdjectiveConfig = {
+    id: "adjective_funny",
+    base: "funny",
+    comparative: "funnier",
+    superlative: "funniest",
+    isGradable: true,
+    translation: {
+        default: "おかしい",
+        predicative: "おかしい",
+        past: "おかしかった",
+        predNeg: "おかしくない",
+        pastNeg: "おかしくなかった",
+        predQ: "おかしいのか",
+        pastQ: "おかしかったのか"
+    }
+};
+
+const configSad: AdjectiveConfig = {
+    id: "adjective_sad",
+    base: "sad",
+    comparative: "sadder",
+    superlative: "saddest",
+    isGradable: true,
+    translation: {
+        default: "悲しい",
+        predicative: "悲しい",
+        past: "悲しかった",
+        predNeg: "悲しくない",
+        pastNeg: "悲しくなかった",
+        predQ: "悲しいのか",
+        pastQ: "悲しかったのか"
+    }
+};
+
+const configReady: AdjectiveConfig = {
+    id: "adjective_ready",
+    base: "ready",
+    comparative: "more ready",
+    superlative: "most ready",
+    isGradable: true,
+    translation: {
+        default: "準備ができた",
+        predicative: "準備ができている",
+        past: "準備ができていた",
+        predNeg: "準備ができていない",
+        pastNeg: "準備ができていなかった",
+        predQ: "準備ができているのか",
+        pastQ: "準備ができていたのか"
+    }
+};
+
+const configQuickAdj: AdjectiveConfig = {
+    id: "adjective_quick",
+    base: "quick",
+    comparative: "quicker",
+    superlative: "quickest",
+    isGradable: true,
+    translation: {
+        default: "速い",
+        predicative: "速い",
+        past: "速かった",
+        predNeg: "速くない",
+        pastNeg: "速くなかった",
+        predQ: "速いのか",
+        pastQ: "速かったのか"
+    }
+};
+
+const configSlowAdj: AdjectiveConfig = {
+    id: "adjective_slow",
+    base: "slow",
+    comparative: "slower",
+    superlative: "slowest",
+    isGradable: true,
+    translation: {
+        default: "遅い",
+        predicative: "遅い",
+        past: "遅かった",
+        predNeg: "遅くない",
+        pastNeg: "遅くなかった",
+        predQ: "遅いのか",
+        pastQ: "遅かったのか"
+    }
+};
+
+const configWeak: AdjectiveConfig = {
+    id: "adjective_weak",
+    base: "weak",
+    comparative: "weaker",
+    superlative: "weakest",
+    isGradable: true,
+    translation: {
+        default: "弱い",
+        predicative: "弱い",
+        past: "弱かった",
+        predNeg: "弱くない",
+        pastNeg: "弱くなかった",
+        predQ: "弱いのか",
+        pastQ: "弱かったのか"
+    }
+};
+
+const configSoft: AdjectiveConfig = {
+    id: "adjective_soft",
+    base: "soft",
+    comparative: "softer",
+    superlative: "softest",
+    isGradable: true,
+    translation: {
+        default: "柔らかい",
+        predicative: "柔らかい",
+        past: "柔らかかった",
+        predNeg: "柔らかくない",
+        pastNeg: "柔らかくなかった",
+        predQ: "柔らかいのか",
+        pastQ: "柔らかかったのか"
+    }
+};
+
+const configHardAdj: AdjectiveConfig = {
+    id: "adjective_hard",
+    base: "hard",
+    comparative: "harder",
+    superlative: "hardest",
+    isGradable: true,
+    translation: {
+        default: "固い",
+        predicative: "固い",
+        past: "固かった",
+        predNeg: "固くない",
+        pastNeg: "固くなかった",
+        predQ: "固いのか",
+        pastQ: "固かったのか"
+    }
+};
+
 export const blockBig = generator.createAdjectiveBlock(configBig);
 export const blockInteresting = generator.createAdjectiveBlock(configInteresting);
 export const blockNew = generator.createAdjectiveBlock(configNew);
@@ -1533,10 +1720,30 @@ export const blockNoisy = generator.createAdjectiveBlock(configNoisy);
 export const blockWindy = generator.createAdjectiveBlock(configWindy);
 export const blockRainy = generator.createAdjectiveBlock(configRainy);
 export const blockSunny = generator.createAdjectiveBlock(configSunny);
+export const blockNice = generator.createAdjectiveBlock(configNice);
+export const blockKindAdj = generator.createAdjectiveBlock(configKindAdj);
+export const blockHelpful = generator.createAdjectiveBlock(configHelpful);
+export const blockFunny = generator.createAdjectiveBlock(configFunny);
+export const blockSad = generator.createAdjectiveBlock(configSad);
+export const blockReady = generator.createAdjectiveBlock(configReady);
+export const blockQuick = generator.createAdjectiveBlock(configQuickAdj);
+export const blockSlowAdj = generator.createAdjectiveBlock(configSlowAdj);
+export const blockWeak = generator.createAdjectiveBlock(configWeak);
+export const blockSoft = generator.createAdjectiveBlock(configSoft);
+export const blockHardAdj = generator.createAdjectiveBlock(configHardAdj);
 
 const dailyLifeAdjectiveBlocks: Block[] = [
     blockClean,
     blockDirty,
+    blockNice,
+    blockKindAdj,
+    blockHelpful,
+    blockFriendly,
+    blockPolite,
+    blockHonest,
+    blockReady,
+    blockQuick,
+    blockSlowAdj,
     blockBusy,
     blockComfortable,
     blockCheap,
@@ -1550,11 +1757,9 @@ const dailyLifeAdjectiveBlocks: Block[] = [
     blockOld,
     blockDifferent,
     blockYoung,
-    blockInteresting,
+    blockFunny,
     blockHappy,
-    blockFriendly,
-    blockPolite,
-    blockHonest,
+    blockSad,
     blockCalmAdj,
     blockAngry,
     blockAfraid,
@@ -1596,6 +1801,7 @@ const travelAdjectiveBlocks: Block[] = [
 
 const healthAdjectiveBlocks: Block[] = [
     blockHealthy,
+    blockWeak,
     blockHungry,
     blockThirsty,
     blockSleepy,
@@ -1627,6 +1833,8 @@ const natureAdjectiveBlocks: Block[] = [
     blockWarm,
     blockCool,
     blockCold,
+    blockSoft,
+    blockHardAdj,
     blockBright,
     blockDark,
     blockDry,
