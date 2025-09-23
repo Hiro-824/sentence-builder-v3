@@ -41,6 +41,8 @@ export class Renderer {
         this.searchIcon = null;
         this.sidebarNavGroup = null;
         this.sidebarSearchGroup = null;
+        this.sidebarSearchHitbox = null;
+        this.sidebarSearchForeignObject = null;
         this.sidebarScrollContainer = null;
         this.sidebarContent = null;
         this.sidebarContentContainer = null;
@@ -526,9 +528,49 @@ export class Renderer {
         this.setBlockBoardTransform();
     }
 
+    getCurrentZoomExtent() {
+        if (!this.grid) {
+            return 1;
+        }
+        const transform = d3.zoomTransform(this.grid.node());
+        if (!transform || typeof transform.k !== "number" || !isFinite(transform.k)) {
+            return 1;
+        }
+        return transform.k;
+    }
+
+    updateSidebarSearchLayout(zoomExtent) {
+        if (!this.sidebarSearchGroup) {
+            return;
+        }
+
+        const effectiveZoom = (typeof zoomExtent === "number" && isFinite(zoomExtent))
+            ? zoomExtent
+            : this.getCurrentZoomExtent();
+
+        const blockListWidth = (this.cachedBlockListWidth ?? this.calculateBlockListWidth()) || 0;
+        const leftOffset = sidebarSearchPadding.horizontal * effectiveZoom;
+        const availableWidth = Math.max(0, (blockListWidth - sidebarSearchPadding.horizontal - sidebarPadding.right) * effectiveZoom);
+        const hitboxWidth = Math.max(0, blockListWidth * effectiveZoom);
+
+        this.sidebarSearchGroup.attr("transform", `translate(${leftOffset}, 0)`);
+
+        if (this.sidebarSearchHitbox) {
+            this.sidebarSearchHitbox
+                .attr("x", -leftOffset)
+                .attr("width", hitboxWidth);
+        }
+
+        if (this.sidebarSearchForeignObject) {
+            this.sidebarSearchForeignObject.attr("width", availableWidth);
+        }
+    }
+
     renderSearchBar(searchGroup) {
         if (!searchGroup) return;
 
+        this.sidebarSearchHitbox = null;
+        this.sidebarSearchForeignObject = null;
         searchGroup.selectAll("*").remove();
 
         const blockListWidth = this.calculateBlockListWidth();
@@ -536,7 +578,7 @@ export class Renderer {
         const containerHeight = this.getSidebarSearchAreaHeight();
 
         // Add a transparent rectangle to catch mouse events and prevent them from propagating to the canvas.
-        searchGroup.append("rect")
+        this.sidebarSearchHitbox = searchGroup.append("rect")
             .attr("x", -sidebarSearchPadding.horizontal)
             .attr("y", 0)
             .attr("width", blockListWidth)
@@ -549,6 +591,8 @@ export class Renderer {
             .attr("y", sidebarSearchPadding.top)
             .attr("width", searchWidth)
             .attr("height", sidebarSearchHeight);
+
+        this.sidebarSearchForeignObject = foreignObject;
 
         const container = foreignObject.append("xhtml:div")
             .style("display", "flex")
@@ -651,6 +695,7 @@ export class Renderer {
         this.searchClearButton = buttonSelection.node();
         this.searchIcon = iconSelection.node();
         this.toggleSearchDecorations();
+        this.updateSidebarSearchLayout();
     }
 
 
@@ -892,7 +937,7 @@ export class Renderer {
     }
 
     setBlockBoardTransform() {
-        const zoomExtent = d3.zoomTransform(this.grid.node()).k;
+        const zoomExtent = this.getCurrentZoomExtent();
 
         const scrollableHeight = Math.max(0, this.canvasHeight - (this.searchAreaHeight || 0));
         const contentHeight = (this.sideBarContentHeight || 0) * zoomExtent;
@@ -914,6 +959,7 @@ export class Renderer {
         const newWidth = navBarWidth + blockListWidth * zoomExtent;
 
         d3.select("#sidebar rect").attr("width", newWidth);
+        this.updateSidebarSearchLayout(zoomExtent);
         this.previousZoomExtent = zoomExtent;
     }
 
