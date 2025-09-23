@@ -743,16 +743,23 @@ export class Renderer {
 
         this.searchInputElement = inputNode;
 
+        const clearButtonSize = 28;
+
         const buttonSelection = container.append("xhtml:button")
             .attr("type", "button")
             .attr("aria-label", "Clear search")
-            .style("width", "28px")
-            .style("height", "28px")
+            .style("width", `${clearButtonSize}px`)
+            .style("height", `${clearButtonSize}px`)
+            .style("min-width", `${clearButtonSize}px`)
+            .style("min-height", `${clearButtonSize}px`)
+            .style("flex", `0 0 ${clearButtonSize}px`)
             .style("display", "flex")
             .style("align-items", "center")
             .style("justify-content", "center")
             .style("border", "none")
             .style("border-radius", "50%")
+            .style("aspect-ratio", "1 / 1")
+            .style("padding", "0")
             .style("background", "transparent")
             .style("cursor", "pointer")
             .style("font-size", "16px")
