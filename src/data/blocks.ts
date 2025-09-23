@@ -17,6 +17,7 @@ export const blockTo: Block = {
     isRound: true,
     words: [{
         token: "",
+        tags: ["infinitive", "to"],
         categories: [
         {
             head: { type: "adverbial", isTo: true },

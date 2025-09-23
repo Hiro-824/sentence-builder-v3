@@ -64,6 +64,7 @@ export const blockWell: Block = {
     words: [
         {
             token: "well",
+            tags: ["skill", "degree", "good", "nicely"],
             categories: [
                 {
                     head: { type: "adverb", manner: true, meaning: "skill", form: "base", isGradable: true },
@@ -79,6 +80,7 @@ export const blockWell: Block = {
         },
         {
             token: "better",
+            tags: ["comparative", "improvement"],
             categories: [
                 // "skill" meaning
                 {
@@ -96,6 +98,7 @@ export const blockWell: Block = {
         },
         {
             token: "best",
+            tags: ["superlative", "top"],
             categories: [
                 // "skill" meaning
                 {

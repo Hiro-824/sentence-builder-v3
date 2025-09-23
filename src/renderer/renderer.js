@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Converter } from "@/grammar/converter";
 import { Grammar } from "@/grammar/grammar";
-import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding, resolvedGapRadius, initialVisibleCount, visiblilityIncrement, buttonRadius, iconSize, navBarWidth, navBarCircleRadius, navBarCircleSpacing, navBarPadding, navBarScrollPadding } from "./const.js";
+import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding, resolvedGapRadius, initialVisibleCount, visiblilityIncrement, buttonRadius, iconSize, navBarWidth, navBarCircleRadius, navBarCircleSpacing, navBarPadding, navBarScrollPadding, sidebarSearchHeight, sidebarSearchPadding, sidebarSearchBorderRadius } from "./const.js";
 import { createBlockSnapshot, createBlockSnapshotList } from "@/utils/supabase/logging_helpers";
 import * as d3 from "d3";
 
@@ -11,12 +11,13 @@ export class Renderer {
         this.topBarHeight = topBarHeight;
         this.canvasHeight = window.innerHeight - this.topBarHeight;
 
-        this.blockList = blockList;
-        // Format each block in blockList using converter.formatBlock()
         this.converter = new Converter;
-        Object.keys(this.blockList).forEach(groupName => {
-            this.blockList[groupName] = this.blockList[groupName].map(block => this.converter.formatBlock(block));
+        this.fullBlockList = {};
+        Object.entries(blockList || {}).forEach(([groupName, groupBlocks]) => {
+            this.fullBlockList[groupName] = groupBlocks.map(block => this.converter.formatBlock(block));
         });
+        this.blockList = this.cloneBlockList(this.fullBlockList);
+
         this.svg = svg;
         this.sideBarScrollExtent = 0;
         this.viewportHeight = window.innerHeight;
@@ -29,11 +30,21 @@ export class Renderer {
         this.lastHoverTargetId = null;
         this.hoverLogContext = null;
 
-        // Initialize cache
+        // Initialize cache and UI references
         this.cachedBlockListWidth = null;
         // To store the Y-position of each category for quick scrolling
         this.categoryScrollTargets = {};
-
+        this.blockSearchCache = new WeakMap();
+        this.searchQuery = "";
+        this.searchInputElement = null;
+        this.searchClearButton = null;
+        this.sidebarNavGroup = null;
+        this.sidebarSearchGroup = null;
+        this.sidebarScrollContainer = null;
+        this.sidebarContent = null;
+        this.sidebarContentContainer = null;
+        this.blockBoard = null;
+        this.searchAreaHeight = this.getSidebarSearchAreaHeight();
 
         // Update translation for all initial blocks
         this.blocks.forEach(block => this.updateBlockTranslation(block));
@@ -256,6 +267,8 @@ export class Renderer {
         const totalWidth = blockListWidth + navBarWidth;
         const height = window.innerHeight;
 
+        this.searchAreaHeight = this.getSidebarSearchAreaHeight();
+
         this.sidebar = this.svg.append("g")
             .attr("id", "sidebar")
             .attr("transform", `translate(0, 0)`);
@@ -272,15 +285,21 @@ export class Renderer {
                 event.stopPropagation();
             });
 
-        const navBarGroup = this.sidebar.append("g")
+        this.sidebarNavGroup = this.sidebar.append("g")
             .attr("id", "sidebar-nav");
 
-        const contentGroup = this.sidebar.append("g")
+        this.sidebarContentContainer = this.sidebar.append("g")
             .attr("id", "sidebar-content-container")
             .attr("transform", `translate(${navBarWidth}, 0)`);
 
-        this.renderNavBar(navBarGroup);
-        this.renderSideBarContent(contentGroup);
+        this.renderNavBar(this.sidebarNavGroup);
+
+        this.sidebarSearchGroup = this.sidebarContentContainer.append("g")
+            .attr("id", "sidebar-search-container")
+            .attr("transform", `translate(${sidebarPadding.left * 2}, 0)`);
+        this.renderSearchBar(this.sidebarSearchGroup);
+
+        this.renderSideBarContent(this.sidebarContentContainer);
         this.enableSideBarScroll();
     }
 
@@ -291,7 +310,8 @@ export class Renderer {
         }
 
         let maxWidth = 0;
-        Object.values(this.blockList).forEach(blockArray => {
+        const source = this.fullBlockList || this.blockList || {};
+        Object.values(source).forEach(blockArray => {
             blockArray.forEach(block => {
                 const width = this.calculateWidth(block);
                 maxWidth = Math.max(maxWidth, width);
@@ -304,9 +324,12 @@ export class Renderer {
     }
 
     renderNavBar(navBarGroup) {
+        if (!navBarGroup) return;
+        navBarGroup.selectAll("*").remove();
+
         let y = navBarPadding.top;
         const centerX = navBarWidth / 2;
-        const categoryNames = Object.keys(this.blockList);
+        const categoryNames = Object.keys(this.blockList || {});
 
         categoryNames.forEach(groupName => {
             const categoryColor = this.getCategoryColor(groupName);
@@ -383,9 +406,9 @@ export class Renderer {
         let newScrollExtent = -(adjustedTargetY * zoomExtent);
 
         // Clamp the target scroll position within valid bounds
-        const scrollableHeight = this.canvasHeight;
+        const scrollableHeight = Math.max(0, this.canvasHeight - (this.searchAreaHeight || 0));
         const maxScroll = 0;
-        const minScroll = -(this.sideBarContentHeight * zoomExtent - scrollableHeight);
+        const minScroll = Math.min(0, scrollableHeight - (this.sideBarContentHeight || 0) * zoomExtent);
         newScrollExtent = Math.max(minScroll, Math.min(maxScroll, newScrollExtent));
 
         // Use a D3 transition on a temporary object to smoothly animate the scroll
@@ -406,16 +429,64 @@ export class Renderer {
 
 
     renderSideBarContent(parentGroup) {
-        this.sidebarContent = parentGroup.append("g");
-        this.blockBoard = this.sidebarContent.append("g").attr("transform", `translate(${sidebarPadding.left * 2}, 0)`);
+        this.initializeSidebarContent(parentGroup);
+        this.renderBlockList();
+    }
 
-        // Cache sidebar width calculation
+    initializeSidebarContent(parentGroup) {
+        if (this.sidebarScrollContainer) {
+            this.sidebarScrollContainer.remove();
+        }
+
+        this.sidebarScrollContainer = parentGroup.append("g")
+            .attr("id", "sidebar-scroll-container")
+            .attr("transform", `translate(0, ${this.searchAreaHeight})`);
+
+        this.sidebarContent = this.sidebarScrollContainer.append("g");
+        this.blockBoard = this.sidebarContent.append("g")
+            .attr("transform", `translate(${sidebarPadding.left * 2}, 0)`);
+    }
+
+    renderBlockList() {
+        if (!this.blockBoard) return;
+
+        this.blockBoard.selectAll("*").remove();
+        this.categoryScrollTargets = {};
+
         const blockListWidth = this.calculateBlockListWidth();
         this.cachedBlockListWidth = blockListWidth;
         const headerWidth = blockListWidth / 2;
 
         let y = sidebarPadding.top;
-        Object.entries(this.blockList).forEach(([groupName, blockArray]) => {
+        const entries = Object.entries(this.blockList || {});
+
+        if (entries.length === 0) {
+            const emptyGroup = this.blockBoard.append("g");
+
+            emptyGroup.append("text")
+                .text("No matching blocks")
+                .attr("x", 0)
+                .attr("y", y)
+                .attr('font-size', `${blockListFontSize * 0.7}pt`)
+                .attr('fill', '#555555')
+                .style('user-select', 'none')
+                .style('font-weight', '500');
+
+            emptyGroup.append("text")
+                .text("一致するブロックが見つかりません")
+                .attr("x", 0)
+                .attr("y", y + blockListFontSize)
+                .attr('font-size', `${blockListFontSize * 0.6}pt`)
+                .attr('fill', '#888888')
+                .style('user-select', 'none');
+
+            y += blockListFontSize * 2 + sidebarPadding.bottom;
+            this.sideBarContentHeight = y;
+            this.setBlockBoardTransform();
+            return;
+        }
+
+        entries.forEach(([groupName, blockArray]) => {
             const categoryHeader = this.blockBoard.append("g");
 
             categoryHeader.append("rect")
@@ -437,7 +508,6 @@ export class Renderer {
 
             y += 40;
 
-            // Store the calculated Y-position for the first block of this category
             this.categoryScrollTargets[groupName] = y;
 
             blockArray.forEach((block) => {
@@ -446,8 +516,264 @@ export class Renderer {
 
             y += sidebarPadding.bottom;
         });
+
         this.sideBarContentHeight = y;
         this.setBlockBoardTransform();
+    }
+
+    renderSearchBar(searchGroup) {
+        if (!searchGroup) return;
+
+        searchGroup.selectAll("*").remove();
+
+        const blockListWidth = this.cachedBlockListWidth || this.calculateBlockListWidth();
+        const searchWidth = Math.max(240, blockListWidth - sidebarPadding.left);
+        const containerHeight = this.searchAreaHeight;
+
+        searchGroup.append("rect")
+            .attr("x", -sidebarPadding.left * 2)
+            .attr("y", 0)
+            .attr("width", searchWidth + sidebarPadding.left * 2)
+            .attr("height", containerHeight)
+            .attr("fill", "transparent")
+            .on("mousedown", (event) => event.stopPropagation());
+
+        const foreignObject = searchGroup.append("foreignObject")
+            .attr("x", 0)
+            .attr("y", sidebarSearchPadding.top)
+            .attr("width", searchWidth)
+            .attr("height", sidebarSearchHeight);
+
+        const container = foreignObject.append("xhtml:div")
+            .style("width", "100%")
+            .style("height", "100%")
+            .style("display", "flex")
+            .style("align-items", "center")
+            .style("gap", "8px")
+            .style("padding", "0 16px")
+            .style("border-radius", `${sidebarSearchBorderRadius}px`)
+            .style("border", "1px solid #d0d0d0")
+            .style("background", "#ffffff")
+            .style("box-shadow", "0 2px 4px rgba(0,0,0,0.04)")
+            .style("overflow", "visible");
+
+        const inputSelection = container.append("xhtml:input")
+            .attr("type", "search")
+            .attr("id", "sidebar-search-input")
+            .attr("placeholder", "Search blocks…")
+            .attr("aria-label", "Search blocks")
+            .style("flex", "1")
+            .style("height", "100%")
+            .style("border", "none")
+            .style("outline", "none")
+            .style("font-size", `${blockListFontSize * 0.6}pt`)
+            .style("background", "transparent")
+            .style("color", "#222222");
+
+        const inputNode = inputSelection.node();
+        inputNode.value = this.searchQuery;
+        inputSelection.on("input", (event) => {
+            this.handleSearchInput(event.target.value ?? "");
+        });
+        inputSelection.on("keydown", (event) => {
+            if (event.key === "Escape") {
+                event.preventDefault();
+                event.stopPropagation();
+                this.clearSearch();
+            }
+        });
+        inputSelection.on("mousedown", (event) => event.stopPropagation());
+        inputSelection.on("click", (event) => event.stopPropagation());
+
+        this.searchInputElement = inputNode;
+
+        const buttonSelection = container.append("xhtml:button")
+            .attr("type", "button")
+            .attr("aria-label", "Clear search")
+            .style("width", "28px")
+            .style("height", "28px")
+            .style("display", "flex")
+            .style("align-items", "center")
+            .style("justify-content", "center")
+            .style("border", "none")
+            .style("border-radius", "50%")
+            .style("background", "transparent")
+            .style("cursor", "pointer")
+            .style("font-size", `${blockListFontSize * 0.6}pt`)
+            .style("color", "#666666")
+            .text("×");
+
+        buttonSelection.on("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            this.clearSearch();
+        });
+        buttonSelection.on("mousedown", (event) => event.stopPropagation());
+        buttonSelection.on("mouseenter", function () {
+            d3.select(this).style("background", "#f2f2f2");
+        });
+        buttonSelection.on("mouseleave", function () {
+            d3.select(this).style("background", "transparent");
+        });
+
+        const buttonNode = buttonSelection.node();
+        this.searchClearButton = buttonNode;
+        this.toggleSearchClearButton();
+    }
+
+    handleSearchInput(value) {
+        const nextQuery = typeof value === "string" ? value : "";
+        this.searchQuery = nextQuery;
+        if (this.searchInputElement && this.searchInputElement.value !== nextQuery) {
+            this.searchInputElement.value = nextQuery;
+        }
+        this.updateFilteredBlockList();
+        this.sideBarScrollExtent = 0;
+        this.previousZoomExtent = null;
+
+        if (this.sidebarNavGroup) {
+            this.renderNavBar(this.sidebarNavGroup);
+        }
+
+        this.renderBlockList();
+        this.toggleSearchClearButton();
+    }
+
+    clearSearch() {
+        if (this.searchInputElement) {
+            this.searchInputElement.value = "";
+        }
+        this.handleSearchInput("");
+        if (this.searchInputElement) {
+            this.searchInputElement.focus();
+        }
+    }
+
+    toggleSearchClearButton() {
+        if (!this.searchClearButton) return;
+        const shouldShow = !!(this.searchQuery && this.searchQuery.trim().length);
+        this.searchClearButton.style.display = shouldShow ? "flex" : "none";
+    }
+
+    updateFilteredBlockList() {
+        const trimmedQuery = (this.searchQuery || "").trim().toLowerCase();
+        if (!trimmedQuery) {
+            this.blockList = this.cloneBlockList(this.fullBlockList);
+            return;
+        }
+
+        const terms = trimmedQuery.split(/\s+/).filter(Boolean);
+        const filtered = {};
+        Object.entries(this.fullBlockList).forEach(([groupName, blocks]) => {
+            const matches = blocks.filter(block => this.blockMatchesSearch(block, terms));
+            if (matches.length) {
+                filtered[groupName] = matches;
+            }
+        });
+        this.blockList = filtered;
+    }
+
+    blockMatchesSearch(block, terms) {
+        if (!terms || terms.length === 0) return true;
+        const tokens = this.getBlockSearchTokens(block);
+        if (!tokens || tokens.length === 0) return false;
+        return terms.every(term => tokens.some(token => token.includes(term)));
+    }
+
+    getBlockSearchTokens(block) {
+        if (!block) return [];
+        if (this.blockSearchCache.has(block)) {
+            return this.blockSearchCache.get(block);
+        }
+
+        const tokens = new Set();
+
+        this.addSearchToken(tokens, block.id);
+        this.addSearchToken(tokens, block.translation);
+        if (Array.isArray(block.tags)) {
+            block.tags.forEach(tag => this.addSearchToken(tokens, tag));
+        }
+
+        if (Array.isArray(block.children)) {
+            block.children.forEach(child => {
+                if (child?.type === "text" && typeof child.content === "string") {
+                    this.addSearchToken(tokens, child.content);
+                }
+                if (child?.type === "dropdown" && Array.isArray(child.content)) {
+                    child.content.forEach(option => this.addSearchToken(tokens, option));
+                }
+            });
+        }
+
+        if (Array.isArray(block.words)) {
+            block.words.forEach(word => {
+                this.addSearchToken(tokens, word?.token);
+                if (Array.isArray(word?.tags)) {
+                    word.tags.forEach(tag => this.addSearchToken(tokens, tag));
+                }
+                if (Array.isArray(word?.categories)) {
+                    word.categories.forEach(category => {
+                        if (category?.translation && typeof category.translation === "string") {
+                            this.addSearchToken(tokens, category.translation);
+                        }
+                        this.collectTranslationStrings(category?.translationTemplates).forEach(str => this.addSearchToken(tokens, str));
+                    });
+                }
+            });
+        }
+
+        const tokenList = Array.from(tokens);
+        this.blockSearchCache.set(block, tokenList);
+        return tokenList;
+    }
+
+    collectTranslationStrings(translationTemplates) {
+        if (!translationTemplates) return [];
+        const strings = [];
+        Object.values(translationTemplates).forEach(template => {
+            if (!Array.isArray(template)) return;
+            template.forEach(element => {
+                if (typeof element === "string") {
+                    strings.push(element);
+                } else if (element && typeof element === "object") {
+                    if (typeof element.particle === "string") {
+                        strings.push(element.particle);
+                    }
+                    if (Array.isArray(element.filler)) {
+                        element.filler.forEach(filler => {
+                            if (typeof filler === "string") {
+                                strings.push(filler);
+                            }
+                        });
+                    }
+                }
+            });
+        });
+        return strings;
+    }
+
+    addSearchToken(tokenSet, value) {
+        if (value === undefined || value === null) return;
+        const text = String(value).trim();
+        if (!text) return;
+        const lower = text.toLowerCase();
+        tokenSet.add(lower);
+        const withoutParens = lower.replace(/\([^)]*\)/g, "").trim();
+        if (withoutParens && withoutParens !== lower) {
+            tokenSet.add(withoutParens);
+        }
+    }
+
+    cloneBlockList(source) {
+        const clone = {};
+        Object.entries(source || {}).forEach(([groupName, blocks]) => {
+            clone[groupName] = Array.isArray(blocks) ? blocks.slice() : [];
+        });
+        return clone;
+    }
+
+    getSidebarSearchAreaHeight() {
+        return sidebarSearchPadding.top + sidebarSearchHeight + sidebarSearchPadding.bottom;
     }
 
     enableSideBarScroll() {
@@ -534,19 +860,22 @@ export class Renderer {
     setBlockBoardTransform() {
         const zoomExtent = d3.zoomTransform(this.grid.node()).k;
 
-        const scrollableHeight = this.canvasHeight;
+        const scrollableHeight = Math.max(0, this.canvasHeight - (this.searchAreaHeight || 0));
+        const contentHeight = (this.sideBarContentHeight || 0) * zoomExtent;
 
-        this.sideBarScrollExtent = Math.max(-(this.sideBarContentHeight * zoomExtent - scrollableHeight), this.sideBarScrollExtent);
-        this.sideBarScrollExtent = Math.min(0, this.sideBarScrollExtent);
+        if (this.previousZoomExtent) {
+            const zoomRatio = zoomExtent / this.previousZoomExtent;
+            this.sideBarScrollExtent *= zoomRatio;
+        }
+
+        const maxScroll = 0;
+        const minScroll = Math.min(0, scrollableHeight - contentHeight);
+        this.sideBarScrollExtent = Math.max(minScroll, Math.min(maxScroll, this.sideBarScrollExtent));
 
         if (this.sidebarContent) {
-            if (this.previousZoomExtent) {
-                const zoomRatio = zoomExtent / this.previousZoomExtent;
-                this.sideBarScrollExtent *= zoomRatio;
-            }
             this.sidebarContent.attr("transform", `translate(0, ${this.sideBarScrollExtent}) scale(${zoomExtent})`);
         }
-        
+
         const blockListWidth = this.cachedBlockListWidth || this.calculateBlockListWidth();
         const newWidth = navBarWidth + blockListWidth * zoomExtent;
 

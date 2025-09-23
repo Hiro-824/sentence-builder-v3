@@ -26,7 +26,7 @@ export interface Phrase {
 }
 
 export type CustomUnificationPath = (string | number)[];
-export interface Word { token: string; categories: Phrase[]; instanceId?: string; }
+export interface Word { token: string; categories: Phrase[]; instanceId?: string; tags?: string[]; }
 export const MissingArgument: Word = { token: "[[MISSING_ARGUMENT]]", categories: [] };
 
 export type RecursiveParseElement = Word | SubPhraseInput;

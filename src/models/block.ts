@@ -12,6 +12,7 @@ export interface Block {
     undraggable?: boolean;
     children: BlockChild[];
     translation?: string;
+    tags?: string[];
 }
 
 export interface BlockChild {
