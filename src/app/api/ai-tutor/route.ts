@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     ];
 
     const completion = await openrouter.chat.completions.create({
-      model: "openai/gpt-oss-120b:free", // Or any other model from OpenRouter
+      model: "x-ai/grok-4-fast:free", // Or any other model from OpenRouter
       messages: apiMessages,
     });
 
