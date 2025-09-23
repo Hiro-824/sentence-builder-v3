@@ -17,10 +17,6 @@ export class Renderer {
         Object.keys(this.blockList).forEach(groupName => {
             this.blockList[groupName] = this.blockList[groupName].map(block => this.converter.formatBlock(block));
         });
-        this.categoryState = {}; // New property
-        Object.keys(this.blockList).forEach(groupName => {
-            this.categoryState[groupName] = { isCollapsed: true, displayCount: initialVisibleCount };
-        });
         this.svg = svg;
         this.sideBarScrollExtent = 0;
         this.viewportHeight = window.innerHeight;
@@ -305,21 +301,7 @@ export class Renderer {
 
         let y = sidebarPadding.top;
         Object.entries(this.blockList).forEach(([groupName, blockArray]) => {
-            const isCollapsed = this.categoryState[groupName].isCollapsed;
-            const categoryHeader = this.blockBoard.append("g")
-                .style("cursor", "pointer")
-                .on("pointerdown", () => {
-                    const wasOpen = !this.categoryState[groupName].isCollapsed;
-                    Object.keys(this.categoryState).forEach(key => {
-                        this.categoryState[key].isCollapsed = true;
-                        // Reset displayCount to initial value when collapsing
-                        this.categoryState[key].displayCount = initialVisibleCount;
-                    });
-                    if (!wasOpen) {
-                        this.categoryState[groupName].isCollapsed = false;
-                    }
-                    this.renderSideBar();
-                });
+            const categoryHeader = this.blockBoard.append("g");
 
             categoryHeader.append("rect")
                 .attr("x", 0)
@@ -329,16 +311,8 @@ export class Renderer {
                 .attr("fill", "transparent");
 
             categoryHeader.append("text")
-                .text(isCollapsed ? "▶" : "▼")
-                .attr("y", y)
-                .attr('font-size', `${blockListFontSize * 0.7}pt`)
-                .attr('fill', '#666666')
-                .style('user-select', 'none')
-                .style('font-weight', '500');
-
-            categoryHeader.append("text")
                 .text(groupName)
-                .attr("x", 32)
+                .attr("x", 0)
                 .attr("y", y)
                 .attr('font-size', `${blockListFontSize * 0.9}pt`)
                 .attr('fill', '#1a1a1a')
@@ -348,33 +322,9 @@ export class Renderer {
 
             y += 40;
 
-            if (!isCollapsed) {
-                const blocksToRender = blockArray.slice(0, this.categoryState[groupName].displayCount);
-                blocksToRender.forEach((block) => {
-                    y += blockListSpacing + this.renderSideBarBlock(block, this.generateRandomId(), y);
-                });
-
-                const displayCount = this.categoryState[groupName].displayCount;
-                const totalCount = blockArray.length;
-
-                if (totalCount > displayCount) {
-                    y += blockListSpacing;
-                    const seeMoreCallback = () => {
-                        const currentCount = this.categoryState[groupName].displayCount;
-                        this.categoryState[groupName].displayCount = currentCount + visiblilityIncrement;
-                        this.renderSideBar();
-                    };
-                    y = this.renderSidebarButton(y + 40, "See more +", seeMoreCallback);
-                }
-
-                if (displayCount > initialVisibleCount) {
-                    const showLessCallback = () => {
-                        this.categoryState[groupName].displayCount -= visiblilityIncrement;
-                        this.renderSideBar();
-                    };
-                    y = this.renderSidebarButton((totalCount > displayCount) ? y : y + 40, "Show less -", showLessCallback);
-                }
-            }
+            blockArray.forEach((block) => {
+                y += blockListSpacing + this.renderSideBarBlock(block, this.generateRandomId(), y);
+            });
 
             y += sidebarPadding.bottom;
         });
