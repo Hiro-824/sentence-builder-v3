@@ -310,7 +310,6 @@ const prepositionConfigs: PrepositionConfig[] = [
     }),
     createConfig("but", {
         id: "prep_but",
-        word: "but",
         modAdj: "を除く",
         adv: "を除いて",
     }),
@@ -337,7 +336,6 @@ const prepositionConfigs: PrepositionConfig[] = [
     }),
     createConfig("following", {
         id: "prep_following",
-        word: "following",
         modAdj: "に続く",
         adv: "に続いて",
     }),
