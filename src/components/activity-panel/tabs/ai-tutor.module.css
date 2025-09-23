@@ -1,8 +1,74 @@
 .container {
+    position: relative;
     display: flex;
     flex-direction: column;
     height: 100%;
-    background-color: #f9f9f9;
+    background: #f9f9f9;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    border-bottom: 1px solid #eceef1;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(6px);
+    gap: 12px;
+}
+
+.headerInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.headerLabel {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.headerTitle {
+    font-size: 16px;
+    font-weight: 600;
+    color: #111827;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.historyButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid #e0e7ff;
+    background: #ffffff;
+    color: #1d4ed8;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    box-shadow: 0 2px 8px rgba(15, 40, 110, 0.08);
+}
+
+.historyButton:hover {
+    border-color: #c7d2fe;
+    box-shadow: 0 4px 12px rgba(15, 40, 110, 0.14);
+}
+
+.historyButton:active {
+    transform: scale(0.96);
+}
+
+.historyButton:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
 }
 
 .messageList {
@@ -119,4 +185,156 @@
     30% {
         transform: translateY(-4px);
     }
+}
+
+.modalOverlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(4px);
+    z-index: 20;
+}
+
+.modal {
+    width: min(420px, 100%);
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 20px;
+    box-shadow: 0 24px 48px rgba(15, 23, 42, 0.18);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.modalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.modalTitle {
+    font-size: 18px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.modalCloseButton {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: #6b7280;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.modalCloseButton:hover {
+    background: rgba(15, 23, 42, 0.08);
+    color: #1f2937;
+}
+
+.modalCloseButton:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+.conversationList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 320px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.conversationItem {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    background: #f9fafb;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.1s ease;
+    text-align: left;
+}
+
+.conversationItem:hover {
+    border-color: #c7d2fe;
+    background: #eef2ff;
+}
+
+.conversationItem:active {
+    transform: scale(0.99);
+}
+
+.conversationItem:focus-visible {
+    outline: 2px solid #007AFF;
+    outline-offset: 2px;
+}
+
+.conversationItemActive {
+    border-color: #007AFF;
+    background: rgba(0, 122, 255, 0.12);
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.18);
+}
+
+.conversationItemTitle {
+    font-size: 15px;
+    font-weight: 600;
+    color: #111827;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.conversationItemMeta {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.conversationItemPreview {
+    font-size: 13px;
+    color: #4b5563;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.newConversationButton {
+    align-self: flex-start;
+    padding: 10px 18px;
+    border-radius: 999px;
+    border: none;
+    background: #007AFF;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.newConversationButton:hover {
+    background: #0056b3;
+}
+
+.newConversationButton:active {
+    transform: scale(0.97);
+}
+
+.newConversationButton:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
 }
