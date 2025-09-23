@@ -38,6 +38,7 @@ export class Renderer {
         this.searchQuery = "";
         this.searchInputElement = null;
         this.searchClearButton = null;
+        this.searchIcon = null;
         this.sidebarNavGroup = null;
         this.sidebarSearchGroup = null;
         this.sidebarScrollContainer = null;
@@ -294,12 +295,16 @@ export class Renderer {
 
         this.renderNavBar(this.sidebarNavGroup);
 
+        // Render content first so it appears underneath the search bar
+        this.renderSideBarContent(this.sidebarContentContainer);
+
+        // Render search bar on top of the content
         this.sidebarSearchGroup = this.sidebarContentContainer.append("g")
             .attr("id", "sidebar-search-container")
-            .attr("transform", `translate(${sidebarPadding.left * 2}, 0)`);
+            .attr("transform", `translate(${sidebarSearchPadding.horizontal}, 0)`);
         this.renderSearchBar(this.sidebarSearchGroup);
 
-        this.renderSideBarContent(this.sidebarContentContainer);
+
         this.enableSideBarScroll();
     }
 
@@ -318,7 +323,7 @@ export class Renderer {
             });
         });
         // Add padding for the sidebar
-        const blockListWidth = maxWidth + sidebarPadding.right + sidebarPadding.left * 2;
+        const blockListWidth = maxWidth + sidebarSearchPadding.horizontal + sidebarPadding.right;
         this.cachedBlockListWidth = blockListWidth;
         return blockListWidth;
     }
@@ -444,7 +449,7 @@ export class Renderer {
 
         this.sidebarContent = this.sidebarScrollContainer.append("g");
         this.blockBoard = this.sidebarContent.append("g")
-            .attr("transform", `translate(${sidebarPadding.left * 2}, 0)`);
+            .attr("transform", `translate(${sidebarSearchPadding.horizontal}, 0)`);
     }
 
     renderBlockList() {
@@ -526,14 +531,15 @@ export class Renderer {
 
         searchGroup.selectAll("*").remove();
 
-        const blockListWidth = this.cachedBlockListWidth || this.calculateBlockListWidth();
-        const searchWidth = Math.max(240, blockListWidth - sidebarPadding.left);
-        const containerHeight = this.searchAreaHeight;
+        const blockListWidth = this.calculateBlockListWidth();
+        const searchWidth = blockListWidth - sidebarSearchPadding.horizontal - sidebarPadding.right;
+        const containerHeight = this.getSidebarSearchAreaHeight();
 
+        // Add a transparent rectangle to catch mouse events and prevent them from propagating to the canvas.
         searchGroup.append("rect")
-            .attr("x", -sidebarPadding.left * 2)
+            .attr("x", -sidebarSearchPadding.horizontal)
             .attr("y", 0)
-            .attr("width", searchWidth + sidebarPadding.left * 2)
+            .attr("width", blockListWidth)
             .attr("height", containerHeight)
             .attr("fill", "transparent")
             .on("mousedown", (event) => event.stopPropagation());
@@ -545,17 +551,26 @@ export class Renderer {
             .attr("height", sidebarSearchHeight);
 
         const container = foreignObject.append("xhtml:div")
-            .style("width", "100%")
-            .style("height", "100%")
             .style("display", "flex")
             .style("align-items", "center")
+            .style("width", "100%")
+            .style("height", "100%")
             .style("gap", "8px")
-            .style("padding", "0 16px")
+            .style("padding", "0 12px")
             .style("border-radius", `${sidebarSearchBorderRadius}px`)
             .style("border", "1px solid #d0d0d0")
             .style("background", "#ffffff")
-            .style("box-shadow", "0 2px 4px rgba(0,0,0,0.04)")
-            .style("overflow", "visible");
+            .style("box-shadow", "0 2px 4px rgba(0,0,0,0.04)");
+
+        // Search Icon
+        const iconSelection = container.append("xhtml:span")
+            .attr("id", "sidebar-search-icon")
+            .style("display", "flex")
+            .style("align-items", "center")
+            .style("justify-content", "center")
+            .style("color", "#888888");
+
+        iconSelection.html('<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>');
 
         const inputSelection = container.append("xhtml:input")
             .attr("type", "search")
@@ -569,6 +584,23 @@ export class Renderer {
             .style("font-size", `${blockListFontSize * 0.6}pt`)
             .style("background", "transparent")
             .style("color", "#222222");
+
+        // Inject CSS to hide the browser's default clear button for search inputs
+        const styleId = 'search-input-style';
+        if (!document.getElementById(styleId)) {
+            const style = document.createElement('style');
+            style.id = styleId;
+            style.innerHTML = `
+                #sidebar-search-input::-webkit-search-decoration,
+                #sidebar-search-input::-webkit-search-cancel-button,
+                #sidebar-search-input::-webkit-search-results-button,
+                #sidebar-search-input::-webkit-search-results-decoration {
+                    -webkit-appearance: none;
+                    appearance: none;
+                }
+            `;
+            document.head.appendChild(style);
+        }
 
         const inputNode = inputSelection.node();
         inputNode.value = this.searchQuery;
@@ -599,7 +631,7 @@ export class Renderer {
             .style("border-radius", "50%")
             .style("background", "transparent")
             .style("cursor", "pointer")
-            .style("font-size", `${blockListFontSize * 0.6}pt`)
+            .style("font-size", `${blockListFontSize * 0.7}pt`)
             .style("color", "#666666")
             .text("×");
 
@@ -616,10 +648,11 @@ export class Renderer {
             d3.select(this).style("background", "transparent");
         });
 
-        const buttonNode = buttonSelection.node();
-        this.searchClearButton = buttonNode;
-        this.toggleSearchClearButton();
+        this.searchClearButton = buttonSelection.node();
+        this.searchIcon = iconSelection.node();
+        this.toggleSearchDecorations();
     }
+
 
     handleSearchInput(value) {
         const nextQuery = typeof value === "string" ? value : "";
@@ -636,7 +669,7 @@ export class Renderer {
         }
 
         this.renderBlockList();
-        this.toggleSearchClearButton();
+        this.toggleSearchDecorations();
     }
 
     clearSearch() {
@@ -649,10 +682,11 @@ export class Renderer {
         }
     }
 
-    toggleSearchClearButton() {
-        if (!this.searchClearButton) return;
-        const shouldShow = !!(this.searchQuery && this.searchQuery.trim().length);
-        this.searchClearButton.style.display = shouldShow ? "flex" : "none";
+    toggleSearchDecorations() {
+        if (!this.searchClearButton || !this.searchIcon) return;
+        const hasQuery = !!(this.searchQuery && this.searchQuery.trim().length);
+        this.searchClearButton.style.display = hasQuery ? "flex" : "none";
+        this.searchIcon.style.display = hasQuery ? "none" : "flex";
     }
 
     updateFilteredBlockList() {
