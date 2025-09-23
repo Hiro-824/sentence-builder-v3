@@ -1128,9 +1128,11 @@ export class Renderer {
         const height = this.calculateHeight(block);
         const strokeColor = this.darkenColor(block.color, 30);
         const actualCornerRadius = block.isRound ? height / 2 : blockCornerRadius;
+        const parentNode = blockGroup.node() ? blockGroup.node().parentNode : null;
+        const isRootBlock = parentNode && parentNode.id === "grid";
 
         // 日本語訳を表示する条件：ドラッグ中 or トップレベル(gridの直下にある)
-        if ((blockGroup.node().parentNode && blockGroup.node().parentNode.id === "grid") || block.id === this.draggedBlockId) {
+        if (isRootBlock || block.id === this.draggedBlockId) {
             this.renderTranslationBubble(block, blockGroup, width, height);
         }
 
@@ -1170,7 +1172,7 @@ export class Renderer {
         }
 
         const isFinite = this.isFiniteSentence(block);
-        if (isFinite && !fromSideBar) {
+        if (isFinite && !fromSideBar && isRootBlock) {
             const isComplete = this.isBlockComplete(block);
             this.renderSendButton(block, blockGroup, width, height, !isComplete);
         }
