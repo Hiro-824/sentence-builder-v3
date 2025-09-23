@@ -20,14 +20,32 @@ const createVerbTranslations = (
     noun: { default: noun }
 });
 
-const complement = (particle: string) => ({ expected: { head: { type: det, case: "acc" } }, particle });
+const nounComplement = (particle: string) => ({
+    expected: { head: { type: det, case: "acc" } },
+    particle
+});
+
+const gerundComplement = (particle: string) => ({
+    expected: { head: { type: { type: "nominal", isGerund: true }, case: "acc" } },
+    particle
+});
+
+const infinitiveComplement = (particle: string) => ({
+    expected: { head: { type: { type: "nominal", isTo: true }, case: "acc" } },
+    particle
+});
+
+const sentenceComplement = (particle: string) => ({
+    expected: { head: { type: "sentence", finite: true } },
+    particle
+});
+
 
 const dailyLifeVerbConfigs: VerbConfig[] = [
     {
         id: "verb_do",
         forms: { base: "do", es: "does", ed: "did", en: "done", ing: "doing" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -36,8 +54,7 @@ const dailyLifeVerbConfigs: VerbConfig[] = [
     {
         id: "verb_make",
         forms: { base: "make", es: "makes", ed: "made", en: "made", ing: "making" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -46,8 +63,7 @@ const dailyLifeVerbConfigs: VerbConfig[] = [
     {
         id: "verb_get",
         forms: { base: "get", es: "gets", ed: "got", en: "gotten", ing: "getting" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "degree",
         gerundSubject: true,
         toSubject: true,
@@ -56,8 +72,7 @@ const dailyLifeVerbConfigs: VerbConfig[] = [
     {
         id: "verb_take",
         forms: { base: "take", es: "takes", ed: "took", en: "taken", ing: "taking" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -66,8 +81,7 @@ const dailyLifeVerbConfigs: VerbConfig[] = [
     {
         id: "verb_bring",
         forms: { base: "bring", es: "brings", ed: "brought", en: "brought", ing: "bringing" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -76,8 +90,7 @@ const dailyLifeVerbConfigs: VerbConfig[] = [
     {
         id: "verb_leave",
         forms: { base: "leave", es: "leaves", ed: "left", en: "left", ing: "leaving" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "degree",
         gerundSubject: true,
         toSubject: true,
@@ -86,8 +99,11 @@ const dailyLifeVerbConfigs: VerbConfig[] = [
     {
         id: "verb_start",
         forms: { base: "start", es: "starts", ed: "started", en: "started", ing: "starting" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [
+            { complements: [nounComplement("を")] },
+            { complements: [gerundComplement("を")] },
+            { complements: [infinitiveComplement("を")] }
+        ],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -96,8 +112,10 @@ const dailyLifeVerbConfigs: VerbConfig[] = [
     {
         id: "verb_finish",
         forms: { base: "finish", es: "finishes", ed: "finished", en: "finished", ing: "finishing" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [
+            { complements: [nounComplement("を")] },
+            { complements: [gerundComplement("を")] }
+        ],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -106,8 +124,10 @@ const dailyLifeVerbConfigs: VerbConfig[] = [
     {
         id: "verb_keep",
         forms: { base: "keep", es: "keeps", ed: "kept", en: "kept", ing: "keeping" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [
+            { complements: [nounComplement("を")] },
+            { complements: [gerundComplement("を")] }
+        ],
         adv_manner_type: "degree",
         gerundSubject: true,
         toSubject: true,
@@ -116,8 +136,10 @@ const dailyLifeVerbConfigs: VerbConfig[] = [
     {
         id: "verb_need",
         forms: { base: "need", es: "needs", ed: "needed", en: "needed", ing: "needing" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [
+            { complements: [nounComplement("を")] },
+            { complements: [infinitiveComplement("を")] }
+        ],
         adv_manner_type: "degree",
         gerundSubject: true,
         toSubject: true,
@@ -126,8 +148,10 @@ const dailyLifeVerbConfigs: VerbConfig[] = [
     {
         id: "verb_say",
         forms: { base: "say", es: "says", ed: "said", en: "said", ing: "saying" },
-        complements: [complement("と")],
-        transitive: true,
+        argumentStructures: [
+            { complements: [nounComplement("と")] },
+            { complements: [sentenceComplement("と")] }
+        ],
         adv_manner_type: "degree",
         gerundSubject: true,
         toSubject: true,
@@ -136,8 +160,11 @@ const dailyLifeVerbConfigs: VerbConfig[] = [
     {
         id: "verb_tell",
         forms: { base: "tell", es: "tells", ed: "told", en: "told", ing: "telling" },
-        complements: [complement("に"), complement("を")],
-        transitive: true,
+        argumentStructures: [
+            { complements: [nounComplement("に"), nounComplement("を")] },
+            { complements: [nounComplement("に"), sentenceComplement("と")] },
+            { complements: [nounComplement("に"), infinitiveComplement("を")] }
+        ],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -146,8 +173,7 @@ const dailyLifeVerbConfigs: VerbConfig[] = [
     {
         id: "verb_call",
         forms: { base: "call", es: "calls", ed: "called", en: "called", ing: "calling" },
-        complements: [complement("に")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("に")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -156,8 +182,7 @@ const dailyLifeVerbConfigs: VerbConfig[] = [
     {
         id: "verb_wait",
         forms: { base: "wait", es: "waits", ed: "waited", en: "waited", ing: "waiting" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "degree",
         gerundSubject: true,
         toSubject: true,
@@ -166,8 +191,7 @@ const dailyLifeVerbConfigs: VerbConfig[] = [
     {
         id: "verb_speak",
         forms: { base: "speak", es: "speaks", ed: "spoke", en: "spoken", ing: "speaking" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -176,8 +200,7 @@ const dailyLifeVerbConfigs: VerbConfig[] = [
     {
         id: "verb_have",
         forms: { base: "have", es: "has", ed: "had", en: "had", ing: "having" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "degree",
         gerundSubject: false,
         toSubject: false,
@@ -186,8 +209,7 @@ const dailyLifeVerbConfigs: VerbConfig[] = [
     {
         id: "verb_use",
         forms: { base: "use", es: "uses", ed: "used", en: "used", ing: "using" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -196,8 +218,7 @@ const dailyLifeVerbConfigs: VerbConfig[] = [
     {
         id: "verb_wash",
         forms: { base: "wash", es: "washes", ed: "washed", en: "washed", ing: "washing" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -206,8 +227,7 @@ const dailyLifeVerbConfigs: VerbConfig[] = [
     {
         id: "verb_clean",
         forms: { base: "clean", es: "cleans", ed: "cleaned", en: "cleaned", ing: "cleaning" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -216,8 +236,7 @@ const dailyLifeVerbConfigs: VerbConfig[] = [
     {
         id: "verb_open",
         forms: { base: "open", es: "opens", ed: "opened", en: "opened", ing: "opening" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -226,8 +245,7 @@ const dailyLifeVerbConfigs: VerbConfig[] = [
     {
         id: "verb_close",
         forms: { base: "close", es: "closes", ed: "closed", en: "closed", ing: "closing" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -236,8 +254,7 @@ const dailyLifeVerbConfigs: VerbConfig[] = [
     {
         id: "verb_wear",
         forms: { base: "wear", es: "wears", ed: "wore", en: "worn", ing: "wearing" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -246,8 +263,7 @@ const dailyLifeVerbConfigs: VerbConfig[] = [
     {
         id: "verb_sleep",
         forms: { base: "sleep", es: "sleeps", ed: "slept", en: "slept", ing: "sleeping" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -256,8 +272,7 @@ const dailyLifeVerbConfigs: VerbConfig[] = [
     {
         id: "verb_wake",
         forms: { base: "wake", es: "wakes", ed: "woke", en: "woken", ing: "waking" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -266,8 +281,7 @@ const dailyLifeVerbConfigs: VerbConfig[] = [
     {
         id: "verb_buy",
         forms: { base: "buy", es: "buys", ed: "bought", en: "bought", ing: "buying" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -276,8 +290,7 @@ const dailyLifeVerbConfigs: VerbConfig[] = [
     {
         id: "verb_see",
         forms: { base: "see", es: "sees", ed: "saw", en: "seen", ing: "seeing" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "degree",
         gerundSubject: true,
         toSubject: true,
@@ -286,8 +299,7 @@ const dailyLifeVerbConfigs: VerbConfig[] = [
     {
         id: "verb_watch",
         forms: { base: "watch", es: "watches", ed: "watched", en: "watched", ing: "watching" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "degree",
         gerundSubject: true,
         toSubject: true,
@@ -296,8 +308,7 @@ const dailyLifeVerbConfigs: VerbConfig[] = [
     {
         id: "verb_read",
         forms: { base: "read", es: "reads", ed: "read", en: "read", ing: "reading" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -306,8 +317,7 @@ const dailyLifeVerbConfigs: VerbConfig[] = [
     {
         id: "verb_help",
         forms: { base: "help", es: "helps", ed: "helped", en: "helped", ing: "helping" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -316,8 +326,11 @@ const dailyLifeVerbConfigs: VerbConfig[] = [
     {
         id: "verb_like",
         forms: { base: "like", es: "likes", ed: "liked", en: "liked", ing: "liking" },
-        complements: [{ expected: { head: { type: { type: "nominal" }, case: "acc" } }, particle: "が" }],
-        transitive: true,
+        argumentStructures: [
+            { complements: [nounComplement("が")] },
+            { complements: [gerundComplement("が")] },
+            { complements: [infinitiveComplement("が")] }
+        ],
         adv_manner_type: "degree",
         gerundSubject: true,
         toSubject: true,
@@ -326,8 +339,10 @@ const dailyLifeVerbConfigs: VerbConfig[] = [
     {
         id: "verb_want",
         forms: { base: "want", es: "wants", ed: "wanted", en: "wanted", ing: "wanting" },
-        complements: [{ expected: { head: { type: { type: "nominal" }, case: "acc" } }, particle: "が" }],
-        transitive: true,
+        argumentStructures: [
+            { complements: [nounComplement("が")] },
+            { complements: [infinitiveComplement("が")] }
+        ],
         adv_manner_type: "degree",
         gerundSubject: true,
         toSubject: true,
@@ -339,8 +354,7 @@ const educationVerbConfigs: VerbConfig[] = [
     {
         id: "verb_ask",
         forms: { base: "ask", es: "asks", ed: "asked", en: "asked", ing: "asking" },
-        complements: [complement("に"), complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("に"), nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -349,8 +363,7 @@ const educationVerbConfigs: VerbConfig[] = [
     {
         id: "verb_answer",
         forms: { base: "answer", es: "answers", ed: "answered", en: "answered", ing: "answering" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -359,8 +372,7 @@ const educationVerbConfigs: VerbConfig[] = [
     {
         id: "verb_think",
         forms: { base: "think", es: "thinks", ed: "thought", en: "thought", ing: "thinking" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "degree",
         gerundSubject: true,
         toSubject: true,
@@ -369,8 +381,7 @@ const educationVerbConfigs: VerbConfig[] = [
     {
         id: "verb_study",
         forms: { base: "study", es: "studies", ed: "studied", en: "studied", ing: "studying" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -379,8 +390,7 @@ const educationVerbConfigs: VerbConfig[] = [
     {
         id: "verb_learn",
         forms: { base: "learn", es: "learns", ed: "learned", en: "learned", ing: "learning" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "degree",
         gerundSubject: true,
         toSubject: true,
@@ -389,8 +399,7 @@ const educationVerbConfigs: VerbConfig[] = [
     {
         id: "verb_teach",
         forms: { base: "teach", es: "teaches", ed: "taught", en: "taught", ing: "teaching" },
-        complements: [complement("に"), complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("に"), nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -399,8 +408,7 @@ const educationVerbConfigs: VerbConfig[] = [
     {
         id: "verb_explain",
         forms: { base: "explain", es: "explains", ed: "explained", en: "explained", ing: "explaining" },
-        complements: [complement("に"), complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("に"), nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -409,8 +417,7 @@ const educationVerbConfigs: VerbConfig[] = [
     {
         id: "verb_review",
         forms: { base: "review", es: "reviews", ed: "reviewed", en: "reviewed", ing: "reviewing" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -419,8 +426,7 @@ const educationVerbConfigs: VerbConfig[] = [
     {
         id: "verb_practice",
         forms: { base: "practice", es: "practices", ed: "practiced", en: "practiced", ing: "practicing" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -429,8 +435,7 @@ const educationVerbConfigs: VerbConfig[] = [
     {
         id: "verb_memorize",
         forms: { base: "memorize", es: "memorizes", ed: "memorized", en: "memorized", ing: "memorizing" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -439,8 +444,7 @@ const educationVerbConfigs: VerbConfig[] = [
     {
         id: "verb_research",
         forms: { base: "research", es: "researches", ed: "researched", en: "researched", ing: "researching" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -449,8 +453,7 @@ const educationVerbConfigs: VerbConfig[] = [
     {
         id: "verb_test",
         forms: { base: "test", es: "tests", ed: "tested", en: "tested", ing: "testing" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -459,8 +462,10 @@ const educationVerbConfigs: VerbConfig[] = [
     {
         id: "verb_know",
         forms: { base: "know", es: "knows", ed: "knew", en: "known", ing: "knowing" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [
+            { complements: [nounComplement("を")] },
+            { complements: [sentenceComplement("と")] }
+        ],
         adv_manner_type: "degree",
         gerundSubject: true,
         toSubject: true,
@@ -472,8 +477,7 @@ const workVerbConfigs: VerbConfig[] = [
     {
         id: "verb_plan",
         forms: { base: "plan", es: "plans", ed: "planned", en: "planned", ing: "planning" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -482,8 +486,7 @@ const workVerbConfigs: VerbConfig[] = [
     {
         id: "verb_schedule",
         forms: { base: "schedule", es: "schedules", ed: "scheduled", en: "scheduled", ing: "scheduling" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -492,8 +495,7 @@ const workVerbConfigs: VerbConfig[] = [
     {
         id: "verb_manage",
         forms: { base: "manage", es: "manages", ed: "managed", en: "managed", ing: "managing" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -502,8 +504,7 @@ const workVerbConfigs: VerbConfig[] = [
     {
         id: "verb_meet",
         forms: { base: "meet", es: "meets", ed: "met", en: "met", ing: "meeting" },
-        complements: [complement("と")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("と")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -512,8 +513,7 @@ const workVerbConfigs: VerbConfig[] = [
     {
         id: "verb_send",
         forms: { base: "send", es: "sends", ed: "sent", en: "sent", ing: "sending" },
-        complements: [complement("に"), complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("に"), nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -522,8 +522,7 @@ const workVerbConfigs: VerbConfig[] = [
     {
         id: "verb_deliver",
         forms: { base: "deliver", es: "delivers", ed: "delivered", en: "delivered", ing: "delivering" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -532,8 +531,7 @@ const workVerbConfigs: VerbConfig[] = [
     {
         id: "verb_approve",
         forms: { base: "approve", es: "approves", ed: "approved", en: "approved", ing: "approving" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "degree",
         gerundSubject: true,
         toSubject: true,
@@ -542,8 +540,7 @@ const workVerbConfigs: VerbConfig[] = [
     {
         id: "verb_organize",
         forms: { base: "organize", es: "organizes", ed: "organized", en: "organized", ing: "organizing" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -552,8 +549,7 @@ const workVerbConfigs: VerbConfig[] = [
     {
         id: "verb_report",
         forms: { base: "report", es: "reports", ed: "reported", en: "reported", ing: "reporting" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -562,8 +558,7 @@ const workVerbConfigs: VerbConfig[] = [
     {
         id: "verb_negotiate",
         forms: { base: "negotiate", es: "negotiates", ed: "negotiated", en: "negotiated", ing: "negotiating" },
-        complements: [complement("と")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("と")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -572,8 +567,7 @@ const workVerbConfigs: VerbConfig[] = [
     {
         id: "verb_hire",
         forms: { base: "hire", es: "hires", ed: "hired", en: "hired", ing: "hiring" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -582,8 +576,7 @@ const workVerbConfigs: VerbConfig[] = [
     {
         id: "verb_analyze",
         forms: { base: "analyze", es: "analyzes", ed: "analyzed", en: "analyzed", ing: "analyzing" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -592,8 +585,7 @@ const workVerbConfigs: VerbConfig[] = [
     {
         id: "verb_give",
         forms: { base: "give", es: "gives", ed: "gave", en: "given", ing: "giving" },
-        complements: [complement("に"), complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("に"), nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -605,8 +597,7 @@ const travelVerbConfigs: VerbConfig[] = [
     {
         id: "verb_go",
         forms: { base: "go", es: "goes", ed: "went", en: "gone", ing: "going" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -615,8 +606,7 @@ const travelVerbConfigs: VerbConfig[] = [
     {
         id: "verb_travel",
         forms: { base: "travel", es: "travels", ed: "traveled", en: "traveled", ing: "traveling" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -625,8 +615,7 @@ const travelVerbConfigs: VerbConfig[] = [
     {
         id: "verb_drive",
         forms: { base: "drive", es: "drives", ed: "drove", en: "driven", ing: "driving" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -635,8 +624,7 @@ const travelVerbConfigs: VerbConfig[] = [
     {
         id: "verb_ride",
         forms: { base: "ride", es: "rides", ed: "rode", en: "ridden", ing: "riding" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -645,8 +633,7 @@ const travelVerbConfigs: VerbConfig[] = [
     {
         id: "verb_fly",
         forms: { base: "fly", es: "flies", ed: "flew", en: "flown", ing: "flying" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -655,8 +642,7 @@ const travelVerbConfigs: VerbConfig[] = [
     {
         id: "verb_arrive",
         forms: { base: "arrive", es: "arrives", ed: "arrived", en: "arrived", ing: "arriving" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -665,8 +651,7 @@ const travelVerbConfigs: VerbConfig[] = [
     {
         id: "verb_depart",
         forms: { base: "depart", es: "departs", ed: "departed", en: "departed", ing: "departing" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -675,8 +660,7 @@ const travelVerbConfigs: VerbConfig[] = [
     {
         id: "verb_board",
         forms: { base: "board", es: "boards", ed: "boarded", en: "boarded", ing: "boarding" },
-        complements: [complement("に")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("に")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -685,8 +669,7 @@ const travelVerbConfigs: VerbConfig[] = [
     {
         id: "verb_book",
         forms: { base: "book", es: "books", ed: "booked", en: "booked", ing: "booking" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -695,8 +678,7 @@ const travelVerbConfigs: VerbConfig[] = [
     {
         id: "verb_pack",
         forms: { base: "pack", es: "packs", ed: "packed", en: "packed", ing: "packing" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -705,8 +687,7 @@ const travelVerbConfigs: VerbConfig[] = [
     {
         id: "verb_stay",
         forms: { base: "stay", es: "stays", ed: "stayed", en: "stayed", ing: "staying" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "degree",
         gerundSubject: true,
         toSubject: true,
@@ -715,8 +696,7 @@ const travelVerbConfigs: VerbConfig[] = [
     {
         id: "verb_check",
         forms: { base: "check", es: "checks", ed: "checked", en: "checked", ing: "checking" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -725,8 +705,7 @@ const travelVerbConfigs: VerbConfig[] = [
     {
         id: "verb_visit",
         forms: { base: "visit", es: "visits", ed: "visited", en: "visited", ing: "visiting" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -738,8 +717,7 @@ const healthVerbConfigs: VerbConfig[] = [
     {
         id: "verb_exercise",
         forms: { base: "exercise", es: "exercises", ed: "exercised", en: "exercised", ing: "exercising" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -748,8 +726,7 @@ const healthVerbConfigs: VerbConfig[] = [
     {
         id: "verb_breathe",
         forms: { base: "breathe", es: "breathes", ed: "breathed", en: "breathed", ing: "breathing" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -758,8 +735,7 @@ const healthVerbConfigs: VerbConfig[] = [
     {
         id: "verb_treat",
         forms: { base: "treat", es: "treats", ed: "treated", en: "treated", ing: "treating" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -768,8 +744,7 @@ const healthVerbConfigs: VerbConfig[] = [
     {
         id: "verb_examine",
         forms: { base: "examine", es: "examines", ed: "examined", en: "examined", ing: "examining" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -778,8 +753,7 @@ const healthVerbConfigs: VerbConfig[] = [
     {
         id: "verb_recover",
         forms: { base: "recover", es: "recovers", ed: "recovered", en: "recovered", ing: "recovering" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "degree",
         gerundSubject: true,
         toSubject: true,
@@ -788,8 +762,7 @@ const healthVerbConfigs: VerbConfig[] = [
     {
         id: "verb_rest",
         forms: { base: "rest", es: "rests", ed: "rested", en: "rested", ing: "resting" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "degree",
         gerundSubject: true,
         toSubject: true,
@@ -798,8 +771,7 @@ const healthVerbConfigs: VerbConfig[] = [
     {
         id: "verb_diagnose",
         forms: { base: "diagnose", es: "diagnoses", ed: "diagnosed", en: "diagnosed", ing: "diagnosing" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -808,8 +780,7 @@ const healthVerbConfigs: VerbConfig[] = [
     {
         id: "verb_heal",
         forms: { base: "heal", es: "heals", ed: "healed", en: "healed", ing: "healing" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -818,8 +789,7 @@ const healthVerbConfigs: VerbConfig[] = [
     {
         id: "verb_prescribe",
         forms: { base: "prescribe", es: "prescribes", ed: "prescribed", en: "prescribed", ing: "prescribing" },
-        complements: [complement("に"), complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("に"), nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -828,8 +798,7 @@ const healthVerbConfigs: VerbConfig[] = [
     {
         id: "verb_vaccinate",
         forms: { base: "vaccinate", es: "vaccinates", ed: "vaccinated", en: "vaccinated", ing: "vaccinating" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -838,8 +807,7 @@ const healthVerbConfigs: VerbConfig[] = [
     {
         id: "verb_measure",
         forms: { base: "measure", es: "measures", ed: "measured", en: "measured", ing: "measuring" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -851,8 +819,7 @@ const foodVerbConfigs: VerbConfig[] = [
     {
         id: "verb_cook",
         forms: { base: "cook", es: "cooks", ed: "cooked", en: "cooked", ing: "cooking" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -861,8 +828,7 @@ const foodVerbConfigs: VerbConfig[] = [
     {
         id: "verb_eat",
         forms: { base: "eat", es: "eats", ed: "ate", en: "eaten", ing: "eating" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -871,8 +837,7 @@ const foodVerbConfigs: VerbConfig[] = [
     {
         id: "verb_drink",
         forms: { base: "drink", es: "drinks", ed: "drank", en: "drunk", ing: "drinking" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -881,8 +846,7 @@ const foodVerbConfigs: VerbConfig[] = [
     {
         id: "verb_chop",
         forms: { base: "chop", es: "chops", ed: "chopped", en: "chopped", ing: "chopping" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -891,8 +855,7 @@ const foodVerbConfigs: VerbConfig[] = [
     {
         id: "verb_boil",
         forms: { base: "boil", es: "boils", ed: "boiled", en: "boiled", ing: "boiling" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -901,8 +864,7 @@ const foodVerbConfigs: VerbConfig[] = [
     {
         id: "verb_bake",
         forms: { base: "bake", es: "bakes", ed: "baked", en: "baked", ing: "baking" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -911,8 +873,7 @@ const foodVerbConfigs: VerbConfig[] = [
     {
         id: "verb_mix",
         forms: { base: "mix", es: "mixes", ed: "mixed", en: "mixed", ing: "mixing" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -921,8 +882,7 @@ const foodVerbConfigs: VerbConfig[] = [
     {
         id: "verb_taste",
         forms: { base: "taste", es: "tastes", ed: "tasted", en: "tasted", ing: "tasting" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "degree",
         gerundSubject: true,
         toSubject: true,
@@ -931,8 +891,7 @@ const foodVerbConfigs: VerbConfig[] = [
     {
         id: "verb_serve",
         forms: { base: "serve", es: "serves", ed: "served", en: "served", ing: "serving" },
-        complements: [complement("に"), complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("に"), nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -941,8 +900,7 @@ const foodVerbConfigs: VerbConfig[] = [
     {
         id: "verb_season",
         forms: { base: "season", es: "seasons", ed: "seasoned", en: "seasoned", ing: "seasoning" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -951,8 +909,7 @@ const foodVerbConfigs: VerbConfig[] = [
     {
         id: "verb_grill",
         forms: { base: "grill", es: "grills", ed: "grilled", en: "grilled", ing: "grilling" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -961,8 +918,7 @@ const foodVerbConfigs: VerbConfig[] = [
     {
         id: "verb_pour",
         forms: { base: "pour", es: "pours", ed: "poured", en: "poured", ing: "pouring" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -971,8 +927,7 @@ const foodVerbConfigs: VerbConfig[] = [
     {
         id: "verb_slice",
         forms: { base: "slice", es: "slices", ed: "sliced", en: "sliced", ing: "slicing" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -981,8 +936,7 @@ const foodVerbConfigs: VerbConfig[] = [
     {
         id: "verb_fry",
         forms: { base: "fry", es: "fries", ed: "fried", en: "fried", ing: "frying" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -991,8 +945,7 @@ const foodVerbConfigs: VerbConfig[] = [
     {
         id: "verb_stir",
         forms: { base: "stir", es: "stirs", ed: "stirred", en: "stirred", ing: "stirring" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1004,8 +957,7 @@ const natureVerbConfigs: VerbConfig[] = [
     {
         id: "verb_grow",
         forms: { base: "grow", es: "grows", ed: "grew", en: "grown", ing: "growing" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1014,8 +966,7 @@ const natureVerbConfigs: VerbConfig[] = [
     {
         id: "verb_plant",
         forms: { base: "plant", es: "plants", ed: "planted", en: "planted", ing: "planting" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1024,8 +975,7 @@ const natureVerbConfigs: VerbConfig[] = [
     {
         id: "verb_bloom",
         forms: { base: "bloom", es: "blooms", ed: "bloomed", en: "bloomed", ing: "blooming" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1034,8 +984,7 @@ const natureVerbConfigs: VerbConfig[] = [
     {
         id: "verb_recycle",
         forms: { base: "recycle", es: "recycles", ed: "recycled", en: "recycled", ing: "recycling" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1044,8 +993,7 @@ const natureVerbConfigs: VerbConfig[] = [
     {
         id: "verb_protect",
         forms: { base: "protect", es: "protects", ed: "protected", en: "protected", ing: "protecting" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1054,8 +1002,7 @@ const natureVerbConfigs: VerbConfig[] = [
     {
         id: "verb_conserve",
         forms: { base: "conserve", es: "conserves", ed: "conserved", en: "conserved", ing: "conserving" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1064,8 +1011,7 @@ const natureVerbConfigs: VerbConfig[] = [
     {
         id: "verb_melt",
         forms: { base: "melt", es: "melts", ed: "melted", en: "melted", ing: "melting" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1074,8 +1020,7 @@ const natureVerbConfigs: VerbConfig[] = [
     {
         id: "verb_freeze",
         forms: { base: "freeze", es: "freezes", ed: "froze", en: "frozen", ing: "freezing" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1084,8 +1029,7 @@ const natureVerbConfigs: VerbConfig[] = [
     {
         id: "verb_rain",
         forms: { base: "rain", es: "rains", ed: "rained", en: "rained", ing: "raining" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "degree",
         gerundSubject: true,
         toSubject: true,
@@ -1094,8 +1038,7 @@ const natureVerbConfigs: VerbConfig[] = [
     {
         id: "verb_snow",
         forms: { base: "snow", es: "snows", ed: "snowed", en: "snowed", ing: "snowing" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "degree",
         gerundSubject: true,
         toSubject: true,
@@ -1104,8 +1047,7 @@ const natureVerbConfigs: VerbConfig[] = [
     {
         id: "verb_blow",
         forms: { base: "blow", es: "blows", ed: "blew", en: "blown", ing: "blowing" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1114,8 +1056,7 @@ const natureVerbConfigs: VerbConfig[] = [
     {
         id: "verb_pollute",
         forms: { base: "pollute", es: "pollutes", ed: "polluted", en: "polluted", ing: "polluting" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1124,8 +1065,7 @@ const natureVerbConfigs: VerbConfig[] = [
     {
         id: "verb_erode",
         forms: { base: "erode", es: "erodes", ed: "eroded", en: "eroded", ing: "eroding" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1134,8 +1074,7 @@ const natureVerbConfigs: VerbConfig[] = [
     {
         id: "verb_harvest",
         forms: { base: "harvest", es: "harvests", ed: "harvested", en: "harvested", ing: "harvesting" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1147,8 +1086,7 @@ const technologyVerbConfigs: VerbConfig[] = [
     {
         id: "verb_code",
         forms: { base: "code", es: "codes", ed: "coded", en: "coded", ing: "coding" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1157,8 +1095,7 @@ const technologyVerbConfigs: VerbConfig[] = [
     {
         id: "verb_upload",
         forms: { base: "upload", es: "uploads", ed: "uploaded", en: "uploaded", ing: "uploading" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1167,8 +1104,7 @@ const technologyVerbConfigs: VerbConfig[] = [
     {
         id: "verb_download",
         forms: { base: "download", es: "downloads", ed: "downloaded", en: "downloaded", ing: "downloading" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1177,8 +1113,7 @@ const technologyVerbConfigs: VerbConfig[] = [
     {
         id: "verb_share",
         forms: { base: "share", es: "shares", ed: "shared", en: "shared", ing: "sharing" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1187,8 +1122,7 @@ const technologyVerbConfigs: VerbConfig[] = [
     {
         id: "verb_message",
         forms: { base: "message", es: "messages", ed: "messaged", en: "messaged", ing: "messaging" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1197,8 +1131,7 @@ const technologyVerbConfigs: VerbConfig[] = [
     {
         id: "verb_search",
         forms: { base: "search", es: "searches", ed: "searched", en: "searched", ing: "searching" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1207,8 +1140,7 @@ const technologyVerbConfigs: VerbConfig[] = [
     {
         id: "verb_stream",
         forms: { base: "stream", es: "streams", ed: "streamed", en: "streamed", ing: "streaming" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1217,8 +1149,7 @@ const technologyVerbConfigs: VerbConfig[] = [
     {
         id: "verb_update",
         forms: { base: "update", es: "updates", ed: "updated", en: "updated", ing: "updating" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1227,8 +1158,7 @@ const technologyVerbConfigs: VerbConfig[] = [
     {
         id: "verb_connect",
         forms: { base: "connect", es: "connects", ed: "connected", en: "connected", ing: "connecting" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1237,8 +1167,7 @@ const technologyVerbConfigs: VerbConfig[] = [
     {
         id: "verb_debug",
         forms: { base: "debug", es: "debugs", ed: "debugged", en: "debugged", ing: "debugging" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1247,8 +1176,7 @@ const technologyVerbConfigs: VerbConfig[] = [
     {
         id: "verb_record",
         forms: { base: "record", es: "records", ed: "recorded", en: "recorded", ing: "recording" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1257,8 +1185,7 @@ const technologyVerbConfigs: VerbConfig[] = [
     {
         id: "verb_publish",
         forms: { base: "publish", es: "publishes", ed: "published", en: "published", ing: "publishing" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1267,8 +1194,7 @@ const technologyVerbConfigs: VerbConfig[] = [
     {
         id: "verb_install",
         forms: { base: "install", es: "installs", ed: "installed", en: "installed", ing: "installing" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1277,8 +1203,7 @@ const technologyVerbConfigs: VerbConfig[] = [
     {
         id: "verb_design",
         forms: { base: "design", es: "designs", ed: "designed", en: "designed", ing: "designing" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1290,8 +1215,7 @@ const sportsVerbConfigs: VerbConfig[] = [
     {
         id: "verb_play",
         forms: { base: "play", es: "plays", ed: "played", en: "played", ing: "playing" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1300,8 +1224,7 @@ const sportsVerbConfigs: VerbConfig[] = [
     {
         id: "verb_run",
         forms: { base: "run", es: "runs", ed: "ran", en: "run", ing: "running" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1310,8 +1233,7 @@ const sportsVerbConfigs: VerbConfig[] = [
     {
         id: "verb_swim",
         forms: { base: "swim", es: "swims", ed: "swam", en: "swum", ing: "swimming" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1320,8 +1242,7 @@ const sportsVerbConfigs: VerbConfig[] = [
     {
         id: "verb_jump",
         forms: { base: "jump", es: "jumps", ed: "jumped", en: "jumped", ing: "jumping" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1330,8 +1251,7 @@ const sportsVerbConfigs: VerbConfig[] = [
     {
         id: "verb_score",
         forms: { base: "score", es: "scores", ed: "scored", en: "scored", ing: "scoring" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1340,8 +1260,7 @@ const sportsVerbConfigs: VerbConfig[] = [
     {
         id: "verb_train",
         forms: { base: "train", es: "trains", ed: "trained", en: "trained", ing: "training" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1350,8 +1269,7 @@ const sportsVerbConfigs: VerbConfig[] = [
     {
         id: "verb_compete",
         forms: { base: "compete", es: "competes", ed: "competed", en: "competed", ing: "competing" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1360,8 +1278,7 @@ const sportsVerbConfigs: VerbConfig[] = [
     {
         id: "verb_win",
         forms: { base: "win", es: "wins", ed: "won", en: "won", ing: "winning" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "degree",
         gerundSubject: true,
         toSubject: true,
@@ -1370,8 +1287,7 @@ const sportsVerbConfigs: VerbConfig[] = [
     {
         id: "verb_lose",
         forms: { base: "lose", es: "loses", ed: "lost", en: "lost", ing: "losing" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "degree",
         gerundSubject: true,
         toSubject: true,
@@ -1380,8 +1296,7 @@ const sportsVerbConfigs: VerbConfig[] = [
     {
         id: "verb_cheer",
         forms: { base: "cheer", es: "cheers", ed: "cheered", en: "cheered", ing: "cheering" },
-        complements: [complement("を")],
-        transitive: true,
+        argumentStructures: [{ complements: [nounComplement("を")] }],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1390,8 +1305,7 @@ const sportsVerbConfigs: VerbConfig[] = [
     {
         id: "verb_relax",
         forms: { base: "relax", es: "relaxes", ed: "relaxed", en: "relaxed", ing: "relaxing" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "degree",
         gerundSubject: true,
         toSubject: true,
@@ -1400,8 +1314,7 @@ const sportsVerbConfigs: VerbConfig[] = [
     {
         id: "verb_hike",
         forms: { base: "hike", es: "hikes", ed: "hiked", en: "hiked", ing: "hiking" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,
@@ -1410,8 +1323,7 @@ const sportsVerbConfigs: VerbConfig[] = [
     {
         id: "verb_dance",
         forms: { base: "dance", es: "dances", ed: "danced", en: "danced", ing: "dancing" },
-        complements: [],
-        transitive: false,
+        argumentStructures: [],
         adv_manner_type: "skill",
         gerundSubject: true,
         toSubject: true,

@@ -55,14 +55,17 @@ export interface VerbTranslations {
     noun: VerbTranslation;
 }
 
-export interface VerbConfig {
-    id: string;
-    forms: VerbForms;
+export interface VerbArgumentStructure {
     complements: {
         expected: Phrase;
         particle: string;
     }[];
-    transitive: boolean;
+}
+
+export interface VerbConfig {
+    id: string;
+    forms: VerbForms;
+    argumentStructures?: VerbArgumentStructure[];
     gerundSubject: boolean;
     toSubject: boolean;
     translations: VerbTranslations;
@@ -461,7 +464,7 @@ export class Generator {
     }
 
     private createVerbCategory(config: VerbConfig, form: "base" | "es" | "ed" | "ing" | "perfect" | "passive"): Phrase[] {
-        const categories: Phrase[] = [];
+        const finalCategories: Phrase[] = [];
         const subjectType: FeatureStructure = {
             type: "nominal",
             isDet: true
@@ -474,54 +477,50 @@ export class Generator {
             subjectType.isTo = false;
         }
 
+        const initialTemplates: Partial<Phrase>[] = [];
         switch (form) {
             case "base":
-                categories.push({
+                initialTemplates.push({
                     head: { type: "verb", tense: "present", finite: true, form: "base" },
                     left: [{ head: { type: det, agr: { type: "non-3sing" }, case: "nom", isSubject: true } }],
                     translation: config.translations.present,
                 });
-                categories.push({
+                initialTemplates.push({
                     head: { type: "verb", finite: false, form: "base" },
                     left: [{ head: { type: subjectType } }],
                     translation: config.translations.present,
                 });
                 break;
             case "es":
-                categories.push({
+                initialTemplates.push({
                     head: { type: "verb", tense: "present", finite: true, form: "es" },
                     left: [{ head: { type: subjectType, agr: { type: "3sing" }, case: "nom" } }],
                     translation: config.translations.present,
                 });
                 break;
             case "ed":
-                categories.push({
+                initialTemplates.push({
                     head: { type: "verb", tense: "past", finite: true, form: "ed" },
                     left: [{ head: { type: subjectType, case: "nom" } }],
                     translation: config.translations.past,
                 });
                 break;
             case "ing":
-                categories.push({
+                initialTemplates.push({
                     head: { type: "verb", finite: false, form: "progressive" },
                     left: [{ head: { type: subjectType, isSubject: true } }],
                     translation: config.translations.progressive,
                 });
-                categories.push({
-                    head: { type: { type: "nominal", isGerund: true, isSubject: true }, agr: { type: "3sing" } },
-                    left: [{ head: { type: subjectType } }],
-                    translation: config.translations.noun,
-                });
                 break;
             case "perfect":
-                categories.push({
+                initialTemplates.push({
                     head: { type: "verb", finite: false, form: "perfect" },
                     left: [{ head: { type: subjectType, isSubject: true } }],
                     translation: config.translations.perfect,
                 });
                 break;
             case "passive":
-                categories.push({
+                initialTemplates.push({
                     head: { type: "verb", finite: false, form: "passive" },
                     left: [{ head: { type: subjectType, isSubject: true } }],
                     translation: config.translations.passive ?? {},
@@ -529,41 +528,82 @@ export class Generator {
                 break;
         }
 
-        return categories.map((category) => {
-            if (config.adv_manner_type) {
-                category.head.adv_manner_type = config.adv_manner_type;
-            } else {
-                category.head.adv_manner_type = "none";
+        const argumentStructures = (config.argumentStructures?.length)
+            ? config.argumentStructures
+            : [{ complements: [] }];
+
+        for (const template of initialTemplates) {
+            for (const argStruct of argumentStructures) {
+                const category = { ...template } as Phrase;
+                category.right = argStruct.complements.map(c => c.expected);
+
+                const complementsForTranslation = (form === "passive" && argStruct.complements.length > 0)
+                    ? argStruct.complements.slice(1)
+                    : argStruct.complements;
+
+                const translationTemplates: TranslationTemplates = {};
+                if (category.translation) {
+                    Object.entries(category.translation).forEach(([key, translationWord]) => {
+                        translationTemplates[key] = [
+                            ...complementsForTranslation.map((complement, index) => ({
+                                path: ["right", index],
+                                key: "default",
+                                particle: complement.particle
+                            })),
+                            translationWord as string
+                        ];
+                    });
+                }
+                category.translationTemplates = translationTemplates;
+                delete category.translation;
+                category.head.adv_manner_type = config.adv_manner_type || "none";
+                finalCategories.push(category);
             }
-            const translationTemplates: TranslationTemplates = {};
-            if (category.translation) {
-                Object.entries(category.translation).forEach(([key, translationWord]) => {
-                    const complementsToUse = form === "passive" ? config.complements.slice(1) : config.complements; // Passive forms drop the translation's object
-                    translationTemplates[key] = [
-                        ...complementsToUse.map((complement, index) => ({
-                            path: ["right", index],
-                            key: "default",
-                            particle: complement.particle
-                        })),
-                        translationWord as string
-                    ];
-                });
+        }
+
+        if (form === 'ing') {
+            for (const argStruct of argumentStructures) {
+                const gerundNounCategory: Phrase = {
+                    head: { type: { type: "nominal", isGerund: true, isSubject: true }, agr: { type: "3sing" } },
+                    left: [{ head: { type: subjectType } }],
+                    right: argStruct.complements.map(c => c.expected),
+                    translation: config.translations.noun,
+                    translationTemplates: {}
+                };
+
+                const translationTemplates: TranslationTemplates = {};
+                if (gerundNounCategory.translation) {
+                    Object.entries(gerundNounCategory.translation).forEach(([key, translationWord]) => {
+                        translationTemplates[key] = [
+                            ...argStruct.complements.map((complement, index) => ({
+                                path: ["right", index],
+                                key: "default",
+                                particle: complement.particle
+                            })),
+                            translationWord as string
+                        ];
+                    });
+                }
+                gerundNounCategory.translationTemplates = translationTemplates;
+                delete gerundNounCategory.translation;
+                finalCategories.push(gerundNounCategory);
             }
-            return {
-                head: category.head,
-                left: category.left,
-                right: [...config.complements.map(complement => complement.expected)],
-                translationTemplates
-            };
-        })
+        }
+
+        return finalCategories;
     }
 
+
     createVerbBlock(config: VerbConfig): Block {
-        const { id, forms, transitive } = config;
+        const { id, forms } = config;
         const color = config.color || "tomato";
 
+        const isTransitive = config.argumentStructures?.some(s => s.complements.length > 0) ?? false;
+
         const heads = Object.values(forms);
-        if (transitive) heads.push(forms.en);
+        if (isTransitive) {
+            heads.push(forms.en);
+        }
 
         const words = [
             {
@@ -586,21 +626,22 @@ export class Generator {
                 token: `${forms.ing}(ing)`,
                 categories: this.createVerbCategory(config, "ing")
             },
-            ...(transitive ? [{
+            ...(isTransitive ? [{
                 token: `${forms.en}(passive)`,
                 categories: this.createVerbCategory(config, "passive")
             }] : [])
-        ]
+        ];
 
-        const placeholders: BlockChild[] = config.complements.map((_, index) => {
-            return {
-                id: `complement-${index}`,
-                type: "placeholder",
-                content: null,
-                hidden: false,
-                headIndex: index === 0 ? [0, 1, 2, 3, 4] : undefined,
-            }
-        });
+        const maxComplements = config.argumentStructures
+            ? Math.max(0, ...config.argumentStructures.map(s => s.complements.length))
+            : 0;
+
+        const placeholders: BlockChild[] = Array.from({ length: maxComplements }, (_, index) => ({
+            id: `complement-${index}`,
+            type: "placeholder",
+            content: null,
+            hidden: false,
+        }));
 
         return {
             id: id,
@@ -616,7 +657,7 @@ export class Generator {
                 hidden: false,
             },
             ...placeholders]
-        }
+        };
     }
 
     createAdjectiveBlock(config: AdjectiveConfig): Block {
