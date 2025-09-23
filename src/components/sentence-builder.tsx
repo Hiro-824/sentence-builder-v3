@@ -282,7 +282,7 @@ const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
                             left: 0,
                         }}
                     />
-                    <ActivityPanel lessons={lessons} />
+                    <ActivityPanel lessons={lessons} currentProjectId={currentProjectId} />
                 </>
             )}
 

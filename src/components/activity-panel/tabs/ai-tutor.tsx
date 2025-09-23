@@ -19,6 +19,10 @@ interface Conversation {
     updatedAt: number;
 }
 
+interface AiTutorTabContentProps {
+    projectId?: string | null;
+}
+
 const LOCAL_STORAGE_KEY = 'aiTutorConversations';
 const CURRENT_CONVERSATION_KEY = 'aiTutorCurrentConversationId';
 const INITIAL_GREETING = 'Hello! How can I help you with your English practice today?';
@@ -118,14 +122,25 @@ const getConversationPreview = (messages: Message[]) => {
     return truncateText(`${prefix}${lastMessage.text}`, 80);
 };
 
-export const AiTutorTabContent = () => {
+export const AiTutorTabContent = ({ projectId }: AiTutorTabContentProps) => {
+    const normalizedProjectId = typeof projectId === 'string' ? projectId.trim() : '';
+    const projectKey = normalizedProjectId || 'default';
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
     const [inputValue, setInputValue] = useState('');
     const [pendingConversationId, setPendingConversationId] = useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [hasHydrated, setHasHydrated] = useState(false);
+    const [hydratedProjectKey, setHydratedProjectKey] = useState<string | null>(null);
     const messageListRef = useRef<HTMLDivElement>(null);
+
+    const storageKeys = useMemo(
+        () => ({
+            conversations: `${LOCAL_STORAGE_KEY}:${projectKey}`,
+            currentConversation: `${CURRENT_CONVERSATION_KEY}:${projectKey}`,
+        }),
+        [projectKey],
+    );
 
     const currentConversation = useMemo(
         () => conversations.find((conv) => conv.id === currentConversationId) ?? null,
@@ -138,7 +153,10 @@ export const AiTutorTabContent = () => {
             return;
         }
 
-        const stored = window.localStorage.getItem(LOCAL_STORAGE_KEY);
+        setHasHydrated(false);
+        setHydratedProjectKey(null);
+
+        const stored = window.localStorage.getItem(storageKeys.conversations);
         let parsed: unknown = null;
 
         if (stored) {
@@ -155,39 +173,45 @@ export const AiTutorTabContent = () => {
                   .filter((conv): conv is Conversation => Boolean(conv))
             : [];
 
-        if (sanitized.length === 0) {
-            const initialConversation = createConversation(1);
-            setConversations([initialConversation]);
-            setCurrentConversationId(initialConversation.id);
-            setHasHydrated(true);
-            return;
-        }
+        const nextConversations = sanitized.length > 0 ? sanitized : [createConversation(1)];
+        setConversations(nextConversations);
 
-        setConversations(sanitized);
-        const storedCurrent = window.localStorage.getItem(CURRENT_CONVERSATION_KEY);
-        const fallbackId = sanitized[0].id;
-        const nextCurrent = storedCurrent && sanitized.some((conv) => conv.id === storedCurrent)
+        const storedCurrent = window.localStorage.getItem(storageKeys.currentConversation);
+        const fallbackId = nextConversations[0]?.id ?? null;
+        const nextCurrent = storedCurrent && nextConversations.some((conv) => conv.id === storedCurrent)
             ? storedCurrent
             : fallbackId;
         setCurrentConversationId(nextCurrent);
+        setPendingConversationId(null);
         setHasHydrated(true);
-    }, []);
+        setHydratedProjectKey(projectKey);
+    }, [projectKey, storageKeys]);
 
     useEffect(() => {
-        if (!hasHydrated || typeof window === 'undefined') {
+        if (
+            !hasHydrated ||
+            hydratedProjectKey !== projectKey ||
+            typeof window === 'undefined'
+        ) {
             return;
         }
-        window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(conversations));
-    }, [conversations, hasHydrated]);
+        window.localStorage.setItem(storageKeys.conversations, JSON.stringify(conversations));
+    }, [conversations, hasHydrated, hydratedProjectKey, projectKey, storageKeys]);
 
     useEffect(() => {
-        if (!hasHydrated || typeof window === 'undefined') {
+        if (
+            !hasHydrated ||
+            hydratedProjectKey !== projectKey ||
+            typeof window === 'undefined'
+        ) {
             return;
         }
         if (currentConversationId) {
-            window.localStorage.setItem(CURRENT_CONVERSATION_KEY, currentConversationId);
+            window.localStorage.setItem(storageKeys.currentConversation, currentConversationId);
+        } else {
+            window.localStorage.removeItem(storageKeys.currentConversation);
         }
-    }, [currentConversationId, hasHydrated]);
+    }, [currentConversationId, hasHydrated, hydratedProjectKey, projectKey, storageKeys]);
 
     const isCurrentConversationPending = pendingConversationId === currentConversationId;
 
