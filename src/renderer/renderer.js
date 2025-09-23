@@ -370,6 +370,7 @@ export class Renderer {
         const categoryNames = Object.keys(this.blockList || {});
 
         categoryNames.forEach(groupName => {
+            const circleCenterY = y;
             const categoryColor = this.getCategoryColor(groupName);
             const circleFill = categoryColor || "#e0e0e0";
             const circleStroke = categoryColor ? this.darkenColor(categoryColor, 30) : "#cccccc";
@@ -413,7 +414,21 @@ export class Renderer {
                 }
             }
 
-            const textHeight = textElement.node().getBBox().height;
+            const textBBox = textElement.node().getBBox();
+            const textHeight = textBBox.height;
+            const hitboxPadding = 12;
+            const hitboxTop = Math.min(circleCenterY - navBarCircleRadius, textBBox.y) - hitboxPadding;
+            const hitboxBottom = Math.max(circleCenterY + navBarCircleRadius, textBBox.y + textBBox.height) + hitboxPadding;
+            const hitboxHeight = Math.max(0, hitboxBottom - hitboxTop);
+
+            circleGroup.insert("rect", ":first-child")
+                .attr("x", 0)
+                .attr("y", hitboxTop)
+                .attr("width", navBarWidth)
+                .attr("height", hitboxHeight)
+                .attr("fill", "transparent")
+                .attr("pointer-events", "all");
+
             y += (navBarCircleRadius * 2) + textHeight + navBarCircleSpacing;
         });
     }
@@ -796,7 +811,7 @@ export class Renderer {
         if (!this.searchClearButton || !this.searchIcon) return;
         const hasQuery = !!(this.searchQuery && this.searchQuery.trim().length);
         this.searchClearButton.style.display = hasQuery ? "flex" : "none";
-        this.searchIcon.style.display = hasQuery ? "none" : "flex";
+        this.searchIcon.style.display = "flex";
     }
 
     updateFilteredBlockList() {
