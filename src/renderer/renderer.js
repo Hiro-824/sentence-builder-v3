@@ -44,6 +44,7 @@ export class Renderer {
         this.sidebarSearchHitbox = null;
         this.sidebarSearchForeignObject = null;
         this.sidebarSearchShadowPadding = 4;
+        this.sidebarSearchBackground = null;
         this.sidebarScrollContainer = null;
         this.sidebarContent = null;
         this.sidebarContentContainer = null;
@@ -305,6 +306,18 @@ export class Renderer {
 
         // Render content first so it appears underneath the search bar
         this.renderSideBarContent(this.sidebarContentContainer);
+
+        // Draw background behind the search bar before placing the search UI on top
+        this.sidebarSearchBackground = this.sidebarContentContainer.append("rect")
+            .attr("id", "sidebar-search-background")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", blockListWidth)
+            .attr("height", this.searchAreaHeight)
+            .attr("fill", "#ffffff")
+            .attr("stroke", "#e0e0e0")
+            .attr("stroke-width", 1)
+            .attr("pointer-events", "none");
 
         // Render search bar on top of the content
         this.sidebarSearchGroup = this.sidebarContentContainer.append("g")
@@ -588,6 +601,12 @@ export class Renderer {
                 .attr("width", totalWidth)
                 .attr("height", sidebarSearchHeight + focusPadding * 2);
         }
+
+        if (this.sidebarSearchBackground) {
+            this.sidebarSearchBackground
+                .attr("width", blockListWidth * effectiveZoom)
+                .attr("height", this.searchAreaHeight);
+        }
     }
 
     renderSearchBar(searchGroup) {
@@ -601,6 +620,12 @@ export class Renderer {
         const searchWidth = blockListWidth - sidebarSearchPadding.horizontal - sidebarPadding.right;
         const containerHeight = this.getSidebarSearchAreaHeight();
         const focusPadding = this.sidebarSearchShadowPadding || 0;
+
+        if (this.sidebarSearchBackground) {
+            this.sidebarSearchBackground
+                .attr("width", blockListWidth)
+                .attr("height", containerHeight);
+        }
 
         // Add a transparent rectangle to catch mouse events and prevent them from propagating to the canvas.
         this.sidebarSearchHitbox = searchGroup.append("rect")
