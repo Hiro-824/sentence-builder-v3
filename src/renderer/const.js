@@ -19,8 +19,8 @@ export const initialVisibleCount = 5;
 export const visiblilityIncrement = 5;
 
 export const navBarWidth = 60;
-export const navBarPadding = { top: 100, bottom: 100 };
-export const navBarCircleRadius = 16;
+export const navBarPadding = { top: 40, bottom: 100 };
+export const navBarCircleRadius = 12;
 export const navBarCircleSpacing = 20;
 export const navBarScrollPadding = 140;
 

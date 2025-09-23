@@ -324,7 +324,32 @@ export class Renderer {
                 .attr("stroke", "#cccccc")
                 .attr("stroke-width", 1);
 
-            y += navBarCircleRadius * 2 + navBarCircleSpacing;
+            const textElement = circleGroup.append('text')
+                .attr('y', y + navBarCircleRadius + 14) // y-position of the first line
+                .attr('text-anchor', 'middle')
+                .style('font-size', '10px')
+                .style('fill', '#444')
+                .style('user-select', 'none');
+
+            const words = groupName.split(/\s+/).reverse();
+            let word;
+            let line = [];
+            const maxWidth = navBarWidth - 16;
+            let tspan = textElement.append("tspan").attr("x", centerX);
+
+            while (word = words.pop()) {
+                line.push(word);
+                tspan.text(line.join(" "));
+                if (tspan.node().getComputedTextLength() > maxWidth) {
+                    line.pop();
+                    tspan.text(line.join(" "));
+                    line = [word];
+                    tspan = textElement.append("tspan").attr("x", centerX).attr("dy", "1.2em").text(word);
+                }
+            }
+
+            const textHeight = textElement.node().getBBox().height;
+            y += (navBarCircleRadius * 2) + textHeight + navBarCircleSpacing;
         });
     }
 
@@ -500,11 +525,11 @@ export class Renderer {
                 const zoomRatio = zoomExtent / this.previousZoomExtent;
                 this.sideBarScrollExtent *= zoomRatio;
             }
-            this.sidebarContent.attr("transform", `translate(0, ${this.sideBarScrollExtent}), scale(${zoomExtent})`);
+            this.sidebarContent.attr("transform", `translate(0, ${this.sideBarScrollExtent}) scale(${zoomExtent})`);
         }
         
-        const totalWidth = (this.cachedBlockListWidth || this.calculateBlockListWidth()) + navBarWidth;
-        const newWidth = totalWidth * zoomExtent;
+        const blockListWidth = this.cachedBlockListWidth || this.calculateBlockListWidth();
+        const newWidth = navBarWidth + blockListWidth * zoomExtent;
 
         d3.select("#sidebar rect").attr("width", newWidth);
         this.previousZoomExtent = zoomExtent;
