@@ -1,4 +1,5 @@
 import { Block } from "@/models/block";
+import { Phrase } from "@/models/grammar-entities";
 import { Generator } from "@/grammar/generator";
 
 const generator = new Generator();
@@ -15,7 +16,7 @@ interface SimpleAdverbConfig {
 }
 
 const createSimpleAdverbBlock = ({ id, word, translation, advType = 'skill', gradable = true, color = 'Coral' }: SimpleAdverbConfig): Block => {
-    const targets = [] as { head: Record<string, unknown> }[];
+    const targets: Phrase[] = [];
     if (advType === 'skill' || advType === 'both') {
         targets.push({ head: { type: 'verb', adv_manner_type: 'skill' } });
     }
