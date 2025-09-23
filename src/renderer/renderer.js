@@ -331,7 +331,7 @@ export class Renderer {
                 .style('fill', '#444')
                 .style('user-select', 'none');
 
-            const words = groupName.split(/\s+/).reverse();
+            const words = groupName.split('').reverse();
             let word;
             let line = [];
             const maxWidth = navBarWidth - 16;
@@ -339,10 +339,10 @@ export class Renderer {
 
             while (word = words.pop()) {
                 line.push(word);
-                tspan.text(line.join(" "));
+                tspan.text(line.join(""));
                 if (tspan.node().getComputedTextLength() > maxWidth) {
                     line.pop();
-                    tspan.text(line.join(" "));
+                    tspan.text(line.join(""));
                     line = [word];
                     tspan = textElement.append("tspan").attr("x", centerX).attr("dy", "1.2em").text(word);
                 }
