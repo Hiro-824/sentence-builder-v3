@@ -43,6 +43,7 @@ export class Renderer {
         this.sidebarSearchGroup = null;
         this.sidebarSearchHitbox = null;
         this.sidebarSearchForeignObject = null;
+        this.sidebarSearchShadowPadding = 4;
         this.sidebarScrollContainer = null;
         this.sidebarContent = null;
         this.sidebarContentContainer = null;
@@ -550,19 +551,25 @@ export class Renderer {
 
         const blockListWidth = (this.cachedBlockListWidth ?? this.calculateBlockListWidth()) || 0;
         const leftOffset = sidebarSearchPadding.horizontal * effectiveZoom;
+        const focusPadding = this.sidebarSearchShadowPadding || 0;
         const availableWidth = Math.max(0, (blockListWidth - sidebarSearchPadding.horizontal - sidebarPadding.right) * effectiveZoom);
-        const hitboxWidth = Math.max(0, blockListWidth * effectiveZoom);
+        const totalWidth = availableWidth + focusPadding * 2;
+        const hitboxWidth = Math.max(0, blockListWidth * effectiveZoom + focusPadding * 2);
 
         this.sidebarSearchGroup.attr("transform", `translate(${leftOffset}, 0)`);
 
         if (this.sidebarSearchHitbox) {
             this.sidebarSearchHitbox
-                .attr("x", -leftOffset)
+                .attr("x", -leftOffset - focusPadding)
                 .attr("width", hitboxWidth);
         }
 
         if (this.sidebarSearchForeignObject) {
-            this.sidebarSearchForeignObject.attr("width", availableWidth);
+            this.sidebarSearchForeignObject
+                .attr("x", -focusPadding)
+                .attr("y", sidebarSearchPadding.top - focusPadding)
+                .attr("width", totalWidth)
+                .attr("height", sidebarSearchHeight + focusPadding * 2);
         }
     }
 
@@ -576,29 +583,31 @@ export class Renderer {
         const blockListWidth = this.calculateBlockListWidth();
         const searchWidth = blockListWidth - sidebarSearchPadding.horizontal - sidebarPadding.right;
         const containerHeight = this.getSidebarSearchAreaHeight();
+        const focusPadding = this.sidebarSearchShadowPadding || 0;
 
         // Add a transparent rectangle to catch mouse events and prevent them from propagating to the canvas.
         this.sidebarSearchHitbox = searchGroup.append("rect")
-            .attr("x", -sidebarSearchPadding.horizontal)
+            .attr("x", -sidebarSearchPadding.horizontal - focusPadding)
             .attr("y", 0)
-            .attr("width", blockListWidth)
+            .attr("width", blockListWidth + focusPadding * 2)
             .attr("height", containerHeight)
             .attr("fill", "transparent")
             .on("mousedown", (event) => event.stopPropagation());
 
         const foreignObject = searchGroup.append("foreignObject")
-            .attr("x", 0)
-            .attr("y", sidebarSearchPadding.top)
-            .attr("width", searchWidth)
-            .attr("height", sidebarSearchHeight);
+            .attr("x", -focusPadding)
+            .attr("y", sidebarSearchPadding.top - focusPadding)
+            .attr("width", searchWidth + focusPadding * 2)
+            .attr("height", sidebarSearchHeight + focusPadding * 2);
 
         this.sidebarSearchForeignObject = foreignObject;
 
         const container = foreignObject.append("xhtml:div")
             .style("display", "flex")
             .style("align-items", "center")
-            .style("width", "100%")
-            .style("height", "100%")
+            .style("width", `calc(100% - ${focusPadding * 2}px)`)
+            .style("height", `calc(100% - ${focusPadding * 2}px)`)
+            .style("margin", `${focusPadding}px`)
             .style("gap", "8px")
             .style("padding", "8px 12px")
             .style("border-radius", `${sidebarSearchBorderRadius}px`)
