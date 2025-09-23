@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Converter } from "@/grammar/converter";
 import { Grammar } from "@/grammar/grammar";
-import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding, resolvedGapRadius, initialVisibleCount, visiblilityIncrement, buttonRadius, iconSize, navBarWidth, navBarCircleRadius, navBarCircleSpacing, navBarPadding } from "./const.js";
+import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding, resolvedGapRadius, initialVisibleCount, visiblilityIncrement, buttonRadius, iconSize, navBarWidth, navBarCircleRadius, navBarCircleSpacing, navBarPadding, navBarScrollPadding } from "./const.js";
 import { createBlockSnapshot, createBlockSnapshotList } from "@/utils/supabase/logging_helpers";
 import * as d3 from "d3";
 
@@ -332,8 +332,11 @@ export class Renderer {
         const targetY = this.categoryScrollTargets[groupName];
         if (targetY === undefined) return;
 
+        // Adjust the target Y-position to leave padding at the top, ensuring the category title is visible.
+        const adjustedTargetY = Math.max(0, targetY - navBarScrollPadding);
+
         const zoomExtent = d3.zoomTransform(this.grid.node()).k;
-        let newScrollExtent = -(targetY * zoomExtent);
+        let newScrollExtent = -(adjustedTargetY * zoomExtent);
 
         // Clamp the target scroll position within valid bounds
         const scrollableHeight = this.canvasHeight;
