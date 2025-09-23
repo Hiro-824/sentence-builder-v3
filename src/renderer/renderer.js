@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Converter } from "@/grammar/converter";
 import { Grammar } from "@/grammar/grammar";
-import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding, resolvedGapRadius, initialVisibleCount, visiblilityIncrement, buttonRadius, iconSize } from "./const.js";
+import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding, resolvedGapRadius, initialVisibleCount, visiblilityIncrement, buttonRadius, iconSize, navBarWidth, navBarCircleRadius, navBarCircleSpacing, navBarPadding } from "./const.js";
 import { createBlockSnapshot, createBlockSnapshotList } from "@/utils/supabase/logging_helpers";
 import * as d3 from "d3";
 
@@ -30,7 +30,10 @@ export class Renderer {
         this.hoverLogContext = null;
 
         // Initialize cache
-        this.cachedSidebarWidth = null;
+        this.cachedBlockListWidth = null;
+        // To store the Y-position of each category for quick scrolling
+        this.categoryScrollTargets = {};
+
 
         // Update translation for all initial blocks
         this.blocks.forEach(block => this.updateBlockTranslation(block));
@@ -76,7 +79,7 @@ export class Renderer {
         this.canvasHeight = window.innerHeight - this.topBarHeight;
 
         // Clear cache on resize
-        this.cachedSidebarWidth = null;
+        this.cachedBlockListWidth = null;
 
         // Update sidebar background height
         const sidebarBackground = d3.select("#sidebar-background");
@@ -101,7 +104,7 @@ export class Renderer {
 
     render() {
         // Clear cache when re-rendering
-        this.cachedSidebarWidth = null;
+        this.cachedBlockListWidth = null;
 
         this.renderGrid();
         this.renderSideBar();
@@ -249,7 +252,8 @@ export class Renderer {
         // Remove the entire sidebar group
         d3.select("#sidebar").remove();
 
-        const width = this.calculateSideBarWidth();
+        const blockListWidth = this.calculateBlockListWidth();
+        const totalWidth = blockListWidth + navBarWidth;
         const height = window.innerHeight;
 
         this.sidebar = this.svg.append("g")
@@ -259,7 +263,7 @@ export class Renderer {
         // Add the sidebar background
         this.sidebar.append("rect")
             .attr("id", "sidebar-background")
-            .attr("width", width)
+            .attr("width", totalWidth)
             .attr("height", height)
             .attr("fill", "#fafafa")
             .attr("stroke", "#f0f0f0")
@@ -268,14 +272,22 @@ export class Renderer {
                 event.stopPropagation();
             });
 
-        this.renderSideBarContent();
+        const navBarGroup = this.sidebar.append("g")
+            .attr("id", "sidebar-nav");
+
+        const contentGroup = this.sidebar.append("g")
+            .attr("id", "sidebar-content-container")
+            .attr("transform", `translate(${navBarWidth}, 0)`);
+
+        this.renderNavBar(navBarGroup);
+        this.renderSideBarContent(contentGroup);
         this.enableSideBarScroll();
     }
 
-    calculateSideBarWidth() {
+    calculateBlockListWidth() {
         // Use cached value if available
-        if (this.cachedSidebarWidth) {
-            return this.cachedSidebarWidth;
+        if (this.cachedBlockListWidth) {
+            return this.cachedBlockListWidth;
         }
 
         let maxWidth = 0;
@@ -286,18 +298,74 @@ export class Renderer {
             });
         });
         // Add padding for the sidebar
-        this.cachedSidebarWidth = maxWidth + sidebarPadding.right + sidebarPadding.left * 2;
-        return this.cachedSidebarWidth;
+        const blockListWidth = maxWidth + sidebarPadding.right + sidebarPadding.left * 2;
+        this.cachedBlockListWidth = blockListWidth;
+        return blockListWidth;
     }
 
-    renderSideBarContent() {
-        this.sidebarContent = this.sidebar.append("g");
+    renderNavBar(navBarGroup) {
+        let y = navBarPadding.top;
+        const centerX = navBarWidth / 2;
+        const categoryNames = Object.keys(this.blockList);
+
+        categoryNames.forEach(groupName => {
+            const circleGroup = navBarGroup.append("g")
+                .style("cursor", "pointer")
+                .on("mousedown", (event) => {
+                    event.stopPropagation();
+                    this.scrollToCategory(groupName);
+                });
+
+            circleGroup.append("circle")
+                .attr("cx", centerX)
+                .attr("cy", y)
+                .attr("r", navBarCircleRadius)
+                .attr("fill", "#e0e0e0")
+                .attr("stroke", "#cccccc")
+                .attr("stroke-width", 1);
+
+            y += navBarCircleRadius * 2 + navBarCircleSpacing;
+        });
+    }
+
+    scrollToCategory(groupName) {
+        const targetY = this.categoryScrollTargets[groupName];
+        if (targetY === undefined) return;
+
+        const zoomExtent = d3.zoomTransform(this.grid.node()).k;
+        let newScrollExtent = -(targetY * zoomExtent);
+
+        // Clamp the target scroll position within valid bounds
+        const scrollableHeight = this.canvasHeight;
+        const maxScroll = 0;
+        const minScroll = -(this.sideBarContentHeight * zoomExtent - scrollableHeight);
+        newScrollExtent = Math.max(minScroll, Math.min(maxScroll, newScrollExtent));
+
+        // Use a D3 transition on a temporary object to smoothly animate the scroll
+        const currentScroll = this.sideBarScrollExtent;
+        const dummy = {};
+        d3.select(dummy)
+            .transition()
+            .duration(500) // 500ms smooth scroll
+            .ease(d3.easeCubicOut)
+            .tween('scroll', () => {
+                const i = d3.interpolate(currentScroll, newScrollExtent);
+                return (t) => {
+                    this.sideBarScrollExtent = i(t);
+                    this.setBlockBoardTransform(); // Update the transform on each tick
+                };
+            });
+    }
+
+
+    renderSideBarContent(parentGroup) {
+        this.sidebarContent = parentGroup.append("g");
         this.blockBoard = this.sidebarContent.append("g").attr("transform", `translate(${sidebarPadding.left * 2}, 0)`);
 
         // Cache sidebar width calculation
-        const sidebarWidth = this.calculateSideBarWidth();
-        this.cachedSidebarWidth = sidebarWidth;
-        const headerWidth = sidebarWidth / 2;
+        const blockListWidth = this.calculateBlockListWidth();
+        this.cachedBlockListWidth = blockListWidth;
+        const headerWidth = blockListWidth / 2;
 
         let y = sidebarPadding.top;
         Object.entries(this.blockList).forEach(([groupName, blockArray]) => {
@@ -321,6 +389,9 @@ export class Renderer {
                 .style("letter-spacing", "-0.01em");
 
             y += 40;
+
+            // Store the calculated Y-position for the first block of this category
+            this.categoryScrollTargets[groupName] = y;
 
             blockArray.forEach((block) => {
                 y += blockListSpacing + this.renderSideBarBlock(block, this.generateRandomId(), y);
@@ -428,8 +499,10 @@ export class Renderer {
             }
             this.sidebarContent.attr("transform", `translate(0, ${this.sideBarScrollExtent}), scale(${zoomExtent})`);
         }
+        
+        const totalWidth = (this.cachedBlockListWidth || this.calculateBlockListWidth()) + navBarWidth;
+        const newWidth = totalWidth * zoomExtent;
 
-        const newWidth = this.calculateSideBarWidth() * zoomExtent;
         d3.select("#sidebar rect").attr("width", newWidth);
         this.previousZoomExtent = zoomExtent;
     }
@@ -459,7 +532,7 @@ export class Renderer {
 
     renderSidebarButton(y, text, onClickCallback) {
         // Cache button width calculation
-        const buttonWidth = this.cachedSidebarWidth ? this.cachedSidebarWidth - sidebarPadding.left * 4 : this.calculateSideBarWidth() - sidebarPadding.left * 4;
+        const buttonWidth = this.cachedBlockListWidth ? this.cachedBlockListWidth - sidebarPadding.left * 4 : this.calculateBlockListWidth() - sidebarPadding.left * 4;
         const buttonHeight = 56;
         const buttonCornerRadius = 28;
         const buttonFontSize = "24pt";
