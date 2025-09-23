@@ -309,6 +309,10 @@ export class Renderer {
         const categoryNames = Object.keys(this.blockList);
 
         categoryNames.forEach(groupName => {
+            const categoryColor = this.getCategoryColor(groupName);
+            const circleFill = categoryColor || "#e0e0e0";
+            const circleStroke = categoryColor ? this.darkenColor(categoryColor, 30) : "#cccccc";
+
             const circleGroup = navBarGroup.append("g")
                 .style("cursor", "pointer")
                 .on("mousedown", (event) => {
@@ -320,8 +324,8 @@ export class Renderer {
                 .attr("cx", centerX)
                 .attr("cy", y)
                 .attr("r", navBarCircleRadius)
-                .attr("fill", "#e0e0e0")
-                .attr("stroke", "#cccccc")
+                .attr("fill", circleFill)
+                .attr("stroke", circleStroke)
                 .attr("stroke-width", 1);
 
             const textElement = circleGroup.append('text')
@@ -351,6 +355,21 @@ export class Renderer {
             const textHeight = textElement.node().getBBox().height;
             y += (navBarCircleRadius * 2) + textHeight + navBarCircleSpacing;
         });
+    }
+
+    getCategoryColor(groupName) {
+        const blocks = this.blockList?.[groupName];
+        if (!Array.isArray(blocks)) {
+            return null;
+        }
+
+        for (const block of blocks) {
+            if (block?.color) {
+                return block.color;
+            }
+        }
+
+        return null;
     }
 
     scrollToCategory(groupName) {
