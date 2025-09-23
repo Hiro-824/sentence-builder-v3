@@ -600,11 +600,19 @@ export class Renderer {
             .style("width", "100%")
             .style("height", "100%")
             .style("gap", "8px")
-            .style("padding", "0 12px")
+            .style("padding", "8px 12px")
             .style("border-radius", `${sidebarSearchBorderRadius}px`)
-            .style("border", "1px solid #d0d0d0")
+            .style("border", "1px solid #e0e0e0")
             .style("background", "#ffffff")
-            .style("box-shadow", "0 2px 4px rgba(0,0,0,0.04)");
+            .style("box-shadow", "none")
+            .style("transition", "border-color 0.2s ease, box-shadow 0.2s ease");
+
+        const applyFocusState = (isFocused) => {
+            container
+                .style("border-color", isFocused ? "#007AFF" : "#e0e0e0")
+                .style("box-shadow", isFocused ? "0 0 0 2px rgba(0, 122, 255, 0.1)" : "none");
+        };
+        applyFocusState(false);
 
         // Search Icon
         const iconSelection = container.append("xhtml:span")
@@ -612,7 +620,7 @@ export class Renderer {
             .style("display", "flex")
             .style("align-items", "center")
             .style("justify-content", "center")
-            .style("color", "#888888");
+            .style("color", "#9b9b9b");
 
         iconSelection.html('<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>');
 
@@ -625,9 +633,13 @@ export class Renderer {
             .style("height", "100%")
             .style("border", "none")
             .style("outline", "none")
-            .style("font-size", `${blockListFontSize * 0.6}pt`)
+            .style("font-size", "15px")
+            .style("line-height", "1.4")
             .style("background", "transparent")
-            .style("color", "#222222");
+            .style("color", "#222222")
+            .style("margin", "0")
+            .style("padding", "0")
+            .style("font-family", "inherit");
 
         // Inject CSS to hide the browser's default clear button for search inputs
         const styleId = 'search-input-style';
@@ -660,6 +672,8 @@ export class Renderer {
         });
         inputSelection.on("mousedown", (event) => event.stopPropagation());
         inputSelection.on("click", (event) => event.stopPropagation());
+        inputSelection.on("focus", () => applyFocusState(true));
+        inputSelection.on("blur", () => applyFocusState(false));
 
         this.searchInputElement = inputNode;
 
@@ -675,7 +689,7 @@ export class Renderer {
             .style("border-radius", "50%")
             .style("background", "transparent")
             .style("cursor", "pointer")
-            .style("font-size", `${blockListFontSize * 0.7}pt`)
+            .style("font-size", "16px")
             .style("color", "#666666")
             .text("×");
 
