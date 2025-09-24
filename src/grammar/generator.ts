@@ -55,17 +55,14 @@ export interface VerbTranslations {
     noun: VerbTranslation;
 }
 
-export interface VerbArgumentStructure {
+export interface VerbConfig {
+    id: string;
+    forms: VerbForms;
     complements: {
         expected: Phrase;
         particle: string;
     }[];
-}
-
-export interface VerbConfig {
-    id: string;
-    forms: VerbForms;
-    argumentStructures?: VerbArgumentStructure[];
+    transitive: boolean;
     gerundSubject: boolean;
     toSubject: boolean;
     translations: VerbTranslations;
@@ -192,7 +189,8 @@ export class Generator {
             right: [{
                 head: { type: noun, agr: {} }
             }],
-            // Keep determiner agreement in sync with the noun.
+            // This unification ensures the determiner phrase inherits the
+            // agreement features of the noun it modifies.
             customUnification: [
                 [["head", "agr"], ["right", 0, "head", "agr"]]
             ],
@@ -217,7 +215,8 @@ export class Generator {
         return {
             head: {
                 type: pronoun,
-                // Standalone possessive pronouns act like 3rd-person nominals (e.g., "Mine is red.")
+                // A standalone possessive pronoun often behaves as a 3rd person nominal.
+                // e.g., "Mine *is* red." not "Mine *am* red."
                 agr: { per: 3, num: number },
             },
             translationTemplates: {
@@ -277,7 +276,8 @@ export class Generator {
             forms.reflexive
         ];
 
-        // Only show the noun slot when the possessive determiner is selected.
+        // The placeholder for the noun (e.g., for "my book") should only be visible
+        // when the possessive determiner is selected in the dropdown.
         const possessiveDetIndex = dropdownContent.indexOf(forms.possessiveDet);
 
         return {
@@ -298,8 +298,8 @@ export class Generator {
                 id: "complement",
                 type: "placeholder",
                 content: null,
-                hidden: true, // Revealed by selection logic
-                headIndex: [possessiveDetIndex], // Link to the possessive form
+                hidden: true, // Hide by default, logic will show it
+                headIndex: [possessiveDetIndex], // Link to the 'my' form
             }]
         };
     }
@@ -359,12 +359,12 @@ export class Generator {
         const sharedAgr = { type: "non-3sing", num: "pl", per: 3 };
         const sharedTranslation = { default: [translation] };
         return [
-            // Determiner phrase form
+            // Category 1: A full determiner phrase (can be a subject/object)
             {
                 head: { type: det, agr: sharedAgr },
                 translationTemplates: sharedTranslation
             },
-            // Bare noun form
+            // Category 2: A simple noun (can be modified by another determiner)
             {
                 head: { type: noun, agr: sharedAgr },
                 translationTemplates: sharedTranslation
@@ -376,12 +376,12 @@ export class Generator {
         const sharedAgr = { type: "3sing" };
         const sharedTranslation = { default: [translation] };
         return [
-            // Determiner phrase form
+            // Category 1: A full determiner phrase (can be a subject/object)
             {
                 head: { type: det, agr: sharedAgr, count: false },
                 translationTemplates: sharedTranslation
             },
-            // Bare noun form
+            // Category 2: A simple noun (can be modified by another determiner)
             {
                 head: { type: noun, agr: sharedAgr, count: false },
                 translationTemplates: sharedTranslation
@@ -464,7 +464,7 @@ export class Generator {
     }
 
     private createVerbCategory(config: VerbConfig, form: "base" | "es" | "ed" | "ing" | "perfect" | "passive"): Phrase[] {
-        const finalCategories: Phrase[] = [];
+        const categories: Phrase[] = [];
         const subjectType: FeatureStructure = {
             type: "nominal",
             isDet: true
@@ -477,50 +477,54 @@ export class Generator {
             subjectType.isTo = false;
         }
 
-        const initialTemplates: Partial<Phrase>[] = [];
         switch (form) {
             case "base":
-                initialTemplates.push({
+                categories.push({
                     head: { type: "verb", tense: "present", finite: true, form: "base" },
                     left: [{ head: { type: det, agr: { type: "non-3sing" }, case: "nom", isSubject: true } }],
                     translation: config.translations.present,
                 });
-                initialTemplates.push({
+                categories.push({
                     head: { type: "verb", finite: false, form: "base" },
                     left: [{ head: { type: subjectType } }],
                     translation: config.translations.present,
                 });
                 break;
             case "es":
-                initialTemplates.push({
+                categories.push({
                     head: { type: "verb", tense: "present", finite: true, form: "es" },
                     left: [{ head: { type: subjectType, agr: { type: "3sing" }, case: "nom" } }],
                     translation: config.translations.present,
                 });
                 break;
             case "ed":
-                initialTemplates.push({
+                categories.push({
                     head: { type: "verb", tense: "past", finite: true, form: "ed" },
                     left: [{ head: { type: subjectType, case: "nom" } }],
                     translation: config.translations.past,
                 });
                 break;
             case "ing":
-                initialTemplates.push({
+                categories.push({
                     head: { type: "verb", finite: false, form: "progressive" },
                     left: [{ head: { type: subjectType, isSubject: true } }],
                     translation: config.translations.progressive,
                 });
+                categories.push({
+                    head: { type: { type: "nominal", isGerund: true, isSubject: true }, agr: { type: "3sing" } },
+                    left: [{ head: { type: subjectType } }],
+                    translation: config.translations.noun,
+                });
                 break;
             case "perfect":
-                initialTemplates.push({
+                categories.push({
                     head: { type: "verb", finite: false, form: "perfect" },
                     left: [{ head: { type: subjectType, isSubject: true } }],
                     translation: config.translations.perfect,
                 });
                 break;
             case "passive":
-                initialTemplates.push({
+                categories.push({
                     head: { type: "verb", finite: false, form: "passive" },
                     left: [{ head: { type: subjectType, isSubject: true } }],
                     translation: config.translations.passive ?? {},
@@ -528,82 +532,41 @@ export class Generator {
                 break;
         }
 
-        const argumentStructures = (config.argumentStructures?.length)
-            ? config.argumentStructures
-            : [{ complements: [] }];
-
-        for (const template of initialTemplates) {
-            for (const argStruct of argumentStructures) {
-                const category = { ...template } as Phrase;
-                category.right = argStruct.complements.map(c => c.expected);
-
-                const complementsForTranslation = (form === "passive" && argStruct.complements.length > 0)
-                    ? argStruct.complements.slice(1)
-                    : argStruct.complements;
-
-                const translationTemplates: TranslationTemplates = {};
-                if (category.translation) {
-                    Object.entries(category.translation).forEach(([key, translationWord]) => {
-                        translationTemplates[key] = [
-                            ...complementsForTranslation.map((complement, index) => ({
-                                path: ["right", index],
-                                key: "default",
-                                particle: complement.particle
-                            })),
-                            translationWord as string
-                        ];
-                    });
-                }
-                category.translationTemplates = translationTemplates;
-                delete category.translation;
-                category.head.adv_manner_type = config.adv_manner_type || "none";
-                finalCategories.push(category);
+        return categories.map((category) => {
+            if (config.adv_manner_type) {
+                category.head.adv_manner_type = config.adv_manner_type;
+            } else {
+                category.head.adv_manner_type = "none";
             }
-        }
-
-        if (form === 'ing') {
-            for (const argStruct of argumentStructures) {
-                const gerundNounCategory: Phrase = {
-                    head: { type: { type: "nominal", isGerund: true, isSubject: true }, agr: { type: "3sing" } },
-                    left: [{ head: { type: subjectType } }],
-                    right: argStruct.complements.map(c => c.expected),
-                    translation: config.translations.noun,
-                    translationTemplates: {}
-                };
-
-                const translationTemplates: TranslationTemplates = {};
-                if (gerundNounCategory.translation) {
-                    Object.entries(gerundNounCategory.translation).forEach(([key, translationWord]) => {
-                        translationTemplates[key] = [
-                            ...argStruct.complements.map((complement, index) => ({
-                                path: ["right", index],
-                                key: "default",
-                                particle: complement.particle
-                            })),
-                            translationWord as string
-                        ];
-                    });
-                }
-                gerundNounCategory.translationTemplates = translationTemplates;
-                delete gerundNounCategory.translation;
-                finalCategories.push(gerundNounCategory);
+            const translationTemplates: TranslationTemplates = {};
+            if (category.translation) {
+                Object.entries(category.translation).forEach(([key, translationWord]) => {
+                    const complementsToUse = form === "passive" ? config.complements.slice(1) : config.complements; //受動態は訳の目的語が消える
+                    translationTemplates[key] = [
+                        ...complementsToUse.map((complement, index) => ({
+                            path: ["right", index],
+                            key: "default",
+                            particle: complement.particle
+                        })),
+                        translationWord as string
+                    ];
+                });
             }
-        }
-
-        return finalCategories;
+            return {
+                head: category.head,
+                left: category.left,
+                right: [...config.complements.map(complement => complement.expected)],
+                translationTemplates
+            };
+        })
     }
 
-
     createVerbBlock(config: VerbConfig): Block {
-        const { id, forms } = config;
+        const { id, forms, transitive } = config;
         const color = config.color || "tomato";
 
-        const isTransitive = config.argumentStructures?.some(s => s.complements.length > 0) ?? false;
-
         const heads = Object.values(forms);
-        if (isTransitive) {
-            heads.push(forms.en);
-        }
+        if (transitive) heads.push(forms.en);
 
         const words = [
             {
@@ -626,22 +589,21 @@ export class Generator {
                 token: `${forms.ing}(ing)`,
                 categories: this.createVerbCategory(config, "ing")
             },
-            ...(isTransitive ? [{
+            ...(transitive ? [{
                 token: `${forms.en}(passive)`,
                 categories: this.createVerbCategory(config, "passive")
             }] : [])
-        ];
+        ]
 
-        const maxComplements = config.argumentStructures
-            ? Math.max(0, ...config.argumentStructures.map(s => s.complements.length))
-            : 0;
-
-        const placeholders: BlockChild[] = Array.from({ length: maxComplements }, (_, index) => ({
-            id: `complement-${index}`,
-            type: "placeholder",
-            content: null,
-            hidden: false,
-        }));
+        const placeholders: BlockChild[] = config.complements.map((_, index) => {
+            return {
+                id: `complement-${index}`,
+                type: "placeholder",
+                content: null,
+                hidden: false,
+                headIndex: index === 0 ? [0, 1, 2, 3, 4] : undefined,
+            }
+        });
 
         return {
             id: id,
@@ -657,7 +619,7 @@ export class Generator {
                 hidden: false,
             },
             ...placeholders]
-        };
+        }
     }
 
     createAdjectiveBlock(config: AdjectiveConfig): Block {
@@ -896,19 +858,21 @@ export class Generator {
             words: [{
                 token: config.word,
                 categories: [{
-                    // Combined phrase, e.g., "every day"
-                    head: { type: "temporal-adv" }, // Custom type for these adverbials
+                    // This is the definition for the combined phrase, e.g., "every day"
+                    head: { type: "temporal-adv" }, // A custom type for this kind of adverbial
                     right: [{
-                        // Expects a noun complement
+                        // It expects one argument on its right: a noun.
                         head: { type: noun, agr: { type: "3sing" } }
                     }],
-                    // Can modify sentences or verbs
+                    // This defines what the resulting phrase can modify.
+                    // It can be a right-hand modifier for a sentence or a verb.
                     leftModTargets: [
                         { head: { type: "sentence" } },
                         { head: { type: "verb" } },
                     ],
                     translationTemplates: {
-                        // Prefix the complement translation (e.g., "毎" + "日" -> "毎日")
+                        // The translation prepends the prefix to the complement's translation.
+                        // e.g., "毎" + "日" -> "毎日"
                         default: [config.translationPrefix, { path: ["right", 0], key: "default" }]
                     }
                 }]
@@ -1477,7 +1441,7 @@ export class Generator {
         const head: FeatureStructure = { type: "sentence", inverted: true, question: true, negative: false, finite: true, form: form };
         if (tense) head.tense = tense;
 
-        // Subject and base verb both sit on the right.
+        // The subject is the first argument to the right, and the base verb is the second.
         const subject: Phrase = { head: { type: { type: "nominal", isDet: true, isTo: false, isGerund: false }, case: "nom", isSubject: true, agr: agr ?? {} } };
         const verb: Phrase = { head: { type: "verb", form: "base" } };
 
@@ -1566,12 +1530,12 @@ export class Generator {
                     "did",
                 ]
             }, {
-                id: "specifier", // Subject slot
+                id: "specifier", // Placeholder for the subject
                 hidden: false,
                 type: "placeholder",
                 content: undefined,
             }, {
-                id: "complement", // Base verb slot
+                id: "complement", // Placeholder for the main verb (in base form)
                 hidden: false,
                 type: "placeholder",
                 content: undefined,
@@ -1629,7 +1593,7 @@ export class Generator {
         const head: FeatureStructure = {
             type: "sentence",
             finite: true,
-            negative: true, // Mark as negative
+            negative: true, // Key feature for negation
             inverted: false,
             form: form
         };
@@ -1637,7 +1601,7 @@ export class Generator {
 
         const left: Phrase = { head: { type: { type: "nominal", isDet: true }, case: "nom", agr: agr ?? {} } };
 
-        // Require a perfect-form verb (e.g., "seen")
+        // The complement MUST be a verb in its perfect form (e.g., "seen", "done").
         const right: Phrase = {
             head: { type: "verb", form: "perfect" },
             gaps: [{ head: { type: { type: "nominal", isDet: true } } }]
@@ -1671,13 +1635,13 @@ export class Generator {
             type: "sentence",
             finite: true,
             negative: false,
-            inverted: true, // Subject-aux inversion
+            inverted: true, // Key feature for Subject-Auxiliary Inversion
             question: true,
             form: form
         };
         if (tense) head.tense = tense;
 
-        // Inverted forms place subject and complement on the right.
+        // In inverted structures, both subject and complement are on the right.
         const subject: Phrase = { head: { type: { type: "nominal", isDet: true }, case: "nom", agr: agr ?? {} } };
         const complement: Phrase = { head: { type: "verb", form: "perfect" } };
 
@@ -1696,7 +1660,7 @@ export class Generator {
 
         return [{
             head: head,
-            right: [subject, complement], // Subject followed by VP
+            right: [subject, complement], // Argument order: Subject, then VP
             translationTemplates: translationTemplates
         }];
     }
@@ -1947,15 +1911,15 @@ export class Generator {
             words: [{
                 token: "",
                 categories: [{
-                    // Negative finite modal sentence
+                    // The head indicates this is a finite, but now negative, sentence.
                     head: {
                         type: "sentence",
                         finite: true,
                         inverted: false,
-                        negative: true, // Negative clause marker
+                        negative: true, // Key change: this is a negative clause
                         modal: true
                     },
-                    // Arguments mirror the positive modal
+                    // The structure of arguments remains the same as a positive modal.
                     left: [{
                         head: { type: { type: "nominal", isDet: true }, case: "nom" }
                     }],
@@ -1976,7 +1940,7 @@ export class Generator {
                                 path: ["right", 0],
                                 key: translationKey ?? "default",
                             },
-                            // Use modal-specific negative string
+                            // Use the specific negative translation
                             negativeTranslation
                         ],
                         nominal: [
@@ -1990,14 +1954,14 @@ export class Generator {
                                 path: ["right", 0],
                                 key: translationKey ?? "default",
                             },
-                            // Use modal-specific negative string
+                            // Use the specific negative translation
                             negativeTranslation
                         ]
                     }
                 }]
             }],
             color: color,
-            // Share layout with the positive modal
+            // The visual block structure is identical to the positive modal
             children: [
                 {
                     id: "specifier", // Subject
