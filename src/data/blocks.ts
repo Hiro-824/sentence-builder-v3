@@ -38,8 +38,9 @@ export const blockTo: Block = {
             head: { type: { type: "nominal", isTo: true, isDet: true }, agr: { type: "3sing" } },
             right: [{ head: { type: "verb", form: "base" } }],
             translationTemplates: {
-                default: [{ path: ["right", 0], key: "default" }, "こと"],
-                base: [{ path: ["right", 0], key: "default" }]
+                imperfective: [{ path: ["right", 0], key: "default" }, "こと"],
+                base: [{ path: ["right", 0], key: "default" }],
+                default: [{ path: ["right", 0], key: "continuous" }]
             }
         }]
     }],

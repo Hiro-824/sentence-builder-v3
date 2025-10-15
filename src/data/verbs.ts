@@ -232,15 +232,15 @@ const configLook: VerbConfig = {
 const configWant: VerbConfig = {
     id: "want_verb",
     forms: { base: "want", es: "wants", ed: "wanted", en: "wanted", ing: "wanting" },
-    complements: [{ expected: { head: { type: det, case: "acc" } }, particle: "が" }],
+    complements: [{ expected: { head: { type: { type: "nominal", isTo: true } } }, particle: "" }],
     transitive: true,
     translations: {
-        present: { default: "欲しがる", imperfective: "欲しがら", past: "欲しがった" },
-        past: { default: "欲しがった" },
-        progressive: { default: "欲しがっているところ", nonPredicate: "欲しがっている" },
-        perfect: { default: "既に欲しがってい" },
-        passive: { default: "欲しがられ" },
-        noun: { default: "欲しがること" }
+        present: { default: "たい", imperfective: "たく", past: "たかった" },
+        past: { default: "たかった" },
+        progressive: { default: "たいと思っているところ", nonPredicate: "たいと思っている" },
+        perfect: { default: "たいと思ってい" },
+        passive: { default: "たがられ" },
+        noun: { default: "たいこと" }
     },
     gerundSubject: true,
     toSubject: true,
@@ -770,15 +770,15 @@ const configRead: VerbConfig = {
 const configLike: VerbConfig = {
     id: "like_verb",
     forms: { base: "like", es: "likes", ed: "liked", en: "liked", ing: "liking" },
-    complements: [{ expected: { head: { type: det, case: "acc" } }, particle: "が" }],
+    complements: [{ expected: { head: { type: { type: "nominal" } } }, particle: "が" }],
     transitive: true,
     translations: {
-        present: { default: "好む", imperfective: "好ま", past: "好んだ" },
-        past: { default: "好んだ" },
-        progressive: { default: "好んでいるところ", nonPredicate: "好んでいる" },
-        perfect: { default: "既に好んでい" },
-        passive: { default: "好まれ" },
-        noun: { default: "好むこと" }
+        present: { default: "好きだ", imperfective: "好きでは", past: "好きだった" },
+        past: { default: "好きだった" },
+        progressive: { default: "好きでいるところ", nonPredicate: "好きでいる" },
+        perfect: { default: "既に好きでい" },
+        passive: { default: "好かれ" },
+        noun: { default: "好きなこと" }
     },
     gerundSubject: true,
     toSubject: true,
@@ -5170,7 +5170,7 @@ const configTalk: VerbConfig = {
     complements: [],
     transitive: false,
     translations: {
-        present: { default: "話す", imperfective: "話さ", past: "話した" },
+        present: { default: "話す", imperfective: "話さ", past: "話した", continuous: "話し" },
         past: { default: "話した" },
         progressive: { default: "話しているところ", nonPredicate: "話している" },
         perfect: { default: "既に話してい" },

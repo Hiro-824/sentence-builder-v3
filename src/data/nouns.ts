@@ -1277,6 +1277,14 @@ const configKid: NounConfig = {
     translation: "子供"
 };
 
+const configInterest: NounConfig = {
+    id: "noun_interest",
+    isCountable: true,
+    singularForm: "interest",
+    pluralForm: "interests",
+    translation: "興味"
+};
+
 export const blockBook = generator.createNounBlock(configBook);
 export const blockChild = generator.createNounBlock(configChild);
 export const blockInformation = generator.createNounBlock(configInformation);
@@ -1437,6 +1445,8 @@ export const blockPower = generator.createNounBlock(configPower);
 export const blockExample = generator.createNounBlock(configExample);
 export const blockKind = generator.createNounBlock(configKind);
 export const blockKid = generator.createNounBlock(configKid);
+export const blockEnglish = generator.createProperNounBlock("English", "英語");
+export const blockInterest = generator.createNounBlock(configInterest);
 
 export const blockJohn = generator.createProperNounBlock("John", "ジョン");
 export const blockMary = generator.createProperNounBlock("Mary", "メアリー");
@@ -1629,6 +1639,7 @@ const abstractConceptBlocks: Block[] = [
     blockAnswer,
     blockStory,
     blockLanguage,
+    blockEnglish,
     blockPower,
     blockExample,
     blockKind,
@@ -1637,6 +1648,7 @@ const abstractConceptBlocks: Block[] = [
     blockWay,
     blockSide,
     blockInformation,
+    blockInterest,
 ];
 
 export const allNounBlocks: Block[] = [
