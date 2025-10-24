@@ -9,6 +9,7 @@ interface Message {
     id: number;
     text: string;
     sender: 'user' | 'ai';
+    translation?: string;
 }
 
 interface Conversation {
@@ -37,20 +38,48 @@ const CUSTOM_SCENARIO_VALUE = 'custom';
 const LOCAL_STORAGE_KEY = 'aiTutorConversations';
 const CURRENT_CONVERSATION_KEY = 'aiTutorCurrentConversationId';
 
-const DEFAULT_GREETING = "Hi! Let's have a friendly chat. What would you like to talk about?";
+interface GreetingTemplate {
+    en: string;
+    ja: string;
+}
+
 const LEGACY_GREETING = 'Hello! How can I help you with your English practice today?';
-const SCENARIO_GREETINGS: Record<string, string> = {
-    cafe_ordering: 'Hi! Welcome to our cafe. What would you like today?',
-    new_school: "Hi! I'm your new classmate. How are you feeling today?",
-    picture_description: 'Hi! I cannot see the picture. What do you notice first?',
-    doctor_visit: 'Hello, I am the doctor today. How are you feeling?',
-    ask_directions: 'Hi! I can help with directions. Where do you need to go?',
+
+const DEFAULT_GREETING: GreetingTemplate = {
+    en: "Hi! Let's have a friendly chat. What would you like to talk about?",
+    ja: 'こんにちは！気軽に英語でおしゃべりしましょう。何について話したいですか？',
 };
 
-const getInitialGreeting = (options: { scenarioId: string | null; customScenario: string }): string => {
+const SCENARIO_GREETINGS: Record<string, GreetingTemplate> = {
+    cafe_ordering: {
+        en: 'Hi! Welcome to our cafe. What would you like today?',
+        ja: 'こんにちは！カフェへようこそ。今日は何を召し上がりますか？',
+    },
+    new_school: {
+        en: "Hi! I'm your new classmate. How are you feeling today?",
+        ja: 'やあ！私はあなたの新しいクラスメイトです。今日はどんな気分？',
+    },
+    picture_description: {
+        en: 'Hi! I cannot see the picture. What do you notice first?',
+        ja: 'こんにちは！その写真は見えないので、最初に何が目に入りましたか？',
+    },
+    doctor_visit: {
+        en: 'Hello, I am the doctor today. How are you feeling?',
+        ja: 'こんにちは、本日の担当医です。体調はいかがですか？',
+    },
+    ask_directions: {
+        en: 'Hi! I can help with directions. Where do you need to go?',
+        ja: 'こんにちは！道案内できますよ。どこに行きたいですか？',
+    },
+};
+
+const getInitialGreeting = (options: { scenarioId: string | null; customScenario: string }): GreetingTemplate => {
     const trimmedCustom = options.customScenario.trim();
     if (trimmedCustom) {
-        return `Hi! Let's practice ${trimmedCustom}. What would you like to say first?`;
+        return {
+            en: `Hi! Let's practice ${trimmedCustom}. What would you like to say first?`,
+            ja: `こんにちは！「${trimmedCustom}」の場面を一緒に練習しましょう。最初に何と言いたいですか？`,
+        };
     }
     if (options.scenarioId && SCENARIO_GREETINGS[options.scenarioId]) {
         return SCENARIO_GREETINGS[options.scenarioId];
@@ -72,11 +101,15 @@ const deriveTitleFromMessages = (messages: Message[], fallback: string) => {
     return truncateText(firstUserMessage.text.trim(), 40);
 };
 
-const createInitialMessage = (text?: string): Message => ({
-    id: generateMessageId(),
-    text: text ?? DEFAULT_GREETING,
-    sender: 'ai',
-});
+const createInitialMessage = (template?: GreetingTemplate): Message => {
+    const greeting = template ?? DEFAULT_GREETING;
+    return {
+        id: generateMessageId(),
+        text: greeting.en,
+        translation: greeting.ja,
+        sender: 'ai',
+    };
+};
 
 const createConversation = (
     labelIndex: number,
@@ -121,10 +154,12 @@ const sanitizeConversation = (value: unknown, index: number): Conversation | nul
                       return null;
                   }
                   const idValue = typeof message.id === 'number' ? message.id : generateMessageId();
+                  const translationValue = typeof message.translation === 'string' ? message.translation : undefined;
                   const parsedMessage: Message = {
                       id: idValue,
                       text: message.text,
                       sender: message.sender,
+                      translation: translationValue,
                   };
                   return parsedMessage;
               })
@@ -148,21 +183,28 @@ const sanitizeConversation = (value: unknown, index: number): Conversation | nul
     let normalizedMessages = sanitizedMessages;
 
     if (normalizedMessages.length === 0) {
-        const greeting = getInitialGreeting({
+        const greetingTemplate = getInitialGreeting({
             scenarioId: normalizedScenarioId,
             customScenario: trimmedCustomScenario,
         });
-        normalizedMessages = [createInitialMessage(greeting)];
+        normalizedMessages = [createInitialMessage(greetingTemplate)];
     } else {
         const containsUserMessage = normalizedMessages.some((msg) => msg.sender === 'user');
         if (!containsUserMessage && normalizedMessages[0]?.sender === 'ai') {
-            const greeting = getInitialGreeting({
+            const greetingTemplate = getInitialGreeting({
                 scenarioId: normalizedScenarioId,
                 customScenario: trimmedCustomScenario,
             });
             const [first, ...rest] = normalizedMessages;
-            if (first.text !== greeting && (first.text === LEGACY_GREETING || rest.length === 0)) {
-                normalizedMessages = [{ ...first, text: greeting }, ...rest];
+            if (first.text !== greetingTemplate.en && (first.text === LEGACY_GREETING || rest.length === 0)) {
+                normalizedMessages = [
+                    {
+                        ...first,
+                        text: greetingTemplate.en,
+                        translation: greetingTemplate.ja,
+                    },
+                    ...rest,
+                ];
             }
         }
     }
@@ -218,6 +260,7 @@ export const AiTutorTabContent = ({ projectId }: AiTutorTabContentProps) => {
     const [selectedScenarioId, setSelectedScenarioId] = useState<string>(NO_SCENARIO_VALUE);
     const [customScenarioInput, setCustomScenarioInput] = useState('');
     const [customScenarioError, setCustomScenarioError] = useState<string | null>(null);
+    const [visibleTranslations, setVisibleTranslations] = useState<Record<number, boolean>>({});
     const messageListRef = useRef<HTMLDivElement>(null);
 
     const storageKeys = useMemo(
@@ -465,12 +508,12 @@ export const AiTutorTabContent = ({ projectId }: AiTutorTabContentProps) => {
             return;
         }
 
-        const expectedGreeting = getInitialGreeting({
+        const greetingTemplate = getInitialGreeting({
             scenarioId: currentConversation.scenarioId,
             customScenario: currentConversation.customScenario ?? '',
         });
 
-        if (firstMessage.text === expectedGreeting) {
+        if (firstMessage.text === greetingTemplate.en && firstMessage.translation === greetingTemplate.ja) {
             return;
         }
 
@@ -482,16 +525,23 @@ export const AiTutorTabContent = ({ projectId }: AiTutorTabContentProps) => {
                 if (conv.messages.length === 0) {
                     return {
                         ...conv,
-                        messages: [createInitialMessage(expectedGreeting)],
+                        messages: [createInitialMessage(greetingTemplate)],
                     } as Conversation;
                 }
                 const [first, ...rest] = conv.messages;
-                if (!first || first.sender !== 'ai' || first.text === expectedGreeting) {
+                if (!first || first.sender !== 'ai') {
                     return conv;
                 }
                 return {
                     ...conv,
-                    messages: [{ ...first, text: expectedGreeting }, ...rest],
+                    messages: [
+                        {
+                            ...first,
+                            text: greetingTemplate.en,
+                            translation: greetingTemplate.ja,
+                        },
+                        ...rest,
+                    ],
                 } as Conversation;
             }),
         );
@@ -559,13 +609,14 @@ export const AiTutorTabContent = ({ projectId }: AiTutorTabContentProps) => {
                 }));
 
                 const scenarioId = trimmedCustomScenario ? undefined : conversation.scenarioId ?? undefined;
-                const aiText = await requestAiTutor(chatMessages, {
+                const response = await requestAiTutor(chatMessages, {
                     scenarioId,
                     customScenario: trimmedCustomScenario || undefined,
                 });
                 const aiMessage: Message = {
                     id: generateMessageId(),
-                    text: aiText,
+                    text: response.text,
+                    translation: response.translation,
                     sender: 'ai',
                 };
 
@@ -586,6 +637,7 @@ export const AiTutorTabContent = ({ projectId }: AiTutorTabContentProps) => {
                 const errorMessage: Message = {
                     id: generateMessageId(),
                     text: 'Sorry, something went wrong.',
+                    translation: 'ごめんなさい。問題が発生しました。',
                     sender: 'ai',
                 };
                 setConversations((prev) =>
@@ -639,6 +691,7 @@ export const AiTutorTabContent = ({ projectId }: AiTutorTabContentProps) => {
 
     useEffect(() => {
         setInputValue('');
+        setVisibleTranslations({});
     }, [currentConversationId]);
 
     useEffect(() => {
@@ -744,6 +797,13 @@ export const AiTutorTabContent = ({ projectId }: AiTutorTabContentProps) => {
         );
     };
 
+    const toggleTranslationVisibility = useCallback((messageId: number) => {
+        setVisibleTranslations((prev) => ({
+            ...prev,
+            [messageId]: !prev[messageId],
+        }));
+    }, []);
+
     const isCustomScenarioSelected = selectedScenarioId === CUSTOM_SCENARIO_VALUE;
     const isCustomScenarioValid = isScenarioLocked || !isCustomScenarioSelected || customScenarioInput.trim().length > 0;
     const isSendDisabled = isCurrentConversationPending || inputValue.trim() === '' || !isCustomScenarioValid;
@@ -821,14 +881,34 @@ export const AiTutorTabContent = ({ projectId }: AiTutorTabContentProps) => {
             </div>
 
             <div ref={messageListRef} className={styles.messageList}>
-                {messages.map((msg) => (
-                    <div
-                        key={msg.id}
-                        className={`${styles.messageBubble} ${msg.sender === 'user' ? styles.userMessage : styles.aiMessage}`}
-                    >
-                        {msg.text}
-                    </div>
-                ))}
+                {messages.map((msg) => {
+                    const isAi = msg.sender === 'ai';
+                    const translation = (msg.translation ?? '').trim();
+                    const isTranslationVisible = Boolean(translation) && Boolean(visibleTranslations[msg.id]);
+
+                    return (
+                        <div
+                            key={msg.id}
+                            className={`${styles.messageBubble} ${isAi ? styles.aiMessage : styles.userMessage}`}
+                        >
+                            <div className={styles.messageText}>{msg.text}</div>
+                            {isAi && translation && (
+                                <div className={styles.translationToggle}>
+                                    <button
+                                        type="button"
+                                        className={styles.translationButton}
+                                        onClick={() => toggleTranslationVisibility(msg.id)}
+                                    >
+                                        {isTranslationVisible ? '日本語訳を隠す' : '日本語訳を表示'}
+                                    </button>
+                                    {isTranslationVisible && (
+                                        <div className={styles.translationText}>{translation}</div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
                 {isCurrentConversationPending && (
                     <div className={`${styles.messageBubble} ${styles.aiMessage} ${styles.typingIndicator}`}>
                         <span></span>

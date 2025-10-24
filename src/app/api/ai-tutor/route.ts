@@ -101,6 +101,11 @@ For every message you send, follow these rules:
 - Brevity: Limit your response to a maximum of 3 sentences.
 - Tone: Be warm, friendly, and human.
 - Line breaks: Write each sentence on a new line.
+- Response structure: Always reply using this format exactly:
+  English:
+  <your English reply, following the rules above>
+  Japanese:
+  <a natural, easy-to-understand Japanese translation of your English reply>
 `;
 
 const openrouter = new OpenAI({
@@ -137,6 +142,28 @@ function createSystemPrompt(args: { scenario?: TutorScenario; customScenario?: s
   return `${BASE_TUTOR_RULES.trim()}\n\n${scenarioInstructions.trim()}`;
 }
 
+function parseTutorResponse(rawContent: unknown) {
+  if (typeof rawContent !== 'string') {
+    return { english: '', japanese: '' };
+  }
+
+  const content = rawContent.trim();
+  const sectionMatch = content.match(/English:\s*([\s\S]*?)\s*Japanese:\s*([\s\S]*)/i);
+
+  if (sectionMatch) {
+    const [, english, japanese] = sectionMatch;
+    return {
+      english: english.trim(),
+      japanese: japanese.trim(),
+    };
+  }
+
+  return {
+    english: content,
+    japanese: '',
+  };
+}
+
 export async function GET() {
   const scenarios = BUILT_IN_SCENARIOS.map(({ id, title, description }) => ({ id, title, description }));
   return NextResponse.json({ scenarios, allowCustomScenario: true });
@@ -169,9 +196,10 @@ export async function POST(req: Request) {
       messages: apiMessages,
     });
 
-    const aiText = completion.choices[0]?.message?.content;
+    const messageContent = completion.choices[0]?.message?.content ?? '';
+    const { english, japanese } = parseTutorResponse(messageContent);
 
-    return NextResponse.json({ text: aiText });
+    return NextResponse.json({ text: english, translation: japanese });
   } catch (err) {
     console.log(err);
     return NextResponse.json({ error: `AI request failed (${err})` }, { status: 500 });

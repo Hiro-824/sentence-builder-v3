@@ -8,7 +8,12 @@ export interface AiTutorRequestOptions {
     customScenario?: string;
 }
 
-export async function requestAiTutor(messages: ChatMessage[], options: AiTutorRequestOptions = {}): Promise<string> {
+export interface AiTutorResponse {
+    text: string;
+    translation?: string;
+}
+
+export async function requestAiTutor(messages: ChatMessage[], options: AiTutorRequestOptions = {}): Promise<AiTutorResponse> {
     const payload: Record<string, unknown> = { messages };
 
     if (options.scenarioId) {
@@ -30,5 +35,9 @@ export async function requestAiTutor(messages: ChatMessage[], options: AiTutorRe
     }
 
     const data = await res.json();
-    return data.text as string;
+
+    const text = typeof data?.text === 'string' ? data.text : '';
+    const translation = typeof data?.translation === 'string' ? data.translation : '';
+
+    return { text, translation };
 }
