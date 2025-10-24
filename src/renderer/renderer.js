@@ -1598,7 +1598,8 @@ export class Renderer {
             .attr("transform", `translate(${bubbleX}, ${bubbleY})`)
             .attr("pointer-events", "none");
 
-        const bubbleFill = this.lightenColor(block.color, 80);
+        const bubbleFill = this.getStructureBubbleColor(block.color);
+        const strokeColor = this.mixColor(bubbleFill, "#ffffff", 0.12);
 
         bubbleGroup.append("rect")
             .attr("width", bubbleWidth)
@@ -1606,7 +1607,9 @@ export class Renderer {
             .attr("fill", bubbleFill)
             .attr("opacity", 0.95)
             .attr("rx", blockCornerRadius)
-            .attr("ry", blockCornerRadius);
+            .attr("ry", blockCornerRadius)
+            .attr("stroke", strokeColor)
+            .attr("stroke-width", 1.5);
 
         let cursorY = bubblePaddingY;
 
@@ -1641,8 +1644,8 @@ export class Renderer {
 
             if (metric.tone === "warning" || metric.tone === "missing") {
                 const toneColor = metric.tone === "warning"
-                    ? "rgba(255, 171, 64, 0.28)"
-                    : "rgba(255, 255, 255, 0.18)";
+                    ? "rgba(255, 128, 82, 0.32)"
+                    : "rgba(255, 255, 255, 0.14)";
                 rowGroup.insert("rect", ":first-child")
                     .attr("x", -bubblePaddingX * 0.15)
                     .attr("y", -3)
@@ -1668,10 +1671,10 @@ export class Renderer {
                 .attr("x", metric.labelBox.width + columnGap)
                 .attr("y", 0)
                 .attr("fill", metric.tone === "warning"
-                    ? "#FFB347"
+                    ? "#FFB38A"
                     : metric.tone === "missing"
-                        ? "rgba(255,255,255,0.55)"
-                        : "#FFFFFF")
+                        ? "rgba(229, 231, 235, 0.65)"
+                        : "#F9FAFB")
                 .attr("font-size", `${labelFontSize - 1}pt`)
                 .attr("font-weight", metric.tone === "missing" ? "400" : "700")
                 .attr("dominant-baseline", "hanging")
@@ -1686,7 +1689,7 @@ export class Renderer {
                 .text(structure.note)
                 .attr("x", bubblePaddingX)
                 .attr("y", cursorY)
-                .attr("fill", "rgba(255,255,255,0.8)")
+                .attr("fill", "rgba(226,232,240,0.92)")
                 .attr("font-size", `${labelFontSize - 3}pt`)
                 .attr("font-weight", "400")
                 .attr("dominant-baseline", "hanging")
@@ -2688,5 +2691,26 @@ export class Renderer {
         rgb.g = Math.min(255, rgb.g + factor);
         rgb.b = Math.min(255, rgb.b + factor);
         return rgb;
+    }
+
+    mixColor(colorA, colorB, ratio) {
+        const a = d3.rgb(colorA);
+        const b = d3.rgb(colorB);
+        return d3.rgb(
+            a.r + (b.r - a.r) * ratio,
+            a.g + (b.g - a.g) * ratio,
+            a.b + (b.b - a.b) * ratio
+        );
+    }
+
+    getStructureBubbleColor(color) {
+        const base = d3.hsl(color);
+        if (Number.isNaN(base.h)) {
+            return this.mixColor("#1f2937", "#0f172a", 0.5);
+        }
+        const saturation = Math.min(0.85, base.s * 0.7 + 0.1);
+        const lightness = Math.min(0.32, Math.max(0.18, base.l * 0.45));
+        const toned = d3.hsl(base.h, saturation, lightness).rgb();
+        return this.mixColor(toned, "#0f172a", 0.55);
     }
 }
