@@ -36,7 +36,27 @@ const CUSTOM_SCENARIO_VALUE = 'custom';
 
 const LOCAL_STORAGE_KEY = 'aiTutorConversations';
 const CURRENT_CONVERSATION_KEY = 'aiTutorCurrentConversationId';
-const INITIAL_GREETING = 'Hello! How can I help you with your English practice today?';
+
+const DEFAULT_GREETING = "Hi! Let's have a friendly chat. What would you like to talk about?";
+const LEGACY_GREETING = 'Hello! How can I help you with your English practice today?';
+const SCENARIO_GREETINGS: Record<string, string> = {
+    cafe_ordering: 'Hi! Welcome to our cafe. What would you like today?',
+    new_school: "Hi! I'm your new classmate. How are you feeling today?",
+    picture_description: 'Hi! I cannot see the picture. What do you notice first?',
+    doctor_visit: 'Hello, I am the doctor today. How are you feeling?',
+    ask_directions: 'Hi! I can help with directions. Where do you need to go?',
+};
+
+const getInitialGreeting = (options: { scenarioId: string | null; customScenario: string }): string => {
+    const trimmedCustom = options.customScenario.trim();
+    if (trimmedCustom) {
+        return `Hi! Let's practice ${trimmedCustom}. What would you like to say first?`;
+    }
+    if (options.scenarioId && SCENARIO_GREETINGS[options.scenarioId]) {
+        return SCENARIO_GREETINGS[options.scenarioId];
+    }
+    return DEFAULT_GREETING;
+};
 
 const generateConversationId = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 const generateMessageId = () => Date.now() + Math.floor(Math.random() * 1000);
@@ -52,24 +72,33 @@ const deriveTitleFromMessages = (messages: Message[], fallback: string) => {
     return truncateText(firstUserMessage.text.trim(), 40);
 };
 
-const createInitialMessage = (): Message => ({
+const createInitialMessage = (text?: string): Message => ({
     id: generateMessageId(),
-    text: INITIAL_GREETING,
+    text: text ?? DEFAULT_GREETING,
     sender: 'ai',
 });
 
 const createConversation = (
     labelIndex: number,
     scenario?: { scenarioId: string | null; customScenario?: string },
-): Conversation => ({
-    id: generateConversationId(),
-    title: `Conversation ${labelIndex}`,
-    messages: [createInitialMessage()],
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    scenarioId: scenario?.scenarioId ?? null,
-    customScenario: typeof scenario?.customScenario === 'string' ? scenario.customScenario.trim() : '',
-});
+): Conversation => {
+    const scenarioId = scenario?.scenarioId ?? null;
+    const customScenario = typeof scenario?.customScenario === 'string' ? scenario.customScenario.trim() : '';
+    const greeting = getInitialGreeting({
+        scenarioId,
+        customScenario,
+    });
+
+    return {
+        id: generateConversationId(),
+        title: `Conversation ${labelIndex}`,
+        messages: [createInitialMessage(greeting)],
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        scenarioId,
+        customScenario,
+    };
+};
 
 const sanitizeConversation = (value: unknown, index: number): Conversation | null => {
     if (!value || typeof value !== 'object') {
@@ -116,10 +145,32 @@ const sanitizeConversation = (value: unknown, index: number): Conversation | nul
 
     const normalizedScenarioId = trimmedCustomScenario ? null : rawScenarioId || null;
 
+    let normalizedMessages = sanitizedMessages;
+
+    if (normalizedMessages.length === 0) {
+        const greeting = getInitialGreeting({
+            scenarioId: normalizedScenarioId,
+            customScenario: trimmedCustomScenario,
+        });
+        normalizedMessages = [createInitialMessage(greeting)];
+    } else {
+        const containsUserMessage = normalizedMessages.some((msg) => msg.sender === 'user');
+        if (!containsUserMessage && normalizedMessages[0]?.sender === 'ai') {
+            const greeting = getInitialGreeting({
+                scenarioId: normalizedScenarioId,
+                customScenario: trimmedCustomScenario,
+            });
+            const [first, ...rest] = normalizedMessages;
+            if (first.text !== greeting && (first.text === LEGACY_GREETING || rest.length === 0)) {
+                normalizedMessages = [{ ...first, text: greeting }, ...rest];
+            }
+        }
+    }
+
     return {
         id,
         title: fallbackTitle,
-        messages: sanitizedMessages.length > 0 ? sanitizedMessages : [createInitialMessage()],
+        messages: normalizedMessages,
         createdAt,
         updatedAt,
         scenarioId: normalizedScenarioId,
@@ -403,6 +454,48 @@ export const AiTutorTabContent = ({ projectId }: AiTutorTabContentProps) => {
     }, [allowCustomScenario, currentConversation, currentConversationId, scenarioOptions]);
 
     const isCurrentConversationPending = pendingConversationId === currentConversationId;
+
+    useEffect(() => {
+        if (!currentConversation || hasUserMessage) {
+            return;
+        }
+
+        const firstMessage = currentConversation.messages[0];
+        if (!firstMessage || firstMessage.sender !== 'ai') {
+            return;
+        }
+
+        const expectedGreeting = getInitialGreeting({
+            scenarioId: currentConversation.scenarioId,
+            customScenario: currentConversation.customScenario ?? '',
+        });
+
+        if (firstMessage.text === expectedGreeting) {
+            return;
+        }
+
+        setConversations((prev) =>
+            prev.map((conv) => {
+                if (conv.id !== currentConversation.id) {
+                    return conv;
+                }
+                if (conv.messages.length === 0) {
+                    return {
+                        ...conv,
+                        messages: [createInitialMessage(expectedGreeting)],
+                    } as Conversation;
+                }
+                const [first, ...rest] = conv.messages;
+                if (!first || first.sender !== 'ai' || first.text === expectedGreeting) {
+                    return conv;
+                }
+                return {
+                    ...conv,
+                    messages: [{ ...first, text: expectedGreeting }, ...rest],
+                } as Conversation;
+            }),
+        );
+    }, [currentConversation, hasUserMessage, setConversations]);
 
     useEffect(() => {
         if (messageListRef.current) {
