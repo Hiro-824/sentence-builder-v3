@@ -298,9 +298,11 @@ export class Converter {
         if (!block) {
             return block;
         }
-    
+
         const newBlock = structuredClone(block);
-    
+        newBlock.translation = undefined;
+        newBlock.structure = undefined;
+
         // Recursively format any nested blocks first (bottom-up approach).
         if (newBlock.children) {
             for (const child of newBlock.children) {

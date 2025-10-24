@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Converter } from "@/grammar/converter";
 import { Grammar } from "@/grammar/grammar";
-import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding, resolvedGapRadius, initialVisibleCount, visiblilityIncrement, buttonRadius, iconSize, navBarWidth, navBarCircleRadius, navBarCircleSpacing, navBarPadding, navBarScrollPadding, sidebarSearchHeight, sidebarSearchPadding, sidebarSearchBorderRadius } from "./const.js";
+import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding, resolvedGapRadius, initialVisibleCount, visiblilityIncrement, buttonRadius, iconSize, navBarWidth, navBarCircleRadius, navBarCircleSpacing, navBarPadding, navBarScrollPadding, sidebarSearchHeight, sidebarSearchPadding, sidebarSearchBorderRadius } from "./const.js";
 import { createBlockSnapshot, createBlockSnapshotList } from "@/utils/supabase/logging_helpers";
+import { buildSentenceStructure } from "@/utils/predicate-structure";
 import * as d3 from "d3";
 
 export class Renderer {
@@ -856,6 +857,16 @@ export class Renderer {
 
         this.addSearchToken(tokens, block.id);
         this.addSearchToken(tokens, block.translation);
+        if (block.structure) {
+            this.addSearchToken(tokens, block.structure.title);
+            this.addSearchToken(tokens, block.structure.note);
+            if (Array.isArray(block.structure.entries)) {
+                block.structure.entries.forEach(entry => {
+                    this.addSearchToken(tokens, entry.label);
+                    this.addSearchToken(tokens, entry.value);
+                });
+            }
+        }
         if (Array.isArray(block.tags)) {
             block.tags.forEach(tag => this.addSearchToken(tokens, tag));
         }
@@ -1140,7 +1151,7 @@ export class Renderer {
 
         // 日本語訳を表示する条件：ドラッグ中 or トップレベル(gridの直下にある)
         if (isRootBlock || block.id === this.draggedBlockId) {
-            this.renderTranslationBubble(block, blockGroup, width, height);
+            this.renderStructureBubble(block, blockGroup, width, height);
         }
 
         // フレーム描画
@@ -1531,43 +1542,156 @@ export class Renderer {
         }
     }
 
-    renderTranslationBubble(block, blockGroup, width, height) {
-        // Only render if translation exists
-        if (!block.translation) return;
+    renderStructureBubble(block, blockGroup, width, height) {
+        const structure = block.structure;
+        if (!structure || !Array.isArray(structure.entries) || structure.entries.length === 0) {
+            return;
+        }
 
-        // Calculate text box
-        const box = this.calculateTextHeightAndWidth(block.translation);
-        const bubbleWidth = box.width + padding * 10;
-        const bubbleHeight = box.height + padding * 10;
-        const bubbleY = -(bubbleHeight + 10);
+        const bubblePaddingX = horizontalPadding * 2;
+        const bubblePaddingY = horizontalPadding * 1.6;
+        const columnGap = horizontalPadding * 1.5;
+        const rowGap = 6;
+        const headerGap = 12;
+        const noteGap = 12;
+
+        const titleBox = this.calculateTextHeightAndWidth(structure.title);
+        const noteBox = structure.note ? this.calculateTextHeightAndWidth(structure.note) : { width: 0, height: 0 };
+
+        const rowMetrics = structure.entries.map(entry => {
+            const labelText = `${entry.icon} ${entry.label}`;
+            const labelBox = this.calculateTextHeightAndWidth(labelText);
+            const valueText = entry.value;
+            const valueBox = this.calculateTextHeightAndWidth(valueText);
+            const rowHeight = Math.max(labelBox.height, valueBox.height) + 6;
+            const rowWidth = labelBox.width + columnGap + valueBox.width;
+            return {
+                labelText,
+                valueText,
+                labelBox,
+                valueBox,
+                rowHeight,
+                rowWidth,
+                tone: entry.tone
+            };
+        });
+
+        const contentWidth = Math.max(
+            titleBox.width,
+            noteBox.width,
+            ...rowMetrics.map(metric => metric.rowWidth)
+        );
+        const bubbleWidth = contentWidth + bubblePaddingX * 2;
+        const rowsHeight = rowMetrics.reduce((sum, metric) => sum + metric.rowHeight, 0)
+            + rowGap * Math.max(0, rowMetrics.length - 1);
+        const bubbleHeight = bubblePaddingY * 2
+            + titleBox.height
+            + headerGap
+            + rowsHeight
+            + (structure.note ? noteGap + noteBox.height : 0);
 
         const blockCenterX = width / 2;
         const bubbleX = blockCenterX - (bubbleWidth / 2);
+        const bubbleY = -(bubbleHeight + 12);
 
-        // Bubble background
-        blockGroup.append("rect")
-            .attr("id", `bubble-${block.id}`)
-            .attr("opacity", 0.5)
-            .attr("width", bubbleWidth)
-            .attr("height", bubbleHeight)
-            .attr("x", bubbleX)
-            .attr("y", bubbleY)
-            .attr("fill", bubbleColor)
-            .attr("rx", blockCornerRadius)
-            .attr("ry", blockCornerRadius)
+        const bubbleGroup = blockGroup.append("g")
+            .attr("transform", `translate(${bubbleX}, ${bubbleY})`)
             .attr("pointer-events", "none");
 
-        // Bubble text
-        blockGroup.append("text")
-            .text(block.translation)
-            .attr("x", blockCenterX)
-            .attr("y", bubbleY + (bubbleHeight / 2))
-            .attr('fill', 'white')
-            .attr('font-size', `${labelFontSize}pt`)
-            .attr('font-weight', 'bold')
-            .attr('dy', '0.35em')
-            .attr('text-anchor', 'middle')
-            .style('user-select', 'none');
+        const bubbleFill = this.lightenColor(block.color, 80);
+
+        bubbleGroup.append("rect")
+            .attr("width", bubbleWidth)
+            .attr("height", bubbleHeight)
+            .attr("fill", bubbleFill)
+            .attr("opacity", 0.95)
+            .attr("rx", blockCornerRadius)
+            .attr("ry", blockCornerRadius);
+
+        let cursorY = bubblePaddingY;
+
+        bubbleGroup.append("text")
+            .text(structure.title)
+            .attr("x", bubblePaddingX)
+            .attr("y", cursorY + titleBox.height)
+            .attr("fill", "white")
+            .attr("font-size", `${labelFontSize}pt`)
+            .attr("font-weight", "700")
+            .attr("dominant-baseline", "alphabetic")
+            .style("user-select", "none");
+
+        cursorY += titleBox.height + headerGap / 2;
+
+        bubbleGroup.append("line")
+            .attr("x1", bubblePaddingX)
+            .attr("x2", bubbleWidth - bubblePaddingX)
+            .attr("y1", cursorY)
+            .attr("y2", cursorY)
+            .attr("stroke", "rgba(255,255,255,0.3)")
+            .attr("stroke-width", 1.5);
+
+        cursorY += headerGap / 2;
+
+        rowMetrics.forEach(metric => {
+            const rowGroup = bubbleGroup.append("g")
+                .attr("transform", `translate(${bubblePaddingX}, ${cursorY})`);
+
+            const rowWidth = bubbleWidth - bubblePaddingX * 2;
+            const rowHeight = metric.rowHeight;
+
+            if (metric.tone === "warning" || metric.tone === "missing") {
+                const toneColor = metric.tone === "warning"
+                    ? "rgba(255, 171, 64, 0.28)"
+                    : "rgba(255, 255, 255, 0.18)";
+                rowGroup.insert("rect", ":first-child")
+                    .attr("x", -bubblePaddingX * 0.15)
+                    .attr("y", -3)
+                    .attr("width", rowWidth + bubblePaddingX * 0.3)
+                    .attr("height", rowHeight + 6)
+                    .attr("fill", toneColor)
+                    .attr("rx", 10)
+                    .attr("ry", 10);
+            }
+
+            rowGroup.append("text")
+                .text(metric.labelText)
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("fill", "rgba(255,255,255,0.85)")
+                .attr("font-size", `${labelFontSize - 1}pt`)
+                .attr("font-weight", "600")
+                .attr("dominant-baseline", "hanging")
+                .style("user-select", "none");
+
+            rowGroup.append("text")
+                .text(metric.valueText)
+                .attr("x", metric.labelBox.width + columnGap)
+                .attr("y", 0)
+                .attr("fill", metric.tone === "warning"
+                    ? "#FFB347"
+                    : metric.tone === "missing"
+                        ? "rgba(255,255,255,0.55)"
+                        : "#FFFFFF")
+                .attr("font-size", `${labelFontSize - 1}pt`)
+                .attr("font-weight", metric.tone === "missing" ? "400" : "700")
+                .attr("dominant-baseline", "hanging")
+                .style("user-select", "none");
+
+            cursorY += rowHeight + rowGap;
+        });
+
+        if (structure.note) {
+            cursorY += noteGap - rowGap;
+            bubbleGroup.append("text")
+                .text(structure.note)
+                .attr("x", bubblePaddingX)
+                .attr("y", cursorY)
+                .attr("fill", "rgba(255,255,255,0.8)")
+                .attr("font-size", `${labelFontSize - 3}pt`)
+                .attr("font-weight", "400")
+                .attr("dominant-baseline", "hanging")
+                .style("user-select", "none");
+        }
     }
 
     renderResolvedGap(child, height, block, blockGroup, x) {
@@ -2440,8 +2564,8 @@ export class Renderer {
         if (phraseInput) {
             const result = this.grammar.parseNestedPhrase(phraseInput);
             if (result && result.categories && result.categories.length > 0) {
-                // Use the first parse result's translation if available
-                const translationObj = result.categories[0].translation;
+                const resolvedPhrase = result.categories[0];
+                const translationObj = resolvedPhrase.translation;
                 if (translationObj && typeof translationObj === 'object') {
                     // Use the first key's value as the translation string
                     const firstKey = Object.keys(translationObj)[0];
@@ -2450,11 +2574,17 @@ export class Renderer {
                 } else {
                     block.translation = '';
                 }
+                const structure = buildSentenceStructure(resolvedPhrase, {
+                    formatTranslation: this.converter.formatTranslation.bind(this.converter)
+                });
+                block.structure = structure ?? undefined;
             } else {
                 block.translation = '';
+                block.structure = undefined;
             }
         } else {
             block.translation = '';
+            block.structure = undefined;
         }
     }
 
@@ -2549,6 +2679,14 @@ export class Renderer {
         rgb.r = Math.max(0, rgb.r - factor);
         rgb.g = Math.max(0, rgb.g - factor);
         rgb.b = Math.max(0, rgb.b - factor);
+        return rgb;
+    }
+
+    lightenColor(color, factor) {
+        const rgb = d3.rgb(color);
+        rgb.r = Math.min(255, rgb.r + factor);
+        rgb.g = Math.min(255, rgb.g + factor);
+        rgb.b = Math.min(255, rgb.b + factor);
         return rgb;
     }
 }

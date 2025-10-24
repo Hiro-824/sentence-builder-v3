@@ -13,6 +13,7 @@ export interface Block {
     children: BlockChild[];
     translation?: string;
     tags?: string[];
+    structure?: SentenceStructure;
 }
 
 export interface BlockChild {
@@ -24,4 +25,17 @@ export interface BlockChild {
     selected?: number;
     content: unknown;
     instanceId?: string;
+}
+
+export interface SentenceStructureEntry {
+    icon: string;
+    label: string;
+    value: string;
+    tone?: 'note' | 'warning' | 'missing';
+}
+
+export interface SentenceStructure {
+    title: string;
+    entries: SentenceStructureEntry[];
+    note: string;
 }
