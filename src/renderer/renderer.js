@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Converter } from "@/grammar/converter";
 import { Grammar } from "@/grammar/grammar";
-import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding, resolvedGapRadius, initialVisibleCount, visiblilityIncrement } from "./const.js";
+import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding, resolvedGapRadius, initialVisibleCount, visiblilityIncrement, buttonRadius, iconSize, navBarWidth, navBarCircleRadius, navBarCircleSpacing, navBarPadding, navBarScrollPadding, sidebarSearchHeight, sidebarSearchPadding, sidebarSearchBorderRadius } from "./const.js";
 import { createBlockSnapshot, createBlockSnapshotList } from "@/utils/supabase/logging_helpers";
 import * as d3 from "d3";
 
@@ -11,16 +11,13 @@ export class Renderer {
         this.topBarHeight = topBarHeight;
         this.canvasHeight = window.innerHeight - this.topBarHeight;
 
-        this.blockList = blockList;
-        // Format each block in blockList using converter.formatBlock()
         this.converter = new Converter;
-        Object.keys(this.blockList).forEach(groupName => {
-            this.blockList[groupName] = this.blockList[groupName].map(block => this.converter.formatBlock(block));
+        this.fullBlockList = {};
+        Object.entries(blockList || {}).forEach(([groupName, groupBlocks]) => {
+            this.fullBlockList[groupName] = groupBlocks.map(block => this.converter.formatBlock(block));
         });
-        this.categoryState = {}; // New property
-        Object.keys(this.blockList).forEach(groupName => {
-            this.categoryState[groupName] = { isCollapsed: true, displayCount: initialVisibleCount };
-        });
+        this.blockList = this.cloneBlockList(this.fullBlockList);
+
         this.svg = svg;
         this.sideBarScrollExtent = 0;
         this.viewportHeight = window.innerHeight;
@@ -33,8 +30,27 @@ export class Renderer {
         this.lastHoverTargetId = null;
         this.hoverLogContext = null;
 
-        // Initialize cache
-        this.cachedSidebarWidth = null;
+        // Initialize cache and UI references
+        this.cachedBlockListWidth = null;
+        // To store the Y-position of each category for quick scrolling
+        this.categoryScrollTargets = {};
+        this.blockSearchCache = new WeakMap();
+        this.searchQuery = "";
+        this.searchInputElement = null;
+        this.searchClearButton = null;
+        this.searchIcon = null;
+        this.sidebarNavGroup = null;
+        this.sidebarSearchGroup = null;
+        this.sidebarSearchHitbox = null;
+        this.sidebarSearchForeignObject = null;
+        this.sidebarSearchShadowPadding = 4;
+        this.sidebarSearchBackground = null;
+        this.sidebarScrollContainer = null;
+        this.sidebarContent = null;
+        this.sidebarContentContainer = null;
+        this.blockBoard = null;
+        this.searchAreaHeight = this.getSidebarSearchAreaHeight();
+        this.navBackgroundRect = null;
 
         // Update translation for all initial blocks
         this.blocks.forEach(block => this.updateBlockTranslation(block));
@@ -80,13 +96,17 @@ export class Renderer {
         this.canvasHeight = window.innerHeight - this.topBarHeight;
 
         // Clear cache on resize
-        this.cachedSidebarWidth = null;
+        this.cachedBlockListWidth = null;
 
         // Update sidebar background height
         const sidebarBackground = d3.select("#sidebar-background");
         if (!sidebarBackground.empty()) {
             sidebarBackground
                 .attr("height", window.innerHeight);
+        }
+
+        if (this.sidebarNavGroup) {
+            this.renderNavBar(this.sidebarNavGroup);
         }
 
         // Recalculate sidebar scroll bounds
@@ -105,7 +125,7 @@ export class Renderer {
 
     render() {
         // Clear cache when re-rendering
-        this.cachedSidebarWidth = null;
+        this.cachedBlockListWidth = null;
 
         this.renderGrid();
         this.renderSideBar();
@@ -221,7 +241,7 @@ export class Renderer {
             );
         }
 
-        this.renderBlockImage(block, blockGroup);
+        this.renderBlockImage(block, blockGroup, fromSideBar);
     }
 
     updateBlock(id) {
@@ -253,8 +273,11 @@ export class Renderer {
         // Remove the entire sidebar group
         d3.select("#sidebar").remove();
 
-        const width = this.calculateSideBarWidth();
+        const blockListWidth = this.calculateBlockListWidth();
+        const totalWidth = blockListWidth + navBarWidth;
         const height = window.innerHeight;
+
+        this.searchAreaHeight = this.getSidebarSearchAreaHeight();
 
         this.sidebar = this.svg.append("g")
             .attr("id", "sidebar")
@@ -263,7 +286,7 @@ export class Renderer {
         // Add the sidebar background
         this.sidebar.append("rect")
             .attr("id", "sidebar-background")
-            .attr("width", width)
+            .attr("width", totalWidth)
             .attr("height", height)
             .attr("fill", "#fafafa")
             .attr("stroke", "#f0f0f0")
@@ -272,54 +295,252 @@ export class Renderer {
                 event.stopPropagation();
             });
 
-        this.renderSideBarContent();
+        this.sidebarNavGroup = this.sidebar.append("g")
+            .attr("id", "sidebar-nav");
+
+        this.sidebarContentContainer = this.sidebar.append("g")
+            .attr("id", "sidebar-content-container")
+            .attr("transform", `translate(${navBarWidth}, 0)`);
+
+        this.renderNavBar(this.sidebarNavGroup);
+
+        // Render content first so it appears underneath the search bar
+        this.renderSideBarContent(this.sidebarContentContainer);
+
+        // Draw background behind the search bar before placing the search UI on top
+        this.sidebarSearchBackground = this.sidebarContentContainer.append("rect")
+            .attr("id", "sidebar-search-background")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", blockListWidth)
+            .attr("height", this.searchAreaHeight)
+            .attr("fill", "#ffffff")
+            .attr("stroke", "#e0e0e0")
+            .attr("stroke-width", 1)
+            .attr("pointer-events", "none");
+
+        // Render search bar on top of the content
+        this.sidebarSearchGroup = this.sidebarContentContainer.append("g")
+            .attr("id", "sidebar-search-container")
+            .attr("transform", `translate(${sidebarSearchPadding.horizontal}, 0)`);
+        this.renderSearchBar(this.sidebarSearchGroup);
+
+
         this.enableSideBarScroll();
     }
 
-    calculateSideBarWidth() {
+    calculateBlockListWidth() {
         // Use cached value if available
-        if (this.cachedSidebarWidth) {
-            return this.cachedSidebarWidth;
+        if (this.cachedBlockListWidth) {
+            return this.cachedBlockListWidth;
         }
 
         let maxWidth = 0;
-        Object.values(this.blockList).forEach(blockArray => {
+        const source = this.fullBlockList || this.blockList || {};
+        Object.values(source).forEach(blockArray => {
             blockArray.forEach(block => {
                 const width = this.calculateWidth(block);
                 maxWidth = Math.max(maxWidth, width);
             });
         });
         // Add padding for the sidebar
-        this.cachedSidebarWidth = maxWidth + sidebarPadding.right + sidebarPadding.left * 2;
-        return this.cachedSidebarWidth;
+        const blockListWidth = maxWidth + sidebarSearchPadding.horizontal + sidebarPadding.right;
+        this.cachedBlockListWidth = blockListWidth;
+        return blockListWidth;
     }
 
-    renderSideBarContent() {
-        this.sidebarContent = this.sidebar.append("g");
-        this.blockBoard = this.sidebarContent.append("g").attr("transform", `translate(${sidebarPadding.left * 2}, 0)`);
+    renderNavBar(navBarGroup) {
+        if (!navBarGroup) return;
+        navBarGroup.selectAll("*").remove();
 
-        // Cache sidebar width calculation
-        const sidebarWidth = this.calculateSideBarWidth();
-        this.cachedSidebarWidth = sidebarWidth;
-        const headerWidth = sidebarWidth / 2;
+        this.navBackgroundRect = navBarGroup.append("rect")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", navBarWidth)
+            .attr("height", this.canvasHeight)
+            .attr("rx", 0)
+            .attr("ry", 0)
+            .attr("fill", "#ffffff")
+            .attr("stroke", "#e0e0e0")
+            .attr("stroke-width", 1)
+            .attr("pointer-events", "none");
+
+        let y = navBarPadding.top;
+        const centerX = navBarWidth / 2;
+        const categoryNames = Object.keys(this.blockList || {});
+
+        categoryNames.forEach(groupName => {
+            const circleCenterY = y;
+            const categoryColor = this.getCategoryColor(groupName);
+            const circleFill = categoryColor || "#e0e0e0";
+            const circleStroke = categoryColor ? this.darkenColor(categoryColor, 30) : "#cccccc";
+
+            const circleGroup = navBarGroup.append("g")
+                .style("cursor", "pointer")
+                .on("mousedown", (event) => {
+                    event.stopPropagation();
+                    this.scrollToCategory(groupName);
+                });
+
+            circleGroup.append("circle")
+                .attr("cx", centerX)
+                .attr("cy", y)
+                .attr("r", navBarCircleRadius)
+                .attr("fill", circleFill)
+                .attr("stroke", circleStroke)
+                .attr("stroke-width", 1);
+
+            const textElement = circleGroup.append('text')
+                .attr('y', y + navBarCircleRadius + 14) // y-position of the first line
+                .attr('text-anchor', 'middle')
+                .style('font-size', '10px')
+                .style('fill', '#444')
+                .style('user-select', 'none');
+
+            const words = groupName.split('').reverse();
+            let word;
+            let line = [];
+            const maxWidth = navBarWidth - 16;
+            let tspan = textElement.append("tspan").attr("x", centerX);
+
+            while (word = words.pop()) {
+                line.push(word);
+                tspan.text(line.join(""));
+                if (tspan.node().getComputedTextLength() > maxWidth) {
+                    line.pop();
+                    tspan.text(line.join(""));
+                    line = [word];
+                    tspan = textElement.append("tspan").attr("x", centerX).attr("dy", "1.2em").text(word);
+                }
+            }
+
+            const textBBox = textElement.node().getBBox();
+            const textHeight = textBBox.height;
+            const hitboxPadding = 12;
+            const hitboxTop = Math.min(circleCenterY - navBarCircleRadius, textBBox.y) - hitboxPadding;
+            const hitboxBottom = Math.max(circleCenterY + navBarCircleRadius, textBBox.y + textBBox.height) + hitboxPadding;
+            const hitboxHeight = Math.max(0, hitboxBottom - hitboxTop);
+
+            circleGroup.insert("rect", ":first-child")
+                .attr("x", 0)
+                .attr("y", hitboxTop)
+                .attr("width", navBarWidth)
+                .attr("height", hitboxHeight)
+                .attr("fill", "transparent")
+                .attr("pointer-events", "all");
+
+            y += (navBarCircleRadius * 2) + textHeight + navBarCircleSpacing;
+        });
+    }
+
+    getCategoryColor(groupName) {
+        const blocks = this.blockList?.[groupName];
+        if (!Array.isArray(blocks)) {
+            return null;
+        }
+
+        for (const block of blocks) {
+            if (block?.color) {
+                return block.color;
+            }
+        }
+
+        return null;
+    }
+
+    scrollToCategory(groupName) {
+        const targetY = this.categoryScrollTargets[groupName];
+        if (targetY === undefined) return;
+
+        // Adjust the target Y-position to leave padding at the top, ensuring the category title is visible.
+        const adjustedTargetY = Math.max(0, targetY - navBarScrollPadding);
+
+        const zoomExtent = d3.zoomTransform(this.grid.node()).k;
+        let newScrollExtent = -(adjustedTargetY * zoomExtent);
+
+        // Clamp the target scroll position within valid bounds
+        const scrollableHeight = Math.max(0, this.canvasHeight - (this.searchAreaHeight || 0));
+        const maxScroll = 0;
+        const minScroll = Math.min(0, scrollableHeight - (this.sideBarContentHeight || 0) * zoomExtent);
+        newScrollExtent = Math.max(minScroll, Math.min(maxScroll, newScrollExtent));
+
+        // Use a D3 transition on a temporary object to smoothly animate the scroll
+        const currentScroll = this.sideBarScrollExtent;
+        const dummy = {};
+        d3.select(dummy)
+            .transition()
+            .duration(500) // 500ms smooth scroll
+            .ease(d3.easeCubicOut)
+            .tween('scroll', () => {
+                const i = d3.interpolate(currentScroll, newScrollExtent);
+                return (t) => {
+                    this.sideBarScrollExtent = i(t);
+                    this.setBlockBoardTransform(); // Update the transform on each tick
+                };
+            });
+    }
+
+
+    renderSideBarContent(parentGroup) {
+        this.initializeSidebarContent(parentGroup);
+        this.renderBlockList();
+    }
+
+    initializeSidebarContent(parentGroup) {
+        if (this.sidebarScrollContainer) {
+            this.sidebarScrollContainer.remove();
+        }
+
+        this.sidebarScrollContainer = parentGroup.append("g")
+            .attr("id", "sidebar-scroll-container")
+            .attr("transform", `translate(0, ${this.searchAreaHeight})`);
+
+        this.sidebarContent = this.sidebarScrollContainer.append("g");
+        this.blockBoard = this.sidebarContent.append("g")
+            .attr("transform", `translate(${sidebarSearchPadding.horizontal}, 0)`);
+    }
+
+    renderBlockList() {
+        if (!this.blockBoard) return;
+
+        this.blockBoard.selectAll("*").remove();
+        this.categoryScrollTargets = {};
+
+        const blockListWidth = this.calculateBlockListWidth();
+        this.cachedBlockListWidth = blockListWidth;
+        const headerWidth = blockListWidth / 2;
 
         let y = sidebarPadding.top;
-        Object.entries(this.blockList).forEach(([groupName, blockArray]) => {
-            const isCollapsed = this.categoryState[groupName].isCollapsed;
-            const categoryHeader = this.blockBoard.append("g")
-                .style("cursor", "pointer")
-                .on("pointerdown", () => {
-                    const wasOpen = !this.categoryState[groupName].isCollapsed;
-                    Object.keys(this.categoryState).forEach(key => {
-                        this.categoryState[key].isCollapsed = true;
-                        // Reset displayCount to initial value when collapsing
-                        this.categoryState[key].displayCount = initialVisibleCount;
-                    });
-                    if (!wasOpen) {
-                        this.categoryState[groupName].isCollapsed = false;
-                    }
-                    this.renderSideBar();
-                });
+        const entries = Object.entries(this.blockList || {});
+
+        if (entries.length === 0) {
+            const emptyGroup = this.blockBoard.append("g");
+
+            emptyGroup.append("text")
+                .text("No matching blocks")
+                .attr("x", 0)
+                .attr("y", y)
+                .attr('font-size', `${blockListFontSize * 0.7}pt`)
+                .attr('fill', '#555555')
+                .style('user-select', 'none')
+                .style('font-weight', '500');
+
+            emptyGroup.append("text")
+                .text("一致するブロックが見つかりません")
+                .attr("x", 0)
+                .attr("y", y + blockListFontSize)
+                .attr('font-size', `${blockListFontSize * 0.6}pt`)
+                .attr('fill', '#888888')
+                .style('user-select', 'none');
+
+            y += blockListFontSize * 2 + sidebarPadding.bottom;
+            this.sideBarContentHeight = y;
+            this.setBlockBoardTransform();
+            return;
+        }
+
+        entries.forEach(([groupName, blockArray]) => {
+            const categoryHeader = this.blockBoard.append("g");
 
             categoryHeader.append("rect")
                 .attr("x", 0)
@@ -329,16 +550,8 @@ export class Renderer {
                 .attr("fill", "transparent");
 
             categoryHeader.append("text")
-                .text(isCollapsed ? "▶" : "▼")
-                .attr("y", y)
-                .attr('font-size', `${blockListFontSize * 0.7}pt`)
-                .attr('fill', '#666666')
-                .style('user-select', 'none')
-                .style('font-weight', '500');
-
-            categoryHeader.append("text")
                 .text(groupName)
-                .attr("x", 32)
+                .attr("x", 0)
                 .attr("y", y)
                 .attr('font-size', `${blockListFontSize * 0.9}pt`)
                 .attr('fill', '#1a1a1a')
@@ -348,38 +561,385 @@ export class Renderer {
 
             y += 40;
 
-            if (!isCollapsed) {
-                const blocksToRender = blockArray.slice(0, this.categoryState[groupName].displayCount);
-                blocksToRender.forEach((block) => {
-                    y += blockListSpacing + this.renderSideBarBlock(block, this.generateRandomId(), y);
-                });
+            this.categoryScrollTargets[groupName] = y;
 
-                const displayCount = this.categoryState[groupName].displayCount;
-                const totalCount = blockArray.length;
-
-                if (totalCount > displayCount) {
-                    y += blockListSpacing;
-                    const seeMoreCallback = () => {
-                        const currentCount = this.categoryState[groupName].displayCount;
-                        this.categoryState[groupName].displayCount = currentCount + visiblilityIncrement;
-                        this.renderSideBar();
-                    };
-                    y = this.renderSidebarButton(y + 40, "See more +", seeMoreCallback);
-                }
-
-                if (displayCount > initialVisibleCount) {
-                    const showLessCallback = () => {
-                        this.categoryState[groupName].displayCount -= visiblilityIncrement;
-                        this.renderSideBar();
-                    };
-                    y = this.renderSidebarButton((totalCount > displayCount) ? y : y + 40, "Show less -", showLessCallback);
-                }
-            }
+            blockArray.forEach((block) => {
+                y += blockListSpacing + this.renderSideBarBlock(block, this.generateRandomId(), y);
+            });
 
             y += sidebarPadding.bottom;
         });
+
         this.sideBarContentHeight = y;
         this.setBlockBoardTransform();
+    }
+
+    getCurrentZoomExtent() {
+        if (!this.grid) {
+            return 1;
+        }
+        const transform = d3.zoomTransform(this.grid.node());
+        if (!transform || typeof transform.k !== "number" || !isFinite(transform.k)) {
+            return 1;
+        }
+        return transform.k;
+    }
+
+    updateSidebarSearchLayout(zoomExtent) {
+        if (!this.sidebarSearchGroup) {
+            return;
+        }
+
+        const effectiveZoom = (typeof zoomExtent === "number" && isFinite(zoomExtent))
+            ? zoomExtent
+            : this.getCurrentZoomExtent();
+
+        const blockListWidth = (this.cachedBlockListWidth ?? this.calculateBlockListWidth()) || 0;
+        const leftOffset = sidebarSearchPadding.horizontal * effectiveZoom;
+        const focusPadding = this.sidebarSearchShadowPadding || 0;
+        const availableWidth = Math.max(0, (blockListWidth - sidebarSearchPadding.horizontal - sidebarPadding.right) * effectiveZoom);
+        const totalWidth = availableWidth + focusPadding * 2;
+        const hitboxWidth = Math.max(0, blockListWidth * effectiveZoom + focusPadding * 2);
+
+        this.sidebarSearchGroup.attr("transform", `translate(${leftOffset}, 0)`);
+
+        if (this.sidebarSearchHitbox) {
+            this.sidebarSearchHitbox
+                .attr("x", -leftOffset - focusPadding)
+                .attr("width", hitboxWidth);
+        }
+
+        if (this.sidebarSearchForeignObject) {
+            this.sidebarSearchForeignObject
+                .attr("x", -focusPadding)
+                .attr("y", sidebarSearchPadding.top - focusPadding)
+                .attr("width", totalWidth)
+                .attr("height", sidebarSearchHeight + focusPadding * 2);
+        }
+
+        if (this.sidebarSearchBackground) {
+            this.sidebarSearchBackground
+                .attr("width", blockListWidth * effectiveZoom)
+                .attr("height", this.searchAreaHeight);
+        }
+    }
+
+    renderSearchBar(searchGroup) {
+        if (!searchGroup) return;
+
+        this.sidebarSearchHitbox = null;
+        this.sidebarSearchForeignObject = null;
+        searchGroup.selectAll("*").remove();
+
+        const blockListWidth = this.calculateBlockListWidth();
+        const searchWidth = blockListWidth - sidebarSearchPadding.horizontal - sidebarPadding.right;
+        const containerHeight = this.getSidebarSearchAreaHeight();
+        const focusPadding = this.sidebarSearchShadowPadding || 0;
+
+        if (this.sidebarSearchBackground) {
+            this.sidebarSearchBackground
+                .attr("width", blockListWidth)
+                .attr("height", containerHeight);
+        }
+
+        // Add a transparent rectangle to catch mouse events and prevent them from propagating to the canvas.
+        this.sidebarSearchHitbox = searchGroup.append("rect")
+            .attr("x", -sidebarSearchPadding.horizontal - focusPadding)
+            .attr("y", 0)
+            .attr("width", blockListWidth + focusPadding * 2)
+            .attr("height", containerHeight)
+            .attr("fill", "transparent")
+            .on("mousedown", (event) => event.stopPropagation());
+
+        const foreignObject = searchGroup.append("foreignObject")
+            .attr("x", -focusPadding)
+            .attr("y", sidebarSearchPadding.top - focusPadding)
+            .attr("width", searchWidth + focusPadding * 2)
+            .attr("height", sidebarSearchHeight + focusPadding * 2);
+
+        this.sidebarSearchForeignObject = foreignObject;
+
+        const container = foreignObject.append("xhtml:div")
+            .style("display", "flex")
+            .style("align-items", "center")
+            .style("width", `calc(100% - ${focusPadding * 2}px)`)
+            .style("height", `calc(100% - ${focusPadding * 2}px)`)
+            .style("margin", `${focusPadding}px`)
+            .style("gap", "8px")
+            .style("padding", "8px 12px")
+            .style("border-radius", `${sidebarSearchBorderRadius}px`)
+            .style("border", "1px solid #e0e0e0")
+            .style("background", "#ffffff")
+            .style("box-shadow", "none")
+            .style("transition", "border-color 0.2s ease, box-shadow 0.2s ease");
+
+        const applyFocusState = (isFocused) => {
+            container
+                .style("border-color", isFocused ? "#007AFF" : "#e0e0e0")
+                .style("box-shadow", isFocused ? "0 0 0 2px rgba(0, 122, 255, 0.1)" : "none");
+        };
+        applyFocusState(false);
+
+        // Search Icon
+        const iconSelection = container.append("xhtml:span")
+            .attr("id", "sidebar-search-icon")
+            .style("display", "flex")
+            .style("align-items", "center")
+            .style("justify-content", "center")
+            .style("color", "#9b9b9b");
+
+        iconSelection.html('<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>');
+
+        const inputSelection = container.append("xhtml:input")
+            .attr("type", "search")
+            .attr("id", "sidebar-search-input")
+            .attr("placeholder", "検索")
+            .attr("aria-label", "検索")
+            .style("flex", "1")
+            .style("height", "100%")
+            .style("border", "none")
+            .style("outline", "none")
+            .style("font-size", "15px")
+            .style("line-height", "1.4")
+            .style("background", "transparent")
+            .style("color", "#222222")
+            .style("margin", "0")
+            .style("padding", "0")
+            .style("font-family", "inherit");
+
+        // Inject CSS to hide the browser's default clear button for search inputs
+        const styleId = 'search-input-style';
+        if (!document.getElementById(styleId)) {
+            const style = document.createElement('style');
+            style.id = styleId;
+            style.innerHTML = `
+                #sidebar-search-input::-webkit-search-decoration,
+                #sidebar-search-input::-webkit-search-cancel-button,
+                #sidebar-search-input::-webkit-search-results-button,
+                #sidebar-search-input::-webkit-search-results-decoration {
+                    -webkit-appearance: none;
+                    appearance: none;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        const inputNode = inputSelection.node();
+        inputNode.value = this.searchQuery;
+        inputSelection.on("input", (event) => {
+            this.handleSearchInput(event.target.value ?? "");
+        });
+        inputSelection.on("keydown", (event) => {
+            if (event.key === "Escape") {
+                event.preventDefault();
+                event.stopPropagation();
+                this.clearSearch();
+            }
+        });
+        inputSelection.on("mousedown", (event) => event.stopPropagation());
+        inputSelection.on("click", (event) => event.stopPropagation());
+        inputSelection.on("focus", () => applyFocusState(true));
+        inputSelection.on("blur", () => applyFocusState(false));
+
+        this.searchInputElement = inputNode;
+
+        const clearButtonSize = 28;
+
+        const buttonSelection = container.append("xhtml:button")
+            .attr("type", "button")
+            .attr("aria-label", "Clear search")
+            .style("width", `${clearButtonSize}px`)
+            .style("height", `${clearButtonSize}px`)
+            .style("min-width", `${clearButtonSize}px`)
+            .style("min-height", `${clearButtonSize}px`)
+            .style("flex", `0 0 ${clearButtonSize}px`)
+            .style("display", "flex")
+            .style("align-items", "center")
+            .style("justify-content", "center")
+            .style("border", "none")
+            .style("border-radius", "50%")
+            .style("aspect-ratio", "1 / 1")
+            .style("padding", "0")
+            .style("background", "transparent")
+            .style("cursor", "pointer")
+            .style("font-size", "16px")
+            .style("color", "#666666")
+            .text("×");
+
+        buttonSelection.on("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            this.clearSearch();
+        });
+        buttonSelection.on("mousedown", (event) => event.stopPropagation());
+        buttonSelection.on("mouseenter", function () {
+            d3.select(this).style("background", "#f2f2f2");
+        });
+        buttonSelection.on("mouseleave", function () {
+            d3.select(this).style("background", "transparent");
+        });
+
+        this.searchClearButton = buttonSelection.node();
+        this.searchIcon = iconSelection.node();
+        this.toggleSearchDecorations();
+        this.updateSidebarSearchLayout();
+    }
+
+
+    handleSearchInput(value) {
+        const nextQuery = typeof value === "string" ? value : "";
+        this.searchQuery = nextQuery;
+        if (this.searchInputElement && this.searchInputElement.value !== nextQuery) {
+            this.searchInputElement.value = nextQuery;
+        }
+        this.updateFilteredBlockList();
+        this.sideBarScrollExtent = 0;
+        this.previousZoomExtent = null;
+
+        if (this.sidebarNavGroup) {
+            this.renderNavBar(this.sidebarNavGroup);
+        }
+
+        this.renderBlockList();
+        this.toggleSearchDecorations();
+    }
+
+    clearSearch() {
+        if (this.searchInputElement) {
+            this.searchInputElement.value = "";
+        }
+        this.handleSearchInput("");
+        if (this.searchInputElement) {
+            this.searchInputElement.focus();
+        }
+    }
+
+    toggleSearchDecorations() {
+        if (!this.searchClearButton || !this.searchIcon) return;
+        const hasQuery = !!(this.searchQuery && this.searchQuery.trim().length);
+        this.searchClearButton.style.display = hasQuery ? "flex" : "none";
+        this.searchIcon.style.display = "flex";
+    }
+
+    updateFilteredBlockList() {
+        const trimmedQuery = (this.searchQuery || "").trim().toLowerCase();
+        if (!trimmedQuery) {
+            this.blockList = this.cloneBlockList(this.fullBlockList);
+            return;
+        }
+
+        const terms = trimmedQuery.split(/\s+/).filter(Boolean);
+        const filtered = {};
+        Object.entries(this.fullBlockList).forEach(([groupName, blocks]) => {
+            const matches = blocks.filter(block => this.blockMatchesSearch(block, terms));
+            if (matches.length) {
+                filtered[groupName] = matches;
+            }
+        });
+        this.blockList = filtered;
+    }
+
+    blockMatchesSearch(block, terms) {
+        if (!terms || terms.length === 0) return true;
+        const tokens = this.getBlockSearchTokens(block);
+        if (!tokens || tokens.length === 0) return false;
+        return terms.every(term => tokens.some(token => token.includes(term)));
+    }
+
+    getBlockSearchTokens(block) {
+        if (!block) return [];
+        if (this.blockSearchCache.has(block)) {
+            return this.blockSearchCache.get(block);
+        }
+
+        const tokens = new Set();
+
+        this.addSearchToken(tokens, block.id);
+        this.addSearchToken(tokens, block.translation);
+        if (Array.isArray(block.tags)) {
+            block.tags.forEach(tag => this.addSearchToken(tokens, tag));
+        }
+
+        if (Array.isArray(block.children)) {
+            block.children.forEach(child => {
+                if (child?.type === "text" && typeof child.content === "string") {
+                    this.addSearchToken(tokens, child.content);
+                }
+                if (child?.type === "dropdown" && Array.isArray(child.content)) {
+                    child.content.forEach(option => this.addSearchToken(tokens, option));
+                }
+            });
+        }
+
+        if (Array.isArray(block.words)) {
+            block.words.forEach(word => {
+                this.addSearchToken(tokens, word?.token);
+                if (Array.isArray(word?.tags)) {
+                    word.tags.forEach(tag => this.addSearchToken(tokens, tag));
+                }
+                if (Array.isArray(word?.categories)) {
+                    word.categories.forEach(category => {
+                        if (category?.translation && typeof category.translation === "string") {
+                            this.addSearchToken(tokens, category.translation);
+                        }
+                        this.collectTranslationStrings(category?.translationTemplates).forEach(str => this.addSearchToken(tokens, str));
+                    });
+                }
+            });
+        }
+
+        const tokenList = Array.from(tokens);
+        this.blockSearchCache.set(block, tokenList);
+        return tokenList;
+    }
+
+    collectTranslationStrings(translationTemplates) {
+        if (!translationTemplates) return [];
+        const strings = [];
+        Object.values(translationTemplates).forEach(template => {
+            if (!Array.isArray(template)) return;
+            template.forEach(element => {
+                if (typeof element === "string") {
+                    strings.push(element);
+                } else if (element && typeof element === "object") {
+                    if (typeof element.particle === "string") {
+                        strings.push(element.particle);
+                    }
+                    if (Array.isArray(element.filler)) {
+                        element.filler.forEach(filler => {
+                            if (typeof filler === "string") {
+                                strings.push(filler);
+                            }
+                        });
+                    }
+                }
+            });
+        });
+        return strings;
+    }
+
+    addSearchToken(tokenSet, value) {
+        if (value === undefined || value === null) return;
+        const text = String(value).trim();
+        if (!text) return;
+        const lower = text.toLowerCase();
+        tokenSet.add(lower);
+        const withoutParens = lower.replace(/\([^)]*\)/g, "").trim();
+        if (withoutParens && withoutParens !== lower) {
+            tokenSet.add(withoutParens);
+        }
+    }
+
+    cloneBlockList(source) {
+        const clone = {};
+        Object.entries(source || {}).forEach(([groupName, blocks]) => {
+            clone[groupName] = Array.isArray(blocks) ? blocks.slice() : [];
+        });
+        return clone;
+    }
+
+    getSidebarSearchAreaHeight() {
+        return sidebarSearchPadding.top + sidebarSearchHeight + sidebarSearchPadding.bottom;
     }
 
     enableSideBarScroll() {
@@ -464,23 +1024,29 @@ export class Renderer {
     }
 
     setBlockBoardTransform() {
-        const zoomExtent = d3.zoomTransform(this.grid.node()).k;
+        const zoomExtent = this.getCurrentZoomExtent();
 
-        const scrollableHeight = this.canvasHeight;
+        const scrollableHeight = Math.max(0, this.canvasHeight - (this.searchAreaHeight || 0));
+        const contentHeight = (this.sideBarContentHeight || 0) * zoomExtent;
 
-        this.sideBarScrollExtent = Math.max(-(this.sideBarContentHeight * zoomExtent - scrollableHeight), this.sideBarScrollExtent);
-        this.sideBarScrollExtent = Math.min(0, this.sideBarScrollExtent);
-
-        if (this.sidebarContent) {
-            if (this.previousZoomExtent) {
-                const zoomRatio = zoomExtent / this.previousZoomExtent;
-                this.sideBarScrollExtent *= zoomRatio;
-            }
-            this.sidebarContent.attr("transform", `translate(0, ${this.sideBarScrollExtent}), scale(${zoomExtent})`);
+        if (this.previousZoomExtent) {
+            const zoomRatio = zoomExtent / this.previousZoomExtent;
+            this.sideBarScrollExtent *= zoomRatio;
         }
 
-        const newWidth = this.calculateSideBarWidth() * zoomExtent;
+        const maxScroll = 0;
+        const minScroll = Math.min(0, scrollableHeight - contentHeight);
+        this.sideBarScrollExtent = Math.max(minScroll, Math.min(maxScroll, this.sideBarScrollExtent));
+
+        if (this.sidebarContent) {
+            this.sidebarContent.attr("transform", `translate(0, ${this.sideBarScrollExtent}) scale(${zoomExtent})`);
+        }
+
+        const blockListWidth = this.cachedBlockListWidth || this.calculateBlockListWidth();
+        const newWidth = navBarWidth + blockListWidth * zoomExtent;
+
         d3.select("#sidebar rect").attr("width", newWidth);
+        this.updateSidebarSearchLayout(zoomExtent);
         this.previousZoomExtent = zoomExtent;
     }
 
@@ -509,7 +1075,7 @@ export class Renderer {
 
     renderSidebarButton(y, text, onClickCallback) {
         // Cache button width calculation
-        const buttonWidth = this.cachedSidebarWidth ? this.cachedSidebarWidth - sidebarPadding.left * 4 : this.calculateSideBarWidth() - sidebarPadding.left * 4;
+        const buttonWidth = this.cachedBlockListWidth ? this.cachedBlockListWidth - sidebarPadding.left * 4 : this.calculateBlockListWidth() - sidebarPadding.left * 4;
         const buttonHeight = 56;
         const buttonCornerRadius = 28;
         const buttonFontSize = "24pt";
@@ -563,15 +1129,17 @@ export class Renderer {
 
     /*ブロックの画像の描画***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
-    renderBlockImage(block, blockGroup) {
+    renderBlockImage(block, blockGroup, fromSideBar = false) {
         blockGroup.selectAll("*").remove();
         const width = this.calculateWidth(block);
         const height = this.calculateHeight(block);
         const strokeColor = this.darkenColor(block.color, 30);
         const actualCornerRadius = block.isRound ? height / 2 : blockCornerRadius;
+        const parentNode = blockGroup.node() ? blockGroup.node().parentNode : null;
+        const isRootBlock = parentNode && parentNode.id === "grid";
 
         // 日本語訳を表示する条件：ドラッグ中 or トップレベル(gridの直下にある)
-        if ((blockGroup.node().parentNode && blockGroup.node().parentNode.id === "grid") || block.id === this.draggedBlockId) {
+        if (isRootBlock || block.id === this.draggedBlockId) {
             this.renderTranslationBubble(block, blockGroup, width, height);
         }
 
@@ -610,7 +1178,129 @@ export class Renderer {
             }
         }
 
+        const isFinite = this.isFiniteSentence(block);
+        if (isFinite && !fromSideBar && isRootBlock) {
+            const isComplete = this.isBlockComplete(block);
+            this.renderSendButton(block, blockGroup, width, height, !isComplete);
+        }
+
         return { width: width, height: height };
+    }
+
+    // Determine if a block is a finite sentence type, regardless of completion
+    isFiniteSentence(block) {
+        if (!block || !Array.isArray(block.children) || !Array.isArray(block.words) || block.words.length === 0) return false;
+        const headChild = block.children.find(c => c.id === 'head');
+        if (!headChild) return false;
+        const headIndex = headChild.type === 'dropdown' ? (headChild.selected ?? 0) : 0;
+        const headWord = block.words[headIndex];
+        const headCategory = headWord && Array.isArray(headWord.categories) ? headWord.categories[0] : undefined;
+        const isSentence = headCategory && headCategory.head && headCategory.head.type === 'sentence';
+        const isFinite = isSentence && headCategory.head.finite === true;
+        return Boolean(isFinite);
+    }
+
+    isBlockComplete(block) {
+        if (!block || !Array.isArray(block.children)) return true; // Default to complete if no children array
+        
+        // Check immediate children for unfilled placeholders
+        const hasUnfilled = block.children.some(ch => {
+            if (ch.hidden) return false;
+            
+            // Check if this child is an unfilled placeholder
+            if (ch.type === 'placeholder' && !ch.content && !ch.resolved) {
+                return true;
+            }
+            
+            // If this child has content (is a block), recursively check it
+            if ((ch.type === 'placeholder' || ch.type === 'attachment') && ch.content) {
+                return !this.isBlockComplete(ch.content);
+            }
+            
+            return false;
+        });
+        
+        return !hasUnfilled;
+    }
+
+    // Simple string representation to send to AI (matches logging helper semantics)
+    generateFlatString(block) {
+        if (!block) return '';
+        const parts = block.children
+            .filter(child => !child.hidden)
+            .map(child => {
+                if (child.id === 'head') {
+                    if (child.type === 'text') return child.content;
+                    if (child.type === 'dropdown') {
+                        const idx = child.selected ?? 0;
+                        return child.content && child.content[idx] ? child.content[idx] : '';
+                    }
+                    return block.id;
+                }
+                if ((child.type === 'placeholder' || child.type === 'attachment') && child.content) {
+                    return this.generateFlatString(child.content);
+                }
+                return null;
+            })
+            .filter(Boolean);
+        return parts.join(' ');
+    }
+
+    // Render a small icon button to the left of the block
+    renderSendButton(block, blockGroup, width, height, isDisabled = false) {
+        const gap = 8;
+
+        const group = blockGroup.append('g')
+            .attr('id', `send-${block.id}`)
+            .classed('pointer', !isDisabled);
+
+        if (isDisabled) {
+            group.style('opacity', 0.5)
+                .style('cursor', 'not-allowed');
+        }
+
+        const cx = -gap - buttonRadius;
+        const cy = height / 2;
+
+        const circle = group.append('circle')
+            .attr('cx', cx)
+            .attr('cy', cy)
+            .attr('r', buttonRadius)
+            .attr('fill', isDisabled ? '#cdd2d7' : '#007AFF')  // gray when disabled, blue when enabled
+            .attr('stroke', '#e0e0e0')
+            .attr('stroke-width', 1);
+
+        // SVG path for the send icon. Its original viewBox is 24x24.
+        const iconPath = "M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z";
+        const scale = iconSize / 24;
+        const transform = `translate(${cx}, ${cy}) scale(${scale}) translate(-12, -12)`;
+
+        group.append('path')
+            .attr('d', iconPath)
+            .attr('fill', '#FFFFFF')  // icon always white
+            .attr('transform', transform)
+            .style('pointer-events', 'none');
+
+        if (!isDisabled) {
+            group
+                .on('mouseenter', () => {
+                    circle.attr('fill', '#0056b3');  // darker blue on hover
+                })
+                .on('mouseleave', () => {
+                    circle.attr('fill', '#007AFF');  // restore normal blue
+                })
+                .on('mousedown', async (event) => {
+                    event.stopPropagation();
+                    // Gather sentence string and dispatch to AI Tutor chat tab
+                    const text = this.generateFlatString(block);
+                    const eventToDispatch = new CustomEvent('aiTutorSend', { detail: text });
+                    window.dispatchEvent(eventToDispatch);
+                });
+        }
+        // extend the hit area to include the button when dragging around the block
+        group.raise();
+
+        return { x: cx - buttonRadius, y: cy + buttonRadius };
     }
 
     renderPlaceholder(child, height, block, blockGroup, count, x) {
@@ -742,7 +1432,6 @@ export class Renderer {
                     event.stopPropagation();
                     const isFromSidebar = event.currentTarget.closest("#sidebar") !== null;
 
-                    // ログ出力
                     const fromText = child.content[child.selected];
                     const toText = option;
                     if (!isFromSidebar && fromText !== toText) {
@@ -915,7 +1604,6 @@ export class Renderer {
         };
         this.svg.node().appendChild(this.dragboard.node());
 
-        // ログ出力
         if (!fromSideBar) {
             const { rootParent, parentBlock } = this.findBlock(d.id);
             if (parentBlock && rootParent) {
@@ -943,7 +1631,6 @@ export class Renderer {
         if (!this.dragStarted) {
 
             if (fromSideBar) {
-                // ログ出力
                 const newBlockSnapshot = createBlockSnapshot(d);
                 this.onLogEvent('BLOCK_INTERACTION', {
                     sub_type: 'creation',
@@ -988,7 +1675,6 @@ export class Renderer {
             d3.select(`#${d.id}`).attr("transform", `translate(${d.x}, ${d.y})`);
             this.detectOverlapAndHighlight(d);
 
-            // ログ出力
             const placeholderInfo = this.detectPlaceholderOverlap(d, event.x, event.y);
             const currentHoverId = placeholderInfo && !placeholderInfo.isValid ? placeholderInfo.id : null;
             const prevHoverId = this.hoverLogContext.currentPlaceholderId;
@@ -1089,7 +1775,6 @@ export class Renderer {
             }
         }
 
-        // ログ出力
         const prevHoverId = this.hoverLogContext.currentPlaceholderId;
         if (prevHoverId && this.hoverLogContext.timerId) {
             clearTimeout(this.hoverLogContext.timerId);
@@ -1129,7 +1814,6 @@ export class Renderer {
             const targetBlockId = overlapInfo.id.split("-")[1];
             this.attachBlock(d.id, targetBlockId, overlapInfo.side)
         } else {
-            // ログ出力
             const { foundBlock } = this.findBlock(d.id);
             if (foundBlock) {
                 this.onLogEvent('BLOCK_INTERACTION', {
@@ -1330,7 +2014,6 @@ export class Renderer {
     /*階層構造に関する処理***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
     deleteBlock(blockId) {
-        // ログ出力
         const { foundBlock } = this.findBlock(blockId);
         if (foundBlock) {
             const deletedSnapshot = createBlockSnapshot(foundBlock);
@@ -1584,7 +2267,6 @@ export class Renderer {
     insertBlock(id, targetParentId, index) {
         const updatedParent = this.previewInsertion(id, targetParentId, index);
 
-        // ログ出力
         const { foundBlock: draggedBlock } = this.findBlock(id);
         const { rootParent: targetParentBefore } = this.findBlock(targetParentId);
         if (draggedBlock && targetParentBefore && updatedParent) {
@@ -1621,7 +2303,6 @@ export class Renderer {
     attachBlock(id, targetParentId, side) {
         const updatedParent = this.previewAttachment(id, targetParentId, side);
 
-        // ログ出力
         const { foundBlock: draggedBlock } = this.findBlock(id);
         const { rootParent: targetParentBefore } = this.findBlock(targetParentId);
         if (draggedBlock && targetParentBefore && updatedParent) {

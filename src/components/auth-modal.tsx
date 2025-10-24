@@ -20,7 +20,6 @@ const AuthModal = ({ isOpen, onAuthSuccess, onAnonymousAccess }: AuthModalProps)
   const supabase = createClient();
 
   useEffect(() => {
-    // Check if user is already authenticated
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -30,7 +29,6 @@ const AuthModal = ({ isOpen, onAuthSuccess, onAnonymousAccess }: AuthModalProps)
     };
     getUser();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (session?.user) {
@@ -51,7 +49,7 @@ const AuthModal = ({ isOpen, onAuthSuccess, onAnonymousAccess }: AuthModalProps)
     setError("");
 
     try {
-      // Convert username to email format for Supabase (username@sentence-builder.app)
+      // Supabase auth expects an email address
       const email = `${username}@sentence-builder.app`;
       const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -282,4 +280,4 @@ const AuthModal = ({ isOpen, onAuthSuccess, onAnonymousAccess }: AuthModalProps)
   );
 };
 
-export default AuthModal; 
+export default AuthModal;

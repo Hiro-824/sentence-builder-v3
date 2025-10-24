@@ -15,5 +15,17 @@ export const sidebarPadding = { top: 100, bottom: 100, right: 80, left: 12 };
 export const blockListSpacing = 20;
 export const blockListFontSize = 26;
 export const scrollMomentumExtent = 20;
+export const sidebarSearchHeight = 48;
+export const sidebarSearchPadding = { top: 24, bottom: 24, horizontal: 24 };
+export const sidebarSearchBorderRadius = 18;
 export const initialVisibleCount = 5;
 export const visiblilityIncrement = 5;
+
+export const navBarWidth = 70;
+export const navBarPadding = { top: 40, bottom: 100 };
+export const navBarCircleRadius = 12;
+export const navBarCircleSpacing = 20;
+export const navBarScrollPadding = 116;
+
+export const buttonRadius = 32;
+export const iconSize = 32;

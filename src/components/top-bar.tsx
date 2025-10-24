@@ -54,10 +54,8 @@ const TopBar = ({ user, onSignOut, onShowAuthModal, isDirty, isSaving, onSave, o
 
     const handleUserIconClick = useCallback(() => {
         if (user) {
-            // If user is authenticated, toggle the user menu
             setShowUserMenu(!showUserMenu);
         } else {
-            // If user is not authenticated, show the auth modal
             onShowAuthModal?.();
         }
     }, [showUserMenu, user, onShowAuthModal]);
@@ -67,7 +65,6 @@ const TopBar = ({ user, onSignOut, onShowAuthModal, isDirty, isSaving, onSave, o
         setShowUserMenu(false);
     }, [onSignOut]);
 
-    // Close menu when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
@@ -120,7 +117,7 @@ const TopBar = ({ user, onSignOut, onShowAuthModal, isDirty, isSaving, onSave, o
                     target="_blank"
                     rel="noopener noreferrer"
                     className="top-bar-button"
-                    style={{ textDecoration: 'none' }} // Prevents the default underline
+                    style={{ textDecoration: 'none' }}
                     onMouseEnter={(e) => handleButtonHover(e, true)}
                     onMouseLeave={(e) => handleButtonHover(e, false)}
                 >

@@ -117,7 +117,7 @@ export const renderStaticBlock = <ParentDatum>(
     block: Block,
     parentSelection: d3.Selection<SVGGElement, ParentDatum, null, undefined>
 ) => {
-    // We create a group for the block itself, offset by its own x/y
+    // Group for this block, offset by its coordinates
     const blockGroup = parentSelection.append("g")
         .attr("transform", `translate(${block.x ?? 0}, ${block.y ?? 0})`)
         .datum(block);
@@ -139,7 +139,7 @@ export const renderStaticBlock = <ParentDatum>(
 
     let currentX = horizontalPadding + (block.isRound ? horizontalPadding : 0);
 
-    // Iterate over children to render them
+    // Render each visible child
     for (const child of block.children) {
         if (child.hidden) continue;
 
@@ -158,14 +158,13 @@ export const renderStaticBlock = <ParentDatum>(
 
         } else if (child.type === 'placeholder' || child.type === 'attachment') {
             if (childContent) {
-                // Nested block exists, so render it recursively
+                // Render nested block recursively
                 const childWidth = calculateBlockWidth(childContent);
                 const childHeight = calculateBlockHeight(childContent);
-                // Set relative coordinates for the nested block
+                // Offset nested block coordinates
                 childContent.x = currentX;
                 childContent.y = (height - childHeight) / 2;
 
-                // This recursive call now works because `blockGroup` matches the generic signature
                 renderStaticBlock(childContent, blockGroup);
 
                 currentX += (childWidth + horizontalPadding);

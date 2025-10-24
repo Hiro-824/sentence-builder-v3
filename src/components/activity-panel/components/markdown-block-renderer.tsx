@@ -36,7 +36,7 @@ const MarkdownBlockRenderer = ({ jsonString }: MarkdownBlockRendererProps) => {
     const formattedBlock = converter.formatBlock(blockData);
 
     const svg = d3.select(svgRef.current);
-    svg.selectAll("*").remove(); // Clear previous render
+    svg.selectAll("*").remove();
 
     const scaleFactor = 0.5;
 

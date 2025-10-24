@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import type { Project } from "@/models/project";
-import { listProjects } from "@/utils/supabase/projects"; // We will create this file in the next step
+import { listProjects } from "@/utils/supabase/projects";
 
 interface ProjectListModalProps {
   isOpen: boolean;
@@ -22,7 +22,6 @@ const ProjectListModal = ({ isOpen, isDismissible, onClose, onSelectProject, onC
         setIsLoading(true);
         try {
           const projectsData = await listProjects();
-          // Sort projects by most recently updated
           projectsData.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
           setProjects(projectsData);
         } catch (error) {

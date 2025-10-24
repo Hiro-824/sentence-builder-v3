@@ -27,12 +27,11 @@ export async function listProjects(): Promise<Project[]> {
             return [];
         }
 
-        // Map the file metadata from Supabase Storage to our Project type.
         const projects: Project[] = files
-            .filter(file => file.name.endsWith('.json')) // Ensure we only process project files
+            .filter(file => file.name.endsWith('.json'))
             .map(file => ({
                 id: file.name.replace('.json', ''),
-                name: file.name.replace('.json', ''), // The file name is the title
+                name: file.name.replace('.json', ''),
                 updated_at: file.updated_at,
             }));
 
@@ -86,8 +85,7 @@ export async function saveProjectData(projectId: string, projectData: { blocks: 
     }
 
     try {
-        // The third argument (space count) makes the JSON in storage human-readable for easier debugging.
-        const jsonString = JSON.stringify(projectData, null, 2);
+        const jsonString = JSON.stringify(projectData, null, 2); // Keep JSON readable in storage
         const file = new File([jsonString], `${projectId}.json`, { type: "application/json" });
 
         const { error } = await supabase.storage

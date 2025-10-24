@@ -7,7 +7,7 @@ import { blockA, blockS, blockThe } from "./determiners";
 import { allAuxiliaryBlocks } from "./auxiliaries";
 import { allPrepositionBlocks } from "./prepositions";
 import { blockHowManySentence, blockHowSentence, blockThat, blockWhatDetSentence, blockWhatSentence, blockWhereSentence, blockWhichDetSentence, blockWhichSentence, blockWhoseDetSentence, blockWhoSentence, blockWhoseSentence } from "./complementizers";
-import { blockEvery, blockFast, blockVery, blockWell } from "./adverbials";
+import { blockActively, blockAggressively, blockAlready, blockAlways, blockAround, blockBadly, blockCarefully, blockCalmly, blockClearly, blockEasily, blockEfficiently, blockEnergetically, blockEvery, blockEverywhere, blockFar, blockFast, blockFinally, blockHardAdv, blockHere, blockHappily, blockIndoors, blockJust, blockLateAdv, blockLater, blockLoudly, blockMaybe, blockNear, blockNever, blockNow, blockOften, blockOnline, blockOutdoors, blockPolitelyAdv, blockProbably, blockProfessionally, blockQuickly, blockQuietly, blockRarely, blockReally, blockRegularly, blockSafely, blockSeriouslyAdv, blockSlowly, blockSmoothly, blockSometimes, blockSoon, blockStill, blockThen, blockThere, blockTogether, blockTomorrow, blockToday, blockUsually, blockVery, blockWell, blockYesterday, blockEarlyAdv } from "./adverbials";
 import { allRelativePronounBlocks } from "./relatives";
 
 export const blockTo: Block = {
@@ -17,6 +17,7 @@ export const blockTo: Block = {
     isRound: true,
     words: [{
         token: "",
+        tags: ["infinitive", "to"],
         categories: [
         {
             head: { type: "adverbial", isTo: true },
@@ -37,8 +38,9 @@ export const blockTo: Block = {
             head: { type: { type: "nominal", isTo: true, isDet: true }, agr: { type: "3sing" } },
             right: [{ head: { type: "verb", form: "base" } }],
             translationTemplates: {
-                default: [{ path: ["right", 0], key: "default" }, "こと"],
-                base: [{ path: ["right", 0], key: "default" }]
+                imperfective: [{ path: ["right", 0], key: "default" }, "こと"],
+                base: [{ path: ["right", 0], key: "default" }],
+                default: [{ path: ["right", 0], key: "continuous" }]
             }
         }]
     }],
@@ -65,6 +67,59 @@ export const blockList = {
     ],
     "副詞": [
         blockEvery,
+        blockAlways,
+        blockUsually,
+        blockOften,
+        blockSometimes,
+        blockRarely,
+        blockNever,
+        blockRegularly,
+        blockReally,
+        blockProbably,
+        blockMaybe,
+        blockNow,
+        blockEarlyAdv,
+        blockSoon,
+        blockAlready,
+        blockJust,
+        blockStill,
+        blockFinally,
+        blockThen,
+        blockLater,
+        blockYesterday,
+        blockToday,
+        blockTomorrow,
+        blockHere,
+        blockThere,
+        blockEverywhere,
+        blockOutdoors,
+        blockIndoors,
+        blockFar,
+        blockNear,
+        blockAround,
+        blockQuickly,
+        blockSlowly,
+        blockCarefully,
+        blockBadly,
+        blockQuietly,
+        blockLoudly,
+        blockCalmly,
+        blockHappily,
+        blockSeriouslyAdv,
+        blockHardAdv,
+        blockClearly,
+        blockEasily,
+        blockEfficiently,
+        blockProfessionally,
+        blockSafely,
+        blockSmoothly,
+        blockTogether,
+        blockOnline,
+        blockActively,
+        blockAggressively,
+        blockEnergetically,
+        blockPolitelyAdv,
+        blockLateAdv,
         blockVery,
         blockWell,
         blockFast,
