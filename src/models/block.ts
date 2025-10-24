@@ -28,7 +28,7 @@ export interface BlockChild {
 }
 
 export interface SentenceStructureEntry {
-    icon: string;
+    icon?: string;
     label: string;
     value: string;
     tone?: 'note' | 'warning' | 'missing';

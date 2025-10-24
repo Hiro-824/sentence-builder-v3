@@ -172,57 +172,54 @@ function detectTimeLabel(value: string): boolean {
     return TIME_KEYWORDS.some(keyword => value.includes(keyword));
 }
 
-function inferLabelAndIcon(value: string, index: number): { label: string; icon: string } {
+function inferLabel(value: string, index: number): string {
     if (!value || value.includes("＿")) {
-        return { label: index === 0 ? "なにを？" : "つながり", icon: index === 0 ? "🎯" : "🧩" };
+        return index === 0 ? "なにを？" : "つながり";
     }
 
     const multiParticlePatterns = [
-        { pattern: /について$/, label: "なにについて？", icon: "💬" },
-        { pattern: /のことを$/, label: "なにについて？", icon: "💬" },
-        { pattern: /のために$/, label: "なんのために？", icon: "🎯" },
-        { pattern: /ために$/, label: "なんのために？", icon: "🎯" },
-        { pattern: /として$/, label: "どんな役割で？", icon: "🎭" },
-        { pattern: /にとって$/, label: "だれにとって？", icon: "🧠" },
-        { pattern: /から$/, label: "どこから？", icon: "🚪" },
-        { pattern: /まで$/, label: "どこまで？", icon: "➡️" }
+        { pattern: /について$/, label: "なにについて？" },
+        { pattern: /のことを$/, label: "なにについて？" },
+        { pattern: /のために$/, label: "なんのために？" },
+        { pattern: /ために$/, label: "なんのために？" },
+        { pattern: /として$/, label: "どんな役割で？" },
+        { pattern: /にとって$/, label: "だれにとって？" },
+        { pattern: /から$/, label: "どこから？" },
+        { pattern: /まで$/, label: "どこまで？" }
     ];
 
     const matchedMulti = multiParticlePatterns.find(entry => entry.pattern.test(value));
     if (matchedMulti) {
-        return { label: matchedMulti.label, icon: matchedMulti.icon };
+        return matchedMulti.label;
     }
 
     if (detectTimeLabel(value)) {
-        return { label: "いつ？", icon: "🕒" };
+        return "いつ？";
     }
 
     const lastChar = value.slice(-1);
     switch (lastChar) {
         case "を":
-            return { label: "なにを？", icon: "🎯" };
+            return "なにを？";
         case "に":
         case "へ":
-            return { label: "どこに？", icon: "📍" };
+            return "どこに？";
         case "で":
-            return { label: "どこで？", icon: "🏠" };
+            return "どこで？";
         case "と":
-            return { label: "だれと？", icon: "🤝" };
+            return "だれと？";
         default:
             break;
     }
 
-    return {
-        label: index === 0 ? "なにとつながる？" : "つながり",
-        icon: index === 0 ? "🧩" : "🔗"
-    };
+    return index === 0 ? "なにとつながる？" : "つながり";
 }
 
 function buildSubjectEntry(subjectPhrase: Phrase | undefined, actionText: string, format: (text: string) => string): SentenceStructureEntry {
     const subjectValue = extractTranslation(subjectPhrase, format);
     const missing = isMissingValue(subjectValue);
     const human = isLikelyHuman(subjectValue);
-    const label = human ? "だれが？" : "なにが？";
+    const label = human ? "だれが？" : "なにが？（だれが？）";
     let tone: SentenceStructureEntry["tone"];
 
     if (missing) {
@@ -231,10 +228,9 @@ function buildSubjectEntry(subjectPhrase: Phrase | undefined, actionText: string
         tone = "warning";
     }
 
-    const icon = human ? "👤" : "🧱";
     const value = missing ? "（まだ入っていないよ）" : subjectValue;
 
-    return { icon, label, value, tone };
+    return { label, value, tone };
 }
 
 function buildComplementEntries(phrase: Phrase, format: (text: string) => string): SentenceStructureEntry[] {
@@ -242,9 +238,8 @@ function buildComplementEntries(phrase: Phrase, format: (text: string) => string
     return complements.map((arg, index) => {
         const value = extractTranslation(arg, format);
         const missing = isMissingValue(value);
-        const { label, icon } = inferLabelAndIcon(value, index);
+        const label = inferLabel(value, index);
         return {
-            icon,
             label,
             value: missing ? "（ここはまだ空っぽ）" : value,
             tone: missing ? "missing" : undefined
@@ -258,10 +253,8 @@ function buildModifierEntries(phrase: Phrase, format: (text: string) => string):
         const value = extractTranslation(mod, format);
         const missing = isMissingValue(value);
         const isTime = detectTimeLabel(value);
-        const icon = isTime ? "🕒" : "✨";
         const label = isTime ? "いつ？" : "付け足し";
         return {
-            icon,
             label,
             value: missing ? "（ここもまだ空いているよ）" : value,
             tone: missing ? "missing" : undefined
@@ -274,7 +267,6 @@ function analyzePredicate(predicatePhrase: Phrase | undefined, format: (text: st
         return {
             actionText: "",
             entries: [{
-                icon: "🎬",
                 label: "どうする？",
                 value: "（まだ動きが決まっていないよ）",
                 tone: "missing"
@@ -284,7 +276,6 @@ function analyzePredicate(predicatePhrase: Phrase | undefined, format: (text: st
 
     const actionText = extractTranslation(predicatePhrase, format);
     const actionEntry: SentenceStructureEntry = {
-        icon: "🎬",
         label: "どうする？",
         value: actionText ? actionText : "（まだ動きが決まっていないよ）",
         tone: actionText ? undefined : "missing"
@@ -319,11 +310,11 @@ export function buildSentenceStructure(phrase: Phrase | undefined, options: Buil
     const hasWarning = entries.some(entry => entry.tone === "warning");
     const hasMissing = entries.some(entry => entry.tone === "missing");
 
-    let note = "👀 ブロックの関係をチェックしよう。少し変だと感じたら並べ替えてみよう！";
+    let note = "ブロックの関係をチェックしよう。少し変だと感じたら並べ替えてみよう！";
     if (hasWarning) {
-        note = "⚠️ ちょっと不思議かも：動くのは人かな？ ブロックを入れ替えてみよう。";
+        note = "ちょっと不思議かも。動くのはだれか、もう一度考えてみよう。";
     } else if (hasMissing) {
-        note = "＋ まだ空いているところがあるよ。必要なブロックを追加してみよう！";
+        note = "まだ空いているところがあるよ。必要なブロックを追加してみよう。";
     }
 
     return {

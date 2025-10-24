@@ -1551,15 +1551,16 @@ export class Renderer {
         const bubblePaddingX = horizontalPadding * 2;
         const bubblePaddingY = horizontalPadding * 1.6;
         const columnGap = horizontalPadding * 1.5;
-        const rowGap = 6;
-        const headerGap = 12;
+        const rowGap = 8;
+        const titleSpacing = 24;
+        const lineSpacing = 12;
         const noteGap = 12;
 
         const titleBox = this.calculateTextHeightAndWidth(structure.title);
         const noteBox = structure.note ? this.calculateTextHeightAndWidth(structure.note) : { width: 0, height: 0 };
 
         const rowMetrics = structure.entries.map(entry => {
-            const labelText = `${entry.icon} ${entry.label}`;
+            const labelText = entry.label;
             const labelBox = this.calculateTextHeightAndWidth(labelText);
             const valueText = entry.value;
             const valueBox = this.calculateTextHeightAndWidth(valueText);
@@ -1586,7 +1587,8 @@ export class Renderer {
             + rowGap * Math.max(0, rowMetrics.length - 1);
         const bubbleHeight = bubblePaddingY * 2
             + titleBox.height
-            + headerGap
+            + titleSpacing
+            + lineSpacing
             + rowsHeight
             + (structure.note ? noteGap + noteBox.height : 0);
 
@@ -1623,7 +1625,7 @@ export class Renderer {
             .attr("dominant-baseline", "alphabetic")
             .style("user-select", "none");
 
-        cursorY += titleBox.height + headerGap / 2;
+        cursorY += titleBox.height + titleSpacing;
 
         bubbleGroup.append("line")
             .attr("x1", bubblePaddingX)
@@ -1633,7 +1635,7 @@ export class Renderer {
             .attr("stroke", "rgba(255,255,255,0.3)")
             .attr("stroke-width", 1.5);
 
-        cursorY += headerGap / 2;
+        cursorY += lineSpacing;
 
         rowMetrics.forEach(metric => {
             const rowGroup = bubbleGroup.append("g")
@@ -1642,25 +1644,11 @@ export class Renderer {
             const rowWidth = bubbleWidth - bubblePaddingX * 2;
             const rowHeight = metric.rowHeight;
 
-            if (metric.tone === "warning" || metric.tone === "missing") {
-                const toneColor = metric.tone === "warning"
-                    ? "rgba(255, 128, 82, 0.32)"
-                    : "rgba(255, 255, 255, 0.14)";
-                rowGroup.insert("rect", ":first-child")
-                    .attr("x", -bubblePaddingX * 0.15)
-                    .attr("y", -3)
-                    .attr("width", rowWidth + bubblePaddingX * 0.3)
-                    .attr("height", rowHeight + 6)
-                    .attr("fill", toneColor)
-                    .attr("rx", 10)
-                    .attr("ry", 10);
-            }
-
             rowGroup.append("text")
                 .text(metric.labelText)
                 .attr("x", 0)
                 .attr("y", 0)
-                .attr("fill", "rgba(255,255,255,0.85)")
+                .attr("fill", "rgba(226,232,240,0.85)")
                 .attr("font-size", `${labelFontSize - 1}pt`)
                 .attr("font-weight", "600")
                 .attr("dominant-baseline", "hanging")
@@ -1670,11 +1658,7 @@ export class Renderer {
                 .text(metric.valueText)
                 .attr("x", metric.labelBox.width + columnGap)
                 .attr("y", 0)
-                .attr("fill", metric.tone === "warning"
-                    ? "#FFB38A"
-                    : metric.tone === "missing"
-                        ? "rgba(229, 231, 235, 0.65)"
-                        : "#F9FAFB")
+                .attr("fill", "#F8FAFC")
                 .attr("font-size", `${labelFontSize - 1}pt`)
                 .attr("font-weight", metric.tone === "missing" ? "400" : "700")
                 .attr("dominant-baseline", "hanging")
