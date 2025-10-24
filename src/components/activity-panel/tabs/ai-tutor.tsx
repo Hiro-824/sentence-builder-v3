@@ -190,6 +190,13 @@ export const AiTutorTabContent = ({ projectId }: AiTutorTabContentProps) => {
         return scenarioOptions.find((option) => option.id === selectedScenarioId) ?? null;
     }, [scenarioOptions, selectedScenarioId]);
 
+    const hasUserMessage = useMemo(
+        () => currentConversation?.messages.some((msg) => msg.sender === 'user') ?? false,
+        [currentConversation],
+    );
+
+    const isScenarioLocked = hasUserMessage;
+
     useEffect(() => {
         if (typeof window === 'undefined') {
             return;
@@ -514,7 +521,7 @@ export const AiTutorTabContent = ({ projectId }: AiTutorTabContentProps) => {
             if (!trimmedInput || isCurrentConversationPending) {
                 return;
             }
-            if (selectedScenarioId === CUSTOM_SCENARIO_VALUE && !customScenarioInput.trim()) {
+            if (!isScenarioLocked && selectedScenarioId === CUSTOM_SCENARIO_VALUE && !customScenarioInput.trim()) {
                 setCustomScenarioError('カスタムシナリオを入力してください。');
                 return;
             }
@@ -522,7 +529,7 @@ export const AiTutorTabContent = ({ projectId }: AiTutorTabContentProps) => {
             setInputValue('');
             void sendTextToAi(trimmedInput);
         },
-        [customScenarioInput, inputValue, isCurrentConversationPending, selectedScenarioId, sendTextToAi],
+        [customScenarioInput, inputValue, isCurrentConversationPending, isScenarioLocked, selectedScenarioId, sendTextToAi],
     );
 
     useEffect(() => {
@@ -573,6 +580,10 @@ export const AiTutorTabContent = ({ projectId }: AiTutorTabContentProps) => {
     };
 
     const handleScenarioSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        if (isScenarioLocked) {
+            return;
+        }
+
         const value = event.target.value;
         setSelectedScenarioId(value);
         setCustomScenarioError(null);
@@ -615,6 +626,10 @@ export const AiTutorTabContent = ({ projectId }: AiTutorTabContentProps) => {
     };
 
     const handleCustomScenarioInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+        if (isScenarioLocked) {
+            return;
+        }
+
         const value = event.target.value;
         setCustomScenarioInput(value);
         setCustomScenarioError(null);
@@ -637,7 +652,7 @@ export const AiTutorTabContent = ({ projectId }: AiTutorTabContentProps) => {
     };
 
     const isCustomScenarioSelected = selectedScenarioId === CUSTOM_SCENARIO_VALUE;
-    const isCustomScenarioValid = !isCustomScenarioSelected || customScenarioInput.trim().length > 0;
+    const isCustomScenarioValid = isScenarioLocked || !isCustomScenarioSelected || customScenarioInput.trim().length > 0;
     const isSendDisabled = isCurrentConversationPending || inputValue.trim() === '' || !isCustomScenarioValid;
 
     return (
@@ -666,7 +681,7 @@ export const AiTutorTabContent = ({ projectId }: AiTutorTabContentProps) => {
                         className={styles.scenarioSelect}
                         value={selectedScenarioId}
                         onChange={handleScenarioSelect}
-                        disabled={isFetchingScenarios || isCurrentConversationPending}
+                        disabled={isFetchingScenarios || isCurrentConversationPending || isScenarioLocked}
                     >
                         <option value={NO_SCENARIO_VALUE}>シナリオなし（自由に練習）</option>
                         {scenarioOptions.map((option) => (
@@ -699,11 +714,16 @@ export const AiTutorTabContent = ({ projectId }: AiTutorTabContentProps) => {
                             className={styles.customScenarioInput}
                             placeholder="例：駅で道を聞く / オンラインで自己紹介する"
                             rows={2}
-                            disabled={isCurrentConversationPending}
+                            disabled={isCurrentConversationPending || isScenarioLocked}
                         />
                         <p className={styles.scenarioHint}>AI講師がこの状況に合わせて会話します。</p>
                         {customScenarioError && <p className={styles.scenarioError}>{customScenarioError}</p>}
                     </div>
+                )}
+                {isScenarioLocked && (
+                    <p className={styles.scenarioLockNotice}>
+                        会話が始まったため、この会話のシナリオは変更できません。新しい会話を開始して選び直してください。
+                    </p>
                 )}
             </div>
 

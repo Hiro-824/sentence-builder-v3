@@ -14,8 +14,8 @@ type TutorScenario = {
 export const BUILT_IN_SCENARIOS: TutorScenario[] = [
   {
     id: 'cafe_ordering',
-    title: 'Ordering at a Café',
-    description: 'Practice ordering drinks and snacks from a friendly café worker.',
+    title: 'カフェで注文する',
+    description: 'カフェで飲み物や軽食を注文する練習ができます。',
     aiRole: 'cheerful café cashier',
     sceneSetting: 'A cozy neighborhood café counter with a short menu board.',
     conversationFocus: [
@@ -27,8 +27,8 @@ export const BUILT_IN_SCENARIOS: TutorScenario[] = [
   },
   {
     id: 'new_school',
-    title: 'First Day at a New School',
-    description: 'Practice meeting a classmate and learning about the school.',
+    title: '新しい学校での初日',
+    description: '新しい学校でクラスメイトと話す練習ができます。',
     aiRole: 'welcoming classmate',
     sceneSetting: 'A lively school hallway right before class begins.',
     conversationFocus: [
@@ -40,8 +40,8 @@ export const BUILT_IN_SCENARIOS: TutorScenario[] = [
   },
   {
     id: 'picture_description',
-    title: 'Describing a Picture',
-    description: 'Practice describing visual details for someone who cannot see the picture.',
+    title: '絵を言葉で説明する',
+    description: '見えない相手に写真や絵を説明する練習ができます。',
     aiRole: 'curious friend on the phone',
     sceneSetting: 'A quiet call where the learner explains a photo they are looking at.',
     conversationFocus: [
@@ -53,8 +53,8 @@ export const BUILT_IN_SCENARIOS: TutorScenario[] = [
   },
   {
     id: 'doctor_visit',
-    title: 'Talking to a Doctor',
-    description: 'Practice sharing symptoms and receiving simple medical advice.',
+    title: '医者との会話',
+    description: '体の調子を医者に伝える練習ができます。',
     aiRole: 'kind family doctor',
     sceneSetting: 'A small clinic room during a routine visit.',
     conversationFocus: [
@@ -66,8 +66,8 @@ export const BUILT_IN_SCENARIOS: TutorScenario[] = [
   },
   {
     id: 'ask_directions',
-    title: 'Asking for Directions',
-    description: 'Practice talking with a stranger to find a location.',
+    title: '道を尋ねる',
+    description: '街で道案内をお願いするときの練習ができます。',
     aiRole: 'helpful passerby',
     sceneSetting: 'A busy city street corner with nearby landmarks.',
     conversationFocus: [
@@ -81,8 +81,8 @@ export const BUILT_IN_SCENARIOS: TutorScenario[] = [
 
 const FALLBACK_SCENARIO: TutorScenario = {
   id: 'friendly_chat',
-  title: 'Friendly Chat',
-  description: 'General light conversation practice.',
+  title: 'フリートーク',
+  description: '気軽な英会話の練習ができます。',
   aiRole: 'kind English tutor',
   sceneSetting: 'A relaxed online chat focused on everyday topics.',
   conversationFocus: [
