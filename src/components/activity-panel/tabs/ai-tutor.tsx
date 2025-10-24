@@ -17,11 +17,22 @@ interface Conversation {
     messages: Message[];
     createdAt: number;
     updatedAt: number;
+    scenarioId: string | null;
+    customScenario: string;
 }
 
 interface AiTutorTabContentProps {
     projectId?: string | null;
 }
+
+interface ScenarioOption {
+    id: string;
+    title: string;
+    description: string;
+}
+
+const NO_SCENARIO_VALUE = 'none';
+const CUSTOM_SCENARIO_VALUE = 'custom';
 
 const LOCAL_STORAGE_KEY = 'aiTutorConversations';
 const CURRENT_CONVERSATION_KEY = 'aiTutorCurrentConversationId';
@@ -47,12 +58,17 @@ const createInitialMessage = (): Message => ({
     sender: 'ai',
 });
 
-const createConversation = (labelIndex: number): Conversation => ({
+const createConversation = (
+    labelIndex: number,
+    scenario?: { scenarioId: string | null; customScenario?: string },
+): Conversation => ({
     id: generateConversationId(),
     title: `Conversation ${labelIndex}`,
     messages: [createInitialMessage()],
     createdAt: Date.now(),
     updatedAt: Date.now(),
+    scenarioId: scenario?.scenarioId ?? null,
+    customScenario: typeof scenario?.customScenario === 'string' ? scenario.customScenario.trim() : '',
 });
 
 const sanitizeConversation = (value: unknown, index: number): Conversation | null => {
@@ -90,12 +106,24 @@ const sanitizeConversation = (value: unknown, index: number): Conversation | nul
         ? conversation.title
         : `Conversation ${index}`;
 
+    const trimmedCustomScenario = typeof conversation.customScenario === 'string'
+        ? conversation.customScenario.trim()
+        : '';
+
+    const rawScenarioId = typeof conversation.scenarioId === 'string' && conversation.scenarioId.trim()
+        ? conversation.scenarioId.trim()
+        : '';
+
+    const normalizedScenarioId = trimmedCustomScenario ? null : rawScenarioId || null;
+
     return {
         id,
         title: fallbackTitle,
         messages: sanitizedMessages.length > 0 ? sanitizedMessages : [createInitialMessage()],
         createdAt,
         updatedAt,
+        scenarioId: normalizedScenarioId,
+        customScenario: trimmedCustomScenario,
     } as Conversation;
 };
 
@@ -132,6 +160,13 @@ export const AiTutorTabContent = ({ projectId }: AiTutorTabContentProps) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [hasHydrated, setHasHydrated] = useState(false);
     const [hydratedProjectKey, setHydratedProjectKey] = useState<string | null>(null);
+    const [scenarioOptions, setScenarioOptions] = useState<ScenarioOption[]>([]);
+    const [allowCustomScenario, setAllowCustomScenario] = useState(true);
+    const [isFetchingScenarios, setIsFetchingScenarios] = useState(false);
+    const [scenarioFetchError, setScenarioFetchError] = useState<string | null>(null);
+    const [selectedScenarioId, setSelectedScenarioId] = useState<string>(NO_SCENARIO_VALUE);
+    const [customScenarioInput, setCustomScenarioInput] = useState('');
+    const [customScenarioError, setCustomScenarioError] = useState<string | null>(null);
     const messageListRef = useRef<HTMLDivElement>(null);
 
     const storageKeys = useMemo(
@@ -147,6 +182,13 @@ export const AiTutorTabContent = ({ projectId }: AiTutorTabContentProps) => {
         [conversations, currentConversationId],
     );
     const messages = useMemo(() => currentConversation?.messages ?? [], [currentConversation]);
+
+    const selectedScenarioOption = useMemo(() => {
+        if (selectedScenarioId === CUSTOM_SCENARIO_VALUE || selectedScenarioId === NO_SCENARIO_VALUE) {
+            return null;
+        }
+        return scenarioOptions.find((option) => option.id === selectedScenarioId) ?? null;
+    }, [scenarioOptions, selectedScenarioId]);
 
     useEffect(() => {
         if (typeof window === 'undefined') {
@@ -188,6 +230,65 @@ export const AiTutorTabContent = ({ projectId }: AiTutorTabContentProps) => {
     }, [projectKey, storageKeys]);
 
     useEffect(() => {
+        let isCancelled = false;
+
+        const fetchScenarios = async () => {
+            setIsFetchingScenarios(true);
+            try {
+                const response = await fetch('/api/ai-tutor');
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch scenarios (${response.status})`);
+                }
+                const data = await response.json();
+                if (isCancelled) {
+                    return;
+                }
+
+                const rawScenarios = Array.isArray(data?.scenarios) ? data.scenarios : [];
+                const sanitizedScenarios = rawScenarios
+                    .map((item: unknown) => {
+                        if (!item || typeof item !== 'object') {
+                            return null;
+                        }
+                        const { id, title, description } = item as Partial<ScenarioOption>;
+                        if (typeof id !== 'string' || typeof title !== 'string') {
+                            return null;
+                        }
+                        return {
+                            id: id.trim(),
+                            title: title.trim(),
+                            description: typeof description === 'string' ? description.trim() : '',
+                        } satisfies ScenarioOption;
+                    })
+                    .filter((option): option is ScenarioOption => Boolean(option));
+
+                const uniqueOptions = Array.from(new Map(sanitizedScenarios.map((option) => [option.id, option])).values());
+                setScenarioOptions(uniqueOptions);
+
+                if (typeof data?.allowCustomScenario === 'boolean') {
+                    setAllowCustomScenario(data.allowCustomScenario);
+                }
+                setScenarioFetchError(null);
+            } catch (error) {
+                if (!isCancelled) {
+                    console.warn('Failed to load AI tutor scenarios', error);
+                    setScenarioFetchError('シナリオ一覧の取得に失敗しました。');
+                }
+            } finally {
+                if (!isCancelled) {
+                    setIsFetchingScenarios(false);
+                }
+            }
+        };
+
+        fetchScenarios();
+
+        return () => {
+            isCancelled = true;
+        };
+    }, []);
+
+    useEffect(() => {
         if (
             !hasHydrated ||
             hydratedProjectKey !== projectKey ||
@@ -213,6 +314,87 @@ export const AiTutorTabContent = ({ projectId }: AiTutorTabContentProps) => {
         }
     }, [currentConversationId, hasHydrated, hydratedProjectKey, projectKey, storageKeys]);
 
+    useEffect(() => {
+        if (!hasHydrated || scenarioOptions.length === 0) {
+            return;
+        }
+
+        setConversations((prev) => {
+            let changed = false;
+            const validIds = new Set(scenarioOptions.map((option) => option.id));
+
+            const next = prev.map((conv) => {
+                if (!conv.scenarioId) {
+                    return conv;
+                }
+                if (!validIds.has(conv.scenarioId)) {
+                    changed = true;
+                    return {
+                        ...conv,
+                        scenarioId: null,
+                    } as Conversation;
+                }
+                return conv;
+            });
+
+            return changed ? next : prev;
+        });
+    }, [hasHydrated, scenarioOptions]);
+
+    useEffect(() => {
+        if (!currentConversation) {
+            setSelectedScenarioId(NO_SCENARIO_VALUE);
+            setCustomScenarioInput('');
+            setCustomScenarioError(null);
+            return;
+        }
+
+        const currentCustom = currentConversation.customScenario ?? '';
+        const trimmedCustom = currentCustom.trim();
+        const hasValidScenarioId = Boolean(
+            currentConversation.scenarioId &&
+            scenarioOptions.some((option) => option.id === currentConversation.scenarioId)
+        );
+
+        if (trimmedCustom && allowCustomScenario) {
+            setSelectedScenarioId(CUSTOM_SCENARIO_VALUE);
+            setCustomScenarioInput(currentCustom);
+            setCustomScenarioError(null);
+            return;
+        }
+
+        if (hasValidScenarioId) {
+            setSelectedScenarioId(currentConversation.scenarioId as string);
+            setCustomScenarioInput('');
+            setCustomScenarioError(null);
+            return;
+        }
+
+        if (trimmedCustom && !allowCustomScenario && currentConversationId) {
+            setConversations((prev) => {
+                let changed = false;
+                const next = prev.map((conv) => {
+                    if (conv.id !== currentConversationId) {
+                        return conv;
+                    }
+                    if (!conv.customScenario.trim()) {
+                        return conv;
+                    }
+                    changed = true;
+                    return {
+                        ...conv,
+                        customScenario: '',
+                    } as Conversation;
+                });
+                return changed ? next : prev;
+            });
+        }
+
+        setSelectedScenarioId(NO_SCENARIO_VALUE);
+        setCustomScenarioInput('');
+        setCustomScenarioError(null);
+    }, [allowCustomScenario, currentConversation, currentConversationId, scenarioOptions]);
+
     const isCurrentConversationPending = pendingConversationId === currentConversationId;
 
     useEffect(() => {
@@ -237,6 +419,13 @@ export const AiTutorTabContent = ({ projectId }: AiTutorTabContentProps) => {
             if (!conversation) {
                 return;
             }
+
+            const trimmedCustomScenario = conversation.customScenario.trim();
+            if (selectedScenarioId === CUSTOM_SCENARIO_VALUE && !trimmedCustomScenario) {
+                setCustomScenarioError('カスタムシナリオを入力してください。');
+                return;
+            }
+            setCustomScenarioError(null);
 
             const conversationId = conversation.id;
             const userMessage: Message = {
@@ -269,7 +458,11 @@ export const AiTutorTabContent = ({ projectId }: AiTutorTabContentProps) => {
                     content: msg.text,
                 }));
 
-                const aiText = await requestAiTutor(chatMessages);
+                const scenarioId = trimmedCustomScenario ? undefined : conversation.scenarioId ?? undefined;
+                const aiText = await requestAiTutor(chatMessages, {
+                    scenarioId,
+                    customScenario: trimmedCustomScenario || undefined,
+                });
                 const aiMessage: Message = {
                     id: generateMessageId(),
                     text: aiText,
@@ -311,20 +504,25 @@ export const AiTutorTabContent = ({ projectId }: AiTutorTabContentProps) => {
                 setPendingConversationId((prev) => (prev === conversationId ? null : prev));
             }
         },
-        [conversations, currentConversationId, pendingConversationId],
+        [conversations, currentConversationId, pendingConversationId, selectedScenarioId],
     );
 
     const handleSendMessage = useCallback(
         (event: React.FormEvent) => {
             event.preventDefault();
-            if (!inputValue.trim() || isCurrentConversationPending) {
+            const trimmedInput = inputValue.trim();
+            if (!trimmedInput || isCurrentConversationPending) {
                 return;
             }
-            const text = inputValue;
+            if (selectedScenarioId === CUSTOM_SCENARIO_VALUE && !customScenarioInput.trim()) {
+                setCustomScenarioError('カスタムシナリオを入力してください。');
+                return;
+            }
+            setCustomScenarioError(null);
             setInputValue('');
-            void sendTextToAi(text);
+            void sendTextToAi(trimmedInput);
         },
-        [inputValue, isCurrentConversationPending, sendTextToAi],
+        [customScenarioInput, inputValue, isCurrentConversationPending, selectedScenarioId, sendTextToAi],
     );
 
     useEffect(() => {
@@ -362,11 +560,85 @@ export const AiTutorTabContent = ({ projectId }: AiTutorTabContentProps) => {
     };
 
     const handleStartNewConversation = () => {
-        const newConversation = createConversation(conversations.length + 1);
+        const scenarioPreset = selectedScenarioId === CUSTOM_SCENARIO_VALUE
+            ? { scenarioId: null, customScenario: customScenarioInput.trim() }
+            : selectedScenarioId === NO_SCENARIO_VALUE
+                ? { scenarioId: null, customScenario: '' }
+                : { scenarioId: selectedScenarioId, customScenario: '' };
+
+        const newConversation = createConversation(conversations.length + 1, scenarioPreset);
         setConversations((prev) => [...prev, newConversation]);
         setCurrentConversationId(newConversation.id);
         setIsModalOpen(false);
     };
+
+    const handleScenarioSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const value = event.target.value;
+        setSelectedScenarioId(value);
+        setCustomScenarioError(null);
+
+        if (!currentConversationId) {
+            return;
+        }
+
+        if (value === CUSTOM_SCENARIO_VALUE) {
+            const existingCustom = conversations.find((conv) => conv.id === currentConversationId)?.customScenario ?? '';
+            setCustomScenarioInput(existingCustom);
+            setConversations((prev) =>
+                prev.map((conv) => {
+                    if (conv.id !== currentConversationId) {
+                        return conv;
+                    }
+                    return {
+                        ...conv,
+                        scenarioId: null,
+                    } as Conversation;
+                }),
+            );
+            return;
+        }
+
+        const nextScenarioId = value === NO_SCENARIO_VALUE ? null : value;
+        setCustomScenarioInput('');
+        setConversations((prev) =>
+            prev.map((conv) => {
+                if (conv.id !== currentConversationId) {
+                    return conv;
+                }
+                return {
+                    ...conv,
+                    scenarioId: nextScenarioId,
+                    customScenario: '',
+                } as Conversation;
+            }),
+        );
+    };
+
+    const handleCustomScenarioInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const value = event.target.value;
+        setCustomScenarioInput(value);
+        setCustomScenarioError(null);
+
+        if (!currentConversationId) {
+            return;
+        }
+
+        setConversations((prev) =>
+            prev.map((conv) => {
+                if (conv.id !== currentConversationId) {
+                    return conv;
+                }
+                return {
+                    ...conv,
+                    customScenario: value,
+                } as Conversation;
+            }),
+        );
+    };
+
+    const isCustomScenarioSelected = selectedScenarioId === CUSTOM_SCENARIO_VALUE;
+    const isCustomScenarioValid = !isCustomScenarioSelected || customScenarioInput.trim().length > 0;
+    const isSendDisabled = isCurrentConversationPending || inputValue.trim() === '' || !isCustomScenarioValid;
 
     return (
         <div className={styles.container}>
@@ -382,6 +654,57 @@ export const AiTutorTabContent = ({ projectId }: AiTutorTabContentProps) => {
                 >
                     会話履歴
                 </button>
+            </div>
+
+            <div className={styles.scenarioBar}>
+                <label className={styles.scenarioLabel} htmlFor="ai-tutor-scenario-select">
+                    シナリオを選択
+                </label>
+                <div className={styles.scenarioRow}>
+                    <select
+                        id="ai-tutor-scenario-select"
+                        className={styles.scenarioSelect}
+                        value={selectedScenarioId}
+                        onChange={handleScenarioSelect}
+                        disabled={isFetchingScenarios || isCurrentConversationPending}
+                    >
+                        <option value={NO_SCENARIO_VALUE}>シナリオなし（自由に練習）</option>
+                        {scenarioOptions.map((option) => (
+                            <option key={option.id} value={option.id}>
+                                {option.title}
+                            </option>
+                        ))}
+                        {allowCustomScenario && (
+                            <option value={CUSTOM_SCENARIO_VALUE}>カスタムシナリオを入力</option>
+                        )}
+                    </select>
+                    {isFetchingScenarios && <span className={styles.scenarioStatus}>読込中…</span>}
+                </div>
+                {scenarioFetchError && (
+                    <p className={styles.scenarioError}>{scenarioFetchError}</p>
+                )}
+                {!isCustomScenarioSelected && selectedScenarioId === NO_SCENARIO_VALUE && (
+                    <p className={styles.scenarioDescription}>
+                        シナリオを選ばない場合は、通常のやさしいフリートークになります。
+                    </p>
+                )}
+                {!isCustomScenarioSelected && selectedScenarioOption?.description && (
+                    <p className={styles.scenarioDescription}>{selectedScenarioOption.description}</p>
+                )}
+                {allowCustomScenario && isCustomScenarioSelected && (
+                    <div className={styles.customScenarioGroup}>
+                        <textarea
+                            value={customScenarioInput}
+                            onChange={handleCustomScenarioInputChange}
+                            className={styles.customScenarioInput}
+                            placeholder="例：駅で道を聞く / オンラインで自己紹介する"
+                            rows={2}
+                            disabled={isCurrentConversationPending}
+                        />
+                        <p className={styles.scenarioHint}>AI講師がこの状況に合わせて会話します。</p>
+                        {customScenarioError && <p className={styles.scenarioError}>{customScenarioError}</p>}
+                    </div>
+                )}
             </div>
 
             <div ref={messageListRef} className={styles.messageList}>
@@ -420,7 +743,7 @@ export const AiTutorTabContent = ({ projectId }: AiTutorTabContentProps) => {
                 <button
                     type="submit"
                     className={styles.sendButton}
-                    disabled={isCurrentConversationPending || inputValue.trim() === ''}
+                    disabled={isSendDisabled}
                 >
                     <SendIcon />
                 </button>

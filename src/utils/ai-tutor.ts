@@ -3,11 +3,26 @@ export interface ChatMessage {
     content: string;
 }
 
-export async function requestAiTutor(messages: ChatMessage[]): Promise<string> {
+export interface AiTutorRequestOptions {
+    scenarioId?: string;
+    customScenario?: string;
+}
+
+export async function requestAiTutor(messages: ChatMessage[], options: AiTutorRequestOptions = {}): Promise<string> {
+    const payload: Record<string, unknown> = { messages };
+
+    if (options.scenarioId) {
+        payload.scenarioId = options.scenarioId;
+    }
+
+    if (options.customScenario) {
+        payload.customScenario = options.customScenario;
+    }
+
     const res = await fetch('/api/ai-tutor', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages }),
+        body: JSON.stringify(payload),
     });
 
     if (!res.ok) {
