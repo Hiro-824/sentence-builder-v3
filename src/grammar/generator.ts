@@ -149,6 +149,107 @@ export class Generator {
         return person === 3 && number === 'sing' ? '3sing' : 'non-3sing';
     }
 
+    private ensureContinuousForm(translation?: VerbTranslation): VerbTranslation | undefined {
+        if (!translation) {
+            return translation;
+        }
+        if (translation.continuous) {
+            return translation;
+        }
+        const derived = this.deriveContinuousForm(translation);
+        if (!derived) {
+            return translation;
+        }
+        return { ...translation, continuous: derived };
+    }
+
+    private deriveContinuousForm(translation: VerbTranslation): string | undefined {
+        const dictionary = translation.default;
+        const imperfective = translation.imperfective;
+
+        if (dictionary) {
+            if (dictionary.endsWith("する")) {
+                return dictionary.slice(0, -2) + "し";
+            }
+        }
+
+        if (dictionary && dictionary.endsWith("る") && imperfective && imperfective === dictionary.slice(0, -1)) {
+            return imperfective;
+        }
+
+        if (imperfective) {
+            const converted = this.convertGodanAToI(imperfective);
+            if (converted) {
+                return converted;
+            }
+        }
+
+        if (dictionary) {
+            if (dictionary === "する") {
+                return "し";
+            }
+            if (dictionary.endsWith("る")) {
+                return dictionary.slice(0, -1);
+            }
+            const converted = this.convertGodanEndingToStem(dictionary);
+            if (converted) {
+                return converted;
+            }
+        }
+
+        return undefined;
+    }
+
+    private convertGodanAToI(form: string): string {
+        if (!form) {
+            return form;
+        }
+        const map: Record<string, string> = {
+            "か": "き",
+            "が": "ぎ",
+            "さ": "し",
+            "ざ": "じ",
+            "た": "ち",
+            "だ": "ぢ",
+            "な": "に",
+            "は": "ひ",
+            "ば": "び",
+            "ぱ": "ぴ",
+            "ま": "み",
+            "ら": "り",
+            "わ": "い"
+        };
+        const lastChar = form.slice(-1);
+        const replacement = map[lastChar];
+        if (!replacement) {
+            return form;
+        }
+        return form.slice(0, -1) + replacement;
+    }
+
+    private convertGodanEndingToStem(dictionary: string): string | undefined {
+        if (!dictionary) {
+            return undefined;
+        }
+        const map: Record<string, string> = {
+            "う": "い",
+            "く": "き",
+            "ぐ": "ぎ",
+            "す": "し",
+            "つ": "ち",
+            "ぬ": "に",
+            "ぶ": "び",
+            "む": "み",
+            "る": "り"
+        };
+        const lastChar = dictionary.slice(-1);
+        const replacement = map[lastChar];
+        if (!replacement) {
+            return undefined;
+        }
+        return dictionary.slice(0, -1) + replacement;
+    }
+
     private createNominativeCategory(person: 1 | 2 | 3, number: 'sing' | 'pl', translation: string): Phrase {
         return {
             head: {
@@ -538,9 +639,10 @@ export class Generator {
             } else {
                 category.head.adv_manner_type = "none";
             }
+            const translation = this.ensureContinuousForm(category.translation);
             const translationTemplates: TranslationTemplates = {};
-            if (category.translation) {
-                Object.entries(category.translation).forEach(([key, translationWord]) => {
+            if (translation) {
+                Object.entries(translation).forEach(([key, translationWord]) => {
                     const complementsToUse = form === "passive" ? config.complements.slice(1) : config.complements; //受動態は訳の目的語が消える
                     translationTemplates[key] = [
                         ...complementsToUse.map((complement, index) => ({
