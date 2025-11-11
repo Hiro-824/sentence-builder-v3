@@ -163,6 +163,14 @@ export class Generator {
         return { ...translation, continuous: derived };
     }
 
+    private isVerbTranslation(value: unknown): value is VerbTranslation {
+        if (!value || typeof value !== "object" || Array.isArray(value)) {
+            return false;
+        }
+
+        return Object.values(value).every((entry) => typeof entry === "string");
+    }
+
     private deriveContinuousForm(translation: VerbTranslation): string | undefined {
         const dictionary = translation.default;
         const imperfective = translation.imperfective;
@@ -639,20 +647,22 @@ export class Generator {
             } else {
                 category.head.adv_manner_type = "none";
             }
-            const translation = this.ensureContinuousForm(category.translation);
             const translationTemplates: TranslationTemplates = {};
-            if (translation) {
-                Object.entries(translation).forEach(([key, translationWord]) => {
-                    const complementsToUse = form === "passive" ? config.complements.slice(1) : config.complements; //受動態は訳の目的語が消える
-                    translationTemplates[key] = [
-                        ...complementsToUse.map((complement, index) => ({
-                            path: ["right", index],
-                            key: "default",
-                            particle: complement.particle
-                        })),
-                        translationWord as string
-                    ];
-                });
+            if (this.isVerbTranslation(category.translation)) {
+                const translation = this.ensureContinuousForm(category.translation);
+                if (translation) {
+                    Object.entries(translation).forEach(([key, translationWord]) => {
+                        const complementsToUse = form === "passive" ? config.complements.slice(1) : config.complements; //受動態は訳の目的語が消える
+                        translationTemplates[key] = [
+                            ...complementsToUse.map((complement, index) => ({
+                                path: ["right", index],
+                                key: "default",
+                                particle: complement.particle
+                            })),
+                            translationWord
+                        ];
+                    });
+                }
             }
             return {
                 head: category.head,
