@@ -345,7 +345,7 @@ export const AiTutorTabContent = ({ projectId }: AiTutorTabContentProps) => {
                     return;
                 }
 
-                const rawScenarios = Array.isArray(data?.scenarios) ? data.scenarios : [];
+                const rawScenarios: unknown[] = Array.isArray(data?.scenarios) ? data.scenarios : [];
                 const sanitizedScenarios = rawScenarios
                     .map((item: unknown) => {
                         if (!item || typeof item !== 'object') {
@@ -361,7 +361,7 @@ export const AiTutorTabContent = ({ projectId }: AiTutorTabContentProps) => {
                             description: typeof description === 'string' ? description.trim() : '',
                         } satisfies ScenarioOption;
                     })
-                    .filter((option): option is ScenarioOption => Boolean(option));
+                    .filter((option: ScenarioOption | null): option is ScenarioOption => Boolean(option));
 
                 const uniqueOptions = Array.from(new Map(sanitizedScenarios.map((option) => [option.id, option])).values());
                 setScenarioOptions(uniqueOptions);
