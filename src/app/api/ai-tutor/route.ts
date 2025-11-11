@@ -11,7 +11,7 @@ type TutorScenario = {
   followUpStyle: string;
 };
 
-export const BUILT_IN_SCENARIOS: TutorScenario[] = [
+const BUILT_IN_SCENARIOS: TutorScenario[] = [
   {
     id: 'cafe_ordering',
     title: 'カフェで注文する',
