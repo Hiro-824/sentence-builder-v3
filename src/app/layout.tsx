@@ -20,28 +20,38 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://sentence-builder.hirodevs.com"),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || "https://sentence-builder.hirodevs.com"
+  ),
   title: {
-    default: "Sentence Builder",
-    template: "%s · Sentence Builder",
+    default: "Sentence Builder｜ブロック操作で英文の作り方を直感的に学べる英文構築アプリ",
+    template: "%s｜Sentence Builder",
   },
-  description: "Build natural sentences fast with an interactive Next.js tool.",
+  description:
+    "Sentence Builderは、英単語ブロックを組み合わせて英文を構築する体験を通して、英文を作る力を直感的に習得できる英語学習アプリです。ブロックベースのインターフェースにより、言葉による説明に頼らず自然な方法で英文法を身につけられます。",
   alternates: { canonical: "/" },
   openGraph: {
     siteName: "Sentence Builder",
     url: "https://sentence-builder.hirodevs.com",
     type: "website",
-    title: "Sentence Builder – Build natural sentences fast",
-    description: "Interactive tool to construct, test, and share sentences.",
+    title:
+      "Sentence Builder｜ブロック操作で英文の作り方を直感的に学べる英文構築アプリ",
+    description:
+      "英単語ブロックを組み合わせて英文を構築することで、英文法を自然に理解できる英語学習アプリ。Next.js製のインタラクティブなツールです。",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Sentence Builder",
-    description: "Interactive tool to construct, test, and share sentences.",
+    title: "Sentence Builder｜ブロック操作で英文の作り方を直感的に学べる英文構築アプリ",
+    description:
+      "英単語ブロックを組み合わせて英文を構築し、英文法を直感的に学べる英語学習アプリ。",
   },
-  verification: { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || "" },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || "",
+  },
+  // Keep legacy tags for reference or analytics tools
   other: {
-    "sentence-builder:legacy-title": "Sentence Builder｜ブロック操作で英文の作り方を直感的に学べる英文構築アプリ",
+    "sentence-builder:legacy-title":
+      "Sentence Builder｜ブロック操作で英文の作り方を直感的に学べる英文構築アプリ",
     "sentence-builder:legacy-description":
       "Sentence Builderは、英単語ブロックを組み合わせて英文を構築する体験を通して、英文を作る力を直感的に習得できる英語学習アプリです。ブロックベースのインターフェースにより、言葉による説明に頼らず自然な方法で英文法を身につけられます。",
   },
