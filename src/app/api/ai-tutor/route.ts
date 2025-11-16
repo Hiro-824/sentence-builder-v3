@@ -171,25 +171,9 @@ export async function GET() {
 
 export async function POST(req: Request) {
 
-  console.log('VERCEL_ENV', process.env.VERCEL_ENV);
-  console.log('OPENROUTER_API_KEY prefix', process.env.OPENROUTER_API_KEY?.slice(0, 10));
-
-  if (!process.env.OPENROUTER_API_KEY) {
-    throw new Error('Missing OPENROUTER_API_KEY in production environment');
-  }
-
   try {
     const body = await req.json();
     const { messages, scenarioId, customScenario } = body ?? {};
-
-    // sanity check
-    if (!process.env.OPENROUTER_API_KEY) {
-      console.error('OPENROUTER_API_KEY is missing in the server environment');
-      return NextResponse.json(
-        { error: 'Server misconfigured: missing OPENROUTER_API_KEY' },
-        { status: 500 },
-      );
-    }
 
     if (!Array.isArray(messages)) {
       return NextResponse.json({ error: 'Invalid payload: messages must be an array.' }, { status: 400 });
