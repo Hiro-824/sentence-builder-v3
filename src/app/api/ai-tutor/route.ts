@@ -174,6 +174,15 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { messages, scenarioId, customScenario } = body ?? {};
 
+    // sanity check
+    if (!process.env.OPENROUTER_API_KEY) {
+      console.error('OPENROUTER_API_KEY is missing in the server environment');
+      return NextResponse.json(
+        { error: 'Server misconfigured: missing OPENROUTER_API_KEY' },
+        { status: 500 },
+      );
+    }
+
     if (!Array.isArray(messages)) {
       return NextResponse.json({ error: 'Invalid payload: messages must be an array.' }, { status: 400 });
     }
