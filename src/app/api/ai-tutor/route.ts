@@ -108,10 +108,18 @@ For every message you send, follow these rules:
   <a natural, easy-to-understand Japanese translation of your English reply>
 `;
 
-const openrouter = new OpenAI({
-  baseURL: 'https://openrouter.ai/api/v1',
-  apiKey: process.env.OPENROUTER_API_KEY,
-});
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+
+if (!OPENROUTER_API_KEY) {
+  console.error('[AI Tutor] OPENROUTER_API_KEY is not set. API requests will fail until it is configured.');
+}
+
+const openrouter = OPENROUTER_API_KEY
+  ? new OpenAI({
+      baseURL: 'https://openrouter.ai/api/v1',
+      apiKey: OPENROUTER_API_KEY,
+    })
+  : null;
 
 function buildScenarioPrompt(options: { scenario?: TutorScenario; customScenario?: string }) {
   const { scenario, customScenario } = options;
@@ -172,6 +180,13 @@ export async function GET() {
 export async function POST(req: Request) {
 
   try {
+    if (!openrouter) {
+      return NextResponse.json(
+        { error: 'AI Tutor is unavailable: missing OPENROUTER_API_KEY on the server.' },
+        { status: 500 },
+      );
+    }
+
     const body = await req.json();
     const { messages, scenarioId, customScenario } = body ?? {};
 
