@@ -2,11 +2,6 @@ import Link from "next/link";
 import Image from "next/image";
 import React from "react";
 
-export const metadata = {
-  title: "Syntablo - 英語の語順と文法を直感的に学ぶ",
-  description: "Syntabloは、英単語ブロックを組み合わせて英文を構築しながら、直感的に英語の語順と文法を学べるアプリです。",
-};
-
 export default function LandingPage() {
   return (
     <div className="landing-page">
