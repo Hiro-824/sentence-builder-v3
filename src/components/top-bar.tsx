@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useCallback, useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
 import { User } from '@supabase/supabase-js';
 
 interface TopBarProps {
@@ -84,7 +85,7 @@ const TopBar = ({ user, onSignOut, onShowAuthModal, isDirty, isSaving, onSave, o
     return (
         <nav className="top-bar-nav">
             <div className="top-bar-left">
-                <span className="top-bar-logo" style={{ userSelect: "none" }}>Syntablo</span>
+                <Link href="/" className="top-bar-logo" style={{ userSelect: "none", textDecoration: "none" }}>Syntablo</Link>
                 {user && currentProjectId && (
                     <div style={{
                         display: 'flex',
