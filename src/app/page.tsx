@@ -97,11 +97,19 @@ export default function LandingPage() {
           width: 100%;
         }
         .logo {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
           font-size: 24px;
           font-weight: 700;
           color: #1a1a1a;
           text-decoration: none;
           letter-spacing: -0.02em;
+        }
+        .logo-icon {
+          display: block;
+          width: 28px;
+          height: 28px;
         }
 
         /* Hero */
@@ -305,7 +313,14 @@ export default function LandingPage() {
       <header className="header">
         <div className="container header-content">
           <Link href="/" className="logo">
-            Syntablo
+            <img
+              src="/android-chrome-512x512.png"
+              alt="Syntablo icon"
+              className="logo-icon"
+              width={28}
+              height={28}
+            />
+            <span>Syntablo</span>
           </Link>
           <Link href="/app" className="btn btn-primary" style={{ padding: "8px 16px", fontSize: "14px" }}>
             アプリを開く

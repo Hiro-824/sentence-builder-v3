@@ -85,7 +85,16 @@ const TopBar = ({ user, onSignOut, onShowAuthModal, isDirty, isSaving, onSave, o
     return (
         <nav className="top-bar-nav">
             <div className="top-bar-left">
-                <Link href="/" className="top-bar-logo" style={{ userSelect: "none", textDecoration: "none" }}>Syntablo</Link>
+                <Link href="/" className="top-bar-logo" style={{ userSelect: "none", textDecoration: "none" }}>
+                    <img
+                        src="/android-chrome-512x512.png"
+                        alt="Syntablo icon"
+                        className="top-bar-logo-icon"
+                        width={28}
+                        height={28}
+                    />
+                    <span>Syntablo</span>
+                </Link>
                 {user && currentProjectId && (
                     <div style={{
                         display: 'flex',
