@@ -62,10 +62,19 @@ body {
 }
 
 .top-bar-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
     font-weight: 700;
     font-size: 22px;
     color: #1a1a1a;
     letter-spacing: -0.02em;
+}
+
+.top-bar-logo-icon {
+    display: block;
+    width: 28px;
+    height: 28px;
 }
 
 .top-bar-button {
