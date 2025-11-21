@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export const metadata = {
   alternates: { canonical: "/" },
-  title: "Syntablo｜英文構築アプリ",
+  title: "Syntablo｜ブロック操作で英文の作り方を直感的に学べる英文構築アプリ",
   description:
     "Syntabloは、英単語ブロックを組み合わせて英文を構築しながら、直感的に英語の語順と文法を学べるアプリです。",
 };
