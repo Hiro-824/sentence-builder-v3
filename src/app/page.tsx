@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import React from "react";
 
 export const metadata = {
@@ -9,7 +10,6 @@ export const metadata = {
 export default function LandingPage() {
   return (
     <div className="landing-page">
-      {/* Internal Styles for Responsiveness and Layout */}
       <style>{`
         .landing-page {
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -75,7 +75,7 @@ export default function LandingPage() {
           max-width: 700px;
           margin: 0 auto 48px auto;
         }
-        
+
         /* Header */
         .header {
           position: fixed;
@@ -105,11 +105,6 @@ export default function LandingPage() {
           color: #1a1a1a;
           text-decoration: none;
           letter-spacing: -0.02em;
-        }
-        .logo-icon {
-          display: block;
-          width: 28px;
-          height: 28px;
         }
 
         /* Hero */
@@ -145,21 +140,16 @@ export default function LandingPage() {
           gap: 16px;
           flex-wrap: wrap;
         }
-        .visual-placeholder {
+        .visual-box {
           width: 100%;
-          aspect-ratio: 16/10;
-          background-color: #f0f2f5;
-          border: 1px solid #e5e7eb;
           border-radius: 16px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #9ca3af;
-          font-weight: 500;
+          overflow: hidden;
+          border: 1px solid #e5e7eb;
+          background-color: #f9fafb;
           box-shadow: 0 20px 40px -12px rgba(0,0,0,0.1);
         }
 
-        /* Feature Grid */
+        /* Features */
         .feature-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -198,7 +188,7 @@ export default function LandingPage() {
           line-height: 1.7;
         }
 
-        /* How it works */
+        /* Steps */
         .steps-container {
           display: flex;
           flex-direction: column;
@@ -227,7 +217,6 @@ export default function LandingPage() {
           padding: 4px 12px;
           border-radius: 20px;
           margin-bottom: 16px;
-          text-transform: uppercase;
         }
         .step-title {
           font-size: 24px;
@@ -239,7 +228,7 @@ export default function LandingPage() {
           font-size: 16px;
         }
 
-        /* CTA Box */
+        /* CTA */
         .cta-section {
           background-color: #007AFF;
           color: white;
@@ -280,7 +269,7 @@ export default function LandingPage() {
           margin-top: 60px;
         }
 
-        /* Mobile Responsiveness */
+        /* Mobile */
         @media (max-width: 768px) {
           .hero {
             flex-direction: column;
@@ -288,12 +277,8 @@ export default function LandingPage() {
             gap: 40px;
             text-align: center;
           }
-          .hero-headline {
-            font-size: 36px;
-          }
-          .hero-actions {
-            justify-content: center;
-          }
+          .hero-headline { font-size: 36px; }
+          .hero-actions { justify-content: center; }
           .step-row, .step-row.reverse {
             flex-direction: column;
             text-align: center;
@@ -303,9 +288,7 @@ export default function LandingPage() {
             margin: 0;
             border-radius: 0;
           }
-          .cta-title {
-            font-size: 28px;
-          }
+          .cta-title { font-size: 28px; }
         }
       `}</style>
 
@@ -313,12 +296,11 @@ export default function LandingPage() {
       <header className="header">
         <div className="container header-content">
           <Link href="/" className="logo">
-            <img
+            <Image
               src="/android-chrome-512x512.png"
-              alt="Syntablo icon"
-              className="logo-icon"
               width={28}
               height={28}
+              alt="Syntablo icon"
             />
             <span>Syntablo</span>
           </Link>
@@ -328,7 +310,7 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* Hero Section */}
+      {/* Hero */}
       <section className="container hero">
         <div className="hero-text">
           <h1 className="hero-headline">
@@ -350,17 +332,23 @@ export default function LandingPage() {
           </div>
         </div>
         <div className="hero-visual">
-          <div className="visual-placeholder">
-            {/* Placeholder for Hero GIF/Image */}
-            <div style={{ textAlign: "center" }}>
-              <p>App Demo Visual</p>
-              <span style={{ fontSize: "12px", opacity: 0.6 }}>(Drag & Drop Animation)</span>
-            </div>
+          <div className="visual-box">
+            <Image
+              src="/screenshots/syntablo-hero.png"
+              alt="Syntablo アプリの操作画面"
+              width={1600}
+              height={1000}
+              style={{
+                width: "100%",
+                height: "auto",
+                objectFit: "contain"   // ← これが重要！
+              }}
+            />
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* Features */}
       <section id="features" className="section bg-gray">
         <div className="container">
           <div className="text-center">
@@ -372,61 +360,51 @@ export default function LandingPage() {
           </div>
 
           <div className="feature-grid">
-            {/* Feature 1 */}
-            <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            {/* Feature Cards (unchanged) */}
+            {[
+              {
+                title: "視覚的な文法チェック",
+                text: "単語ブロックは品詞ごとに色分けされています。正しくない構造は物理的に繋がりません。直感的に文法ルールが身につきます。",
+                icon: (
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
-                </svg>
-              </div>
-              <h3 className="feature-title">視覚的な文法チェック</h3>
-              <p className="feature-text">
-                単語は品詞ごとに色分けされたブロックになっています。
-                文法的に正しくない組み合わせは物理的に繋がらないため、
-                試行錯誤しながら自然と正しいルールが身につきます。
-              </p>
-            </div>
-
-            {/* Feature 2 */}
-            <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                ),
+              },
+              {
+                title: "AI講師との対話",
+                text: "自分で組み立てた英文を使って、AI講師とチャットで会話できます。ロールプレイ形式で自然な英語力が身につきます。",
+                icon: (
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
-              </div>
-              <h3 className="feature-title">AI講師との対話</h3>
-              <p className="feature-text">
-                自分で組み立てた英文を使って、AI講師とチャット形式で会話ができます。
-                シチュエーションごとのロールプレイを通じて、
-                実践的なコミュニケーション力を養えます。
-              </p>
-            </div>
-
-            {/* Feature 3 */}
-            <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                ),
+              },
+              {
+                title: "体系的なレッスン",
+                text: "基礎文法から段階的に学べるレッスンも搭載。独学でも安心して進められるよう、丁寧なガイドがついています。",
+                icon: (
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
+                ),
+              },
+            ].map((f, i) => (
+              <div className="feature-card" key={i}>
+                <div className="feature-icon">
+                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2">
+                    {f.icon}
+                  </svg>
+                </div>
+                <h3 className="feature-title">{f.title}</h3>
+                <p className="feature-text">{f.text}</p>
               </div>
-              <h3 className="feature-title">体系的なレッスン</h3>
-              <p className="feature-text">
-                中学英語レベルの基礎文法から、少しずつ複雑な構文へとステップアップ。
-                各レッスンには解説が含まれており、
-                独学でも安心して学習を進めることができます。
-              </p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* How it Works Section */}
+      {/* Steps */}
       <section className="section">
         <div className="container">
           <div className="text-center">
             <h2 className="section-title">学習のステップ</h2>
             <p className="section-desc">
-              難しい操作は必要ありません。シンプルで直感的な3ステップです。
+              直感的な3ステップで、誰でもすぐに使い始められます。
             </p>
           </div>
 
@@ -434,16 +412,23 @@ export default function LandingPage() {
             {/* Step 1 */}
             <div className="step-row">
               <div className="step-visual">
-                <div className="visual-placeholder" style={{ aspectRatio: "16/9", backgroundColor: "#f9fafb" }}>
-                  <p>Step 1 Screenshot</p>
+                <div className="visual-box" style={{ aspectRatio: "16/9" }}>
+                  <Image
+                    src="/screenshots/syntablo-step1.png"
+                    alt="Step 1 screenshot"
+                    width={1600}
+                    height={900}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
                 </div>
               </div>
+
               <div className="step-content">
                 <span className="step-number">Step 1</span>
                 <h3 className="step-title">ブロックを選ぶ</h3>
                 <p className="step-desc">
-                  サイドバーから使いたい単語ブロックを選び、キャンバスにドラッグ＆ドロップします。
-                  ブロックは品詞ごとに色分けされているため、役割が一目でわかります。
+                  サイドバーから使いたい単語ブロックを選び、キャンバスにドラッグします。
+                  色分けされたブロックで品詞が一目でわかります。
                 </p>
               </div>
             </div>
@@ -451,16 +436,22 @@ export default function LandingPage() {
             {/* Step 2 */}
             <div className="step-row reverse">
               <div className="step-visual">
-                <div className="visual-placeholder" style={{ aspectRatio: "16/9", backgroundColor: "#f9fafb" }}>
-                  <p>Step 2 Screenshot</p>
+                <div className="visual-box" style={{ aspectRatio: "16/9" }}>
+                  <Image
+                    src="/screenshots/syntablo-step2.png"
+                    alt="Step 2 screenshot"
+                    width={1600}
+                    height={900}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
                 </div>
               </div>
               <div className="step-content">
                 <span className="step-number">Step 2</span>
                 <h3 className="step-title">ブロックを繋ぐ</h3>
                 <p className="step-desc">
-                  パズルのようにブロック同士を近づけると、正しい文法であればカチッと繋がります。
-                  語順が間違っていると繋がらないため、その場でミスに気づくことができます。
+                  ブロック同士を近づけると、文法的に正しい場合だけカチッと繋がります。
+                  間違っている場合は繋がらないため、リアルタイムで理解が深まります。
                 </p>
               </div>
             </div>
@@ -468,16 +459,23 @@ export default function LandingPage() {
             {/* Step 3 */}
             <div className="step-row">
               <div className="step-visual">
-                <div className="visual-placeholder" style={{ aspectRatio: "16/9", backgroundColor: "#f9fafb" }}>
-                  <p>Step 3 Screenshot</p>
+                <div className="visual-box" style={{ aspectRatio: "16/9" }}>
+                  <Image
+                    src="/screenshots/syntablo-step3.png"
+                    alt="Step 3 screenshot"
+                    width={1600}
+                    height={900}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
                 </div>
               </div>
+
               <div className="step-content">
                 <span className="step-number">Step 3</span>
                 <h3 className="step-title">会話で実践する</h3>
                 <p className="step-desc">
-                  完成した英文を送信して、AI講師と会話を楽しみましょう。
-                  正しい英文を作れたという成功体験が、英語学習のモチベーションを高めます。
+                  完成した英文をAI講師に送信し、ロールプレイで会話練習ができます。
+                  「正しく作れた！」という成功体験が次の学習につながります。
                 </p>
               </div>
             </div>
@@ -485,13 +483,12 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* CTA */}
       <div className="container">
         <section className="cta-section">
           <h2 className="cta-title">英語の構造が、手に取るようにわかる体験を。</h2>
           <p className="cta-desc">
-            Syntabloは、あなたのペースで自由に学べるツールです。
-            まずはアカウント登録なしで、実際の操作感を試してみてください。
+            まずはアカウント登録なしで、実際にブロックを触りながら英文を作ってみてください。
           </p>
           <Link href="/app" className="btn btn-white">
             今すぐブラウザで試す
@@ -505,11 +502,19 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="footer">
         <div className="container text-center">
-          <p style={{ marginBottom: "16px" }}>&copy; {new Date().getFullYear()} Syntablo. All rights reserved.</p>
+          <p style={{ marginBottom: "16px" }}>
+            &copy; {new Date().getFullYear()} Syntablo. All rights reserved.
+          </p>
           <div style={{ display: "flex", justifyContent: "center", gap: "24px" }}>
-            <Link href="/app" style={{ color: "#666", textDecoration: "none" }}>アプリ</Link>
-            <a href="#" style={{ color: "#666", textDecoration: "none", pointerEvents: "none" }}>利用規約</a>
-            <a href="#" style={{ color: "#666", textDecoration: "none", pointerEvents: "none" }}>プライバシーポリシー</a>
+            <Link href="/app" style={{ color: "#666", textDecoration: "none" }}>
+              アプリ
+            </Link>
+            <a href="#" style={{ color: "#666", textDecoration: "none" }}>
+              利用規約
+            </a>
+            <a href="#" style={{ color: "#666", textDecoration: "none" }}>
+              プライバシーポリシー
+            </a>
           </div>
         </div>
       </footer>
