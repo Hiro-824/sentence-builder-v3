@@ -4,8 +4,7 @@ import path from "node:path";
 
 const ROUTES = [
   { pathname: "/", changeFrequency: "weekly" as const, priority: 1 },
-  { pathname: "/builder", changeFrequency: "weekly" as const, priority: 0.8 },
-  { pathname: "/examples", changeFrequency: "monthly" as const, priority: 0.6 },
+  { pathname: "/app", changeFrequency: "weekly" as const, priority: 0.9 },
 ];
 
 const pageFiles = ["page.tsx", "page.ts", "page.jsx", "page.js"];
