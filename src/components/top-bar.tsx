@@ -84,7 +84,7 @@ const TopBar = ({ user, onSignOut, onShowAuthModal, isDirty, isSaving, onSave, o
     return (
         <nav className="top-bar-nav">
             <div className="top-bar-left">
-                <span className="top-bar-logo" style={{ userSelect: "none" }}>Sentence Builder</span>
+                <span className="top-bar-logo" style={{ userSelect: "none" }}>Syntablo</span>
                 {user && currentProjectId && (
                     <div style={{
                         display: 'flex',

@@ -1,6 +1,6 @@
-# Sentence Builder
+# Syntablo
 
-Sentence Builder is a web-based English learning application designed to teach sentence construction through intuitive, tactile interaction. It moves beyond traditional rote memorization of abstract rules, allowing users to discover the mechanics of English grammar organically by assembling sentences from word blocks and receiving immediate linguistic feedback.
+Syntablo is a web-based English learning application designed to teach sentence construction through intuitive, tactile interaction. It moves beyond traditional rote memorization of abstract rules, allowing users to discover the mechanics of English grammar organically by assembling sentences from word blocks and receiving immediate linguistic feedback.
 
 At its core, the application is powered by a custom, client-side, unification-based grammar engine that validates sentence structures in real-time and generates corresponding Japanese translations.
 
@@ -24,7 +24,7 @@ At its core, the application is powered by a custom, client-side, unification-ba
 
 ## Core Philosophy
 
-Traditional language learning often relies on students memorizing explicit grammatical rules, which can be abstract and difficult to internalize. Sentence Builder is founded on a different pedagogical principle: **intuitive acquisition through experimentation**.
+Traditional language learning often relies on students memorizing explicit grammatical rules, which can be abstract and difficult to internalize. Syntablo is founded on a different pedagogical principle: **intuitive acquisition through experimentation**.
 
 By providing a sandboxed environment where learners can freely combine linguistic units, the application encourages discovery. The immediate feedback loop—a sentence either "fits" together correctly or it doesn't—allows users to build a subconscious, functional understanding of grammar, much like a native speaker does. The goal is to make the process of learning syntax and morphology feel less like a chore and more like solving a puzzle.
 

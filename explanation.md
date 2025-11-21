@@ -1,6 +1,6 @@
 ### **I. High-Level Overview**
 
-This project is a sophisticated English language learning application named **Sentence Builder**. Its primary goal is to provide an intuitive, hands-on environment for learning English sentence structure. Instead of traditional rule-based memorization, the user learns by physically manipulating grammatical components, represented as colored blocks, to construct valid sentences.
+This project is a sophisticated English language learning application named **Syntablo**. Its primary goal is to provide an intuitive, hands-on environment for learning English sentence structure. Instead of traditional rule-based memorization, the user learns by physically manipulating grammatical components, represented as colored blocks, to construct valid sentences.
 
 The application is a **Single Page Application (SPA)** built with **Next.js** and **React**. It features a dynamic, drag-and-drop interface powered by **D3.js** for rendering SVG elements. The backend logic, including user authentication and data persistence, is handled by **Supabase**.
 
@@ -121,4 +121,4 @@ Supabase serves as the backend-as-a-service (BaaS), simplifying development sign
 
 ### **VII. Conclusion**
 
-The **Sentence Builder** is an exemplary project that stands at the intersection of web development and computational linguistics. It is not merely a web app but a fully-realized educational tool with a powerful, custom-built grammar engine. The architecture is robust, the implementation is polished, and the core concept is innovative. It demonstrates a deep understanding of both the technical and theoretical challenges involved in building such a system.
+The **Syntablo** is an exemplary project that stands at the intersection of web development and computational linguistics. It is not merely a web app but a fully-realized educational tool with a powerful, custom-built grammar engine. The architecture is robust, the implementation is polished, and the core concept is innovative. It demonstrates a deep understanding of both the technical and theoretical challenges involved in building such a system.
