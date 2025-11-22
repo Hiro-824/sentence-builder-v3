@@ -11,6 +11,10 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
+:root {
+    --top-bar-height: 64px;
+}
+
 * {
     box-sizing: border-box;
 }
@@ -37,7 +41,7 @@ body {
     top: 0;
     left: 0;
     right: 0;
-    height: 64px;
+    height: var(--top-bar-height);
     background-color: #ffffff;
     border-bottom: 1px solid #f0f0f0;
     display: flex;
@@ -122,6 +126,53 @@ body {
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
+}
+
+@media (max-width: 1024px) {
+    :root {
+        --top-bar-height: 44px;
+    }
+
+    .top-bar-nav {
+        padding: 0 16px;
+    }
+
+    .top-bar-left {
+        gap: 16px;
+    }
+
+    .top-bar-right {
+        gap: 12px;
+    }
+
+    .top-bar-logo {
+        gap: 8px;
+        font-size: 18px;
+    }
+
+    .top-bar-logo-icon {
+        width: 24px;
+        height: 24px;
+    }
+
+    .top-bar-button {
+        font-size: 13px;
+        padding: 6px 10px;
+    }
+
+    .top-bar-save-button {
+        padding: 6px 12px;
+        font-size: 14px;
+    }
+
+    .top-bar-user-icon {
+        width: 34px;
+        height: 34px;
+    }
+
+    .top-bar-docs {
+        display: none;
+    }
 }
 
 /* Modern scrollbar styling */

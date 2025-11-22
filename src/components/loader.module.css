@@ -1,7 +1,7 @@
 .loaderOverlay {
     position: fixed;
     /* Start below the TopBar */
-    top: 64px; 
+    top: var(--top-bar-height); 
     left: 0;
     right: 0;
     bottom: 0;

@@ -1,9 +1,9 @@
 .panel {
     position: fixed;
-    top: 64px; /* Height of the TopBar */
+    top: var(--top-bar-height); /* Height of the TopBar */
     right: 0;
     width: 33.3333vw;
-    height: calc(100vh - 64px);
+    height: calc(100vh - var(--top-bar-height));
     background-color: rgba(250, 250, 250, 0.85);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);

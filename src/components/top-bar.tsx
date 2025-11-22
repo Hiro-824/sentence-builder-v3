@@ -131,7 +131,7 @@ const TopBar = ({ user, onSignOut, onShowAuthModal, isDirty, isSaving, onSave, o
                     href={documentURL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="top-bar-button"
+                    className="top-bar-button top-bar-docs"
                     style={{ textDecoration: 'none' }}
                     onMouseEnter={(e) => handleButtonHover(e, true)}
                     onMouseLeave={(e) => handleButtonHover(e, false)}

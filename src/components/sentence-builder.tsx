@@ -96,7 +96,14 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
         const container = d3.select(svgContainerRef.current);
         container.selectAll("*").remove();
 
-        const topBarHeight = 64;
+        const getTopBarHeight = () => {
+            if (typeof window === "undefined") return 64;
+            const rawValue = getComputedStyle(document.documentElement).getPropertyValue("--top-bar-height");
+            const parsed = parseInt(rawValue, 10);
+            return Number.isFinite(parsed) ? parsed : 64;
+        };
+
+        const topBarHeight = getTopBarHeight();
 
         const svg = container
             .append("svg")
@@ -104,9 +111,14 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
             .style("background-color", "#ffffff");
 
         const updateSvgSize = () => {
+            const currentTopBarHeight = getTopBarHeight();
             const width = window.innerWidth;
-            const height = window.innerHeight - topBarHeight;
+            const height = window.innerHeight - currentTopBarHeight;
             svg.attr("width", width).attr("height", height);
+            if (rendererRef.current) {
+                rendererRef.current.topBarHeight = currentTopBarHeight;
+                rendererRef.current.canvasHeight = height;
+            }
         };
         updateSvgSize();
         window.addEventListener("resize", updateSvgSize);
@@ -326,7 +338,7 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
                         ref={svgContainerRef}
                         style={{
                             position: 'fixed',
-                            top: '64px',
+                            top: 'var(--top-bar-height)',
                             left: 0,
                         }}
                     />
