@@ -43,6 +43,10 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     const [isMobileViewport, setIsMobileViewport] = useState(false);
     const [isPortrait, setIsPortrait] = useState(false);
 
+    const getEffectiveMode = () => enableModeSwitch
+        ? (isMobileViewport ? "scenario" : mode)
+        : "sandbox";
+
     const svgContainerRef = useRef(null);
     const rendererRef = useRef<Renderer | null>(null);
     const loggingServiceRef = useRef<LoggingService | null>(null);
@@ -109,7 +113,8 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
         const logEvent = (eventType: string, eventData: object) => {
             loggingServiceRef.current?.logEvent(eventType, eventData);
         };
-        rendererRef.current = new Renderer([], blockList, svg, () => setIsDirty(true), topBarHeight, logEvent);
+        const initialSidebarVariant = getEffectiveMode();
+        rendererRef.current = new Renderer([], blockList, svg, () => setIsDirty(true), topBarHeight, logEvent, initialSidebarVariant);
 
         return () => {
             window.removeEventListener("resize", updateSvgSize);
@@ -285,9 +290,12 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
         };
     }, []);
 
-    const effectiveMode = enableModeSwitch
-        ? (isMobileViewport ? "scenario" : mode)
-        : "sandbox";
+    const effectiveMode = getEffectiveMode();
+
+    useEffect(() => {
+        if (!rendererRef.current || !isAuthenticated) return;
+        rendererRef.current.setSidebarVariant(effectiveMode);
+    }, [effectiveMode, isAuthenticated]);
 
     const shouldShowRotateOverlay = isMobileViewport && isPortrait && !showAuthModal;
     const shouldHideActivityPanel = (enableModeSwitch && effectiveMode === "scenario") || (isMobileViewport && !isPortrait && !showAuthModal);

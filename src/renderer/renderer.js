@@ -6,7 +6,7 @@ import { createBlockSnapshot, createBlockSnapshotList } from "@/utils/supabase/l
 import * as d3 from "d3";
 
 export class Renderer {
-    constructor(blocks, blockList, svg, onDirty, topBarHeight = 0, onLogEvent = (string, object) => { }) {
+    constructor(blocks, blockList, svg, onDirty, topBarHeight = 0, onLogEvent = (string, object) => { }, sidebarVariant = "sandbox") {
         this.blocks = blocks;
         this.topBarHeight = topBarHeight;
         this.canvasHeight = window.innerHeight - this.topBarHeight;
@@ -17,6 +17,9 @@ export class Renderer {
             this.fullBlockList[groupName] = groupBlocks.map(block => this.converter.formatBlock(block));
         });
         this.blockList = this.cloneBlockList(this.fullBlockList);
+
+        this.sidebarVariant = sidebarVariant === "scenario" ? "scenario" : "sandbox";
+        this.savedSandboxSidebarState = null;
 
         this.svg = svg;
         this.sideBarScrollExtent = 0;
@@ -49,7 +52,7 @@ export class Renderer {
         this.sidebarContent = null;
         this.sidebarContentContainer = null;
         this.blockBoard = null;
-        this.searchAreaHeight = this.getSidebarSearchAreaHeight();
+        this.searchAreaHeight = this.sidebarVariant === "sandbox" ? this.getSidebarSearchAreaHeight() : 0;
         this.navBackgroundRect = null;
 
         // Update translation for all initial blocks
@@ -119,6 +122,37 @@ export class Renderer {
         if (this.handleResize) {
             window.removeEventListener('resize', this.handleResize);
         }
+    }
+
+    getSidebarNavWidth() {
+        return this.sidebarVariant === "scenario" ? 0 : navBarWidth;
+    }
+
+    setSidebarVariant(variant) {
+        const normalized = variant === "scenario" ? "scenario" : "sandbox";
+        if (this.sidebarVariant === normalized) {
+            return;
+        }
+
+        if (normalized === "scenario") {
+            this.savedSandboxSidebarState = {
+                searchQuery: this.searchQuery,
+                blockList: this.cloneBlockList(this.blockList),
+            };
+            this.searchQuery = "";
+            this.blockList = this.cloneBlockList(this.fullBlockList);
+        } else if (normalized === "sandbox") {
+            const restoredSearchQuery = this.savedSandboxSidebarState?.searchQuery ?? "";
+            const restoredBlockList = this.savedSandboxSidebarState?.blockList ?? this.cloneBlockList(this.fullBlockList);
+            this.searchQuery = restoredSearchQuery;
+            this.blockList = restoredBlockList;
+        }
+
+        this.sidebarVariant = normalized;
+        this.sideBarScrollExtent = 0;
+        this.searchAreaHeight = normalized === "sandbox" ? this.getSidebarSearchAreaHeight() : 0;
+        this.renderSideBar();
+        this.setBlockBoardTransform();
     }
 
     /*レンダリング処理***********************************************************************************************************************************************************************************************************************************************************************************************************************/
@@ -273,8 +307,32 @@ export class Renderer {
         // Remove the entire sidebar group
         d3.select("#sidebar").remove();
 
+        this.sidebarNavGroup = null;
+        this.sidebarSearchGroup = null;
+        this.sidebarSearchHitbox = null;
+        this.sidebarSearchForeignObject = null;
+        this.sidebarSearchBackground = null;
+        this.searchInputElement = null;
+        this.searchClearButton = null;
+        this.searchIcon = null;
+        this.sidebarScrollContainer = null;
+        this.sidebarContent = null;
+        this.sidebarContentContainer = null;
+        this.blockBoard = null;
+        this.navBackgroundRect = null;
+
+        if (this.sidebarVariant === "scenario") {
+            this.renderScenarioSidebar();
+            return;
+        }
+
+        this.renderSandboxSidebar();
+    }
+
+    renderSandboxSidebar() {
         const blockListWidth = this.calculateBlockListWidth();
-        const totalWidth = blockListWidth + navBarWidth;
+        const navWidth = this.getSidebarNavWidth();
+        const totalWidth = blockListWidth + navWidth;
         const height = window.innerHeight;
 
         this.searchAreaHeight = this.getSidebarSearchAreaHeight();
@@ -300,7 +358,7 @@ export class Renderer {
 
         this.sidebarContentContainer = this.sidebar.append("g")
             .attr("id", "sidebar-content-container")
-            .attr("transform", `translate(${navBarWidth}, 0)`);
+            .attr("transform", `translate(${navWidth}, 0)`);
 
         this.renderNavBar(this.sidebarNavGroup);
 
@@ -326,6 +384,37 @@ export class Renderer {
         this.renderSearchBar(this.sidebarSearchGroup);
 
 
+        this.enableSideBarScroll();
+    }
+
+    renderScenarioSidebar() {
+        const blockListWidth = this.calculateBlockListWidth();
+        const navWidth = this.getSidebarNavWidth();
+        const totalWidth = blockListWidth + navWidth;
+        const height = window.innerHeight;
+
+        this.searchAreaHeight = 0;
+
+        this.sidebar = this.svg.append("g")
+            .attr("id", "sidebar")
+            .attr("transform", `translate(0, 0)`);
+
+        this.sidebar.append("rect")
+            .attr("id", "sidebar-background")
+            .attr("width", totalWidth)
+            .attr("height", height)
+            .attr("fill", "#fafafa")
+            .attr("stroke", "#f0f0f0")
+            .attr("stroke-width", "1")
+            .on("mousedown", (event) => {
+                event.stopPropagation();
+            });
+
+        this.sidebarContentContainer = this.sidebar.append("g")
+            .attr("id", "sidebar-content-container")
+            .attr("transform", `translate(${navWidth}, 0)`);
+
+        this.renderSideBarContent(this.sidebarContentContainer);
         this.enableSideBarScroll();
     }
 
@@ -1043,7 +1132,8 @@ export class Renderer {
         }
 
         const blockListWidth = this.cachedBlockListWidth || this.calculateBlockListWidth();
-        const newWidth = navBarWidth + blockListWidth * zoomExtent;
+        const navWidth = this.getSidebarNavWidth();
+        const newWidth = navWidth + blockListWidth * zoomExtent;
 
         d3.select("#sidebar rect").attr("width", newWidth);
         this.updateSidebarSearchLayout(zoomExtent);
