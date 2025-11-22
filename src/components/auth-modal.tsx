@@ -253,12 +253,21 @@ const AuthModal = ({ isOpen, onAuthSuccess, onAnonymousAccess }: AuthModalProps)
     maxHeight: isMobileViewport ? '100vh' : 'none',
     display: 'flex',
     flexDirection: 'column',
-    overflowY: 'auto'
+    overflowY: 'auto',
+    justifyContent: isMobileViewport ? 'center' : 'flex-start'
+  };
+
+  const contentWrapperStyle: CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: isMobileViewport ? 'center' : 'flex-start',
+    minHeight: isMobileViewport ? '100%' : 'auto'
   };
 
   return (
     <div style={overlayStyle}>
       <div style={modalStyle}>
+        <div style={contentWrapperStyle}>
         <div style={{
           display: 'flex',
           justifyContent: 'center',
@@ -662,6 +671,7 @@ const AuthModal = ({ isOpen, onAuthSuccess, onAnonymousAccess }: AuthModalProps)
             </button>
           </>
         )}
+        </div>
       </div>
     </div>
   );
