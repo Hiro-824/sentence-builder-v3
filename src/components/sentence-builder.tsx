@@ -17,7 +17,7 @@ import { LoggingService } from "@/utils/supabase/logging";
 import ActivityPanel from "./activity-panel/activity-panel";
 import { Lesson } from "@/utils/lessons";
 
-const MOBILE_MAX_WIDTH = 900;
+const MOBILE_MAX_WIDTH = 1024;
 
 interface SentenceBuilderProps {
     lessons: Lesson[];

@@ -34,7 +34,7 @@ const EyeIcon = ({ visible }: { visible: boolean }) => (
   </svg>
 );
 
-const MOBILE_MAX_WIDTH = 900;
+const MOBILE_MAX_WIDTH = 1024;
 
 interface AuthModalProps {
   isOpen: boolean;
