@@ -83,6 +83,13 @@
     margin-right: 0;
 }
 
+.typingIndicator {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+}
+
 @keyframes bounce {
     0%, 60%, 100% {
         transform: translateY(0);
