@@ -15,6 +15,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Loader from "./loader";
 import { LoggingService } from "@/utils/supabase/logging";
 import ActivityPanel from "./activity-panel/activity-panel";
+import ScenarioActivityPanel from "./scenario-activity-panel/scenario-activity-panel";
 import { Lesson } from "@/utils/lessons";
 
 const MOBILE_MAX_WIDTH = 1024;
@@ -298,7 +299,9 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     }, [effectiveMode, isAuthenticated]);
 
     const shouldShowRotateOverlay = isMobileViewport && isPortrait && !showAuthModal;
-    const shouldHideActivityPanel = (enableModeSwitch && effectiveMode === "scenario") || (isMobileViewport && !isPortrait && !showAuthModal);
+    const shouldHideSidePanelForViewport = isMobileViewport && !isPortrait && !showAuthModal;
+    const shouldShowActivityPanel = effectiveMode === "sandbox" && !shouldHideSidePanelForViewport;
+    const shouldShowScenarioPanel = enableModeSwitch && effectiveMode === "scenario";
 
     return (
         <>
@@ -327,9 +330,10 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
                             left: 0,
                         }}
                     />
-                    {!shouldHideActivityPanel && (
+                    {shouldShowActivityPanel && (
                         <ActivityPanel lessons={lessons} currentProjectId={currentProjectId} />
                     )}
+                    {shouldShowScenarioPanel && <ScenarioActivityPanel />}
                 </>
             )}
 

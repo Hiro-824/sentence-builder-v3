@@ -1,0 +1,16 @@
+.panel {
+    position: fixed;
+    top: 64px; /* Height of the TopBar */
+    right: 0;
+    width: 33.3333vw;
+    height: calc(100vh - 64px);
+    background-color: rgba(250, 250, 250, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-left: 1px solid #f0f0f0;
+    box-shadow: -3px 0px 15px rgba(0, 0, 0, 0.04);
+    z-index: 5; /* Below modals (1000) but above the canvas */
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease-in-out;
+}
