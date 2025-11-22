@@ -4,6 +4,8 @@ import React, { useCallback, useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { User } from '@supabase/supabase-js';
 
+type BuilderMode = "scenario" | "sandbox";
+
 interface TopBarProps {
     user: User | null;
     onSignOut: () => void;
@@ -14,9 +16,12 @@ interface TopBarProps {
     onShowProjects: () => void;
     currentProjectId: string | null;
     documentURL: string;
+    showModeSwitch?: boolean;
+    mode?: BuilderMode;
+    onModeChange?: (mode: BuilderMode) => void;
 }
 
-const TopBar = ({ user, onSignOut, onShowAuthModal, isDirty, isSaving, onSave, onShowProjects, currentProjectId, documentURL }: TopBarProps) => {
+const TopBar = ({ user, onSignOut, onShowAuthModal, isDirty, isSaving, onSave, onShowProjects, currentProjectId, documentURL, showModeSwitch, mode = "scenario", onModeChange }: TopBarProps) => {
     const [showUserMenu, setShowUserMenu] = useState(false);
     const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -133,6 +138,45 @@ const TopBar = ({ user, onSignOut, onShowAuthModal, isDirty, isSaving, onSave, o
                 >
                     ドキュメント
                 </a>
+                {showModeSwitch && (
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '6px',
+                        backgroundColor: '#f7f7f7',
+                        borderRadius: '12px',
+                        border: '1px solid #e5e7eb'
+                    }}>
+                        {[
+                            { id: 'scenario', label: 'Scenario' },
+                            { id: 'sandbox', label: 'Sandbox' },
+                        ].map((item) => {
+                            const isActive = mode === item.id;
+                            return (
+                                <button
+                                    key={item.id}
+                                    type="button"
+                                    onClick={() => onModeChange?.(item.id as BuilderMode)}
+                                    style={{
+                                        border: isActive ? '1px solid #d1d5db' : '1px solid transparent',
+                                        backgroundColor: isActive ? '#ffffff' : 'transparent',
+                                        color: isActive ? '#1a1a1a' : '#4b5563',
+                                        padding: '6px 10px',
+                                        borderRadius: '8px',
+                                        cursor: 'pointer',
+                                        fontSize: '13px',
+                                        fontWeight: 600,
+                                        transition: 'all 0.2s ease',
+                                        fontFamily: '-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif'
+                                    }}
+                                >
+                                    {item.label}
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
             <div className="top-bar-right">
                 {user && <button

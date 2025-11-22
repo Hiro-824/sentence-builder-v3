@@ -37,7 +37,9 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     const router = useRouter();
     const searchParams = useSearchParams();
     const routeBase = basePath ?? "/app";
+    const enableModeSwitch = routeBase === "/app";
 
+    const [mode, setMode] = useState<"scenario" | "sandbox">(enableModeSwitch ? "scenario" : "sandbox");
     const [isMobileViewport, setIsMobileViewport] = useState(false);
     const [isPortrait, setIsPortrait] = useState(false);
 
@@ -283,8 +285,12 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
         };
     }, []);
 
+    const effectiveMode = enableModeSwitch
+        ? (isMobileViewport ? "scenario" : mode)
+        : "sandbox";
+
     const shouldShowRotateOverlay = isMobileViewport && isPortrait && !showAuthModal;
-    const shouldHideActivityPanel = isMobileViewport && !isPortrait && !showAuthModal;
+    const shouldHideActivityPanel = (enableModeSwitch && effectiveMode === "scenario") || (isMobileViewport && !isPortrait && !showAuthModal);
 
     return (
         <>
@@ -298,6 +304,9 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
                 onShowProjects={() => setIsProjectListOpen(true)}
                 currentProjectId={currentProjectId}
                 documentURL="https://sentence-builder-docs.hirodevs.com/docs/Introduction/intro"
+                showModeSwitch={!isMobileViewport && enableModeSwitch}
+                mode={effectiveMode}
+                onModeChange={(nextMode) => setMode(nextMode)}
             />
 
             {isAuthenticated && (
