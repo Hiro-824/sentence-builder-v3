@@ -17,6 +17,8 @@ import { LoggingService } from "@/utils/supabase/logging";
 import ActivityPanel from "./activity-panel/activity-panel";
 import { Lesson } from "@/utils/lessons";
 
+const MOBILE_MAX_WIDTH = 900;
+
 interface SentenceBuilderProps {
     lessons: Lesson[];
 }
@@ -33,6 +35,9 @@ const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
     const [isProjectLoading, setIsProjectLoading] = useState(false);
     const router = useRouter();
     const searchParams = useSearchParams();
+
+    const [isMobileViewport, setIsMobileViewport] = useState(false);
+    const [isPortrait, setIsPortrait] = useState(false);
 
     const svgContainerRef = useRef(null);
     const rendererRef = useRef<Renderer | null>(null);
@@ -258,6 +263,27 @@ const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
         };
     }, [isDirty]);
 
+    useEffect(() => {
+        const updateViewportState = () => {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            setIsMobileViewport(width <= MOBILE_MAX_WIDTH);
+            setIsPortrait(height > width);
+        };
+
+        updateViewportState();
+        window.addEventListener('resize', updateViewportState);
+        window.addEventListener('orientationchange', updateViewportState);
+
+        return () => {
+            window.removeEventListener('resize', updateViewportState);
+            window.removeEventListener('orientationchange', updateViewportState);
+        };
+    }, []);
+
+    const shouldShowRotateOverlay = isMobileViewport && isPortrait && !showAuthModal;
+    const shouldHideActivityPanel = isMobileViewport && !isPortrait && !showAuthModal;
+
     return (
         <>
             <TopBar
@@ -282,7 +308,9 @@ const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
                             left: 0,
                         }}
                     />
-                    <ActivityPanel lessons={lessons} currentProjectId={currentProjectId} />
+                    {!shouldHideActivityPanel && (
+                        <ActivityPanel lessons={lessons} currentProjectId={currentProjectId} />
+                    )}
                 </>
             )}
 
@@ -304,6 +332,28 @@ const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
                 }}
                 onCreateNew={() => handleCreateNewProject()}
             />
+
+            {shouldShowRotateOverlay && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        backgroundColor: '#ffffff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '24px',
+                        textAlign: 'center',
+                        zIndex: 1200,
+                        color: '#1a1a1a',
+                        fontSize: '18px',
+                        lineHeight: 1.6,
+                        fontWeight: 600,
+                    }}
+                >
+                    Syntablo はスマートフォンでは横向きでの利用を推奨しています。端末を横向きにしてからお使いください。
+                </div>
+            )}
         </>
     );
 }
