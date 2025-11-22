@@ -10,17 +10,22 @@ type ChatMessage = {
 };
 
 const DUMMY_RESPONSE = "Hello! This is a dummy response.";
+const INITIAL_AI_MESSAGE = "準備OKです。完成した文を送ってください。";
 
 const ScenarioActivityPanel = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    { id: 1, text: INITIAL_AI_MESSAGE, sender: "ai" },
+  ]);
+  const [isLoading, setIsLoading] = useState(false);
   const messageListRef = useRef<HTMLDivElement>(null);
-  const nextIdRef = useRef(1);
+  const nextIdRef = useRef(2);
+  const pendingTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (messageListRef.current) {
       messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, isLoading]);
 
   useEffect(() => {
     const handleSend = (event: Event) => {
@@ -28,42 +33,56 @@ const ScenarioActivityPanel = () => {
       const text = typeof customEvent.detail === "string" ? customEvent.detail.trim() : "";
       if (!text) return;
 
+      if (pendingTimeoutRef.current) {
+        window.clearTimeout(pendingTimeoutRef.current);
+        pendingTimeoutRef.current = null;
+      }
+
+      const userId = nextIdRef.current++;
+      const aiId = nextIdRef.current++;
+
       setMessages((prev) => {
-        const userId = nextIdRef.current++;
-        const aiId = nextIdRef.current++;
-        return [
-          ...prev,
-          { id: userId, text, sender: "user" },
-          { id: aiId, text: DUMMY_RESPONSE, sender: "ai" },
-        ];
+        return [...prev, { id: userId, text, sender: "user" }];
       });
+
+      setIsLoading(true);
+
+      pendingTimeoutRef.current = window.setTimeout(() => {
+        setMessages((prev) => [...prev, { id: aiId, text: DUMMY_RESPONSE, sender: "ai" }]);
+        setIsLoading(false);
+        pendingTimeoutRef.current = null;
+      }, 600);
     };
 
     window.addEventListener("aiTutorSend", handleSend as EventListener);
-    return () => window.removeEventListener("aiTutorSend", handleSend as EventListener);
+    return () => {
+      window.removeEventListener("aiTutorSend", handleSend as EventListener);
+      if (pendingTimeoutRef.current) {
+        window.clearTimeout(pendingTimeoutRef.current);
+      }
+    };
   }, []);
 
   return (
     <aside className={styles.panel} aria-label="Scenario activity panel">
       <div className={styles.container}>
-        <div className={styles.header}>
-          <div className={styles.headerLabel}>Scenario Chat</div>
-          <div className={styles.headerHint}>Send a completed sentence to see it here.</div>
-        </div>
         <div ref={messageListRef} className={styles.messageList}>
-          {messages.length === 0 ? (
-            <div className={styles.placeholder}>Completed sentences will appear here.</div>
-          ) : (
-            messages.map((message) => (
-              <div
-                key={message.id}
-                className={`${styles.messageBubble} ${
-                  message.sender === "ai" ? styles.aiMessage : styles.userMessage
-                }`}
-              >
-                <div className={styles.messageText}>{message.text}</div>
-              </div>
-            ))
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              className={`${styles.messageBubble} ${
+                message.sender === "ai" ? styles.aiMessage : styles.userMessage
+              }`}
+            >
+              <div className={styles.messageText}>{message.text}</div>
+            </div>
+          ))}
+          {isLoading && (
+            <div className={`${styles.messageBubble} ${styles.aiMessage} ${styles.typingIndicator}`}>
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
           )}
         </div>
       </div>
