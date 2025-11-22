@@ -4,7 +4,7 @@ Syntablo is a web-based English learning application designed to teach sentence 
 
 At its core, the application is powered by a custom, client-side, unification-based grammar engine that validates sentence structures in real-time and generates corresponding Japanese translations.
 
-**Live Demo:** [https://sentence-builder.hirodevs.com](https://sentence-builder.hirodevs.com)
+**Live Demo:** [https://syntablo.hirodevs.com](https://syntablo.hirodevs.com)
 
 ---
 

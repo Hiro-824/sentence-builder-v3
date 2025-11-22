@@ -15,13 +15,17 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Loader from "./loader";
 import { LoggingService } from "@/utils/supabase/logging";
 import ActivityPanel from "./activity-panel/activity-panel";
+import ScenarioActivityPanel from "./scenario-activity-panel/scenario-activity-panel";
 import { Lesson } from "@/utils/lessons";
+
+const MOBILE_MAX_WIDTH = 1024;
 
 interface SentenceBuilderProps {
     lessons: Lesson[];
+    basePath?: string;
 }
 
-const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
+const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [showAuthModal, setShowAuthModal] = useState(false);
     const [user, setUser] = useState<User | null>(null);
@@ -33,6 +37,16 @@ const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
     const [isProjectLoading, setIsProjectLoading] = useState(false);
     const router = useRouter();
     const searchParams = useSearchParams();
+    const routeBase = basePath ?? "/app";
+    const enableModeSwitch = routeBase === "/app";
+
+    const [mode, setMode] = useState<"scenario" | "sandbox">(enableModeSwitch ? "scenario" : "sandbox");
+    const [isMobileViewport, setIsMobileViewport] = useState(false);
+    const [isPortrait, setIsPortrait] = useState(false);
+
+    const getEffectiveMode = () => enableModeSwitch
+        ? (isMobileViewport ? "scenario" : mode)
+        : "sandbox";
 
     const svgContainerRef = useRef(null);
     const rendererRef = useRef<Renderer | null>(null);
@@ -100,7 +114,8 @@ const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
         const logEvent = (eventType: string, eventData: object) => {
             loggingServiceRef.current?.logEvent(eventType, eventData);
         };
-        rendererRef.current = new Renderer([], blockList, svg, () => setIsDirty(true), topBarHeight, logEvent);
+        const initialSidebarVariant = getEffectiveMode();
+        rendererRef.current = new Renderer([], blockList, svg, () => setIsDirty(true), topBarHeight, logEvent, initialSidebarVariant);
 
         return () => {
             window.removeEventListener("resize", updateSvgSize);
@@ -176,7 +191,7 @@ const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
         setUser(null);
         setIsAuthenticated(false);
         setCurrentProjectId(null);
-        router.push('/app', { scroll: false });
+        router.push(routeBase, { scroll: false });
         setShowAuthModal(true);
     };
 
@@ -213,7 +228,7 @@ const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
             setIsDirty(false);
             rendererRef.current.renderBlocks();
             if (searchParams.get('projectId') !== projectId) {
-                router.push(`/app?projectId=${projectId}`, { scroll: false });
+                router.push(`${routeBase}?projectId=${projectId}`, { scroll: false });
             }
             loggingServiceRef.current?.logEvent('PROJECT_LOAD_SUCCESS', { projectId });
         } catch (error) {
@@ -233,7 +248,7 @@ const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
             const newProjectId = crypto.randomUUID();
             await saveProjectData(newProjectId, { blocks: [] });
             loggingServiceRef.current?.logEvent('PROJECT_CREATE_SUCCESS', { newProjectId: newProjectId });
-            router.push(`/app?projectId=${newProjectId}`, { scroll: false });
+            router.push(`${routeBase}?projectId=${newProjectId}`, { scroll: false });
         } catch (error) {
             console.error("Failed to create new project:", error);
             loggingServiceRef.current?.logEvent('PROJECT_CREATE_FAIL', { error: (error as Error).message });
@@ -258,6 +273,36 @@ const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
         };
     }, [isDirty]);
 
+    useEffect(() => {
+        const updateViewportState = () => {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            setIsMobileViewport(width <= MOBILE_MAX_WIDTH);
+            setIsPortrait(height > width);
+        };
+
+        updateViewportState();
+        window.addEventListener('resize', updateViewportState);
+        window.addEventListener('orientationchange', updateViewportState);
+
+        return () => {
+            window.removeEventListener('resize', updateViewportState);
+            window.removeEventListener('orientationchange', updateViewportState);
+        };
+    }, []);
+
+    const effectiveMode = getEffectiveMode();
+
+    useEffect(() => {
+        if (!rendererRef.current || !isAuthenticated) return;
+        rendererRef.current.setSidebarVariant(effectiveMode);
+    }, [effectiveMode, isAuthenticated]);
+
+    const shouldShowRotateOverlay = isMobileViewport && isPortrait && !showAuthModal;
+    const shouldHideSidePanelForViewport = isMobileViewport && !isPortrait && !showAuthModal;
+    const shouldShowActivityPanel = effectiveMode === "sandbox" && !shouldHideSidePanelForViewport;
+    const shouldShowScenarioPanel = enableModeSwitch && effectiveMode === "scenario";
+
     return (
         <>
             <TopBar
@@ -270,6 +315,9 @@ const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
                 onShowProjects={() => setIsProjectListOpen(true)}
                 currentProjectId={currentProjectId}
                 documentURL="https://sentence-builder-docs.hirodevs.com/docs/Introduction/intro"
+                showModeSwitch={!isMobileViewport && enableModeSwitch}
+                mode={effectiveMode}
+                onModeChange={(nextMode) => setMode(nextMode)}
             />
 
             {isAuthenticated && (
@@ -282,7 +330,10 @@ const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
                             left: 0,
                         }}
                     />
-                    <ActivityPanel lessons={lessons} currentProjectId={currentProjectId} />
+                    {shouldShowActivityPanel && (
+                        <ActivityPanel lessons={lessons} currentProjectId={currentProjectId} />
+                    )}
+                    {shouldShowScenarioPanel && <ScenarioActivityPanel />}
                 </>
             )}
 
@@ -299,11 +350,33 @@ const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
                 onClose={() => setIsProjectListOpen(false)}
                 isDismissible={!!currentProjectId && currentProjectId !== "top-bar-button-test"}
                 onSelectProject={(projectId) => {
-                    router.push(`/app?projectId=${projectId}`, { scroll: false });
+                    router.push(`${routeBase}?projectId=${projectId}`, { scroll: false });
                     setIsProjectListOpen(false);
                 }}
                 onCreateNew={() => handleCreateNewProject()}
             />
+
+            {shouldShowRotateOverlay && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        backgroundColor: '#ffffff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '24px',
+                        textAlign: 'center',
+                        zIndex: 1200,
+                        color: '#1a1a1a',
+                        fontSize: '18px',
+                        lineHeight: 1.6,
+                        fontWeight: 600,
+                    }}
+                >
+                    Syntablo はスマートフォンでは横向きでの利用を推奨しています。端末を横向きにしてからお使いください。
+                </div>
+            )}
         </>
     );
 }

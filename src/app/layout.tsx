@@ -21,7 +21,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "https://sentence-builder.hirodevs.com"
+    process.env.NEXT_PUBLIC_SITE_URL || "https://syntablo.hirodevs.com"
   ),
   title: "Syntablo｜ブロック操作で英文の作り方を直感的に学べる英文構築アプリ",
   description:
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
   openGraph: {
     siteName: "Syntablo",
-    url: "https://sentence-builder.hirodevs.com",
+    url: "https://syntablo.hirodevs.com",
     type: "website",
     title:
       "Syntablo｜ブロック操作で英文の作り方を直感的に学べる英文構築アプリ",
