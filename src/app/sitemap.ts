@@ -29,7 +29,7 @@ function hasRoute(pathname: string) {
 }
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = (process.env.NEXT_PUBLIC_SITE_URL || "https://sentence-builder.hirodevs.com").replace(/\/$/, "");
+  const base = (process.env.NEXT_PUBLIC_SITE_URL || "https://syntablo.hirodevs.com").replace(/\/$/, "");
   const now = new Date();
 
   return ROUTES.filter(({ pathname }) => hasRoute(pathname)).map(({ pathname, changeFrequency, priority }) => ({

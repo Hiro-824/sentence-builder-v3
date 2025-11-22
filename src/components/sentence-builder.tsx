@@ -21,9 +21,10 @@ const MOBILE_MAX_WIDTH = 900;
 
 interface SentenceBuilderProps {
     lessons: Lesson[];
+    basePath?: string;
 }
 
-const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
+const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [showAuthModal, setShowAuthModal] = useState(false);
     const [user, setUser] = useState<User | null>(null);
@@ -35,6 +36,7 @@ const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
     const [isProjectLoading, setIsProjectLoading] = useState(false);
     const router = useRouter();
     const searchParams = useSearchParams();
+    const routeBase = basePath ?? "/app";
 
     const [isMobileViewport, setIsMobileViewport] = useState(false);
     const [isPortrait, setIsPortrait] = useState(false);
@@ -181,7 +183,7 @@ const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
         setUser(null);
         setIsAuthenticated(false);
         setCurrentProjectId(null);
-        router.push('/app', { scroll: false });
+        router.push(routeBase, { scroll: false });
         setShowAuthModal(true);
     };
 
@@ -218,7 +220,7 @@ const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
             setIsDirty(false);
             rendererRef.current.renderBlocks();
             if (searchParams.get('projectId') !== projectId) {
-                router.push(`/app?projectId=${projectId}`, { scroll: false });
+                router.push(`${routeBase}?projectId=${projectId}`, { scroll: false });
             }
             loggingServiceRef.current?.logEvent('PROJECT_LOAD_SUCCESS', { projectId });
         } catch (error) {
@@ -238,7 +240,7 @@ const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
             const newProjectId = crypto.randomUUID();
             await saveProjectData(newProjectId, { blocks: [] });
             loggingServiceRef.current?.logEvent('PROJECT_CREATE_SUCCESS', { newProjectId: newProjectId });
-            router.push(`/app?projectId=${newProjectId}`, { scroll: false });
+            router.push(`${routeBase}?projectId=${newProjectId}`, { scroll: false });
         } catch (error) {
             console.error("Failed to create new project:", error);
             loggingServiceRef.current?.logEvent('PROJECT_CREATE_FAIL', { error: (error as Error).message });
@@ -327,7 +329,7 @@ const SentenceBuilder = ({ lessons }: SentenceBuilderProps) => {
                 onClose={() => setIsProjectListOpen(false)}
                 isDismissible={!!currentProjectId && currentProjectId !== "top-bar-button-test"}
                 onSelectProject={(projectId) => {
-                    router.push(`/app?projectId=${projectId}`, { scroll: false });
+                    router.push(`${routeBase}?projectId=${projectId}`, { scroll: false });
                     setIsProjectListOpen(false);
                 }}
                 onCreateNew={() => handleCreateNewProject()}
