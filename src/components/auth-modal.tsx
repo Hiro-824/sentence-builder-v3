@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, type CSSProperties } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
 
@@ -34,6 +34,8 @@ const EyeIcon = ({ visible }: { visible: boolean }) => (
   </svg>
 );
 
+const MOBILE_MAX_WIDTH = 900;
+
 interface AuthModalProps {
   isOpen: boolean;
   onAuthSuccess: () => void;
@@ -54,6 +56,9 @@ const AuthModal = ({ isOpen, onAuthSuccess, onAnonymousAccess }: AuthModalProps)
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [user, setUser] = useState<User | null>(null);
+  const [isMobileViewport, setIsMobileViewport] = useState(
+    () => typeof window !== "undefined" && window.innerWidth <= MOBILE_MAX_WIDTH
+  );
 
   const supabase = createClient();
 
@@ -87,6 +92,21 @@ const AuthModal = ({ isOpen, onAuthSuccess, onAnonymousAccess }: AuthModalProps)
       setSuccessMessage("");
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    const updateViewport = () => {
+      setIsMobileViewport(window.innerWidth <= MOBILE_MAX_WIDTH);
+    };
+
+    updateViewport();
+    window.addEventListener("resize", updateViewport);
+    window.addEventListener("orientationchange", updateViewport);
+
+    return () => {
+      window.removeEventListener("resize", updateViewport);
+      window.removeEventListener("orientationchange", updateViewport);
+    };
+  }, []);
 
   const getEmailFromIdentifier = (value: string) =>
     value.includes("@") ? value : `${value}@sentence-builder.app`;
@@ -205,28 +225,40 @@ const AuthModal = ({ isOpen, onAuthSuccess, onAnonymousAccess }: AuthModalProps)
 
   if (!isOpen) return null;
 
+  const overlayStyle: CSSProperties = {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    display: 'flex',
+    alignItems: isMobileViewport ? 'stretch' : 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+    overflowY: isMobileViewport ? 'auto' : 'visible'
+  };
+
+  const modalStyle: CSSProperties = {
+    backgroundColor: '#ffffff',
+    borderRadius: isMobileViewport ? '0' : '12px',
+    padding: '32px',
+    maxWidth: isMobileViewport ? '100%' : '400px',
+    width: '100%',
+    margin: isMobileViewport ? '0' : '0 16px',
+    boxShadow: isMobileViewport
+      ? 'none'
+      : '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    height: isMobileViewport ? '100%' : 'auto',
+    maxHeight: isMobileViewport ? '100vh' : 'none',
+    display: 'flex',
+    flexDirection: 'column',
+    overflowY: 'auto'
+  };
+
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000
-    }}>
-      <div style={{
-        backgroundColor: '#ffffff',
-        borderRadius: '12px',
-        padding: '32px',
-        maxWidth: '400px',
-        width: '100%',
-        margin: '0 16px',
-        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
-      }}>
+    <div style={overlayStyle}>
+      <div style={modalStyle}>
         <div style={{
           display: 'flex',
           justifyContent: 'center',
