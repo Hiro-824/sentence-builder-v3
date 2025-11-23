@@ -35,6 +35,13 @@ export const metadata: Metadata = {
       "Syntablo｜ブロック操作で英文の作り方を直感的に学べる英文構築アプリ",
     description:
       "英単語ブロックを組み合わせて英文を構築することで、英文法を自然に理解できる英語学習アプリ。Next.js製のインタラクティブなツールです。",
+    images: [
+      {
+        url: "/ogp.jpg",
+        width: 1200,
+        height: 630,
+      },
+    ],
   },
   icons: {
     icon: "/favicon.ico?v=1",
