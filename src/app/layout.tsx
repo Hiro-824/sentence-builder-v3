@@ -37,7 +37,7 @@ export const metadata: Metadata = {
       "英単語ブロックを組み合わせて英文を構築することで、英文法を自然に理解できる英語学習アプリ。Next.js製のインタラクティブなツールです。",
   },
   icons: {
-    icon: "/favicon.ico",
+    icon: "/favicon.ico?v=1",
     shortcut: "/favicon.ico",
     apple: "/apple-touch-icon.png",
   },
