@@ -176,7 +176,8 @@
 .messageList {
     flex-grow: 1;
     overflow-y: auto;
-    padding: 16px 16px 96px; /* extra bottom room so last bubble isn't hidden on mobile */
+    padding: 16px 16px calc(128px + env(safe-area-inset-bottom)); /* extra bottom room so last bubble isn't hidden on mobile */
+    scroll-padding-bottom: calc(128px + env(safe-area-inset-bottom));
     display: flex;
     flex-direction: column;
     gap: 12px;
