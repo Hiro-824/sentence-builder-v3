@@ -1,12 +1,12 @@
 import { Scenario } from "@/models/scenario";
-import { blockBe } from "./auxiliaries";
+import { blockBe, blockSentence } from "./auxiliaries";
 import { blockTo } from "./blocks";
 import { blockBecause } from "./complementizers";
 import { blockMany } from "./determiners";
-import { blockUsually, blockNow } from "./adverbials";
+import { blockUsually, blockNow, blockAfterSchool } from "./adverbials";
 import { blockI } from "./pronouns";
-import { blockAfter, blockFrom, blockWith } from "./prepositions";
-import { blockEnglish, blockGrammar, blockJapan, blockMary, blockName, blockPerson, blockSchool } from "./nouns";
+import { blockFrom, blockWith } from "./prepositions";
+import { blockEnglish, blockGrammar, blockJapan, blockMary, blockName, blockPerson } from "./nouns";
 import { verbStudy, verbTalk, verbWant } from "./verbs";
 
 export const greetingScenario: Scenario = {
@@ -18,7 +18,7 @@ export const greetingScenario: Scenario = {
     },
     {
       speaker: "user",
-      blocks: [blockI, blockBe, blockName, blockMary],
+      blocks: [blockMary, blockBe, blockI, blockName],
     },
     {
       speaker: "ai",
@@ -27,7 +27,7 @@ export const greetingScenario: Scenario = {
     },
     {
       speaker: "user",
-      blocks: [blockI, blockBe, blockFrom, blockJapan],
+      blocks: [blockBe, blockJapan, blockI, blockFrom],
     },
     {
       speaker: "ai",
@@ -36,7 +36,7 @@ export const greetingScenario: Scenario = {
     },
     {
       speaker: "user",
-      blocks: [blockI, blockUsually, verbStudy, blockEnglish, blockAfter, blockSchool],
+      blocks: [blockAfterSchool, verbStudy, blockSentence, blockUsually, blockI, blockEnglish],
     },
     {
       speaker: "ai",
@@ -45,7 +45,7 @@ export const greetingScenario: Scenario = {
     },
     {
       speaker: "user",
-      blocks: [blockI, blockBe, verbStudy, blockEnglish, blockGrammar, blockNow],
+      blocks: [blockNow, blockGrammar, blockBe, verbStudy, blockI],
     },
     {
       speaker: "ai",
@@ -54,19 +54,7 @@ export const greetingScenario: Scenario = {
     },
     {
       speaker: "user",
-      blocks: [
-        blockI,
-        verbStudy,
-        blockEnglish,
-        blockBecause,
-        blockI,
-        verbWant,
-        blockTo,
-        verbTalk,
-        blockWith,
-        blockMany,
-        blockPerson,
-      ],
+      blocks: [blockSentence, blockBecause, blockI, blockMany, verbStudy, blockPerson, blockSentence, verbTalk, blockEnglish, verbWant, blockTo, blockWith, blockI],
     },
   ],
 };
