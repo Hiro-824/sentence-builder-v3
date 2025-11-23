@@ -1364,7 +1364,7 @@ export class Renderer {
             } else if (child.type === "placeholder") {
                 x += this.renderPlaceholder(child, height, block, blockGroup, originalIndex, x);
             } else if (child.type === "text") {
-                x += this.renderText(child, height, blockGroup, x);
+                x += this.renderText(child, height, block, blockGroup, x);
             } else if (child.type === "dropdown") {
                 x += this.renderDropdown(child, height, block, blockGroup, originalIndex, x);
             } else if (child.type === "attachment") {
@@ -1527,11 +1527,11 @@ export class Renderer {
         }
     }
 
-    renderText(child, height, blockGroup, x) {
+    renderText(child, height, block, blockGroup, x) {
         const content = child.content;
         const box = this.calculateTextHeightAndWidth(content);
         const y = ((height - box.height) / 2) + box.height;
-        blockGroup.append("text")
+        const textSelection = blockGroup.append("text")
             .text(content)
             .attr("x", x)
             .attr("y", y)
@@ -1540,6 +1540,40 @@ export class Renderer {
             .attr('font-weight', 'bold')
             .attr('dy', '-0.24em')
             .style('user-select', 'none');
+
+        if (child.editable) {
+            textSelection.classed("pointer", true)
+                .on("click", (event) => {
+                    event.stopPropagation();
+                    const current = typeof child.content === "string" ? child.content : "";
+                    const input = window.prompt("Enter a label", current);
+                    if (input === null) return;
+                    const trimmed = input.trim();
+                    if (!trimmed) return;
+
+                    child.content = trimmed;
+                    // Keep head word token/translation aligned with the visible label when possible.
+                    if (block?.children?.includes(child) && Array.isArray(block.words) && block.words.length > 0) {
+                        const headIndex = child.type === "dropdown" ? (child.selected ?? 0) : 0;
+                        const headWord = block.words[headIndex];
+                        if (headWord) {
+                            headWord.token = trimmed;
+                            if (Array.isArray(headWord.categories)) {
+                                headWord.categories = headWord.categories.map(category => ({
+                                    ...category,
+                                    translationTemplates: {
+                                        ...(category.translationTemplates ?? {}),
+                                        default: [trimmed]
+                                    }
+                                }));
+                            }
+                        }
+                    }
+
+                    this.cachedBlockListWidth = null;
+                    this.renderBlocks();
+                });
+        }
         return (box.width + horizontalPadding);
     }
 
