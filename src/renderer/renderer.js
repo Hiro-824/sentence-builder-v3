@@ -6,20 +6,21 @@ import { createBlockSnapshot, createBlockSnapshotList } from "@/utils/supabase/l
 import * as d3 from "d3";
 
 export class Renderer {
-    constructor(blocks, blockList, svg, onDirty, topBarHeight = 0, onLogEvent = (string, object) => { }, sidebarVariant = "sandbox") {
+    constructor(blocks, blockList, svg, onDirty, topBarHeight = 0, onLogEvent = (string, object) => { }, sidebarVariant = "sandbox", scenarioBlockList = blockList) {
         this.blocks = blocks;
         this.topBarHeight = topBarHeight;
         this.canvasHeight = window.innerHeight - this.topBarHeight;
 
-        this.converter = new Converter;
-        this.fullBlockList = {};
-        Object.entries(blockList || {}).forEach(([groupName, groupBlocks]) => {
-            this.fullBlockList[groupName] = groupBlocks.map(block => this.converter.formatBlock(block));
-        });
-        this.blockList = this.cloneBlockList(this.fullBlockList);
-
         this.sidebarVariant = sidebarVariant === "scenario" ? "scenario" : "sandbox";
         this.savedSandboxSidebarState = null;
+
+        this.converter = new Converter;
+        this.sandboxBlockList = this.formatBlockList(blockList || {});
+        this.scenarioBlockList = this.formatBlockList(scenarioBlockList || blockList || {});
+        const initialFullBlockList = this.sidebarVariant === "scenario" ? this.scenarioBlockList : this.sandboxBlockList;
+        this.fullBlockList = initialFullBlockList;
+        this.blockList = this.cloneBlockList(initialFullBlockList);
+
 
         this.svg = svg;
         this.sideBarScrollExtent = 0;
@@ -140,9 +141,11 @@ export class Renderer {
                 blockList: this.cloneBlockList(this.blockList),
             };
             this.searchQuery = "";
+            this.fullBlockList = this.scenarioBlockList;
             this.blockList = this.cloneBlockList(this.fullBlockList);
         } else if (normalized === "sandbox") {
             const restoredSearchQuery = this.savedSandboxSidebarState?.searchQuery ?? "";
+            this.fullBlockList = this.sandboxBlockList;
             const restoredBlockList = this.savedSandboxSidebarState?.blockList ?? this.cloneBlockList(this.fullBlockList);
             this.searchQuery = restoredSearchQuery;
             this.blockList = restoredBlockList;
@@ -150,6 +153,7 @@ export class Renderer {
 
         this.sidebarVariant = normalized;
         this.sideBarScrollExtent = 0;
+        this.cachedBlockListWidth = null;
         this.searchAreaHeight = normalized === "sandbox" ? this.getSidebarSearchAreaHeight() : 0;
         this.renderSideBar();
         this.setBlockBoardTransform();
@@ -629,28 +633,30 @@ export class Renderer {
         }
 
         entries.forEach(([groupName, blockArray]) => {
-            const categoryHeader = this.blockBoard.append("g");
+            const shouldRenderHeader = !!groupName;
+            if (shouldRenderHeader) {
+                const categoryHeader = this.blockBoard.append("g");
 
-            categoryHeader.append("rect")
-                .attr("x", 0)
-                .attr("y", y - blockListFontSize * 2)
-                .attr("width", headerWidth)
-                .attr("height", blockListFontSize * 4)
-                .attr("fill", "transparent");
+                categoryHeader.append("rect")
+                    .attr("x", 0)
+                    .attr("y", y - blockListFontSize * 2)
+                    .attr("width", headerWidth)
+                    .attr("height", blockListFontSize * 4)
+                    .attr("fill", "transparent");
 
-            categoryHeader.append("text")
-                .text(groupName)
-                .attr("x", 0)
-                .attr("y", y)
-                .attr('font-size', `${blockListFontSize * 0.9}pt`)
-                .attr('fill', '#1a1a1a')
-                .style('user-select', 'none')
-                .style("font-weight", "600")
-                .style("letter-spacing", "-0.01em");
+                categoryHeader.append("text")
+                    .text(groupName)
+                    .attr("x", 0)
+                    .attr("y", y)
+                    .attr('font-size', `${blockListFontSize * 0.9}pt`)
+                    .attr('fill', '#1a1a1a')
+                    .style('user-select', 'none')
+                    .style("font-weight", "600")
+                    .style("letter-spacing", "-0.01em");
 
-            y += 40;
-
-            this.categoryScrollTargets[groupName] = y;
+                y += 40;
+                this.categoryScrollTargets[groupName] = y;
+            }
 
             blockArray.forEach((block) => {
                 y += blockListSpacing + this.renderSideBarBlock(block, this.generateRandomId(), y);
@@ -1040,6 +1046,23 @@ export class Renderer {
         if (withoutParens && withoutParens !== lower) {
             tokenSet.add(withoutParens);
         }
+    }
+
+    formatBlockList(source) {
+        const formatted = {};
+        if (!source) {
+            return formatted;
+        }
+
+        if (Array.isArray(source)) {
+            formatted[""] = source.map(block => this.converter.formatBlock(block));
+            return formatted;
+        }
+
+        Object.entries(source || {}).forEach(([groupName, blocks]) => {
+            formatted[groupName] = Array.isArray(blocks) ? blocks.map(block => this.converter.formatBlock(block)) : [];
+        });
+        return formatted;
     }
 
     cloneBlockList(source) {

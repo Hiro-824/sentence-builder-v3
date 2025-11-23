@@ -4,7 +4,7 @@
 import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import { Renderer } from "@/renderer/renderer";
-import { blockList } from "@/data/blocks";
+import { blockList, availableBlockList } from "@/data/blocks";
 import TopBar from "./top-bar";
 import AuthModal from "./auth-modal";
 import { createClient } from "@/utils/supabase/client";
@@ -127,7 +127,7 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
             loggingServiceRef.current?.logEvent(eventType, eventData);
         };
         const initialSidebarVariant = getEffectiveMode();
-        rendererRef.current = new Renderer([], blockList, svg, () => setIsDirty(true), topBarHeight, logEvent, initialSidebarVariant);
+        rendererRef.current = new Renderer([], blockList, svg, () => setIsDirty(true), topBarHeight, logEvent, initialSidebarVariant, availableBlockList);
 
         return () => {
             window.removeEventListener("resize", updateSvgSize);

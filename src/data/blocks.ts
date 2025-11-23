@@ -1,10 +1,10 @@
 import { Block } from "@/models/block";
-import { allPronounBlocks } from "./pronouns";
-import { allNounBlocks } from "./nouns";
+import { allPronounBlocks, blockI } from "./pronouns";
+import { allNounBlocks, blockMary, blockName } from "./nouns";
 import { allVerbBlocks } from "./verbs";
 import { allAdjectiveBlocks } from "./adjectives";
 import { blockA, blockS, blockThe } from "./determiners";
-import { allAuxiliaryBlocks } from "./auxiliaries";
+import { allAuxiliaryBlocks, blockBe } from "./auxiliaries";
 import { allPrepositionBlocks } from "./prepositions";
 import { blockHowManySentence, blockHowSentence, blockThat, blockWhatDetSentence, blockWhatSentence, blockWhereSentence, blockWhichDetSentence, blockWhichSentence, blockWhoseDetSentence, blockWhoSentence, blockWhoseSentence } from "./complementizers";
 import { blockActively, blockAggressively, blockAlready, blockAlways, blockAround, blockBadly, blockCarefully, blockCalmly, blockClearly, blockEasily, blockEfficiently, blockEnergetically, blockEvery, blockEverywhere, blockFar, blockFast, blockFinally, blockHardAdv, blockHere, blockHappily, blockIndoors, blockJust, blockLateAdv, blockLater, blockLoudly, blockMaybe, blockNear, blockNever, blockNow, blockOften, blockOnline, blockOutdoors, blockPolitelyAdv, blockProbably, blockProfessionally, blockQuickly, blockQuietly, blockRarely, blockReally, blockRegularly, blockSafely, blockSeriouslyAdv, blockSlowly, blockSmoothly, blockSometimes, blockSoon, blockStill, blockThen, blockThere, blockTogether, blockTomorrow, blockToday, blockUsually, blockVery, blockWell, blockYesterday, blockEarlyAdv } from "./adverbials";
@@ -163,3 +163,10 @@ export const blockList = {
         ...allRelativePronounBlocks
     ]
 }
+
+export const availableBlockList = [
+    blockBe,
+    blockI,
+    blockName,
+    blockMary,
+]
