@@ -1546,7 +1546,7 @@ export class Renderer {
                 .on("click", (event) => {
                     event.stopPropagation();
                     const current = typeof child.content === "string" ? child.content : "";
-                    const input = window.prompt("Enter a label", current);
+                    const input = window.prompt("入力してください", current);
                     if (input === null) return;
                     const trimmed = input.trim();
                     if (!trimmed) return;
