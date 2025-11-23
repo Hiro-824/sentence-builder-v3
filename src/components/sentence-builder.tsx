@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client"
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import { Renderer } from "@/renderer/renderer";
 import { blockList } from "@/data/blocks";
@@ -68,6 +68,16 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     const rendererRef = useRef<Renderer | null>(null);
     const loggingServiceRef = useRef<LoggingService | null>(null);
     const supabase = createClient();
+
+    const handleScenarioAdvance = useCallback((nextBlocks: Block[]) => {
+        if (rendererRef.current) {
+            rendererRef.current.blocks = [];
+            rendererRef.current.renderBlocks();
+            rendererRef.current.setScenarioBlockList(nextBlocks);
+        }
+        setScenarioBlocks(nextBlocks);
+        setIsDirty(true);
+    }, []);
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -370,9 +380,14 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
                         }}
                     />
                     {shouldShowActivityPanel && (
-                        <ActivityPanel lessons={lessons} currentProjectId={currentProjectId} />
+                    <ActivityPanel lessons={lessons} currentProjectId={currentProjectId} />
                     )}
-                    {shouldShowScenarioPanel && <ScenarioActivityPanel />}
+                    {shouldShowScenarioPanel && (
+                        <ScenarioActivityPanel
+                            scenario={scenario}
+                            onScenarioAdvance={handleScenarioAdvance}
+                        />
+                    )}
                 </>
             )}
 

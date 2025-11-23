@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Block } from "@/models/block";
+import { Scenario, ScenarioTurn } from "@/models/scenario";
 import styles from "./scenario-activity-panel.module.css";
 
 type ChatMessage = {
@@ -9,17 +11,57 @@ type ChatMessage = {
   sender: "user" | "ai";
 };
 
-const DUMMY_RESPONSE = "Hello! This is a dummy response.";
-const INITIAL_AI_MESSAGE = "準備OKです。完成した文を送ってください。";
+type ScenarioActivityPanelProps = {
+  scenario: Scenario | null;
+  onScenarioAdvance?: (nextBlocks: Block[]) => void;
+};
 
-const ScenarioActivityPanel = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    { id: 1, text: INITIAL_AI_MESSAGE, sender: "ai" },
-  ]);
+const ScenarioActivityPanel = ({ scenario, onScenarioAdvance }: ScenarioActivityPanelProps) => {
+  const scenarioTurns = useMemo(() => scenario?.turns ?? [], [scenario]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentTurnIndex, setCurrentTurnIndex] = useState<number>(scenarioTurns.length);
   const messageListRef = useRef<HTMLDivElement>(null);
-  const nextIdRef = useRef(2);
+  const nextIdRef = useRef(1);
   const pendingTimeoutRef = useRef<number | null>(null);
+  const turnIndexRef = useRef<number>(scenarioTurns.length);
+  const isLoadingRef = useRef(false);
+
+  useEffect(() => {
+    isLoadingRef.current = isLoading;
+  }, [isLoading]);
+
+  useEffect(() => {
+    turnIndexRef.current = currentTurnIndex;
+  }, [currentTurnIndex]);
+
+  const findNextIndex = useCallback(
+    (speaker: ScenarioTurn["speaker"], startIndex: number) => {
+      return scenarioTurns.findIndex((turn, index) => index >= startIndex && turn.speaker === speaker);
+    },
+    [scenarioTurns],
+  );
+
+  useEffect(() => {
+    if (pendingTimeoutRef.current) {
+      window.clearTimeout(pendingTimeoutRef.current);
+      pendingTimeoutRef.current = null;
+    }
+    const initialTurn = scenarioTurns[0];
+    const shouldShowInitialAi = initialTurn?.speaker === "ai" && typeof initialTurn.text === "string";
+    const initialMessages: ChatMessage[] = shouldShowInitialAi
+      ? [{ id: 1, text: initialTurn.text, sender: "ai" }]
+      : [];
+
+    setMessages(initialMessages);
+    setIsLoading(false);
+    nextIdRef.current = initialMessages.length + 1;
+
+    const firstUserIndex = findNextIndex("user", 0);
+    const normalizedIndex = firstUserIndex === -1 ? scenarioTurns.length : firstUserIndex;
+    setCurrentTurnIndex(normalizedIndex);
+    turnIndexRef.current = normalizedIndex;
+  }, [findNextIndex, scenarioTurns]);
 
   useEffect(() => {
     if (messageListRef.current) {
@@ -27,33 +69,54 @@ const ScenarioActivityPanel = () => {
     }
   }, [messages, isLoading]);
 
-  useEffect(() => {
-    const handleSend = (event: Event) => {
+  const handleSend = useCallback(
+    (event: Event) => {
       const customEvent = event as CustomEvent<string>;
       const text = typeof customEvent.detail === "string" ? customEvent.detail.trim() : "";
-      if (!text) return;
-
-      if (pendingTimeoutRef.current) {
-        window.clearTimeout(pendingTimeoutRef.current);
-        pendingTimeoutRef.current = null;
-      }
+      if (!text || isLoadingRef.current) return;
 
       const userId = nextIdRef.current++;
-      const aiId = nextIdRef.current++;
+      const userTurnIndex = turnIndexRef.current < scenarioTurns.length ? turnIndexRef.current : -1;
+      const aiTurnIndex = findNextIndex("ai", userTurnIndex >= 0 ? userTurnIndex + 1 : 0);
+      const nextUserTurnIndex = aiTurnIndex !== -1
+        ? findNextIndex("user", aiTurnIndex + 1)
+        : findNextIndex("user", (userTurnIndex >= 0 ? userTurnIndex + 1 : 0));
 
-      setMessages((prev) => {
-        return [...prev, { id: userId, text, sender: "user" }];
-      });
+      const nextBlocks =
+        nextUserTurnIndex !== -1 && scenarioTurns[nextUserTurnIndex]?.speaker === "user"
+          ? scenarioTurns[nextUserTurnIndex].blocks ?? []
+          : [];
 
-      setIsLoading(true);
+      const normalizedNextIndex = nextUserTurnIndex !== -1 ? nextUserTurnIndex : scenarioTurns.length;
+      setCurrentTurnIndex(normalizedNextIndex);
+      turnIndexRef.current = normalizedNextIndex;
 
-      pendingTimeoutRef.current = window.setTimeout(() => {
-        setMessages((prev) => [...prev, { id: aiId, text: DUMMY_RESPONSE, sender: "ai" }]);
-        setIsLoading(false);
-        pendingTimeoutRef.current = null;
-      }, 600);
-    };
+      setMessages((prev) => [...prev, { id: userId, text, sender: "user" }]);
 
+      onScenarioAdvance?.(nextBlocks);
+
+      const aiText =
+        aiTurnIndex !== -1 && scenarioTurns[aiTurnIndex]?.speaker === "ai"
+          ? scenarioTurns[aiTurnIndex].text
+          : "";
+
+      if (aiText) {
+        const aiId = nextIdRef.current++;
+        setIsLoading(true);
+        isLoadingRef.current = true;
+        pendingTimeoutRef.current = window.setTimeout(() => {
+          setMessages((prev) => [...prev, { id: aiId, text: aiText, sender: "ai" }]);
+          setIsLoading(false);
+          isLoadingRef.current = false;
+          pendingTimeoutRef.current = null;
+        }, 600);
+        return;
+      }
+    },
+    [findNextIndex, onScenarioAdvance, scenarioTurns],
+  );
+
+  useEffect(() => {
     window.addEventListener("aiTutorSend", handleSend as EventListener);
     return () => {
       window.removeEventListener("aiTutorSend", handleSend as EventListener);
@@ -61,7 +124,7 @@ const ScenarioActivityPanel = () => {
         window.clearTimeout(pendingTimeoutRef.current);
       }
     };
-  }, []);
+  }, [handleSend]);
 
   return (
     <aside className={styles.panel} aria-label="Scenario activity panel">
