@@ -25,7 +25,8 @@
 .messageList {
     flex-grow: 1;
     overflow-y: auto;
-    padding: 16px;
+    padding: 16px 16px calc(128px + env(safe-area-inset-bottom)); /* keep last bubble clear of the input on mobile */
+    scroll-padding-bottom: calc(128px + env(safe-area-inset-bottom));
     display: flex;
     flex-direction: column;
     gap: 12px;

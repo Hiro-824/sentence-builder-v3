@@ -24,4 +24,5 @@ export interface BlockChild {
     selected?: number;
     content: unknown;
     instanceId?: string;
+    editable?: boolean;
 }

@@ -119,6 +119,142 @@ export class Renderer {
         //this.renderTrashCan();
     }
 
+    promptForLabel(initialValue = "") {
+        return new Promise((resolve) => {
+            if (typeof document === "undefined") {
+                resolve(null);
+                return;
+            }
+
+            const overlay = document.createElement("div");
+            Object.assign(overlay.style, {
+                position: "fixed",
+                inset: "0",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "rgba(0,0,0,0.4)",
+                zIndex: "9999",
+                padding: "16px",
+            });
+
+            const modal = document.createElement("div");
+            Object.assign(modal.style, {
+                width: "100%",
+                maxWidth: "360px",
+                background: "#ffffff",
+                borderRadius: "14px",
+                boxShadow: "0 16px 40px rgba(0,0,0,0.18)",
+                padding: "16px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "12px",
+                fontFamily: "inherit",
+            });
+
+            const title = document.createElement("div");
+            title.textContent = "Set label";
+            Object.assign(title.style, {
+                fontSize: "16px",
+                fontWeight: "700",
+                color: "#111827",
+            });
+
+            const input = document.createElement("input");
+            input.type = "text";
+            input.value = initialValue;
+            input.placeholder = "Enter a label";
+            Object.assign(input.style, {
+                width: "100%",
+                padding: "10px 12px",
+                border: "1px solid #d1d5db",
+                borderRadius: "10px",
+                fontSize: "15px",
+                fontFamily: "inherit",
+                outline: "none",
+            });
+
+            const buttonRow = document.createElement("div");
+            Object.assign(buttonRow.style, {
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "8px",
+            });
+
+            const cancelButton = document.createElement("button");
+            cancelButton.type = "button";
+            cancelButton.textContent = "Cancel";
+            Object.assign(cancelButton.style, {
+                padding: "8px 12px",
+                borderRadius: "10px",
+                border: "1px solid #e5e7eb",
+                background: "#f9fafb",
+                color: "#374151",
+                cursor: "pointer",
+                fontWeight: "600",
+            });
+
+            const saveButton = document.createElement("button");
+            saveButton.type = "button";
+            saveButton.textContent = "Save";
+            Object.assign(saveButton.style, {
+                padding: "8px 12px",
+                borderRadius: "10px",
+                border: "none",
+                background: "#007AFF",
+                color: "#ffffff",
+                cursor: "pointer",
+                fontWeight: "700",
+            });
+
+            buttonRow.appendChild(cancelButton);
+            buttonRow.appendChild(saveButton);
+            modal.appendChild(title);
+            modal.appendChild(input);
+            modal.appendChild(buttonRow);
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+
+            const cleanup = (result) => {
+                document.removeEventListener("keydown", onKeyDown);
+                overlay.remove();
+                resolve(result);
+            };
+
+            const onKeyDown = (event) => {
+                if (event.key === "Escape") {
+                    event.preventDefault();
+                    cleanup(null);
+                } else if (event.key === "Enter") {
+                    event.preventDefault();
+                    const value = input.value.trim();
+                    if (value) cleanup(value);
+                }
+            };
+
+            const handleSave = () => {
+                const value = input.value.trim();
+                if (value) cleanup(value);
+            };
+
+            const handleCancel = () => cleanup(null);
+
+            saveButton.addEventListener("click", handleSave);
+            cancelButton.addEventListener("click", handleCancel);
+            overlay.addEventListener("mousedown", (event) => {
+                if (event.target === overlay) {
+                    handleCancel();
+                }
+            });
+            modal.addEventListener("mousedown", (event) => event.stopPropagation());
+            input.addEventListener("mousedown", (event) => event.stopPropagation());
+            document.addEventListener("keydown", onKeyDown);
+
+            input.focus();
+            input.select();
+        });
+    }
+
     // Cleanup method to remove event listeners
     destroy() {
         if (this.handleResize) {
@@ -1364,7 +1500,7 @@ export class Renderer {
             } else if (child.type === "placeholder") {
                 x += this.renderPlaceholder(child, height, block, blockGroup, originalIndex, x);
             } else if (child.type === "text") {
-                x += this.renderText(child, height, blockGroup, x);
+                x += this.renderText(child, height, block, blockGroup, x);
             } else if (child.type === "dropdown") {
                 x += this.renderDropdown(child, height, block, blockGroup, originalIndex, x);
             } else if (child.type === "attachment") {
@@ -1527,11 +1663,11 @@ export class Renderer {
         }
     }
 
-    renderText(child, height, blockGroup, x) {
+    renderText(child, height, block, blockGroup, x) {
         const content = child.content;
         const box = this.calculateTextHeightAndWidth(content);
         const y = ((height - box.height) / 2) + box.height;
-        blockGroup.append("text")
+        const textSelection = blockGroup.append("text")
             .text(content)
             .attr("x", x)
             .attr("y", y)
@@ -1540,6 +1676,40 @@ export class Renderer {
             .attr('font-weight', 'bold')
             .attr('dy', '-0.24em')
             .style('user-select', 'none');
+
+        if (child.editable) {
+            textSelection.classed("pointer", true)
+                .on("click", async (event) => {
+                    event.stopPropagation();
+                    const current = typeof child.content === "string" ? child.content : "";
+                    const input = await this.promptForLabel(current);
+                    if (!input) return;
+                    const trimmed = input.trim();
+                    if (!trimmed) return;
+
+                    child.content = trimmed;
+                    // Keep head word token/translation aligned with the visible label when possible.
+                    if (block?.children?.includes(child) && Array.isArray(block.words) && block.words.length > 0) {
+                        const headIndex = child.type === "dropdown" ? (child.selected ?? 0) : 0;
+                        const headWord = block.words[headIndex];
+                        if (headWord) {
+                            headWord.token = trimmed;
+                            if (Array.isArray(headWord.categories)) {
+                                headWord.categories = headWord.categories.map(category => ({
+                                    ...category,
+                                    translationTemplates: {
+                                        ...(category.translationTemplates ?? {}),
+                                        default: [trimmed]
+                                    }
+                                }));
+                            }
+                        }
+                    }
+
+                    this.cachedBlockListWidth = null;
+                    this.renderBlocks();
+                });
+        }
         return (box.width + horizontalPadding);
     }
 

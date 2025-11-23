@@ -1,3 +1,4 @@
+import { Block } from "@/models/block";
 import { Scenario } from "@/models/scenario";
 import { blockBe, blockSentence } from "./auxiliaries";
 import { blockTo } from "./blocks";
@@ -9,6 +10,44 @@ import { blockFrom, blockWith } from "./prepositions";
 import { blockEnglish, blockGrammar, blockJapan, blockMary, blockName, blockPerson } from "./nouns";
 import { verbStudy, verbTalk, verbWant } from "./verbs";
 
+const withHeadSelection = (block: Block, selectedIndex: number): Block => ({
+  ...block,
+  children: block.children.map((child) =>
+    child.id === "head" && child.type === "dropdown"
+      ? { ...child, selected: selectedIndex }
+      : { ...child }
+  ),
+});
+
+const blockIMy = withHeadSelection(blockI, 1);
+const makeEditableHeadTextBlock = (block: Block, label: string, translation = label, id = block.id): Block => ({
+  ...block,
+  id,
+  words: block.words.map((word, idx) =>
+    idx === 0
+      ? {
+          ...word,
+          token: label,
+          categories: Array.isArray(word.categories)
+            ? word.categories.map((category) => ({
+                ...category,
+                translationTemplates: {
+                  ...(category.translationTemplates ?? {}),
+                  default: [translation],
+                },
+              }))
+            : word.categories,
+        }
+      : { ...word }
+  ),
+  children: block.children.map((child) =>
+    child.id === "head" && child.type === "text"
+      ? { ...child, content: label, editable: true }
+      : { ...child }
+  ),
+});
+const blockUserNameInput = makeEditableHeadTextBlock(blockMary, "名前を入力…", "ダブルタップ", "user_name_input");
+
 export const greetingScenario: Scenario = {
   turns: [
     {
@@ -18,7 +57,7 @@ export const greetingScenario: Scenario = {
     },
     {
       speaker: "user",
-      blocks: [blockMary, blockBe, blockI, blockName],
+      blocks: [blockUserNameInput, blockBe, blockIMy, blockName],
     },
     {
       speaker: "ai",
