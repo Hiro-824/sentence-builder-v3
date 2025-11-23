@@ -485,8 +485,9 @@ export class Renderer {
         });
         // Add padding for the sidebar
         const blockListWidth = maxWidth + sidebarSearchPadding.horizontal + sidebarPadding.right;
-        this.cachedBlockListWidth = blockListWidth;
-        return blockListWidth;
+        const minWidth = 300;
+        this.cachedBlockListWidth = Math.max(blockListWidth, minWidth);
+        return this.cachedBlockListWidth;
     }
 
     renderNavBar(navBarGroup) {
@@ -654,26 +655,31 @@ export class Renderer {
         const entries = Object.entries(this.blockList || {});
 
         if (entries.length === 0) {
-            const emptyGroup = this.blockBoard.append("g");
+            // In scenario mode, keep the panel empty; otherwise show the default empty state.
+            if (this.sidebarVariant !== "scenario") {
+                const emptyGroup = this.blockBoard.append("g");
 
-            emptyGroup.append("text")
-                .text("No matching blocks")
-                .attr("x", 0)
-                .attr("y", y)
-                .attr('font-size', `${blockListFontSize * 0.7}pt`)
-                .attr('fill', '#555555')
-                .style('user-select', 'none')
-                .style('font-weight', '500');
+                emptyGroup.append("text")
+                    .text("No matching blocks")
+                    .attr("x", 0)
+                    .attr("y", y)
+                    .attr('font-size', `${blockListFontSize * 0.7}pt`)
+                    .attr('fill', '#555555')
+                    .style('user-select', 'none')
+                    .style('font-weight', '500');
 
-            emptyGroup.append("text")
-                .text("一致するブロックが見つかりません")
-                .attr("x", 0)
-                .attr("y", y + blockListFontSize)
-                .attr('font-size', `${blockListFontSize * 0.6}pt`)
-                .attr('fill', '#888888')
-                .style('user-select', 'none');
+                emptyGroup.append("text")
+                    .text("一致するブロックが見つかりません")
+                    .attr("x", 0)
+                    .attr("y", y + blockListFontSize)
+                    .attr('font-size', `${blockListFontSize * 0.6}pt`)
+                    .attr('fill', '#888888')
+                    .style('user-select', 'none');
 
-            y += blockListFontSize * 2 + sidebarPadding.bottom;
+                y += blockListFontSize * 2 + sidebarPadding.bottom;
+            } else {
+                y += sidebarPadding.bottom;
+            }
             this.sideBarContentHeight = y;
             this.setBlockBoardTransform();
             return;
