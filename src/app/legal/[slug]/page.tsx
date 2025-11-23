@@ -30,12 +30,14 @@ export async function generateStaticParams() {
   return Object.keys(legalPages).map((slug) => ({ slug }));
 }
 
+// 修正箇所1: paramsをPromiseとして定義し、awaitで展開する
 export async function generateMetadata({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  const config = legalPages[params.slug as LegalSlug];
+  const { slug } = await params; // ここでawaitする
+  const config = legalPages[slug as LegalSlug];
   if (!config) {
     return { title: "Not Found" };
   }
@@ -46,8 +48,14 @@ export async function generateMetadata({
   };
 }
 
-export default async function LegalPage({ params }: { params: { slug: string } }) {
-  const config = legalPages[params.slug as LegalSlug];
+// 修正箇所2: コンポーネントのpropsも同様に修正
+export default async function LegalPage({ 
+  params 
+}: { 
+  params: Promise<{ slug: string }> 
+}) {
+  const { slug } = await params; // ここでawaitする
+  const config = legalPages[slug as LegalSlug];
 
   if (!config) {
     notFound();
@@ -57,6 +65,7 @@ export default async function LegalPage({ params }: { params: { slug: string } }
 
   return (
     <div className="legal-page">
+      {/* styleタグの中身は変更なしのため省略可能ですが、そのまま残します */}
       <style>{`
         .legal-page {
           background: radial-gradient(circle at 20% 20%, #f7fbff 0%, #ffffff 35%), radial-gradient(circle at 80% 0%, #f5f7ff 0%, #ffffff 40%);
