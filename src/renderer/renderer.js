@@ -171,6 +171,41 @@ export class Renderer {
         }
     }
 
+    consumeScenarioBlock(blockId) {
+        if (!blockId || this.sidebarVariant !== "scenario") {
+            return;
+        }
+
+        const removeFromList = (list) => {
+            let removed = false;
+            Object.keys(list || {}).forEach(groupName => {
+                const blocks = list[groupName];
+                if (!Array.isArray(blocks)) return;
+                const index = blocks.findIndex(block => block?.id === blockId);
+                if (index !== -1) {
+                    blocks.splice(index, 1);
+                    if (blocks.length === 0) {
+                        delete list[groupName];
+                    }
+                    removed = true;
+                }
+            });
+            return removed;
+        };
+
+        const removed = removeFromList(this.scenarioBlockList);
+        removeFromList(this.fullBlockList);
+        removeFromList(this.blockList);
+
+        if (!removed) return;
+
+        this.blockList = this.cloneBlockList(this.fullBlockList);
+        this.sideBarScrollExtent = 0;
+        this.cachedBlockListWidth = null;
+        this.renderBlockList();
+        this.setBlockBoardTransform();
+    }
+
     /*レンダリング処理***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
     render() {
@@ -1778,6 +1813,9 @@ export class Renderer {
     dragging(event, d, fromSideBar = false) {
         if (!this.dragStarted) {
 
+            let sideBarId = undefined;
+            let sourceSidebarBlockId = undefined;
+
             if (fromSideBar) {
                 const newBlockSnapshot = createBlockSnapshot(d);
                 this.onLogEvent('BLOCK_INTERACTION', {
@@ -1795,12 +1833,24 @@ export class Renderer {
                 const gridY = (sideBarY - this.topBarHeight - transform.y) / transform.k;
                 d.x = gridX;
                 d.y = gridY;
-                const sideBarId = d3.select(`#${d.id}`).node().parentNode.id;
-                this.renderPreviewBlock(sideBarId);
+                const blockNode = d3.select(`#${d.id}`).node();
+                const sideBarNode = blockNode ? blockNode.parentNode : null;
+                if (sideBarNode) {
+                    sideBarId = sideBarNode.id;
+                    const sideBarData = d3.select(sideBarNode).datum();
+                    sourceSidebarBlockId = sideBarData?.id;
+                }
+                if (sideBarId && this.sidebarVariant !== "scenario") {
+                    this.renderPreviewBlock(sideBarId);
+                }
             }
 
             this.moveBlockToTopLevel(d.id);
             this.moveBlockToDragboard(d.id);
+
+            if (fromSideBar && this.sidebarVariant === "scenario" && sourceSidebarBlockId) {
+                this.consumeScenarioBlock(sourceSidebarBlockId);
+            }
 
             this.dragStartX = event.x;
             this.dragStartY = event.y;

@@ -4,7 +4,7 @@ import { allModalBlocks } from "./modals";
 
 const generator = new Generator();
 export const blockSentence: Block = {
-    id: "",
+    id: "sentence",
     x: 0,
     y: 0,
     color: "orange",

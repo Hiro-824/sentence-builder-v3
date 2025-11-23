@@ -11,7 +11,7 @@ import { blockActively, blockAfterSchool, blockAggressively, blockAlready, block
 import { allRelativePronounBlocks } from "./relatives";
 
 export const blockTo: Block = {
-    id: "",
+    id: "to_inf",
     x: 0,
     y: 0,
     isRound: true,

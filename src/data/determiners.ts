@@ -2,7 +2,7 @@ import { Block } from "@/models/block"
 import { commonNominal, det, noun } from "@/models/grammar-entities"
 
 export const blockThe: Block = {
-    id: "",
+    id: "det_the",
     x: 0,
     y: 0,
     words: [{
@@ -37,7 +37,7 @@ export const blockThe: Block = {
 }
 
 export const blockA: Block = {
-    id: "",
+    id: "det_a_an",
     x: 0,
     y: 0,
     words: [{

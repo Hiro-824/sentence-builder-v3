@@ -439,7 +439,7 @@ export class Generator {
             }
         }
         return {
-            id: "",
+            id: "pronoun_numeric",
             x: 0,
             y: 0,
             isRound: true,
@@ -1335,7 +1335,7 @@ export class Generator {
 
     createBlockBe(): Block {
         return {
-            id: "",
+            id: "aux_be",
             x: 0,
             y: 0,
             words: [{
@@ -1405,7 +1405,7 @@ export class Generator {
 
     createBlockBeNot(): Block {
         return {
-            id: "",
+            id: "aux_be_not",
             x: 0,
             y: 0,
             words: [{
@@ -1462,7 +1462,7 @@ export class Generator {
 
     createBlockInvertedBe(): Block {
         return {
-            id: "",
+            id: "aux_inverted_be",
             x: 0,
             y: 0,
             words: [{
@@ -1578,7 +1578,7 @@ export class Generator {
 
     createBlockDoNot(): Block {
         return {
-            id: "",
+            id: "aux_do_not",
             x: 0,
             y: 0,
             words: [{
