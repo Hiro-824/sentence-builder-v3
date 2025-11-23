@@ -841,6 +841,13 @@ const configLanguage: NounConfig = {
     translation: "言語"
 };
 
+const configGrammar: NounConfig = {
+    id: "noun_grammar",
+    isCountable: false,
+    singularForm: "grammar",
+    translation: "文法"
+};
+
 const configMusic: NounConfig = {
     id: "noun_music",
     isCountable: false,
@@ -1390,6 +1397,7 @@ export const blockQuestion = generator.createNounBlock(configQuestion);
 export const blockAnswer = generator.createNounBlock(configAnswer);
 export const blockStory = generator.createNounBlock(configStory);
 export const blockLanguage = generator.createNounBlock(configLanguage);
+export const blockGrammar = generator.createNounBlock(configGrammar);
 export const blockMusic = generator.createNounBlock(configMusic);
 export const blockMovie = generator.createNounBlock(configMovie);
 export const blockNews = generator.createNounBlock(configNews);
@@ -1446,6 +1454,7 @@ export const blockExample = generator.createNounBlock(configExample);
 export const blockKind = generator.createNounBlock(configKind);
 export const blockKid = generator.createNounBlock(configKid);
 export const blockEnglish = generator.createProperNounBlock("English", "英語");
+export const blockJapan = generator.createProperNounBlock("Japan", "日本");
 export const blockInterest = generator.createNounBlock(configInterest);
 
 export const blockJohn = generator.createProperNounBlock("John", "ジョン");
@@ -1539,6 +1548,7 @@ const educationAndWorkBlocks: Block[] = [
     blockHomework,
     blockExam,
     blockTextbook,
+    blockGrammar,
     blockBook,
     blockPen,
     blockOffice,
@@ -1561,6 +1571,8 @@ const travelBlocks: Block[] = [
     blockTrain,
     blockStation,
     blockAirport,
+    blockCountry,
+    blockJapan,
     blockTicket,
     blockLuggage,
     blockHotel,

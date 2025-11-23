@@ -6,20 +6,22 @@ import { createBlockSnapshot, createBlockSnapshotList } from "@/utils/supabase/l
 import * as d3 from "d3";
 
 export class Renderer {
-    constructor(blocks, blockList, svg, onDirty, topBarHeight = 0, onLogEvent = (string, object) => { }, sidebarVariant = "sandbox") {
+    constructor(blocks, blockList, svg, onDirty, topBarHeight = 0, onLogEvent = (string, object) => { }, sidebarVariant = "sandbox", scenarioBlockList = blockList, enableSidebarDropDelete = false) {
         this.blocks = blocks;
         this.topBarHeight = topBarHeight;
         this.canvasHeight = window.innerHeight - this.topBarHeight;
 
-        this.converter = new Converter;
-        this.fullBlockList = {};
-        Object.entries(blockList || {}).forEach(([groupName, groupBlocks]) => {
-            this.fullBlockList[groupName] = groupBlocks.map(block => this.converter.formatBlock(block));
-        });
-        this.blockList = this.cloneBlockList(this.fullBlockList);
-
         this.sidebarVariant = sidebarVariant === "scenario" ? "scenario" : "sandbox";
         this.savedSandboxSidebarState = null;
+        this.enableSidebarDropDelete = Boolean(enableSidebarDropDelete);
+
+        this.converter = new Converter;
+        this.sandboxBlockList = this.formatBlockList(blockList || {});
+        this.scenarioBlockList = this.formatBlockList(scenarioBlockList || blockList || {});
+        const initialFullBlockList = this.sidebarVariant === "scenario" ? this.scenarioBlockList : this.sandboxBlockList;
+        this.fullBlockList = initialFullBlockList;
+        this.blockList = this.cloneBlockList(initialFullBlockList);
+
 
         this.svg = svg;
         this.sideBarScrollExtent = 0;
@@ -124,6 +126,10 @@ export class Renderer {
         }
     }
 
+    shouldAllowSidebarDropDelete() {
+        return this.enableSidebarDropDelete && this.sidebarVariant === "sandbox";
+    }
+
     getSidebarNavWidth() {
         return this.sidebarVariant === "scenario" ? 0 : navBarWidth;
     }
@@ -140,9 +146,11 @@ export class Renderer {
                 blockList: this.cloneBlockList(this.blockList),
             };
             this.searchQuery = "";
+            this.fullBlockList = this.scenarioBlockList;
             this.blockList = this.cloneBlockList(this.fullBlockList);
         } else if (normalized === "sandbox") {
             const restoredSearchQuery = this.savedSandboxSidebarState?.searchQuery ?? "";
+            this.fullBlockList = this.sandboxBlockList;
             const restoredBlockList = this.savedSandboxSidebarState?.blockList ?? this.cloneBlockList(this.fullBlockList);
             this.searchQuery = restoredSearchQuery;
             this.blockList = restoredBlockList;
@@ -150,8 +158,56 @@ export class Renderer {
 
         this.sidebarVariant = normalized;
         this.sideBarScrollExtent = 0;
+        this.cachedBlockListWidth = null;
         this.searchAreaHeight = normalized === "sandbox" ? this.getSidebarSearchAreaHeight() : 0;
         this.renderSideBar();
+        this.setBlockBoardTransform();
+    }
+
+    setScenarioBlockList(newList) {
+        this.scenarioBlockList = this.formatBlockList(newList || {});
+        if (this.sidebarVariant === "scenario") {
+            this.fullBlockList = this.scenarioBlockList;
+            this.blockList = this.cloneBlockList(this.fullBlockList);
+            this.sideBarScrollExtent = 0;
+            this.cachedBlockListWidth = null;
+            this.renderSideBar();
+            this.setBlockBoardTransform();
+        }
+    }
+
+    consumeScenarioBlock(blockId) {
+        if (!blockId || this.sidebarVariant !== "scenario") {
+            return;
+        }
+
+        const removeFromList = (list) => {
+            let removed = false;
+            Object.keys(list || {}).forEach(groupName => {
+                const blocks = list[groupName];
+                if (!Array.isArray(blocks)) return;
+                const index = blocks.findIndex(block => block?.id === blockId);
+                if (index !== -1) {
+                    blocks.splice(index, 1);
+                    if (blocks.length === 0) {
+                        delete list[groupName];
+                    }
+                    removed = true;
+                }
+            });
+            return removed;
+        };
+
+        const removed = removeFromList(this.scenarioBlockList);
+        removeFromList(this.fullBlockList);
+        removeFromList(this.blockList);
+
+        if (!removed) return;
+
+        this.blockList = this.cloneBlockList(this.fullBlockList);
+        this.sideBarScrollExtent = 0;
+        this.cachedBlockListWidth = null;
+        this.renderBlockList();
         this.setBlockBoardTransform();
     }
 
@@ -434,8 +490,9 @@ export class Renderer {
         });
         // Add padding for the sidebar
         const blockListWidth = maxWidth + sidebarSearchPadding.horizontal + sidebarPadding.right;
-        this.cachedBlockListWidth = blockListWidth;
-        return blockListWidth;
+        const minWidth = 300;
+        this.cachedBlockListWidth = Math.max(blockListWidth, minWidth);
+        return this.cachedBlockListWidth;
     }
 
     renderNavBar(navBarGroup) {
@@ -603,54 +660,61 @@ export class Renderer {
         const entries = Object.entries(this.blockList || {});
 
         if (entries.length === 0) {
-            const emptyGroup = this.blockBoard.append("g");
+            // In scenario mode, keep the panel empty; otherwise show the default empty state.
+            if (this.sidebarVariant !== "scenario") {
+                const emptyGroup = this.blockBoard.append("g");
 
-            emptyGroup.append("text")
-                .text("No matching blocks")
-                .attr("x", 0)
-                .attr("y", y)
-                .attr('font-size', `${blockListFontSize * 0.7}pt`)
-                .attr('fill', '#555555')
-                .style('user-select', 'none')
-                .style('font-weight', '500');
+                emptyGroup.append("text")
+                    .text("No matching blocks")
+                    .attr("x", 0)
+                    .attr("y", y)
+                    .attr('font-size', `${blockListFontSize * 0.7}pt`)
+                    .attr('fill', '#555555')
+                    .style('user-select', 'none')
+                    .style('font-weight', '500');
 
-            emptyGroup.append("text")
-                .text("一致するブロックが見つかりません")
-                .attr("x", 0)
-                .attr("y", y + blockListFontSize)
-                .attr('font-size', `${blockListFontSize * 0.6}pt`)
-                .attr('fill', '#888888')
-                .style('user-select', 'none');
+                emptyGroup.append("text")
+                    .text("一致するブロックが見つかりません")
+                    .attr("x", 0)
+                    .attr("y", y + blockListFontSize)
+                    .attr('font-size', `${blockListFontSize * 0.6}pt`)
+                    .attr('fill', '#888888')
+                    .style('user-select', 'none');
 
-            y += blockListFontSize * 2 + sidebarPadding.bottom;
+                y += blockListFontSize * 2 + sidebarPadding.bottom;
+            } else {
+                y += sidebarPadding.bottom;
+            }
             this.sideBarContentHeight = y;
             this.setBlockBoardTransform();
             return;
         }
 
         entries.forEach(([groupName, blockArray]) => {
-            const categoryHeader = this.blockBoard.append("g");
+            const shouldRenderHeader = !!groupName;
+            if (shouldRenderHeader) {
+                const categoryHeader = this.blockBoard.append("g");
 
-            categoryHeader.append("rect")
-                .attr("x", 0)
-                .attr("y", y - blockListFontSize * 2)
-                .attr("width", headerWidth)
-                .attr("height", blockListFontSize * 4)
-                .attr("fill", "transparent");
+                categoryHeader.append("rect")
+                    .attr("x", 0)
+                    .attr("y", y - blockListFontSize * 2)
+                    .attr("width", headerWidth)
+                    .attr("height", blockListFontSize * 4)
+                    .attr("fill", "transparent");
 
-            categoryHeader.append("text")
-                .text(groupName)
-                .attr("x", 0)
-                .attr("y", y)
-                .attr('font-size', `${blockListFontSize * 0.9}pt`)
-                .attr('fill', '#1a1a1a')
-                .style('user-select', 'none')
-                .style("font-weight", "600")
-                .style("letter-spacing", "-0.01em");
+                categoryHeader.append("text")
+                    .text(groupName)
+                    .attr("x", 0)
+                    .attr("y", y)
+                    .attr('font-size', `${blockListFontSize * 0.9}pt`)
+                    .attr('fill', '#1a1a1a')
+                    .style('user-select', 'none')
+                    .style("font-weight", "600")
+                    .style("letter-spacing", "-0.01em");
 
-            y += 40;
-
-            this.categoryScrollTargets[groupName] = y;
+                y += 40;
+                this.categoryScrollTargets[groupName] = y;
+            }
 
             blockArray.forEach((block) => {
                 y += blockListSpacing + this.renderSideBarBlock(block, this.generateRandomId(), y);
@@ -1040,6 +1104,23 @@ export class Renderer {
         if (withoutParens && withoutParens !== lower) {
             tokenSet.add(withoutParens);
         }
+    }
+
+    formatBlockList(source) {
+        const formatted = {};
+        if (!source) {
+            return formatted;
+        }
+
+        if (Array.isArray(source)) {
+            formatted[""] = source.map(block => this.converter.formatBlock(block));
+            return formatted;
+        }
+
+        Object.entries(source || {}).forEach(([groupName, blocks]) => {
+            formatted[groupName] = Array.isArray(blocks) ? blocks.map(block => this.converter.formatBlock(block)) : [];
+        });
+        return formatted;
     }
 
     cloneBlockList(source) {
@@ -1743,6 +1824,9 @@ export class Renderer {
     dragging(event, d, fromSideBar = false) {
         if (!this.dragStarted) {
 
+            let sideBarId = undefined;
+            let sourceSidebarBlockId = undefined;
+
             if (fromSideBar) {
                 const newBlockSnapshot = createBlockSnapshot(d);
                 this.onLogEvent('BLOCK_INTERACTION', {
@@ -1760,12 +1844,24 @@ export class Renderer {
                 const gridY = (sideBarY - this.topBarHeight - transform.y) / transform.k;
                 d.x = gridX;
                 d.y = gridY;
-                const sideBarId = d3.select(`#${d.id}`).node().parentNode.id;
-                this.renderPreviewBlock(sideBarId);
+                const blockNode = d3.select(`#${d.id}`).node();
+                const sideBarNode = blockNode ? blockNode.parentNode : null;
+                if (sideBarNode) {
+                    sideBarId = sideBarNode.id;
+                    const sideBarData = d3.select(sideBarNode).datum();
+                    sourceSidebarBlockId = sideBarData?.id;
+                }
+                if (sideBarId && this.sidebarVariant !== "scenario") {
+                    this.renderPreviewBlock(sideBarId);
+                }
             }
 
             this.moveBlockToTopLevel(d.id);
             this.moveBlockToDragboard(d.id);
+
+            if (fromSideBar && this.sidebarVariant === "scenario" && sourceSidebarBlockId) {
+                this.consumeScenarioBlock(sourceSidebarBlockId);
+            }
 
             this.dragStartX = event.x;
             this.dragStartY = event.y;
@@ -1860,30 +1956,42 @@ export class Renderer {
 
         const draggedBlockNode = d3.select(`#${d.id}`).node();
         const trashTarget = d3.select("#trash-can-droptarget").node();
-        const sidebarNode = d3.select("#sidebar rect").node();
+        const sidebarNode = d3.select("#sidebar-background").node() || d3.select("#sidebar rect").node();
+        const shouldCheckSidebarDrop = this.shouldAllowSidebarDropDelete() && !!sidebarNode;
 
-        if (draggedBlockNode && trashTarget && sidebarNode) {
+        const checkIntersection = (rect1, rect2) => {
+            return !(
+                rect1.right < rect2.left ||
+                rect1.left > rect2.right ||
+                rect1.bottom < rect2.top ||
+                rect1.top > rect2.bottom
+            );
+        };
+
+        if (draggedBlockNode && (trashTarget || shouldCheckSidebarDrop)) {
             const blockRect = draggedBlockNode.getBoundingClientRect();
-            const trashRect = trashTarget.getBoundingClientRect();
-            const checkIntersection = (rect1, rect2) => {
-                return !(
-                    rect1.right < rect2.left ||
-                    rect1.left > rect2.right ||
-                    rect1.bottom < rect2.top ||
-                    rect1.top > rect2.bottom
-                );
-            };
-            const droppedOnTrash = checkIntersection(blockRect, trashRect);
+            const droppedOnTrash = trashTarget
+                ? checkIntersection(blockRect, trashTarget.getBoundingClientRect())
+                : false;
 
-            const { clientX, clientY } = event.sourceEvent;
-            const sidebarRect = sidebarNode.getBoundingClientRect();
-            const droppedOnSidebar = clientX >= sidebarRect.left && clientX <= sidebarRect.right &&
-                clientY >= sidebarRect.top && clientY <= sidebarRect.bottom;
+            let droppedOnSidebar = false;
+            if (shouldCheckSidebarDrop) {
+                const { clientX, clientY } = event.sourceEvent;
+                const sidebarRect = sidebarNode.getBoundingClientRect();
+                droppedOnSidebar = clientX >= sidebarRect.left && clientX <= sidebarRect.right &&
+                    clientY >= sidebarRect.top && clientY <= sidebarRect.bottom;
+            }
 
-            if (droppedOnTrash /*|| droppedOnSidebar*/) {
+            if (droppedOnTrash || droppedOnSidebar) {
                 this.deleteBlock(d.id);
                 this.dragStarted = false;
                 this.draggedBlockId = null;
+                if (this.hoverLogContext?.timerId) {
+                    clearTimeout(this.hoverLogContext.timerId);
+                    this.hoverLogContext.timerId = null;
+                }
+                this.hoverLogContext.currentPlaceholderId = null;
+                this.deemphasizeAllPlaceholder();
                 return;
             }
         }

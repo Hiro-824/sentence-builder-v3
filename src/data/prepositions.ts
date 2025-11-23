@@ -349,3 +349,16 @@ const prepositionConfigs: PrepositionConfig[] = [
 const prepositionBlocks: Block[] = prepositionConfigs.map((config) => generator.createPrepositionBlock(config));
 
 export const allPrepositionBlocks: Block[] = prepositionBlocks;
+
+const getPrepositionBlock = (word: string) => {
+    const normalizedId = `prep_${word.replace(/[^a-z]/g, "_")}`;
+    const block = prepositionBlocks.find((item) => item.id === normalizedId);
+    if (!block) {
+        throw new Error(`Preposition block not found for "${word}"`);
+    }
+    return block;
+};
+
+export const blockFrom = getPrepositionBlock("from");
+export const blockAfter = getPrepositionBlock("after");
+export const blockWith = getPrepositionBlock("with");

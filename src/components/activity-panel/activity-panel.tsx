@@ -15,9 +15,10 @@ const TABS = [
 interface ActivityPanelProps {
   lessons: Lesson[];
   currentProjectId: string | null;
+  aiTutorKey?: string;
 }
 
-const ActivityPanel = ({ lessons, currentProjectId }: ActivityPanelProps) => {
+const ActivityPanel = ({ lessons, currentProjectId, aiTutorKey }: ActivityPanelProps) => {
   const [activeTab, setActiveTab] = useState(TABS[0].id);
 
 	useEffect(() => {
@@ -44,7 +45,7 @@ const ActivityPanel = ({ lessons, currentProjectId }: ActivityPanelProps) => {
       <div className={styles.content}>
         {activeTab === 'lessons' && <LessonsTabContent lessons={lessons} />}
         {activeTab === 'ai_tutor' && (
-          <AiTutorTabContent projectId={currentProjectId} key={currentProjectId ?? 'default'} />
+          <AiTutorTabContent projectId={currentProjectId} key={aiTutorKey ?? currentProjectId ?? 'default'} />
         )}
       </div>
     </aside>

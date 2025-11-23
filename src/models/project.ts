@@ -1,4 +1,5 @@
 import { Block } from "./block";
+import { ScenarioProgress } from "./scenario";
 
 export interface Project {
     id: string;
@@ -8,4 +9,5 @@ export interface Project {
 
 export interface ProjectData {
     blocks: Block[];
+    scenarioProgress?: ScenarioProgress;
 }

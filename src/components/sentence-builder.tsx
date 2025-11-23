@@ -1,10 +1,11 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client"
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import { Renderer } from "@/renderer/renderer";
 import { blockList } from "@/data/blocks";
+import { greetingScenario } from "@/data/scenarios";
 import TopBar from "./top-bar";
 import AuthModal from "./auth-modal";
 import { createClient } from "@/utils/supabase/client";
@@ -17,8 +18,114 @@ import { LoggingService } from "@/utils/supabase/logging";
 import ActivityPanel from "./activity-panel/activity-panel";
 import ScenarioActivityPanel from "./scenario-activity-panel/scenario-activity-panel";
 import { Lesson } from "@/utils/lessons";
+import { Scenario, ScenarioProgress } from "@/models/scenario";
+import { Block } from "@/models/block";
+import { ProjectData } from "@/models/project";
 
 const MOBILE_MAX_WIDTH = 1024;
+const DEFAULT_SCENARIO = greetingScenario;
+
+const getScenarioBlocksForTurn = (scenario: Scenario | null, turnIndex: number): Block[] => {
+    if (!scenario || turnIndex < 0) return [];
+    const turn = scenario.turns[turnIndex];
+    return turn && turn.speaker === "user" ? turn.blocks ?? [] : [];
+};
+
+const createInitialScenarioProgress = (scenario: Scenario | null): ScenarioProgress => {
+    const turns = scenario?.turns ?? [];
+    const initialTurn = turns[0];
+    const shouldShowInitialAi = initialTurn?.speaker === "ai" && typeof initialTurn.text === "string";
+    const initialMessages = shouldShowInitialAi
+        ? [{
+            id: 1,
+            text: initialTurn.text,
+            translation: initialTurn.translation,
+            sender: "ai" as const,
+        }]
+        : [];
+
+    const firstUserIndex = turns.findIndex((turn) => turn.speaker === "user");
+    const normalizedIndex = firstUserIndex === -1 ? turns.length : firstUserIndex;
+
+    return {
+        messages: initialMessages,
+        currentTurnIndex: normalizedIndex,
+        nextId: initialMessages.length + 1,
+        visibleTranslations: {},
+        isLoading: false,
+    };
+};
+
+const normalizeScenarioProgress = (scenario: Scenario | null, progress?: ScenarioProgress | null): ScenarioProgress => {
+    const base = createInitialScenarioProgress(scenario);
+    if (!progress) return base;
+
+    const turnsLength = scenario?.turns.length ?? 0;
+    const clampedIndex = Math.min(Math.max(progress.currentTurnIndex ?? base.currentTurnIndex, 0), turnsLength);
+
+    const sanitizedMessages: ScenarioProgress["messages"] | undefined = Array.isArray(progress.messages)
+        ? progress.messages
+            .filter((message) => typeof message?.text === "string" && !!message.text.trim())
+            .map((message) => ({
+                id: typeof message.id === "number" ? message.id : base.nextId,
+                text: message.text,
+                sender: message.sender === "ai" ? "ai" : "user",
+                translation: message.translation,
+            }))
+        : undefined;
+
+    const messagesToUse = sanitizedMessages ?? base.messages;
+
+    const maxExistingId = messagesToUse.reduce((max, message) => Math.max(max, message.id), 0);
+    const candidateNextId = typeof progress.nextId === "number" && progress.nextId > 0 ? progress.nextId : base.nextId;
+    const safeNextId = Math.max(candidateNextId, maxExistingId + 1);
+
+    const visibility = progress.visibleTranslations && typeof progress.visibleTranslations === "object"
+        ? progress.visibleTranslations
+        : base.visibleTranslations;
+
+    return {
+        messages: messagesToUse,
+        currentTurnIndex: clampedIndex,
+        nextId: safeNextId,
+        visibleTranslations: visibility,
+        isLoading: Boolean(progress.isLoading) && Boolean(messagesToUse.length),
+    };
+};
+
+const DEFAULT_SCENARIO_PROGRESS = createInitialScenarioProgress(DEFAULT_SCENARIO);
+const DEFAULT_SCENARIO_BLOCKS = getScenarioBlocksForTurn(DEFAULT_SCENARIO, DEFAULT_SCENARIO_PROGRESS.currentTurnIndex);
+
+const buildAiTutorConversationFromScenario = (progress: ScenarioProgress | null | undefined) => {
+    const messages = Array.isArray(progress?.messages)
+        ? progress.messages.map((message) => ({
+            id: typeof message.id === "number" ? message.id : Date.now(),
+            text: message.text,
+            sender: message.sender === "ai" ? "ai" : "user",
+            translation: message.translation,
+        }))
+        : [];
+
+    const now = Date.now();
+    const hasMessages = messages.length > 0;
+
+    return {
+        conversation: {
+            id: "scenario-progress",
+            title: "Scenario Progress",
+            messages: hasMessages ? messages : [{
+                id: now,
+                text: "Let's start from your scenario progress.",
+                sender: "ai" as const,
+            }],
+            createdAt: now,
+            updatedAt: now,
+            scenarioId: null,
+            customScenario: "",
+        },
+        currentConversationId: "scenario-progress",
+    };
+};
 
 interface SentenceBuilderProps {
     lessons: Lesson[];
@@ -39,10 +146,15 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     const searchParams = useSearchParams();
     const routeBase = basePath ?? "/app";
     const enableModeSwitch = routeBase === "/app";
+    const shouldEnableSidebarDropDelete = enableModeSwitch;
 
     const [mode, setMode] = useState<"scenario" | "sandbox">(enableModeSwitch ? "scenario" : "sandbox");
     const [isMobileViewport, setIsMobileViewport] = useState(false);
     const [isPortrait, setIsPortrait] = useState(false);
+    const [scenario, setScenario] = useState<Scenario | null>(DEFAULT_SCENARIO);
+    const [scenarioProgress, setScenarioProgress] = useState<ScenarioProgress>(DEFAULT_SCENARIO_PROGRESS);
+    const [scenarioBlocks, setScenarioBlocks] = useState<Block[]>(DEFAULT_SCENARIO_BLOCKS);
+    const [aiTutorSyncVersion, setAiTutorSyncVersion] = useState(0);
 
     const getEffectiveMode = () => enableModeSwitch
         ? (isMobileViewport ? "scenario" : mode)
@@ -51,7 +163,49 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     const svgContainerRef = useRef(null);
     const rendererRef = useRef<Renderer | null>(null);
     const loggingServiceRef = useRef<LoggingService | null>(null);
+    const aiTutorStorageSnapshotRef = useRef<string | null>(null);
     const supabase = createClient();
+
+    const getAiTutorStorageKeys = useCallback((projectId?: string | null) => {
+        const projectKey = (projectId ?? "").trim() || "default";
+        return {
+            conversations: `aiTutorConversations:${projectKey}`,
+            currentConversation: `aiTutorCurrentConversationId:${projectKey}`,
+        };
+    }, []);
+
+    const syncAiTutorFromScenario = useCallback((projectId: string | null, progress: ScenarioProgress | null | undefined) => {
+        if (typeof window === "undefined") return;
+        const keys = getAiTutorStorageKeys(projectId);
+        const { conversation, currentConversationId } = buildAiTutorConversationFromScenario(progress);
+        const serializedSnapshot = JSON.stringify({ projectId, conversation });
+        if (aiTutorStorageSnapshotRef.current === serializedSnapshot) return;
+        aiTutorStorageSnapshotRef.current = serializedSnapshot;
+        window.localStorage.setItem(keys.conversations, JSON.stringify([conversation]));
+        window.localStorage.setItem(keys.currentConversation, currentConversationId);
+        setAiTutorSyncVersion((prev) => prev + 1);
+    }, [getAiTutorStorageKeys]);
+
+    const handleScenarioCanvasClear = useCallback(() => {
+        if (rendererRef.current) {
+            rendererRef.current.blocks = [];
+            rendererRef.current.renderBlocks();
+        }
+        setIsDirty(true);
+    }, []);
+
+    const handleScenarioAdvance = useCallback((nextBlocks: Block[]) => {
+        if (rendererRef.current) {
+            rendererRef.current.setScenarioBlockList(nextBlocks);
+        }
+        setScenarioBlocks(nextBlocks);
+        setIsDirty(true);
+    }, []);
+
+    const handleScenarioProgressChange = useCallback((nextProgress: ScenarioProgress) => {
+        setScenarioProgress(nextProgress);
+        setIsDirty(true);
+    }, []);
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -127,7 +281,7 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
             loggingServiceRef.current?.logEvent(eventType, eventData);
         };
         const initialSidebarVariant = getEffectiveMode();
-        rendererRef.current = new Renderer([], blockList, svg, () => setIsDirty(true), topBarHeight, logEvent, initialSidebarVariant);
+        rendererRef.current = new Renderer([], blockList, svg, () => setIsDirty(true), topBarHeight, logEvent, initialSidebarVariant, scenarioBlocks, shouldEnableSidebarDropDelete);
 
         return () => {
             window.removeEventListener("resize", updateSvgSize);
@@ -203,6 +357,11 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
         setUser(null);
         setIsAuthenticated(false);
         setCurrentProjectId(null);
+        setScenario(DEFAULT_SCENARIO);
+        setScenarioProgress(DEFAULT_SCENARIO_PROGRESS);
+        setScenarioBlocks(DEFAULT_SCENARIO_BLOCKS);
+        aiTutorStorageSnapshotRef.current = null;
+        setAiTutorSyncVersion(0);
         router.push(routeBase, { scroll: false });
         setShowAuthModal(true);
     };
@@ -214,7 +373,10 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     const handleSaveProject = async () => {
         if (!currentProjectId || !rendererRef.current) return;
         setIsSaving(true);
-        const projectData = { blocks: rendererRef.current.blocks };
+        const projectData: ProjectData = {
+            blocks: rendererRef.current.blocks,
+            scenarioProgress,
+        };
         try {
             await saveProjectData(currentProjectId, projectData);
             setIsDirty(false);
@@ -235,7 +397,11 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
         try {
             const data = await getProjectData(projectId);
             if (!data) return;
-            rendererRef.current.blocks = data.blocks;
+            rendererRef.current.blocks = data.blocks ?? [];
+            const normalizedProgress = normalizeScenarioProgress(scenario, data.scenarioProgress);
+            setScenarioProgress(normalizedProgress);
+            syncAiTutorFromScenario(projectId, normalizedProgress);
+            setScenarioBlocks(getScenarioBlocksForTurn(scenario, normalizedProgress.currentTurnIndex));
             setCurrentProjectId(projectId);
             setIsDirty(false);
             rendererRef.current.renderBlocks();
@@ -258,7 +424,8 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
         setIsProjectLoading(true);
         try {
             const newProjectId = crypto.randomUUID();
-            await saveProjectData(newProjectId, { blocks: [] });
+            const freshScenarioProgress = createInitialScenarioProgress(scenario);
+            await saveProjectData(newProjectId, { blocks: [], scenarioProgress: freshScenarioProgress });
             loggingServiceRef.current?.logEvent('PROJECT_CREATE_SUCCESS', { newProjectId: newProjectId });
             router.push(`${routeBase}?projectId=${newProjectId}`, { scroll: false });
         } catch (error) {
@@ -310,10 +477,33 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
         rendererRef.current.setSidebarVariant(effectiveMode);
     }, [effectiveMode, isAuthenticated]);
 
+    useEffect(() => {
+        const initialProgress = createInitialScenarioProgress(scenario);
+        setScenarioProgress(initialProgress);
+        setScenarioBlocks(getScenarioBlocksForTurn(scenario, initialProgress.currentTurnIndex));
+    }, [scenario]);
+
+    useEffect(() => {
+        setScenarioBlocks((prev) => {
+            const nextBlocks = getScenarioBlocksForTurn(scenario, scenarioProgress.currentTurnIndex);
+            return prev === nextBlocks ? prev : nextBlocks;
+        });
+    }, [scenario, scenarioProgress.currentTurnIndex]);
+
+    useEffect(() => {
+        syncAiTutorFromScenario(currentProjectId, scenarioProgress);
+    }, [currentProjectId, scenarioProgress, syncAiTutorFromScenario]);
+
+    useEffect(() => {
+        if (!rendererRef.current) return;
+        rendererRef.current.setScenarioBlockList(scenarioBlocks);
+    }, [scenarioBlocks]);
+
     const shouldShowRotateOverlay = isMobileViewport && isPortrait && !showAuthModal;
     const shouldHideSidePanelForViewport = isMobileViewport && !isPortrait && !showAuthModal;
     const shouldShowActivityPanel = effectiveMode === "sandbox" && !shouldHideSidePanelForViewport;
     const shouldShowScenarioPanel = enableModeSwitch && effectiveMode === "scenario";
+    const aiTutorKey = `${currentProjectId ?? "default"}:${aiTutorSyncVersion}`;
 
     return (
         <>
@@ -343,9 +533,17 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
                         }}
                     />
                     {shouldShowActivityPanel && (
-                        <ActivityPanel lessons={lessons} currentProjectId={currentProjectId} />
+                        <ActivityPanel lessons={lessons} currentProjectId={currentProjectId} aiTutorKey={aiTutorKey} />
                     )}
-                    {shouldShowScenarioPanel && <ScenarioActivityPanel />}
+                    {shouldShowScenarioPanel && (
+                        <ScenarioActivityPanel
+                            scenario={scenario}
+                            progress={scenarioProgress}
+                            onProgressChange={handleScenarioProgressChange}
+                            onCanvasClear={handleScenarioCanvasClear}
+                            onScenarioAdvance={handleScenarioAdvance}
+                        />
+                    )}
                 </>
             )}
 

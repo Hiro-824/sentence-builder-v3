@@ -19,7 +19,7 @@ export const mobileSidebarTargetWidth = 240;
 export const mobileSidebarMinWidth = 200;
 export const mobileSidebarMaxWidth = 280;
 
-export const sidebarPadding = { top: 100, bottom: 100, right: 80, left: 12 };
+export const sidebarPadding = { top: 32, bottom: 100, right: 80, left: 12 };
 export const blockListSpacing = 20;
 export const blockListFontSize = 26;
 export const scrollMomentumExtent = 20;

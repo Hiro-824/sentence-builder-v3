@@ -2,7 +2,7 @@ import { Block } from "@/models/block"
 import { commonNominal, det, noun } from "@/models/grammar-entities"
 
 export const blockThe: Block = {
-    id: "",
+    id: "det_the",
     x: 0,
     y: 0,
     words: [{
@@ -37,7 +37,7 @@ export const blockThe: Block = {
 }
 
 export const blockA: Block = {
-    id: "",
+    id: "det_a_an",
     x: 0,
     y: 0,
     words: [{
@@ -107,5 +107,40 @@ export const blockS: Block = {
         hidden: false,
         type: "placeholder",
         content: undefined
+    }]
+}
+
+export const blockMany: Block = {
+    id: "many",
+    x: 0,
+    y: 0,
+    words: [{
+        token: "",
+        categories: [{
+            head: { type: det, agr: { type: "non-3sing", num: "pl", per: 3 }, determinered: true },
+            right: [{
+                head: { type: noun, agr: { type: "non-3sing", num: "pl", per: 3 }, count: true }
+            }],
+            customUnification: [
+                [["head", "agr"], ["right", 0, "head", "agr"]]
+            ],
+            translationTemplates: {
+                default: ["多くの", { path: ["right", 0], key: "default" }]
+            }
+        }]
+    }],
+    color: "dodgerblue",
+    isRound: true,
+    children: [{
+        id: "head",
+        hidden: false,
+        type: "text",
+        content: "many",
+    },
+    {
+        id: "complement",
+        hidden: false,
+        type: "placeholder",
+        content: null,
     }]
 }

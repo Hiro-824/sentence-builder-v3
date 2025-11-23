@@ -40,6 +40,50 @@ export const blockThat: Block = {
         content: undefined
     }]
 }
+
+export const blockBecause: Block = {
+    id: "because_clause",
+    isRound: true,
+    x: 0,
+    y: 0,
+    words: [{
+        token: "",
+        categories: [{
+            head: { type: "conjunction" },
+            right: [{
+                head: { type: "sentence", inverted: false }
+            }],
+            leftModTargets: [
+                { head: { type: "sentence" } },
+                { head: { type: "verb" } },
+            ],
+            rightModTargets: [
+                { head: { type: "sentence" } },
+            ],
+            translationTemplates: {
+                default: [
+                    {
+                        path: ["right", 0],
+                        key: "default",
+                        particle: "ので"
+                    }
+                ]
+            }
+        }]
+    }],
+    color: "mediumseagreen",
+    children: [{
+        id: "head",
+        hidden: false,
+        type: "text",
+        content: "because"
+    }, {
+        id: "complement",
+        hidden: false,
+        type: "placeholder",
+        content: undefined
+    }]
+}
 const generator = new Generator();
 
 export const whatPronounFeatures: FeatureStructure = { type: "interrogative", nominal: true, determiner: false, number: false, agr: { type: "3sing" } };
