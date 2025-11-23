@@ -937,8 +937,9 @@ export class Generator {
                 }
             });
         }
+        const blockId = config.id ?? `prep_${config.word.replace(/[^a-z]/g, "_")}`;
         return {
-            id: "",
+            id: blockId,
             x: 0,
             y: 0,
             isRound: true,

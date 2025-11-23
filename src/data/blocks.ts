@@ -166,10 +166,3 @@ export const blockList = {
         ...allRelativePronounBlocks
     ]
 }
-
-export const availableBlockList = [
-    blockBe,
-    blockI,
-    blockName,
-    blockMary,
-]

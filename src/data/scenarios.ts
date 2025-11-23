@@ -4,22 +4,10 @@ import { blockTo } from "./blocks";
 import { blockBecause } from "./complementizers";
 import { blockMany } from "./determiners";
 import { blockUsually, blockNow } from "./adverbials";
-import { allPrepositionBlocks } from "./prepositions";
 import { blockI } from "./pronouns";
+import { blockAfter, blockFrom, blockWith } from "./prepositions";
 import { blockEnglish, blockGrammar, blockJapan, blockMary, blockName, blockPerson, blockSchool } from "./nouns";
 import { verbStudy, verbTalk, verbWant } from "./verbs";
-
-const getPrepositionBlock = (word: string) => {
-  const block = allPrepositionBlocks.find((item) => item.id === `prep_${word}`);
-  if (!block) {
-    throw new Error(`Preposition block not found for "${word}"`);
-  }
-  return block;
-};
-
-const blockFrom = getPrepositionBlock("from");
-const blockAfter = getPrepositionBlock("after");
-const blockWith = getPrepositionBlock("with");
 
 export const greetingScenario: Scenario = {
   turns: [

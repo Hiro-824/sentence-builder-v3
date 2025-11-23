@@ -4,7 +4,8 @@
 import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import { Renderer } from "@/renderer/renderer";
-import { blockList, availableBlockList } from "@/data/blocks";
+import { blockList } from "@/data/blocks";
+import { greetingScenario } from "@/data/scenarios";
 import TopBar from "./top-bar";
 import AuthModal from "./auth-modal";
 import { createClient } from "@/utils/supabase/client";
@@ -17,8 +18,21 @@ import { LoggingService } from "@/utils/supabase/logging";
 import ActivityPanel from "./activity-panel/activity-panel";
 import ScenarioActivityPanel from "./scenario-activity-panel/scenario-activity-panel";
 import { Lesson } from "@/utils/lessons";
+import { Scenario, ScenarioTurn } from "@/models/scenario";
+import { Block } from "@/models/block";
 
 const MOBILE_MAX_WIDTH = 1024;
+const DEFAULT_SCENARIO = greetingScenario;
+
+const isUserTurn = (turn: ScenarioTurn): turn is Extract<ScenarioTurn, { speaker: "user" }> => turn.speaker === "user";
+
+const getInitialScenarioBlocks = (scenario: Scenario | null): Block[] => {
+    if (!scenario) return [];
+    const userTurn = scenario.turns.find(isUserTurn);
+    return userTurn?.blocks ?? [];
+};
+
+const DEFAULT_SCENARIO_BLOCKS = getInitialScenarioBlocks(DEFAULT_SCENARIO);
 
 interface SentenceBuilderProps {
     lessons: Lesson[];
@@ -43,7 +57,8 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     const [mode, setMode] = useState<"scenario" | "sandbox">(enableModeSwitch ? "scenario" : "sandbox");
     const [isMobileViewport, setIsMobileViewport] = useState(false);
     const [isPortrait, setIsPortrait] = useState(false);
-    const [scenarioBlocks, setScenarioBlocks] = useState(availableBlockList);
+    const [scenario, setScenario] = useState<Scenario | null>(DEFAULT_SCENARIO);
+    const [scenarioBlocks, setScenarioBlocks] = useState<Block[]>(DEFAULT_SCENARIO_BLOCKS);
 
     const getEffectiveMode = () => enableModeSwitch
         ? (isMobileViewport ? "scenario" : mode)
@@ -204,7 +219,8 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
         setUser(null);
         setIsAuthenticated(false);
         setCurrentProjectId(null);
-        setScenarioBlocks(availableBlockList);
+        setScenario(DEFAULT_SCENARIO);
+        setScenarioBlocks(DEFAULT_SCENARIO_BLOCKS);
         router.push(routeBase, { scroll: false });
         setShowAuthModal(true);
     };
@@ -311,6 +327,10 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
         if (!rendererRef.current || !isAuthenticated) return;
         rendererRef.current.setSidebarVariant(effectiveMode);
     }, [effectiveMode, isAuthenticated]);
+
+    useEffect(() => {
+        setScenarioBlocks(getInitialScenarioBlocks(scenario));
+    }, [scenario]);
 
     useEffect(() => {
         if (!rendererRef.current) return;
