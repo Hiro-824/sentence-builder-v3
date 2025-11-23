@@ -339,9 +339,16 @@ export const blockUsually = createSimpleAdverbBlock({
     id: "adverb_usually",
     word: "usually",
     translation: "たいてい",
-    advType: "degree",
+    advType: "both",
     gradable: false,
 });
+
+// Ensure "usually" attaches from the left (before the verb) by using rightModTargets.
+if (Array.isArray(blockUsually.words) && blockUsually.words[0]?.categories?.[0]) {
+    const category = blockUsually.words[0].categories[0];
+    category.rightModTargets = category.leftModTargets;
+    delete category.leftModTargets;
+}
 
 export const blockOften = createSimpleAdverbBlock({
     id: "adverb_often",
@@ -430,6 +437,31 @@ export const blockNow = createSimpleAdverbBlock({
     advType: "both",
     gradable: false,
 });
+
+export const blockAfterSchool: Block = {
+    id: "adverb_after_school",
+    x: 0,
+    y: 0,
+    isRound: true,
+    words: [{
+        token: "after school",
+        categories: [{
+            head: { type: "adverb", form: "base", isGradable: false },
+            leftModTargets: [
+                { head: { type: "verb" } },
+                { head: { type: "sentence" } },
+            ],
+            translationTemplates: { default: ["放課後、"] },
+        }]
+    }],
+    color: "Coral",
+    children: [{
+        id: "head",
+        hidden: false,
+        type: "text",
+        content: "after school"
+    }]
+};
 
 export const blockSoon = createSimpleAdverbBlock({
     id: "adverb_soon",
