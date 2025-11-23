@@ -159,6 +159,18 @@ export class Renderer {
         this.setBlockBoardTransform();
     }
 
+    setScenarioBlockList(newList) {
+        this.scenarioBlockList = this.formatBlockList(newList || {});
+        if (this.sidebarVariant === "scenario") {
+            this.fullBlockList = this.scenarioBlockList;
+            this.blockList = this.cloneBlockList(this.fullBlockList);
+            this.sideBarScrollExtent = 0;
+            this.cachedBlockListWidth = null;
+            this.renderSideBar();
+            this.setBlockBoardTransform();
+        }
+    }
+
     /*レンダリング処理***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
     render() {

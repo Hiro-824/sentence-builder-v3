@@ -43,6 +43,7 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     const [mode, setMode] = useState<"scenario" | "sandbox">(enableModeSwitch ? "scenario" : "sandbox");
     const [isMobileViewport, setIsMobileViewport] = useState(false);
     const [isPortrait, setIsPortrait] = useState(false);
+    const [scenarioBlocks, setScenarioBlocks] = useState(availableBlockList);
 
     const getEffectiveMode = () => enableModeSwitch
         ? (isMobileViewport ? "scenario" : mode)
@@ -127,7 +128,7 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
             loggingServiceRef.current?.logEvent(eventType, eventData);
         };
         const initialSidebarVariant = getEffectiveMode();
-        rendererRef.current = new Renderer([], blockList, svg, () => setIsDirty(true), topBarHeight, logEvent, initialSidebarVariant, availableBlockList);
+        rendererRef.current = new Renderer([], blockList, svg, () => setIsDirty(true), topBarHeight, logEvent, initialSidebarVariant, scenarioBlocks);
 
         return () => {
             window.removeEventListener("resize", updateSvgSize);
@@ -203,6 +204,7 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
         setUser(null);
         setIsAuthenticated(false);
         setCurrentProjectId(null);
+        setScenarioBlocks(availableBlockList);
         router.push(routeBase, { scroll: false });
         setShowAuthModal(true);
     };
@@ -309,6 +311,11 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
         if (!rendererRef.current || !isAuthenticated) return;
         rendererRef.current.setSidebarVariant(effectiveMode);
     }, [effectiveMode, isAuthenticated]);
+
+    useEffect(() => {
+        if (!rendererRef.current) return;
+        rendererRef.current.setScenarioBlockList(scenarioBlocks);
+    }, [scenarioBlocks]);
 
     const shouldShowRotateOverlay = isMobileViewport && isPortrait && !showAuthModal;
     const shouldHideSidePanelForViewport = isMobileViewport && !isPortrait && !showAuthModal;
