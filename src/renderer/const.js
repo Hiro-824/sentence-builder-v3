@@ -11,6 +11,14 @@ export const dropdownHeight = 60;
 export const bubbleColor = "#121212";
 export const resolvedGapRadius = 12;
 
+export const defaultInitialZoom = 0.5;
+export const minZoomScale = 0.2;
+export const maxZoomScale = 1.5;
+export const mobileViewportMaxWidth = 1024;
+export const mobileSidebarTargetWidth = 240;
+export const mobileSidebarMinWidth = 200;
+export const mobileSidebarMaxWidth = 280;
+
 export const sidebarPadding = { top: 100, bottom: 100, right: 80, left: 12 };
 export const blockListSpacing = 20;
 export const blockListFontSize = 26;
