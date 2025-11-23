@@ -426,7 +426,7 @@ export const blockTomorrow = createSimpleAdverbBlock({
 export const blockNow = createSimpleAdverbBlock({
     id: "adverb_now",
     word: "now",
-    translation: "今",
+    translation: "今、",
     advType: "both",
     gradable: false,
 });

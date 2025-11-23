@@ -3,10 +3,10 @@ import { allPronounBlocks, blockI } from "./pronouns";
 import { allNounBlocks, blockMary, blockName } from "./nouns";
 import { allVerbBlocks } from "./verbs";
 import { allAdjectiveBlocks } from "./adjectives";
-import { blockA, blockS, blockThe } from "./determiners";
+import { blockA, blockMany, blockS, blockThe } from "./determiners";
 import { allAuxiliaryBlocks, blockBe } from "./auxiliaries";
 import { allPrepositionBlocks } from "./prepositions";
-import { blockHowManySentence, blockHowSentence, blockThat, blockWhatDetSentence, blockWhatSentence, blockWhereSentence, blockWhichDetSentence, blockWhichSentence, blockWhoseDetSentence, blockWhoSentence, blockWhoseSentence } from "./complementizers";
+import { blockBecause, blockHowManySentence, blockHowSentence, blockThat, blockWhatDetSentence, blockWhatSentence, blockWhereSentence, blockWhichDetSentence, blockWhichSentence, blockWhoseDetSentence, blockWhoSentence, blockWhoseSentence } from "./complementizers";
 import { blockActively, blockAggressively, blockAlready, blockAlways, blockAround, blockBadly, blockCarefully, blockCalmly, blockClearly, blockEasily, blockEfficiently, blockEnergetically, blockEvery, blockEverywhere, blockFar, blockFast, blockFinally, blockHardAdv, blockHere, blockHappily, blockIndoors, blockJust, blockLateAdv, blockLater, blockLoudly, blockMaybe, blockNear, blockNever, blockNow, blockOften, blockOnline, blockOutdoors, blockPolitelyAdv, blockProbably, blockProfessionally, blockQuickly, blockQuietly, blockRarely, blockReally, blockRegularly, blockSafely, blockSeriouslyAdv, blockSlowly, blockSmoothly, blockSometimes, blockSoon, blockStill, blockThen, blockThere, blockTogether, blockTomorrow, blockToday, blockUsually, blockVery, blockWell, blockYesterday, blockEarlyAdv } from "./adverbials";
 import { allRelativePronounBlocks } from "./relatives";
 
@@ -130,6 +130,7 @@ export const blockList = {
     "冠詞": [
         blockA,
         blockThe,
+        blockMany,
         blockS,
     ],
     "名詞": [
@@ -146,6 +147,7 @@ export const blockList = {
     ],
     "接続詞": [
         blockThat,
+        blockBecause,
     ],
     "疑問詞": [
         blockWhatSentence,
