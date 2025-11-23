@@ -146,6 +146,7 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     const searchParams = useSearchParams();
     const routeBase = basePath ?? "/app";
     const enableModeSwitch = routeBase === "/app";
+    const shouldEnableSidebarDropDelete = enableModeSwitch;
 
     const [mode, setMode] = useState<"scenario" | "sandbox">(enableModeSwitch ? "scenario" : "sandbox");
     const [isMobileViewport, setIsMobileViewport] = useState(false);
@@ -280,7 +281,7 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
             loggingServiceRef.current?.logEvent(eventType, eventData);
         };
         const initialSidebarVariant = getEffectiveMode();
-        rendererRef.current = new Renderer([], blockList, svg, () => setIsDirty(true), topBarHeight, logEvent, initialSidebarVariant, scenarioBlocks);
+        rendererRef.current = new Renderer([], blockList, svg, () => setIsDirty(true), topBarHeight, logEvent, initialSidebarVariant, scenarioBlocks, shouldEnableSidebarDropDelete);
 
         return () => {
             window.removeEventListener("resize", updateSvgSize);

@@ -6,13 +6,14 @@ import { createBlockSnapshot, createBlockSnapshotList } from "@/utils/supabase/l
 import * as d3 from "d3";
 
 export class Renderer {
-    constructor(blocks, blockList, svg, onDirty, topBarHeight = 0, onLogEvent = (string, object) => { }, sidebarVariant = "sandbox", scenarioBlockList = blockList) {
+    constructor(blocks, blockList, svg, onDirty, topBarHeight = 0, onLogEvent = (string, object) => { }, sidebarVariant = "sandbox", scenarioBlockList = blockList, enableSidebarDropDelete = false) {
         this.blocks = blocks;
         this.topBarHeight = topBarHeight;
         this.canvasHeight = window.innerHeight - this.topBarHeight;
 
         this.sidebarVariant = sidebarVariant === "scenario" ? "scenario" : "sandbox";
         this.savedSandboxSidebarState = null;
+        this.enableSidebarDropDelete = Boolean(enableSidebarDropDelete);
 
         this.converter = new Converter;
         this.sandboxBlockList = this.formatBlockList(blockList || {});
@@ -123,6 +124,10 @@ export class Renderer {
         if (this.handleResize) {
             window.removeEventListener('resize', this.handleResize);
         }
+    }
+
+    shouldAllowSidebarDropDelete() {
+        return this.enableSidebarDropDelete && this.sidebarVariant === "sandbox";
     }
 
     getSidebarNavWidth() {
@@ -1951,30 +1956,42 @@ export class Renderer {
 
         const draggedBlockNode = d3.select(`#${d.id}`).node();
         const trashTarget = d3.select("#trash-can-droptarget").node();
-        const sidebarNode = d3.select("#sidebar rect").node();
+        const sidebarNode = d3.select("#sidebar-background").node() || d3.select("#sidebar rect").node();
+        const shouldCheckSidebarDrop = this.shouldAllowSidebarDropDelete() && !!sidebarNode;
 
-        if (draggedBlockNode && trashTarget && sidebarNode) {
+        const checkIntersection = (rect1, rect2) => {
+            return !(
+                rect1.right < rect2.left ||
+                rect1.left > rect2.right ||
+                rect1.bottom < rect2.top ||
+                rect1.top > rect2.bottom
+            );
+        };
+
+        if (draggedBlockNode && (trashTarget || shouldCheckSidebarDrop)) {
             const blockRect = draggedBlockNode.getBoundingClientRect();
-            const trashRect = trashTarget.getBoundingClientRect();
-            const checkIntersection = (rect1, rect2) => {
-                return !(
-                    rect1.right < rect2.left ||
-                    rect1.left > rect2.right ||
-                    rect1.bottom < rect2.top ||
-                    rect1.top > rect2.bottom
-                );
-            };
-            const droppedOnTrash = checkIntersection(blockRect, trashRect);
+            const droppedOnTrash = trashTarget
+                ? checkIntersection(blockRect, trashTarget.getBoundingClientRect())
+                : false;
 
-            const { clientX, clientY } = event.sourceEvent;
-            const sidebarRect = sidebarNode.getBoundingClientRect();
-            const droppedOnSidebar = clientX >= sidebarRect.left && clientX <= sidebarRect.right &&
-                clientY >= sidebarRect.top && clientY <= sidebarRect.bottom;
+            let droppedOnSidebar = false;
+            if (shouldCheckSidebarDrop) {
+                const { clientX, clientY } = event.sourceEvent;
+                const sidebarRect = sidebarNode.getBoundingClientRect();
+                droppedOnSidebar = clientX >= sidebarRect.left && clientX <= sidebarRect.right &&
+                    clientY >= sidebarRect.top && clientY <= sidebarRect.bottom;
+            }
 
-            if (droppedOnTrash /*|| droppedOnSidebar*/) {
+            if (droppedOnTrash || droppedOnSidebar) {
                 this.deleteBlock(d.id);
                 this.dragStarted = false;
                 this.draggedBlockId = null;
+                if (this.hoverLogContext?.timerId) {
+                    clearTimeout(this.hoverLogContext.timerId);
+                    this.hoverLogContext.timerId = null;
+                }
+                this.hoverLogContext.currentPlaceholderId = null;
+                this.deemphasizeAllPlaceholder();
                 return;
             }
         }
