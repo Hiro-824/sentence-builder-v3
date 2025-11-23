@@ -63,7 +63,7 @@ const normalizeScenarioProgress = (scenario: Scenario | null, progress?: Scenari
     const turnsLength = scenario?.turns.length ?? 0;
     const clampedIndex = Math.min(Math.max(progress.currentTurnIndex ?? base.currentTurnIndex, 0), turnsLength);
 
-    const sanitizedMessages = Array.isArray(progress.messages)
+    const sanitizedMessages: ScenarioProgress["messages"] | undefined = Array.isArray(progress.messages)
         ? progress.messages
             .filter((message) => typeof message?.text === "string" && !!message.text.trim())
             .map((message) => ({
