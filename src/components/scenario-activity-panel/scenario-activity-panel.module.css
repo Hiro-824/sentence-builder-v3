@@ -47,6 +47,42 @@
     white-space: pre-wrap;
 }
 
+.translationToggle {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.translationButton {
+    align-self: flex-start;
+    background: none;
+    border: none;
+    padding: 0;
+    color: #1d4ed8;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.translationButton:hover {
+    text-decoration: underline;
+}
+
+.translationButton:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+.translationText {
+    background: #f3f4f6;
+    color: #111827;
+    border-radius: 12px;
+    padding: 8px 12px;
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
 .aiMessage {
     background-color: #eef0f2;
     color: #1a1a1a;

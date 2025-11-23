@@ -9,6 +9,7 @@ type ChatMessage = {
   id: number;
   text: string;
   sender: "user" | "ai";
+  translation?: string;
 };
 
 type ScenarioActivityPanelProps = {
@@ -22,6 +23,7 @@ const ScenarioActivityPanel = ({ scenario, onScenarioAdvance, onCanvasClear }: S
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentTurnIndex, setCurrentTurnIndex] = useState<number>(scenarioTurns.length);
+  const [visibleTranslations, setVisibleTranslations] = useState<Record<number, boolean>>({});
   const messageListRef = useRef<HTMLDivElement>(null);
   const nextIdRef = useRef(1);
   const pendingTimeoutRef = useRef<number | null>(null);
@@ -51,11 +53,19 @@ const ScenarioActivityPanel = ({ scenario, onScenarioAdvance, onCanvasClear }: S
     const initialTurn = scenarioTurns[0];
     const shouldShowInitialAi = initialTurn?.speaker === "ai" && typeof initialTurn.text === "string";
     const initialMessages: ChatMessage[] = shouldShowInitialAi
-      ? [{ id: 1, text: initialTurn.text, sender: "ai" }]
+      ? [
+          {
+            id: 1,
+            text: initialTurn.text,
+            translation: initialTurn.translation,
+            sender: "ai",
+          },
+        ]
       : [];
 
     setMessages(initialMessages);
     setIsLoading(false);
+    setVisibleTranslations({});
     nextIdRef.current = initialMessages.length + 1;
 
     const firstUserIndex = findNextIndex("user", 0);
@@ -99,13 +109,20 @@ const ScenarioActivityPanel = ({ scenario, onScenarioAdvance, onCanvasClear }: S
         aiTurnIndex !== -1 && scenarioTurns[aiTurnIndex]?.speaker === "ai"
           ? scenarioTurns[aiTurnIndex].text
           : "";
+      const aiTranslation =
+        aiTurnIndex !== -1 && scenarioTurns[aiTurnIndex]?.speaker === "ai"
+          ? scenarioTurns[aiTurnIndex].translation
+          : "";
 
       if (aiText) {
         const aiId = nextIdRef.current++;
         setIsLoading(true);
         isLoadingRef.current = true;
         pendingTimeoutRef.current = window.setTimeout(() => {
-          setMessages((prev) => [...prev, { id: aiId, text: aiText, sender: "ai" }]);
+          setMessages((prev) => [
+            ...prev,
+            { id: aiId, text: aiText, sender: "ai", translation: aiTranslation },
+          ]);
           setIsLoading(false);
           isLoadingRef.current = false;
           pendingTimeoutRef.current = null;
@@ -128,20 +145,47 @@ const ScenarioActivityPanel = ({ scenario, onScenarioAdvance, onCanvasClear }: S
     };
   }, [handleSend]);
 
+  const toggleTranslationVisibility = useCallback((messageId: number) => {
+    setVisibleTranslations((prev) => ({
+      ...prev,
+      [messageId]: !prev[messageId],
+    }));
+  }, []);
+
   return (
     <aside className={styles.panel} aria-label="Scenario activity panel">
       <div className={styles.container}>
         <div ref={messageListRef} className={styles.messageList}>
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`${styles.messageBubble} ${
-                message.sender === "ai" ? styles.aiMessage : styles.userMessage
-              }`}
-            >
-              <div className={styles.messageText}>{message.text}</div>
-            </div>
-          ))}
+          {messages.map((message) => {
+            const translation = (message.translation ?? "").trim();
+            const isTranslationVisible =
+              Boolean(translation) && Boolean(visibleTranslations[message.id]);
+
+            return (
+              <div
+                key={message.id}
+                className={`${styles.messageBubble} ${
+                  message.sender === "ai" ? styles.aiMessage : styles.userMessage
+                }`}
+              >
+                <div className={styles.messageText}>{message.text}</div>
+                {message.sender === "ai" && translation && (
+                  <div className={styles.translationToggle}>
+                    <button
+                      type="button"
+                      className={styles.translationButton}
+                      onClick={() => toggleTranslationVisibility(message.id)}
+                    >
+                      {isTranslationVisible ? "日本語訳を隠す" : "日本語訳を見る"}
+                    </button>
+                    {isTranslationVisible && (
+                      <div className={styles.translationText}>{translation}</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
           {isLoading && (
             <div className={`${styles.messageBubble} ${styles.aiMessage} ${styles.typingIndicator}`}>
               <span></span>
