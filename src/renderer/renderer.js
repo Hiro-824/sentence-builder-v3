@@ -5,6 +5,14 @@ import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, pla
 import { createBlockSnapshot, createBlockSnapshotList } from "@/utils/supabase/logging_helpers";
 import * as d3 from "d3";
 
+const DEFAULT_INITIAL_ZOOM = 0.5;
+const MIN_ZOOM_SCALE = 0.2;
+const MAX_ZOOM_SCALE = 1.5;
+const MOBILE_VIEWPORT_MAX_WIDTH = 1024;
+const MOBILE_SIDEBAR_TARGET_WIDTH = 240;
+const MOBILE_SIDEBAR_MIN_WIDTH = 200;
+const MOBILE_SIDEBAR_MAX_WIDTH = 280;
+
 export class Renderer {
     constructor(blocks, blockList, svg, onDirty, topBarHeight = 0, onLogEvent = (string, object) => { }, sidebarVariant = "sandbox") {
         this.blocks = blocks;
@@ -222,7 +230,7 @@ export class Renderer {
 
         const zoom = d3.zoom()
             .scaleExtent(
-                [0.2, 1.5],
+                [MIN_ZOOM_SCALE, MAX_ZOOM_SCALE],
             )
             .translateExtent([[-width * 4, -height * 4], [width * 4, height * 4]])
             .on("zoom", (event) => {
@@ -237,7 +245,7 @@ export class Renderer {
         }, { passive: false });
 
         //Initial Zoom Level
-        const initialTransform = d3.zoomIdentity.translate(0, 0).scale(0.5);
+        const initialTransform = d3.zoomIdentity.translate(0, 0).scale(this.getInitialZoomScale());
         this.svg.transition().duration(300).call(zoom.transform, initialTransform);
     }
 
@@ -672,6 +680,29 @@ export class Renderer {
             return 1;
         }
         return transform.k;
+    }
+
+    getInitialZoomScale() {
+        if (typeof window === "undefined") {
+            return DEFAULT_INITIAL_ZOOM;
+        }
+
+        const isMobileViewport = window.innerWidth <= MOBILE_VIEWPORT_MAX_WIDTH;
+        if (!isMobileViewport) {
+            return DEFAULT_INITIAL_ZOOM;
+        }
+
+        const blockListWidth = this.cachedBlockListWidth ?? this.calculateBlockListWidth();
+        if (!blockListWidth || !Number.isFinite(blockListWidth)) {
+            return DEFAULT_INITIAL_ZOOM;
+        }
+
+        const targetScale = MOBILE_SIDEBAR_TARGET_WIDTH / blockListWidth;
+        const minScaleForWidth = MOBILE_SIDEBAR_MIN_WIDTH / blockListWidth;
+        const maxScaleForWidth = MOBILE_SIDEBAR_MAX_WIDTH / blockListWidth;
+        const clampedScale = Math.min(Math.max(targetScale, minScaleForWidth), maxScaleForWidth);
+
+        return Math.max(MIN_ZOOM_SCALE, Math.min(MAX_ZOOM_SCALE, clampedScale));
     }
 
     updateSidebarSearchLayout(zoomExtent) {
