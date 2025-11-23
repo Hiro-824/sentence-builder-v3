@@ -504,12 +504,12 @@ export default function LandingPage() {
             <Link href="/app" style={{ color: "#666", textDecoration: "none" }}>
               アプリ
             </Link>
-            <a href="#" style={{ color: "#666", textDecoration: "none" }}>
+            <Link href="/legal/terms" style={{ color: "#666", textDecoration: "none" }}>
               利用規約
-            </a>
-            <a href="#" style={{ color: "#666", textDecoration: "none" }}>
+            </Link>
+            <Link href="/legal/privacy-policy" style={{ color: "#666", textDecoration: "none" }}>
               プライバシーポリシー
-            </a>
+            </Link>
           </div>
         </div>
       </footer>
