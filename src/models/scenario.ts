@@ -7,3 +7,18 @@ export type ScenarioTurn =
 export interface Scenario {
   turns: ScenarioTurn[];
 }
+
+export interface ScenarioChatMessage {
+  id: number;
+  text: string;
+  sender: "user" | "ai";
+  translation?: string;
+}
+
+export interface ScenarioProgress {
+  messages: ScenarioChatMessage[];
+  currentTurnIndex: number;
+  nextId: number;
+  visibleTranslations: Record<number, boolean>;
+  isLoading?: boolean;
+}

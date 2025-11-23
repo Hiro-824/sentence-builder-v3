@@ -18,21 +18,83 @@ import { LoggingService } from "@/utils/supabase/logging";
 import ActivityPanel from "./activity-panel/activity-panel";
 import ScenarioActivityPanel from "./scenario-activity-panel/scenario-activity-panel";
 import { Lesson } from "@/utils/lessons";
-import { Scenario, ScenarioTurn } from "@/models/scenario";
+import { Scenario, ScenarioProgress } from "@/models/scenario";
 import { Block } from "@/models/block";
+import { ProjectData } from "@/models/project";
 
 const MOBILE_MAX_WIDTH = 1024;
 const DEFAULT_SCENARIO = greetingScenario;
 
-const isUserTurn = (turn: ScenarioTurn): turn is Extract<ScenarioTurn, { speaker: "user" }> => turn.speaker === "user";
-
-const getInitialScenarioBlocks = (scenario: Scenario | null): Block[] => {
-    if (!scenario) return [];
-    const userTurn = scenario.turns.find(isUserTurn);
-    return userTurn?.blocks ?? [];
+const getScenarioBlocksForTurn = (scenario: Scenario | null, turnIndex: number): Block[] => {
+    if (!scenario || turnIndex < 0) return [];
+    const turn = scenario.turns[turnIndex];
+    return turn && turn.speaker === "user" ? turn.blocks ?? [] : [];
 };
 
-const DEFAULT_SCENARIO_BLOCKS = getInitialScenarioBlocks(DEFAULT_SCENARIO);
+const createInitialScenarioProgress = (scenario: Scenario | null): ScenarioProgress => {
+    const turns = scenario?.turns ?? [];
+    const initialTurn = turns[0];
+    const shouldShowInitialAi = initialTurn?.speaker === "ai" && typeof initialTurn.text === "string";
+    const initialMessages = shouldShowInitialAi
+        ? [{
+            id: 1,
+            text: initialTurn.text,
+            translation: initialTurn.translation,
+            sender: "ai" as const,
+        }]
+        : [];
+
+    const firstUserIndex = turns.findIndex((turn) => turn.speaker === "user");
+    const normalizedIndex = firstUserIndex === -1 ? turns.length : firstUserIndex;
+
+    return {
+        messages: initialMessages,
+        currentTurnIndex: normalizedIndex,
+        nextId: initialMessages.length + 1,
+        visibleTranslations: {},
+        isLoading: false,
+    };
+};
+
+const normalizeScenarioProgress = (scenario: Scenario | null, progress?: ScenarioProgress | null): ScenarioProgress => {
+    const base = createInitialScenarioProgress(scenario);
+    if (!progress) return base;
+
+    const turnsLength = scenario?.turns.length ?? 0;
+    const clampedIndex = Math.min(Math.max(progress.currentTurnIndex ?? base.currentTurnIndex, 0), turnsLength);
+
+    const sanitizedMessages = Array.isArray(progress.messages)
+        ? progress.messages
+            .filter((message) => typeof message?.text === "string" && !!message.text.trim())
+            .map((message) => ({
+                id: typeof message.id === "number" ? message.id : base.nextId,
+                text: message.text,
+                sender: message.sender === "ai" ? "ai" : "user",
+                translation: message.translation,
+            }))
+        : undefined;
+
+    const messagesToUse = sanitizedMessages ?? base.messages;
+
+    const maxExistingId = messagesToUse.reduce((max, message) => Math.max(max, message.id), 0);
+    const candidateNextId = typeof progress.nextId === "number" && progress.nextId > 0 ? progress.nextId : base.nextId;
+    const safeNextId = Math.max(candidateNextId, maxExistingId + 1);
+
+    const visibility = progress.visibleTranslations && typeof progress.visibleTranslations === "object"
+        ? progress.visibleTranslations
+        : base.visibleTranslations;
+
+    return {
+        messages: messagesToUse,
+        currentTurnIndex: clampedIndex,
+        nextId: safeNextId,
+        visibleTranslations: visibility,
+        isLoading: Boolean(progress.isLoading) && Boolean(messagesToUse.length),
+    };
+};
+
+const DEFAULT_SCENARIO_PROGRESS = createInitialScenarioProgress(DEFAULT_SCENARIO);
+const DEFAULT_SCENARIO_BLOCKS = getScenarioBlocksForTurn(DEFAULT_SCENARIO, DEFAULT_SCENARIO_PROGRESS.currentTurnIndex);
 
 interface SentenceBuilderProps {
     lessons: Lesson[];
@@ -58,6 +120,7 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     const [isMobileViewport, setIsMobileViewport] = useState(false);
     const [isPortrait, setIsPortrait] = useState(false);
     const [scenario, setScenario] = useState<Scenario | null>(DEFAULT_SCENARIO);
+    const [scenarioProgress, setScenarioProgress] = useState<ScenarioProgress>(DEFAULT_SCENARIO_PROGRESS);
     const [scenarioBlocks, setScenarioBlocks] = useState<Block[]>(DEFAULT_SCENARIO_BLOCKS);
 
     const getEffectiveMode = () => enableModeSwitch
@@ -82,6 +145,11 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
             rendererRef.current.setScenarioBlockList(nextBlocks);
         }
         setScenarioBlocks(nextBlocks);
+        setIsDirty(true);
+    }, []);
+
+    const handleScenarioProgressChange = useCallback((nextProgress: ScenarioProgress) => {
+        setScenarioProgress(nextProgress);
         setIsDirty(true);
     }, []);
 
@@ -236,6 +304,7 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
         setIsAuthenticated(false);
         setCurrentProjectId(null);
         setScenario(DEFAULT_SCENARIO);
+        setScenarioProgress(DEFAULT_SCENARIO_PROGRESS);
         setScenarioBlocks(DEFAULT_SCENARIO_BLOCKS);
         router.push(routeBase, { scroll: false });
         setShowAuthModal(true);
@@ -248,7 +317,10 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     const handleSaveProject = async () => {
         if (!currentProjectId || !rendererRef.current) return;
         setIsSaving(true);
-        const projectData = { blocks: rendererRef.current.blocks };
+        const projectData: ProjectData = {
+            blocks: rendererRef.current.blocks,
+            scenarioProgress,
+        };
         try {
             await saveProjectData(currentProjectId, projectData);
             setIsDirty(false);
@@ -269,7 +341,10 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
         try {
             const data = await getProjectData(projectId);
             if (!data) return;
-            rendererRef.current.blocks = data.blocks;
+            rendererRef.current.blocks = data.blocks ?? [];
+            const normalizedProgress = normalizeScenarioProgress(scenario, data.scenarioProgress);
+            setScenarioProgress(normalizedProgress);
+            setScenarioBlocks(getScenarioBlocksForTurn(scenario, normalizedProgress.currentTurnIndex));
             setCurrentProjectId(projectId);
             setIsDirty(false);
             rendererRef.current.renderBlocks();
@@ -292,7 +367,8 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
         setIsProjectLoading(true);
         try {
             const newProjectId = crypto.randomUUID();
-            await saveProjectData(newProjectId, { blocks: [] });
+            const freshScenarioProgress = createInitialScenarioProgress(scenario);
+            await saveProjectData(newProjectId, { blocks: [], scenarioProgress: freshScenarioProgress });
             loggingServiceRef.current?.logEvent('PROJECT_CREATE_SUCCESS', { newProjectId: newProjectId });
             router.push(`${routeBase}?projectId=${newProjectId}`, { scroll: false });
         } catch (error) {
@@ -345,8 +421,17 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     }, [effectiveMode, isAuthenticated]);
 
     useEffect(() => {
-        setScenarioBlocks(getInitialScenarioBlocks(scenario));
+        const initialProgress = createInitialScenarioProgress(scenario);
+        setScenarioProgress(initialProgress);
+        setScenarioBlocks(getScenarioBlocksForTurn(scenario, initialProgress.currentTurnIndex));
     }, [scenario]);
+
+    useEffect(() => {
+        setScenarioBlocks((prev) => {
+            const nextBlocks = getScenarioBlocksForTurn(scenario, scenarioProgress.currentTurnIndex);
+            return prev === nextBlocks ? prev : nextBlocks;
+        });
+    }, [scenario, scenarioProgress.currentTurnIndex]);
 
     useEffect(() => {
         if (!rendererRef.current) return;
@@ -391,6 +476,8 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
                     {shouldShowScenarioPanel && (
                         <ScenarioActivityPanel
                             scenario={scenario}
+                            progress={scenarioProgress}
+                            onProgressChange={handleScenarioProgressChange}
                             onCanvasClear={handleScenarioCanvasClear}
                             onScenarioAdvance={handleScenarioAdvance}
                         />

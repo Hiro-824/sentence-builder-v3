@@ -1,6 +1,5 @@
 import { createClient } from "@/utils/supabase/client";
-import { Project } from "@/models/project";
-import { Block } from "@/models/block";
+import { Project, ProjectData } from "@/models/project";
 
 export async function listProjects(): Promise<Project[]> {
     const supabase = createClient();
@@ -42,7 +41,7 @@ export async function listProjects(): Promise<Project[]> {
     }
 }
 
-export async function getProjectData(projectId: string) {
+export async function getProjectData(projectId: string): Promise<ProjectData | null> {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -68,11 +67,11 @@ export async function getProjectData(projectId: string) {
         throw new Error(`Failed to download project: ${response.statusText}`);
     }
 
-    const projectData = await response.json();
+    const projectData = await response.json() as ProjectData;
     return projectData;
 }
 
-export async function saveProjectData(projectId: string, projectData: { blocks: Block[] }): Promise<void> {
+export async function saveProjectData(projectId: string, projectData: ProjectData): Promise<void> {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
