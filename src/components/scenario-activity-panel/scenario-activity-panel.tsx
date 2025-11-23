@@ -14,9 +14,10 @@ type ChatMessage = {
 type ScenarioActivityPanelProps = {
   scenario: Scenario | null;
   onScenarioAdvance?: (nextBlocks: Block[]) => void;
+  onCanvasClear?: () => void;
 };
 
-const ScenarioActivityPanel = ({ scenario, onScenarioAdvance }: ScenarioActivityPanelProps) => {
+const ScenarioActivityPanel = ({ scenario, onScenarioAdvance, onCanvasClear }: ScenarioActivityPanelProps) => {
   const scenarioTurns = useMemo(() => scenario?.turns ?? [], [scenario]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -92,8 +93,7 @@ const ScenarioActivityPanel = ({ scenario, onScenarioAdvance }: ScenarioActivity
       turnIndexRef.current = normalizedNextIndex;
 
       setMessages((prev) => [...prev, { id: userId, text, sender: "user" }]);
-
-      onScenarioAdvance?.(nextBlocks);
+      onCanvasClear?.();
 
       const aiText =
         aiTurnIndex !== -1 && scenarioTurns[aiTurnIndex]?.speaker === "ai"
@@ -109,11 +109,13 @@ const ScenarioActivityPanel = ({ scenario, onScenarioAdvance }: ScenarioActivity
           setIsLoading(false);
           isLoadingRef.current = false;
           pendingTimeoutRef.current = null;
+          onScenarioAdvance?.(nextBlocks);
         }, 600);
         return;
       }
+      onScenarioAdvance?.(nextBlocks);
     },
-    [findNextIndex, onScenarioAdvance, scenarioTurns],
+    [findNextIndex, onCanvasClear, onScenarioAdvance, scenarioTurns],
   );
 
   useEffect(() => {

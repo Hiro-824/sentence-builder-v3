@@ -69,10 +69,16 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     const loggingServiceRef = useRef<LoggingService | null>(null);
     const supabase = createClient();
 
-    const handleScenarioAdvance = useCallback((nextBlocks: Block[]) => {
+    const handleScenarioCanvasClear = useCallback(() => {
         if (rendererRef.current) {
             rendererRef.current.blocks = [];
             rendererRef.current.renderBlocks();
+        }
+        setIsDirty(true);
+    }, []);
+
+    const handleScenarioAdvance = useCallback((nextBlocks: Block[]) => {
+        if (rendererRef.current) {
             rendererRef.current.setScenarioBlockList(nextBlocks);
         }
         setScenarioBlocks(nextBlocks);
@@ -380,11 +386,12 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
                         }}
                     />
                     {shouldShowActivityPanel && (
-                    <ActivityPanel lessons={lessons} currentProjectId={currentProjectId} />
+                        <ActivityPanel lessons={lessons} currentProjectId={currentProjectId} />
                     )}
                     {shouldShowScenarioPanel && (
                         <ScenarioActivityPanel
                             scenario={scenario}
+                            onCanvasClear={handleScenarioCanvasClear}
                             onScenarioAdvance={handleScenarioAdvance}
                         />
                     )}
