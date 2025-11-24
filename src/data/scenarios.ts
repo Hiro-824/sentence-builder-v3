@@ -48,6 +48,20 @@ const makeEditableHeadTextBlock = (block: Block, label: string, translation = la
 });
 const blockUserNameInput = makeEditableHeadTextBlock(blockMary, "名前を入力…", "ダブルタップ", "user_name_input");
 
+export const testScenario: Scenario = {
+  turns: [
+    {
+      speaker: "ai",
+      text: "Hi! Nice to meet you. What’s your name?",
+      translation: "こんにちは！ はじめまして。あなたの名前は何ですか？",
+    },
+    {
+      speaker: "user",
+      blocks: [blockSentence, blockI, verbTalk],
+    },
+  ],
+};
+
 export const greetingScenario: Scenario = {
   turns: [
     {

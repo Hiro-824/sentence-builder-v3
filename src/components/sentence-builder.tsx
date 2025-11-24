@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import { Renderer } from "@/renderer/renderer";
 import { blockList } from "@/data/blocks";
-import { greetingScenario } from "@/data/scenarios";
+import { testScenario } from "@/data/scenarios";
 import TopBar from "./top-bar";
 import AuthModal from "./auth-modal";
 import { createClient } from "@/utils/supabase/client";
@@ -25,7 +25,7 @@ import { Block } from "@/models/block";
 import { ProjectData } from "@/models/project";
 
 const MOBILE_MAX_WIDTH = 1024;
-const DEFAULT_SCENARIO = greetingScenario;
+const DEFAULT_SCENARIO = testScenario;
 
 const getScenarioBlocksForTurn = (scenario: Scenario | null, turnIndex: number): Block[] => {
     if (!scenario || turnIndex < 0) return [];
@@ -168,6 +168,7 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     const rendererRef = useRef<Renderer | null>(null);
     const loggingServiceRef = useRef<LoggingService | null>(null);
     const aiTutorStorageSnapshotRef = useRef<string | null>(null);
+    const scenarioCompleteTimeoutRef = useRef<number | null>(null);
     const supabase = createClient();
 
     const getAiTutorStorageKeys = useCallback((projectId?: string | null) => {
@@ -217,6 +218,10 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
 
     const handleScenarioRestart = useCallback(() => {
         if (!scenario) return;
+        if (scenarioCompleteTimeoutRef.current) {
+            window.clearTimeout(scenarioCompleteTimeoutRef.current);
+            scenarioCompleteTimeoutRef.current = null;
+        }
         const initialProgress = createInitialScenarioProgress(scenario);
         handleScenarioProgressChange(initialProgress);
         setScenarioBlocks(getScenarioBlocksForTurn(scenario, initialProgress.currentTurnIndex));
@@ -513,6 +518,10 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
         if (!scenario || totalTurns === 0) {
             if (showScenarioCompleteModal) setShowScenarioCompleteModal(false);
             if (hasShownScenarioComplete) setHasShownScenarioComplete(false);
+            if (scenarioCompleteTimeoutRef.current) {
+                window.clearTimeout(scenarioCompleteTimeoutRef.current);
+                scenarioCompleteTimeoutRef.current = null;
+            }
             return;
         }
 
@@ -521,6 +530,10 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
                 setHasShownScenarioComplete(false);
                 setShowScenarioCompleteModal(false);
             }
+            if (scenarioCompleteTimeoutRef.current) {
+                window.clearTimeout(scenarioCompleteTimeoutRef.current);
+                scenarioCompleteTimeoutRef.current = null;
+            }
             return;
         }
 
@@ -528,8 +541,14 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
         const hasMessages = scenarioProgress.messages.length > 0;
 
         if (hasFinished && hasMessages && !hasShownScenarioComplete) {
-            setShowScenarioCompleteModal(true);
-            setHasShownScenarioComplete(true);
+            if (scenarioCompleteTimeoutRef.current) {
+                window.clearTimeout(scenarioCompleteTimeoutRef.current);
+            }
+            scenarioCompleteTimeoutRef.current = window.setTimeout(() => {
+                setShowScenarioCompleteModal(true);
+                setHasShownScenarioComplete(true);
+                scenarioCompleteTimeoutRef.current = null;
+            }, 700);
         }
     }, [
         hasShownScenarioComplete,
@@ -537,6 +556,7 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
         scenarioProgress.currentTurnIndex,
         scenarioProgress.isLoading,
         scenarioProgress.messages.length,
+        scenarioCompleteTimeoutRef,
         showScenarioCompleteModal,
     ]);
 
@@ -548,6 +568,14 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
         if (!rendererRef.current) return;
         rendererRef.current.setScenarioBlockList(scenarioBlocks);
     }, [scenarioBlocks]);
+
+    useEffect(() => {
+        return () => {
+            if (scenarioCompleteTimeoutRef.current) {
+                window.clearTimeout(scenarioCompleteTimeoutRef.current);
+            }
+        };
+    }, []);
 
     const shouldShowRotateOverlay = isMobileViewport && isPortrait && !showAuthModal;
     const shouldHideSidePanelForViewport = isMobileViewport && !isPortrait && !showAuthModal;
