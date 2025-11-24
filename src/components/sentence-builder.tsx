@@ -17,6 +17,7 @@ import Loader from "./loader";
 import { LoggingService } from "@/utils/supabase/logging";
 import ActivityPanel from "./activity-panel/activity-panel";
 import ScenarioActivityPanel from "./scenario-activity-panel/scenario-activity-panel";
+import RotateOverlay from "./rotate-overlay";
 import { Lesson } from "@/utils/lessons";
 import { Scenario, ScenarioProgress } from "@/models/scenario";
 import { Block } from "@/models/block";
@@ -566,27 +567,7 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
                 onCreateNew={() => handleCreateNewProject()}
             />
 
-            {shouldShowRotateOverlay && (
-                <div
-                    style={{
-                        position: 'fixed',
-                        inset: 0,
-                        backgroundColor: '#ffffff',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        padding: '24px',
-                        textAlign: 'center',
-                        zIndex: 1200,
-                        color: '#1a1a1a',
-                        fontSize: '18px',
-                        lineHeight: 1.6,
-                        fontWeight: 600,
-                    }}
-                >
-                    Syntablo はスマートフォンでは横向きでの利用を推奨しています。端末を横向きにしてからお使いください。
-                </div>
-            )}
+            <RotateOverlay show={shouldShowRotateOverlay} />
         </>
     );
 }
