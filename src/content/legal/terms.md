@@ -70,5 +70,4 @@
 
 ## **8. お問い合わせ**
 
-お問い合わせ：
-X（Twitter）：[URLの更新までお待ちください](URL更新までお待ちください)
+X（Twitter）：[@syntablo](https://x.com/syntablo?s=20)
