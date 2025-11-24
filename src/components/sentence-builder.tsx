@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import { Renderer } from "@/renderer/renderer";
 import { blockList } from "@/data/blocks";
-import { testScenario } from "@/data/scenarios";
+import { greetingScenario } from "@/data/scenarios";
 import TopBar from "./top-bar";
 import AuthModal from "./auth-modal";
 import { createClient } from "@/utils/supabase/client";
@@ -25,7 +25,7 @@ import { Block } from "@/models/block";
 import { ProjectData } from "@/models/project";
 
 const MOBILE_MAX_WIDTH = 1024;
-const DEFAULT_SCENARIO = testScenario;
+const DEFAULT_SCENARIO = greetingScenario;
 
 const getScenarioBlocksForTurn = (scenario: Scenario | null, turnIndex: number): Block[] => {
     if (!scenario || turnIndex < 0) return [];
