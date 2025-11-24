@@ -10,4 +10,5 @@ export interface Project {
 export interface ProjectData {
     blocks: Block[];
     scenarioProgress?: ScenarioProgress;
+    scenarioId?: string | null;
 }

@@ -8,6 +8,13 @@ export interface Scenario {
   turns: ScenarioTurn[];
 }
 
+export interface ScenarioOption {
+  id: string;
+  title: string;
+  description?: string;
+  scenario: Scenario;
+}
+
 export interface ScenarioChatMessage {
   id: number;
   text: string;

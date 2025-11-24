@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import { Renderer } from "@/renderer/renderer";
 import { blockList } from "@/data/blocks";
-import { greetingScenario } from "@/data/scenarios";
+import { DEFAULT_SCENARIO_ID as DEFAULT_SCENARIO_KEY, SCENARIO_OPTIONS, getScenarioById, greetingScenario } from "@/data/scenarios";
 import TopBar from "./top-bar";
 import AuthModal from "./auth-modal";
 import { createClient } from "@/utils/supabase/client";
@@ -19,13 +19,21 @@ import ActivityPanel from "./activity-panel/activity-panel";
 import ScenarioActivityPanel from "./scenario-activity-panel/scenario-activity-panel";
 import RotateOverlay from "./rotate-overlay";
 import ScenarioCompleteModal from "./scenario-complete-modal";
+import ScenarioSelectorModal from "./scenario-selector-modal";
 import { Lesson } from "@/utils/lessons";
-import { Scenario, ScenarioProgress } from "@/models/scenario";
+import { Scenario, ScenarioOption, ScenarioProgress } from "@/models/scenario";
 import { Block } from "@/models/block";
 import { ProjectData } from "@/models/project";
 
 const MOBILE_MAX_WIDTH = 1024;
-const DEFAULT_SCENARIO = greetingScenario;
+const NO_SCENARIO_ID = "none";
+const FALLBACK_SCENARIO = getScenarioById(DEFAULT_SCENARIO_KEY) ?? greetingScenario;
+const DEFAULT_SCENARIO = FALLBACK_SCENARIO;
+const DEFAULT_SCENARIO_SELECTOR_CONFIG = {
+    title: "シナリオを選択",
+    description: "練習したいシナリオを選んでください。",
+    allowNoScenario: true,
+};
 
 const getScenarioBlocksForTurn = (scenario: Scenario | null, turnIndex: number): Block[] => {
     if (!scenario || turnIndex < 0) return [];
@@ -139,7 +147,7 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     const [showAuthModal, setShowAuthModal] = useState(false);
     const [user, setUser] = useState<User | null>(null);
 
-    const [currentProjectId, setCurrentProjectId] = useState<string | null>("top-bar-button-test");
+    const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
     const [isDirty, setIsDirty] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [isProjectListOpen, setIsProjectListOpen] = useState(false);
@@ -153,12 +161,15 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     const [mode, setMode] = useState<"scenario" | "sandbox">(enableModeSwitch ? "scenario" : "sandbox");
     const [isMobileViewport, setIsMobileViewport] = useState(false);
     const [isPortrait, setIsPortrait] = useState(false);
+    const [scenarioId, setScenarioId] = useState<string>(DEFAULT_SCENARIO_KEY);
     const [scenario, setScenario] = useState<Scenario | null>(DEFAULT_SCENARIO);
     const [scenarioProgress, setScenarioProgress] = useState<ScenarioProgress>(DEFAULT_SCENARIO_PROGRESS);
     const [scenarioBlocks, setScenarioBlocks] = useState<Block[]>(DEFAULT_SCENARIO_BLOCKS);
     const [showScenarioCompleteModal, setShowScenarioCompleteModal] = useState(false);
     const [hasShownScenarioComplete, setHasShownScenarioComplete] = useState(false);
     const [aiTutorSyncVersion, setAiTutorSyncVersion] = useState(0);
+    const [isScenarioSelectorOpen, setIsScenarioSelectorOpen] = useState(false);
+    const [scenarioSelectorConfig, setScenarioSelectorConfig] = useState(DEFAULT_SCENARIO_SELECTOR_CONFIG);
 
     const getEffectiveMode = () => enableModeSwitch
         ? (isMobileViewport ? "scenario" : mode)
@@ -169,6 +180,9 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     const loggingServiceRef = useRef<LoggingService | null>(null);
     const aiTutorStorageSnapshotRef = useRef<string | null>(null);
     const scenarioCompleteTimeoutRef = useRef<number | null>(null);
+    const scenarioSelectorHandlerRef = useRef<(option: ScenarioOption | null) => void>(null);
+    const skipScenarioResetRef = useRef(false);
+    const pendingProjectIdRef = useRef<string | null>(null);
     const supabase = createClient();
 
     const getAiTutorStorageKeys = useCallback((projectId?: string | null) => {
@@ -212,6 +226,79 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
         setIsDirty(true);
     }, []);
 
+    const resolveScenarioSelection = useCallback((id?: string | null) => {
+        if (id === null || id === NO_SCENARIO_ID) {
+            return { id: NO_SCENARIO_ID, scenario: null };
+        }
+        const normalizedId = (id ?? DEFAULT_SCENARIO_KEY) || DEFAULT_SCENARIO_KEY;
+        const found = getScenarioById(normalizedId);
+        if (found) {
+            return { id: normalizedId, scenario: found };
+        }
+        return { id: DEFAULT_SCENARIO_KEY, scenario: DEFAULT_SCENARIO };
+    }, []);
+
+    const applyScenarioSelection = useCallback((
+        nextScenarioId: string,
+        nextScenario: Scenario | null,
+        options?: {
+            progress?: ScenarioProgress;
+            clearCanvas?: boolean;
+            resetBlocks?: boolean;
+            markDirty?: boolean;
+        }
+    ) => {
+        skipScenarioResetRef.current = true;
+        const normalizedScenarioId = nextScenarioId || (nextScenario ? DEFAULT_SCENARIO_KEY : NO_SCENARIO_ID);
+        setScenarioId(normalizedScenarioId);
+        setScenario(nextScenario);
+        const progressToUse = options?.progress ?? createInitialScenarioProgress(nextScenario);
+        setScenarioProgress(progressToUse);
+        setScenarioBlocks(getScenarioBlocksForTurn(nextScenario, progressToUse.currentTurnIndex));
+
+        if (options?.clearCanvas) {
+            if (rendererRef.current) {
+                if (options.resetBlocks) {
+                    rendererRef.current.blocks = [];
+                }
+                rendererRef.current.renderBlocks();
+            }
+            if (options.markDirty ?? true) {
+                setIsDirty(true);
+            }
+        } else if (options?.markDirty ?? true) {
+            setIsDirty(true);
+        }
+
+        setHasShownScenarioComplete(false);
+        setShowScenarioCompleteModal(false);
+    }, []);
+
+    const openScenarioSelector = useCallback((
+        onSelect: (option: ScenarioOption | null) => void,
+        configOverrides?: Partial<typeof DEFAULT_SCENARIO_SELECTOR_CONFIG>
+    ) => {
+        scenarioSelectorHandlerRef.current = onSelect;
+        setScenarioSelectorConfig({
+            ...DEFAULT_SCENARIO_SELECTOR_CONFIG,
+            ...configOverrides,
+        });
+        setIsScenarioSelectorOpen(true);
+    }, []);
+
+    const closeScenarioSelector = useCallback(() => {
+        setIsScenarioSelectorOpen(false);
+        scenarioSelectorHandlerRef.current = null;
+        setScenarioSelectorConfig(DEFAULT_SCENARIO_SELECTOR_CONFIG);
+    }, []);
+
+    const handleScenarioPicked = useCallback((option: ScenarioOption | null) => {
+        scenarioSelectorHandlerRef.current?.(option);
+        scenarioSelectorHandlerRef.current = null;
+        setIsScenarioSelectorOpen(false);
+        setScenarioSelectorConfig(DEFAULT_SCENARIO_SELECTOR_CONFIG);
+    }, []);
+
     const handleScenarioCompleteModalClose = useCallback(() => {
         setShowScenarioCompleteModal(false);
     }, []);
@@ -222,13 +309,8 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
             window.clearTimeout(scenarioCompleteTimeoutRef.current);
             scenarioCompleteTimeoutRef.current = null;
         }
-        const initialProgress = createInitialScenarioProgress(scenario);
-        handleScenarioProgressChange(initialProgress);
-        setScenarioBlocks(getScenarioBlocksForTurn(scenario, initialProgress.currentTurnIndex));
-        handleScenarioCanvasClear();
-        setShowScenarioCompleteModal(false);
-        setHasShownScenarioComplete(false);
-    }, [handleScenarioCanvasClear, handleScenarioProgressChange, scenario]);
+        applyScenarioSelection(scenarioId, scenario, { clearCanvas: true, resetBlocks: true });
+    }, [applyScenarioSelection, scenario, scenarioId]);
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -323,7 +405,7 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
         if (user) {
             if (projectIdFromUrl && projectIdFromUrl !== currentProjectId) {
                 handleLoadProject(projectIdFromUrl);
-            } else if (!projectIdFromUrl) {
+            } else if (!projectIdFromUrl && !currentProjectId) {
                 setIsProjectListOpen(true);
             }
         }
@@ -331,7 +413,7 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     }, [isAuthenticated, user, searchParams, currentProjectId]);
 
     useEffect(() => {
-        if (user && currentProjectId && currentProjectId !== "top-bar-button-test") {
+        if (user && currentProjectId) {
             const service = new LoggingService();
             loggingServiceRef.current = service;
             service.startSession(user.id, currentProjectId);
@@ -360,6 +442,16 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     const handleAnonymousAccess = () => {
         setIsAuthenticated(true);
         setShowAuthModal(false);
+        setCurrentProjectId(null);
+        openScenarioSelector((option) => {
+            const nextId = option ? option.id : DEFAULT_SCENARIO_KEY;
+            const nextScenario = option ? option.scenario : FALLBACK_SCENARIO;
+            applyScenarioSelection(option ? nextId : DEFAULT_SCENARIO_KEY, nextScenario, { clearCanvas: true, resetBlocks: true });
+        }, {
+            title: "シナリオを選んでスタート",
+            description: "練習したいシナリオを選択してください。",
+            allowNoScenario: false,
+        });
     };
 
     const handleSignOut = async () => {
@@ -380,10 +472,16 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
         setUser(null);
         setIsAuthenticated(false);
         setCurrentProjectId(null);
+        setScenarioId(DEFAULT_SCENARIO_KEY);
         setScenario(DEFAULT_SCENARIO);
         setScenarioProgress(DEFAULT_SCENARIO_PROGRESS);
         setScenarioBlocks(DEFAULT_SCENARIO_BLOCKS);
+        setShowScenarioCompleteModal(false);
+        setHasShownScenarioComplete(false);
+        setIsScenarioSelectorOpen(false);
+        setScenarioSelectorConfig(DEFAULT_SCENARIO_SELECTOR_CONFIG);
         aiTutorStorageSnapshotRef.current = null;
+        pendingProjectIdRef.current = null;
         setAiTutorSyncVersion(0);
         router.push(routeBase, { scroll: false });
         setShowAuthModal(true);
@@ -399,6 +497,7 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
         const projectData: ProjectData = {
             blocks: rendererRef.current.blocks,
             scenarioProgress,
+            scenarioId: scenario ? scenarioId : null,
         };
         try {
             await saveProjectData(currentProjectId, projectData);
@@ -418,16 +517,22 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
         setIsProjectListOpen(false);
         setIsProjectLoading(true);
         try {
+            pendingProjectIdRef.current = projectId;
             const data = await getProjectData(projectId);
-            if (!data) return;
+            if (!data) {
+                pendingProjectIdRef.current = null;
+                return;
+            }
+            const storedScenarioId = data.scenarioId === null ? NO_SCENARIO_ID : data.scenarioId ?? DEFAULT_SCENARIO_KEY;
+            const { id: nextScenarioId, scenario: nextScenario } = resolveScenarioSelection(storedScenarioId);
+            const normalizedProgress = normalizeScenarioProgress(nextScenario, data.scenarioProgress);
+
+            applyScenarioSelection(nextScenarioId, nextScenario, { progress: normalizedProgress, markDirty: false });
             rendererRef.current.blocks = data.blocks ?? [];
-            const normalizedProgress = normalizeScenarioProgress(scenario, data.scenarioProgress);
-            setScenarioProgress(normalizedProgress);
+            rendererRef.current.renderBlocks();
             syncAiTutorFromScenario(projectId, normalizedProgress);
-            setScenarioBlocks(getScenarioBlocksForTurn(scenario, normalizedProgress.currentTurnIndex));
             setCurrentProjectId(projectId);
             setIsDirty(false);
-            rendererRef.current.renderBlocks();
             if (searchParams.get('projectId') !== projectId) {
                 router.push(`${routeBase}?projectId=${projectId}`, { scroll: false });
             }
@@ -436,28 +541,80 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
             console.error("Failed to load project:", error);
             loggingServiceRef.current?.logEvent('PROJECT_LOAD_FAIL', { projectId, error: (error as Error).message });
             alert("プロジェクトの読み込みに失敗しました。");
+            pendingProjectIdRef.current = null;
         } finally {
             setIsProjectLoading(false);
         }
     }
 
-    const handleCreateNewProject = async () => {
+    const handleCreateNewProject = async (scenarioOption?: ScenarioOption | null) => {
         if (!rendererRef.current) return;
         setIsProjectListOpen(false);
         setIsProjectLoading(true);
         try {
             const newProjectId = crypto.randomUUID();
-            const freshScenarioProgress = createInitialScenarioProgress(scenario);
-            await saveProjectData(newProjectId, { blocks: [], scenarioProgress: freshScenarioProgress });
+            pendingProjectIdRef.current = newProjectId;
+            const { id: nextScenarioId, scenario: nextScenario } = scenarioOption === null
+                ? resolveScenarioSelection(NO_SCENARIO_ID)
+                : scenarioOption
+                    ? { id: scenarioOption.id, scenario: scenarioOption.scenario }
+                    : resolveScenarioSelection(scenario ? scenarioId : DEFAULT_SCENARIO_KEY);
+            const freshScenarioProgress = createInitialScenarioProgress(nextScenario);
+            await saveProjectData(newProjectId, {
+                blocks: [],
+                scenarioProgress: freshScenarioProgress,
+                scenarioId: nextScenario ? nextScenarioId : null,
+            });
             loggingServiceRef.current?.logEvent('PROJECT_CREATE_SUCCESS', { newProjectId: newProjectId });
+            applyScenarioSelection(nextScenarioId, nextScenario, { progress: freshScenarioProgress, clearCanvas: true, resetBlocks: true, markDirty: false });
+            setCurrentProjectId(newProjectId);
+            setIsDirty(false);
             router.push(`${routeBase}?projectId=${newProjectId}`, { scroll: false });
         } catch (error) {
             console.error("Failed to create new project:", error);
             loggingServiceRef.current?.logEvent('PROJECT_CREATE_FAIL', { error: (error as Error).message });
             alert("プロジェクトの作成に失敗しました。");
+            pendingProjectIdRef.current = null;
+        } finally {
             setIsProjectLoading(false);
         }
     }
+
+    const handleSelectAnotherScenario = useCallback(() => {
+        setShowScenarioCompleteModal(false);
+        openScenarioSelector(
+            (option) => {
+                const { id: nextScenarioId, scenario: nextScenario } = option
+                    ? { id: option.id, scenario: option.scenario }
+                    : resolveScenarioSelection(NO_SCENARIO_ID);
+                applyScenarioSelection(nextScenarioId, nextScenario, { clearCanvas: true, resetBlocks: true });
+            },
+            {
+                title: user ? "次に取り組むシナリオを選択" : "シナリオを選び直す",
+                description: user
+                    ? "同じプロジェクトで続けるシナリオを選んでください。"
+                    : "次に練習するシナリオを選んでください。",
+                allowNoScenario: Boolean(user),
+            }
+        );
+    }, [applyScenarioSelection, openScenarioSelector, resolveScenarioSelection, user]);
+
+    const promptProjectCreation = useCallback(() => {
+        setIsProjectListOpen(false);
+        openScenarioSelector(
+            (option) => handleCreateNewProject(option),
+            {
+                title: "新しいプロジェクトを作成",
+                description: "はじめに使うシナリオを選んでください（シナリオなしでもOK）。",
+                allowNoScenario: true,
+            }
+        );
+    }, [handleCreateNewProject, openScenarioSelector]);
+
+    const handleStartNewProjectFromComplete = useCallback(() => {
+        setShowScenarioCompleteModal(false);
+        promptProjectCreation();
+    }, [promptProjectCreation]);
 
     useEffect(() => {
         const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -501,6 +658,10 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     }, [effectiveMode, isAuthenticated]);
 
     useEffect(() => {
+        if (skipScenarioResetRef.current) {
+            skipScenarioResetRef.current = false;
+            return;
+        }
         const initialProgress = createInitialScenarioProgress(scenario);
         setScenarioProgress(initialProgress);
         setScenarioBlocks(getScenarioBlocksForTurn(scenario, initialProgress.currentTurnIndex));
@@ -561,7 +722,13 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     ]);
 
     useEffect(() => {
+        if (pendingProjectIdRef.current && currentProjectId !== pendingProjectIdRef.current) {
+            return;
+        }
         syncAiTutorFromScenario(currentProjectId, scenarioProgress);
+        if (pendingProjectIdRef.current && currentProjectId === pendingProjectIdRef.current) {
+            pendingProjectIdRef.current = null;
+        }
     }, [currentProjectId, scenarioProgress, syncAiTutorFromScenario]);
 
     useEffect(() => {
@@ -636,18 +803,32 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
             <ProjectListModal
                 isOpen={isProjectListOpen}
                 onClose={() => setIsProjectListOpen(false)}
-                isDismissible={!!currentProjectId && currentProjectId !== "top-bar-button-test"}
+                isDismissible={!!currentProjectId}
                 onSelectProject={(projectId) => {
                     router.push(`${routeBase}?projectId=${projectId}`, { scroll: false });
                     setIsProjectListOpen(false);
                 }}
-                onCreateNew={() => handleCreateNewProject()}
+                onCreateNew={promptProjectCreation}
             />
 
             <ScenarioCompleteModal
                 isOpen={showScenarioCompleteModal}
                 onClose={handleScenarioCompleteModalClose}
-                onRestart={handleScenarioRestart}
+                onRestart={scenario ? handleScenarioRestart : undefined}
+                onSelectAnother={handleSelectAnotherScenario}
+                onStartNewProject={user ? handleStartNewProjectFromComplete : undefined}
+                isAuthenticated={Boolean(user)}
+            />
+
+            <ScenarioSelectorModal
+                isOpen={isScenarioSelectorOpen}
+                options={SCENARIO_OPTIONS}
+                onSelect={handleScenarioPicked}
+                onClose={closeScenarioSelector}
+                allowNoScenario={scenarioSelectorConfig.allowNoScenario}
+                title={scenarioSelectorConfig.title}
+                description={scenarioSelectorConfig.description}
+                noScenarioLabel="シナリオなしで始める"
             />
 
             <RotateOverlay show={shouldShowRotateOverlay} />
