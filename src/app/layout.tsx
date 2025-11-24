@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.ico?v=1",
     shortcut: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
+    apple: "/apple-icon.png",
   },
   twitter: {
     card: "summary_large_image",
