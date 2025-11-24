@@ -18,7 +18,9 @@ export class Renderer {
         this.converter = new Converter;
         this.sandboxBlockList = this.formatBlockList(blockList || {});
         this.scenarioBlockList = this.formatBlockList(scenarioBlockList || blockList || {});
-        const initialFullBlockList = this.sidebarVariant === "scenario" ? this.scenarioBlockList : this.sandboxBlockList;
+        const initialScenarioList = this.cloneBlockList(this.scenarioBlockList);
+        const initialSandboxList = this.cloneBlockList(this.sandboxBlockList);
+        const initialFullBlockList = this.sidebarVariant === "scenario" ? initialScenarioList : initialSandboxList;
         this.fullBlockList = initialFullBlockList;
         this.blockList = this.cloneBlockList(initialFullBlockList);
 
@@ -282,7 +284,8 @@ export class Renderer {
                 blockList: this.cloneBlockList(this.blockList),
             };
             this.searchQuery = "";
-            this.fullBlockList = this.scenarioBlockList;
+            const scenarioListClone = this.cloneBlockList(this.scenarioBlockList);
+            this.fullBlockList = scenarioListClone;
             this.blockList = this.cloneBlockList(this.fullBlockList);
         } else if (normalized === "sandbox") {
             const restoredSearchQuery = this.savedSandboxSidebarState?.searchQuery ?? "";
@@ -303,7 +306,8 @@ export class Renderer {
     setScenarioBlockList(newList) {
         this.scenarioBlockList = this.formatBlockList(newList || {});
         if (this.sidebarVariant === "scenario") {
-            this.fullBlockList = this.scenarioBlockList;
+            const scenarioListClone = this.cloneBlockList(this.scenarioBlockList);
+            this.fullBlockList = scenarioListClone;
             this.blockList = this.cloneBlockList(this.fullBlockList);
             this.sideBarScrollExtent = 0;
             this.cachedBlockListWidth = null;
