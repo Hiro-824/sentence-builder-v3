@@ -18,6 +18,7 @@ import { LoggingService } from "@/utils/supabase/logging";
 import ActivityPanel from "./activity-panel/activity-panel";
 import ScenarioActivityPanel from "./scenario-activity-panel/scenario-activity-panel";
 import RotateOverlay from "./rotate-overlay";
+import ScenarioCompleteModal from "./scenario-complete-modal";
 import { Lesson } from "@/utils/lessons";
 import { Scenario, ScenarioProgress } from "@/models/scenario";
 import { Block } from "@/models/block";
@@ -155,6 +156,8 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     const [scenario, setScenario] = useState<Scenario | null>(DEFAULT_SCENARIO);
     const [scenarioProgress, setScenarioProgress] = useState<ScenarioProgress>(DEFAULT_SCENARIO_PROGRESS);
     const [scenarioBlocks, setScenarioBlocks] = useState<Block[]>(DEFAULT_SCENARIO_BLOCKS);
+    const [showScenarioCompleteModal, setShowScenarioCompleteModal] = useState(false);
+    const [hasShownScenarioComplete, setHasShownScenarioComplete] = useState(false);
     const [aiTutorSyncVersion, setAiTutorSyncVersion] = useState(0);
 
     const getEffectiveMode = () => enableModeSwitch
@@ -207,6 +210,20 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
         setScenarioProgress(nextProgress);
         setIsDirty(true);
     }, []);
+
+    const handleScenarioCompleteModalClose = useCallback(() => {
+        setShowScenarioCompleteModal(false);
+    }, []);
+
+    const handleScenarioRestart = useCallback(() => {
+        if (!scenario) return;
+        const initialProgress = createInitialScenarioProgress(scenario);
+        handleScenarioProgressChange(initialProgress);
+        setScenarioBlocks(getScenarioBlocksForTurn(scenario, initialProgress.currentTurnIndex));
+        handleScenarioCanvasClear();
+        setShowScenarioCompleteModal(false);
+        setHasShownScenarioComplete(false);
+    }, [handleScenarioCanvasClear, handleScenarioProgressChange, scenario]);
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -492,6 +509,38 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     }, [scenario, scenarioProgress.currentTurnIndex]);
 
     useEffect(() => {
+        const totalTurns = scenario?.turns.length ?? 0;
+        if (!scenario || totalTurns === 0) {
+            if (showScenarioCompleteModal) setShowScenarioCompleteModal(false);
+            if (hasShownScenarioComplete) setHasShownScenarioComplete(false);
+            return;
+        }
+
+        if (scenarioProgress.currentTurnIndex < totalTurns) {
+            if (hasShownScenarioComplete || showScenarioCompleteModal) {
+                setHasShownScenarioComplete(false);
+                setShowScenarioCompleteModal(false);
+            }
+            return;
+        }
+
+        const hasFinished = scenarioProgress.currentTurnIndex >= totalTurns && !scenarioProgress.isLoading;
+        const hasMessages = scenarioProgress.messages.length > 0;
+
+        if (hasFinished && hasMessages && !hasShownScenarioComplete) {
+            setShowScenarioCompleteModal(true);
+            setHasShownScenarioComplete(true);
+        }
+    }, [
+        hasShownScenarioComplete,
+        scenario,
+        scenarioProgress.currentTurnIndex,
+        scenarioProgress.isLoading,
+        scenarioProgress.messages.length,
+        showScenarioCompleteModal,
+    ]);
+
+    useEffect(() => {
         syncAiTutorFromScenario(currentProjectId, scenarioProgress);
     }, [currentProjectId, scenarioProgress, syncAiTutorFromScenario]);
 
@@ -565,6 +614,12 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
                     setIsProjectListOpen(false);
                 }}
                 onCreateNew={() => handleCreateNewProject()}
+            />
+
+            <ScenarioCompleteModal
+                isOpen={showScenarioCompleteModal}
+                onClose={handleScenarioCompleteModalClose}
+                onRestart={handleScenarioRestart}
             />
 
             <RotateOverlay show={shouldShowRotateOverlay} />
