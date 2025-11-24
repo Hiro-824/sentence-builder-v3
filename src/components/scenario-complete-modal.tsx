@@ -6,9 +6,19 @@ type ScenarioCompleteModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onRestart?: () => void;
+  onSelectAnother?: () => void;
+  onStartNewProject?: () => void;
+  isAuthenticated?: boolean;
 };
 
-const ScenarioCompleteModal = ({ isOpen, onClose, onRestart }: ScenarioCompleteModalProps) => {
+const ScenarioCompleteModal = ({
+  isOpen,
+  onClose,
+  onRestart,
+  onSelectAnother,
+  onStartNewProject,
+  isAuthenticated,
+}: ScenarioCompleteModalProps) => {
   if (!isOpen) return null;
 
   return (
@@ -23,14 +33,24 @@ const ScenarioCompleteModal = ({ isOpen, onClose, onRestart }: ScenarioCompleteM
             お疲れさまでした。シナリオに沿ったやり取りをやり切りましたね。次の練習やアレンジに進みましょう。
           </p>
           <div className={styles.actions}>
+            <button type="button" className={`${styles.button} ${styles.secondaryButton}`} onClick={onClose}>
+              {isAuthenticated ? "このままプロジェクトに戻る" : "このまま続ける"}
+            </button>
             {onRestart && (
               <button type="button" className={`${styles.button} ${styles.secondaryButton}`} onClick={onRestart}>
                 もう一度練習する
               </button>
             )}
-            <button type="button" className={`${styles.button} ${styles.primaryButton}`} onClick={onClose}>
-              つぎへ進む
-            </button>
+            {onSelectAnother && (
+              <button type="button" className={`${styles.button} ${styles.primaryButton}`} onClick={onSelectAnother}>
+                別のシナリオを選ぶ
+              </button>
+            )}
+            {onStartNewProject && (
+              <button type="button" className={`${styles.button} ${styles.primaryButton}`} onClick={onStartNewProject}>
+                新しいプロジェクトで始める
+              </button>
+            )}
           </div>
         </div>
       </div>

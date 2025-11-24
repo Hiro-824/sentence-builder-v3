@@ -1,5 +1,5 @@
 import { Block } from "@/models/block";
-import { Scenario } from "@/models/scenario";
+import { Scenario, ScenarioOption } from "@/models/scenario";
 import { blockBe, blockSentence } from "./auxiliaries";
 import { blockTo } from "./blocks";
 import { blockBecause } from "./complementizers";
@@ -110,4 +110,21 @@ export const greetingScenario: Scenario = {
       blocks: [blockSentence, blockBecause, blockI, blockMany, verbStudy, blockPerson, blockSentence, verbTalk, blockEnglish, verbWant, blockTo, blockWith, blockI],
     },
   ],
+};
+
+export const DEFAULT_SCENARIO_ID = "greeting";
+
+export const SCENARIO_OPTIONS: ScenarioOption[] = [
+  {
+    id: DEFAULT_SCENARIO_ID,
+    title: "自己紹介",
+    description: "名前や出身、学習目的を伝える基本の挨拶シナリオ。",
+    scenario: greetingScenario,
+  },
+];
+
+export const getScenarioById = (id: string | null | undefined): Scenario | null => {
+  if (!id) return null;
+  const match = SCENARIO_OPTIONS.find((option) => option.id === id);
+  return match?.scenario ?? null;
 };
