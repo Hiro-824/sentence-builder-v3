@@ -1400,6 +1400,7 @@ export class Renderer {
     renderPreviewBlock(id) {
         const previewBlockGroup = d3.select(`#${id}`);
         const block = previewBlockGroup.datum();
+        previewBlockGroup.selectAll("*").remove();
         const realData = JSON.parse(JSON.stringify(block));
         realData.id = this.generateRandomId();
         realData.x = 0;
@@ -1691,11 +1692,16 @@ export class Renderer {
                     const trimmed = input.trim();
                     if (!trimmed) return;
 
-                    child.content = trimmed;
-                    // Keep head word token/translation aligned with the visible label when possible.
-                    if (block?.children?.includes(child) && Array.isArray(block.words) && block.words.length > 0) {
-                        const headIndex = child.type === "dropdown" ? (child.selected ?? 0) : 0;
-                        const headWord = block.words[headIndex];
+                    const applyLabelToBlock = (targetBlock) => {
+                        if (!targetBlock?.children) return;
+                        const targetChild = targetBlock.children.find(c => c.id === child.id);
+                        if (targetChild) {
+                            targetChild.content = trimmed;
+                        }
+
+                        const headChild = targetBlock.children.find(c => c.id === "head" && (c.type === "dropdown" || c.type === "text"));
+                        const headIndex = headChild?.type === "dropdown" ? (headChild.selected ?? 0) : 0;
+                        const headWord = Array.isArray(targetBlock.words) ? targetBlock.words[headIndex] : undefined;
                         if (headWord) {
                             headWord.token = trimmed;
                             if (Array.isArray(headWord.categories)) {
@@ -1708,6 +1714,26 @@ export class Renderer {
                                 }));
                             }
                         }
+
+                        if (this.blockSearchCache?.delete) {
+                            this.blockSearchCache.delete(targetBlock);
+                        }
+                    };
+
+                    applyLabelToBlock(block);
+
+                    const blockNode = blockGroup?.node();
+                    const sidebarContainer = blockNode?.closest?.("#sidebar-scroll-container");
+                    if (sidebarContainer) {
+                        const previewGroup = blockNode.parentNode;
+                        const sourceBlock = previewGroup ? d3.select(previewGroup).datum() : null;
+                        applyLabelToBlock(sourceBlock);
+                        this.cachedBlockListWidth = null;
+                        if (this.sidebarNavGroup) {
+                            this.renderNavBar(this.sidebarNavGroup);
+                        }
+                        this.renderBlockList();
+                        return;
                     }
 
                     this.cachedBlockListWidth = null;
