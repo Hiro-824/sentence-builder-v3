@@ -1819,18 +1819,19 @@ export class Renderer {
 
             const isSelected = (index === child.selected);
 
-            const optionGroup = optionsGroup.append("g")
-                .classed("pointer", true)
-                .attr("id", `option-${index}-dropdown-${count}-${block.id}`)
-                .on("mousedown", (event) => {
-                    event.stopPropagation();
-                    const isFromSidebar = event.currentTarget.closest("#sidebar") !== null;
+                const optionGroup = optionsGroup.append("g")
+                    .classed("pointer", true)
+                    .attr("id", `option-${index}-dropdown-${count}-${block.id}`)
+                    .on("mousedown", (event) => {
+                        event.stopPropagation();
+                        const isFromSidebar = event.currentTarget.closest("#sidebar") !== null;
 
-                    const fromText = child.content[child.selected];
-                    const toText = option;
-                    if (!isFromSidebar && fromText !== toText) {
-                        const blockSnapshot = createBlockSnapshot(block);
-                        this.onLogEvent('BLOCK_INTERACTION', {
+                        const prevSelected = child.selected ?? 0;
+                        const fromText = child.content[child.selected];
+                        const toText = option;
+                        if (!isFromSidebar && fromText !== toText) {
+                            const blockSnapshot = createBlockSnapshot(block);
+                            this.onLogEvent('BLOCK_INTERACTION', {
                             sub_type: 'dropdown_select',
                             description: `Changed dropdown in '${blockSnapshot.string_rep}' from '${fromText}' to '${toText}'.`,
                             block: blockSnapshot,
@@ -1845,11 +1846,26 @@ export class Renderer {
                         const blockGroup = d3.select(`#${block.id}`);
                         this.renderBlockImage(block, blockGroup);
                     } else {
+                        const rootInfo = this.findBlock(block.id);
+                        const rootParent = rootInfo.rootParent;
+
+                        // Use a formatted clone to avoid mutating live data before validation.
+                        const { formattedRoot, formattedTargetBlock } = this.prepareFormattedBlocksForSelection(rootParent, block.id, child.id, index);
+                        const isBlockValid = formattedTargetBlock ? this.validate(formattedTargetBlock) : false;
+                        const isParentValid = formattedRoot ? this.validate(formattedRoot) : false;
+
+                        if (!isBlockValid) {
+                            // Revert selection if the block itself would be invalid.
+                            child.selected = prevSelected;
+                            this.updateBlock(block.id);
+                            this.closeAllDropdowns();
+                            return;
+                        }
+
+                        // Commit selection and apply formatting/ejection as before.
                         this.formatBlock(block.id);
                         this.raiseBlock(block.id);
-                        const parentBlock = this.findBlock(block.id).rootParent;
-                        const isValid = this.validate(parentBlock);
-                        if (!isValid) {
+                        if (!isParentValid) {
                             this.moveBlockToTopLevel(block.id, true);
                             this.updateBlock(block.id);
                             setTimeout(() => d3.select(`#${block.id}`).raise(), 0);
@@ -2841,6 +2857,42 @@ export class Renderer {
     }
 
     /*文法(できれば他に移動したい)***********************************************************************************************************************************************************************************************************************************************************************************************************************/
+
+    findBlockInTree(block, targetId) {
+        if (!block) return null;
+        if (block.id === targetId) return block;
+        if (!Array.isArray(block.children)) return null;
+        for (const child of block.children) {
+            if ((child.type === "placeholder" || child.type === "attachment") && child.content) {
+                const found = this.findBlockInTree(child.content, targetId);
+                if (found) return found;
+            }
+        }
+        return null;
+    }
+
+    prepareFormattedBlocksForSelection(rootBlock, targetBlockId, dropdownChildId, newSelected) {
+        if (!rootBlock) {
+            return { formattedRoot: null, formattedTargetBlock: null };
+        }
+
+        const clonedRoot = structuredClone(rootBlock);
+        const targetBlock = this.findBlockInTree(clonedRoot, targetBlockId);
+        if (!targetBlock) {
+            return { formattedRoot: null, formattedTargetBlock: null };
+        }
+
+        if (Array.isArray(targetBlock.children)) {
+            const dropdownChild = targetBlock.children.find(c => c.id === dropdownChildId && c.type === "dropdown");
+            if (dropdownChild) {
+                dropdownChild.selected = newSelected;
+            }
+        }
+
+        const formattedRoot = this.converter.formatBlock(clonedRoot);
+        const formattedTargetBlock = this.findBlockInTree(formattedRoot, targetBlockId);
+        return { formattedRoot, formattedTargetBlock };
+    }
 
     validate(block) {
         const phraseInput = this.converter.convert(block);
