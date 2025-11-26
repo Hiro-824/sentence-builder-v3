@@ -2051,16 +2051,18 @@ export class Renderer {
                     const sideBarData = d3.select(sideBarNode).datum();
                     sourceSidebarBlockId = sideBarData?.id;
                 }
-                if (sideBarId && this.sidebarVariant !== "scenario") {
-                    this.renderPreviewBlock(sideBarId);
-                }
             }
 
             this.moveBlockToTopLevel(d.id);
             this.moveBlockToDragboard(d.id);
 
-            if (fromSideBar && this.sidebarVariant === "scenario" && sourceSidebarBlockId) {
-                this.consumeScenarioBlock(sourceSidebarBlockId);
+            if (fromSideBar) {
+                if (this.sidebarVariant !== "scenario" && sideBarId) {
+                    this.renderPreviewBlock(sideBarId);
+                }
+                if (this.sidebarVariant === "scenario" && sourceSidebarBlockId) {
+                    this.consumeScenarioBlock(sourceSidebarBlockId);
+                }
             }
 
             this.dragStartX = event.x;
@@ -2675,6 +2677,10 @@ export class Renderer {
         const foundResult = this.findBlock(id);
         if (foundResult.parentBlock) this.moveBlockToTopLevel(id);
         const blockUI = d3.select(`#${id}`).node();
+        if (!blockUI) {
+            console.warn(`moveBlockToDragboard: block '${id}' does not exist in the DOM.`);
+            return;
+        }
         this.dragboard.node().appendChild(blockUI);
     }
 
