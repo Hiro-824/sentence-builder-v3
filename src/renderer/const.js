@@ -13,11 +13,11 @@ export const resolvedGapRadius = 12;
 
 export const defaultInitialZoom = 0.5;
 export const minZoomScale = 0.2;
-export const maxZoomScale = 1.5;
+export const maxZoomScale = 0.5;
 export const mobileViewportMaxWidth = 1024;
-export const mobileSidebarTargetWidth = 240;
-export const mobileSidebarMinWidth = 200;
-export const mobileSidebarMaxWidth = 280;
+export const mobileSidebarTargetWidth = 150;
+export const mobileSidebarMinWidth = 100;
+export const mobileSidebarMaxWidth = 150;
 
 export const sidebarPadding = { top: 32, bottom: 100, right: 80, left: 12 };
 export const blockListSpacing = 20;
