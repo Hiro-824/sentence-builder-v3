@@ -521,6 +521,25 @@ const configKeep: VerbConfig = {
     color: "tomato",
 };
 
+const configMaintain: VerbConfig = {
+    id: "maintain_verb",
+    forms: { base: "maintain", es: "maintains", ed: "maintained", en: "maintained", ing: "maintaining" },
+    complements: [{ expected: { head: { type: det, case: "acc" } }, particle: "を" }],
+    transitive: true,
+    translations: {
+        present: { default: "保つ", imperfective: "保た", past: "保った" },
+        past: { default: "保った" },
+        progressive: { default: "保っているところ", nonPredicate: "保っている" },
+        perfect: { default: "既に保ってい" },
+        passive: { default: "保たれ" },
+        noun: { default: "保つこと" }
+    },
+    gerundSubject: true,
+    toSubject: true,
+    adv_manner_type: 'skill',
+    color: "tomato",
+};
+
 const configBegin: VerbConfig = {
     id: "begin_verb",
     forms: { base: "begin", es: "begins", ed: "began", en: "begun", ing: "beginning" },
@@ -5749,6 +5768,7 @@ export const verbNeed = generator.createVerbBlock(configNeed);
 export const verbBecome = generator.createVerbBlock(configBecome);
 export const verbPut = generator.createVerbBlock(configPut);
 export const verbKeep = generator.createVerbBlock(configKeep);
+export const verbMaintain = generator.createVerbBlock(configMaintain);
 export const verbBegin = generator.createVerbBlock(configBegin);
 export const verbHelp = generator.createVerbBlock(configHelp);
 export const verbShow = generator.createVerbBlock(configShow);
@@ -6051,6 +6071,7 @@ export const allVerbBlocks: Block[] = [
     verbBecome,
     verbPut,
     verbKeep,
+    verbMaintain,
     verbBegin,
     verbHelp,
     verbShow,

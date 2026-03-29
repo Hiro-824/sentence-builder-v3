@@ -826,6 +826,7 @@ export class Generator {
             ],
             color: config.color ?? "CornflowerBlue",
             isRound: true,
+            blockShape: "bevel",
             children: [{
                 id: "head",
                 hidden: false,

@@ -530,6 +530,23 @@ const configSick: AdjectiveConfig = {
     }
 };
 
+const configIll: AdjectiveConfig = {
+    id: "adjective_ill",
+    base: "ill",
+    comparative: "more ill",
+    superlative: "most ill",
+    isGradable: true,
+    translation: {
+        default: "具合の悪い",
+        predicative: "具合が悪い",
+        past: "具合が悪かった",
+        predNeg: "具合が悪くない",
+        pastNeg: "具合が悪くなかった",
+        predQ: "具合が悪いのか",
+        pastQ: "具合が悪かったのか"
+    }
+};
+
 const configStrong: AdjectiveConfig = {
     id: "adjective_strong",
     base: "strong",
@@ -1666,6 +1683,7 @@ export const blockExpensive = generator.createAdjectiveBlock(configExpensive);
 export const blockHealthy = generator.createAdjectiveBlock(configHealthy);
 export const blockTired = generator.createAdjectiveBlock(configTired);
 export const blockSick = generator.createAdjectiveBlock(configSick);
+export const blockIll = generator.createAdjectiveBlock(configIll);
 export const blockStrong = generator.createAdjectiveBlock(configStrong);
 export const blockSpicy = generator.createAdjectiveBlock(configSpicy);
 export const blockSweet = generator.createAdjectiveBlock(configSweet);
@@ -1808,6 +1826,7 @@ const healthAdjectiveBlocks: Block[] = [
     blockBored,
     blockTired,
     blockSick,
+    blockIll,
     blockStrong,
     blockSevere,
 ];

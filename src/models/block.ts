@@ -1,6 +1,7 @@
 import { Word } from "./grammar-entities";
 
 export type blockChildType = "text" | "dropdown" | "placeholder" | "attachment";
+export type BlockShape = "rect" | "capsule" | "bevel";
 
 export interface Block {
     id: string;
@@ -9,6 +10,7 @@ export interface Block {
     words: Word[];
     color: string;
     isRound?: boolean;
+    blockShape?: BlockShape;
     undraggable?: boolean;
     children: BlockChild[];
     translation?: string;

@@ -1464,21 +1464,40 @@ export class Renderer {
 
     /*ブロックの画像の描画***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
-    renderBlockImage(block, blockGroup, fromSideBar = false) {
-        blockGroup.selectAll("*").remove();
-        const width = this.calculateWidth(block);
-        const height = this.calculateHeight(block);
-        const strokeColor = this.darkenColor(block.color, 30);
-        const actualCornerRadius = block.isRound ? height / 2 : blockCornerRadius;
-        const parentNode = blockGroup.node() ? blockGroup.node().parentNode : null;
-        const isRootBlock = parentNode && parentNode.id === "grid";
+    getBlockShape(block) {
+        if (block?.blockShape) {
+            return block.blockShape;
+        }
+        return block?.isRound === true ? "capsule" : "rect";
+    }
 
-        // 日本語訳を表示する条件：ドラッグ中 or トップレベル(gridの直下にある)
-        if (isRootBlock || block.id === this.draggedBlockId) {
-            this.renderTranslationBubble(block, blockGroup, width, height);
+    getBlockHorizontalInset(block, height = this.calculateHeight(block)) {
+        const shape = this.getBlockShape(block);
+        if (shape === "capsule") {
+            return horizontalPadding;
+        }
+        if (shape === "bevel") {
+            return Math.max(horizontalPadding, Math.round(height * 0.35));
+        }
+        return 0;
+    }
+
+    renderBlockFrame(block, blockGroup, width, height, strokeColor) {
+        const shape = this.getBlockShape(block);
+
+        if (shape === "bevel") {
+            const bevel = Math.max(0, Math.min(this.getBlockHorizontalInset(block, height), width / 2 - 1));
+            const path = `M ${bevel} 0 H ${width - bevel} L ${width} ${height / 2} L ${width - bevel} ${height} H ${bevel} L 0 ${height / 2} Z`;
+            blockGroup.append("path")
+                .attr("id", `frame-${block.id}`)
+                .attr("d", path)
+                .attr("fill", block.color)
+                .attr("stroke", strokeColor)
+                .attr("stroke-width", blockStrokeWidth);
+            return;
         }
 
-        // フレーム描画
+        const actualCornerRadius = shape === "capsule" ? height / 2 : blockCornerRadius;
         blockGroup.append("rect")
             .attr("id", `frame-${block.id}`)
             .attr("width", width)
@@ -1488,8 +1507,24 @@ export class Renderer {
             .attr("ry", actualCornerRadius)
             .attr("stroke", strokeColor)
             .attr("stroke-width", blockStrokeWidth);
+    }
 
-        let x = horizontalPadding + (block.isRound ? horizontalPadding : 0);
+    renderBlockImage(block, blockGroup, fromSideBar = false) {
+        blockGroup.selectAll("*").remove();
+        const height = this.calculateHeight(block);
+        const width = this.calculateWidth(block, height);
+        const strokeColor = this.darkenColor(block.color, 30);
+        const parentNode = blockGroup.node() ? blockGroup.node().parentNode : null;
+        const isRootBlock = parentNode && parentNode.id === "grid";
+
+        // 日本語訳を表示する条件：ドラッグ中 or トップレベル(gridの直下にある)
+        if (isRootBlock || block.id === this.draggedBlockId) {
+            this.renderTranslationBubble(block, blockGroup, width, height);
+        }
+
+        this.renderBlockFrame(block, blockGroup, width, height, strokeColor);
+
+        let x = horizontalPadding + this.getBlockHorizontalInset(block, height);
         const allChildren = block.children;
 
         // 内部の各種アイテムの描画 (Render various internal items)
@@ -2399,7 +2434,7 @@ export class Renderer {
         const descendantFrameIds = collectDescendantFrameIds(blockData);
 
         // Select all block frames except the dragged block's own frame and its descendant frames.
-        const blockFrameIds = d3.selectAll("rect")
+        const blockFrameIds = d3.selectAll("rect, path")
             .filter(function () {
                 const id = d3.select(this).attr("id");
                 return id && id.startsWith("frame-") &&
@@ -2831,7 +2866,7 @@ export class Renderer {
     }
 
     deemphasizeAllBlock() {
-        d3.selectAll("rect")
+        d3.selectAll("rect, path")
             .filter(function () {
                 const id = d3.select(this).attr("id");
                 // Only consider frames, and exclude those whose parent group has class "grabbing"
@@ -2957,13 +2992,10 @@ export class Renderer {
         return horizontalPadding * 4 + box.width;
     }
 
-    calculateWidth(block) {
+    calculateWidth(block, measuredHeight = this.calculateHeight(block)) {
         const children = block.children.filter((child) => !child.hidden);
         const paddingNumber = children.length + 1;
-        let width = 0;
-        if (block.isRound && block.isRound === true) {
-            width += horizontalPadding * 2;
-        }
+        let width = this.getBlockHorizontalInset(block, measuredHeight) * 2;
 
         children.forEach(child => {
             if (child.resolved && child.type === "placeholder") {

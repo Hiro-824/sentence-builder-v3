@@ -396,6 +396,14 @@ const configSymptom: NounConfig = {
     translation: "症状"
 };
 
+const configIllness: NounConfig = {
+    id: "noun_illness",
+    isCountable: true,
+    singularForm: "illness",
+    pluralForm: "illnesses",
+    translation: "病気"
+};
+
 const configPatient: NounConfig = {
     id: "noun_patient",
     isCountable: true,
@@ -1341,6 +1349,7 @@ export const blockNurse = generator.createNounBlock(configNurse);
 export const blockMedicine = generator.createNounBlock(configMedicine);
 export const blockAppointment = generator.createNounBlock(configAppointment);
 export const blockSymptom = generator.createNounBlock(configSymptom);
+export const blockIllness = generator.createNounBlock(configIllness);
 export const blockPatient = generator.createNounBlock(configPatient);
 export const blockKitchen = generator.createNounBlock(configKitchen);
 export const blockRecipe = generator.createNounBlock(configRecipe);
@@ -1502,6 +1511,7 @@ const bodyAndHealthBlocks: Block[] = [
     blockBack,
     blockHeart,
     blockHealth,
+    blockIllness,
     blockHospital,
     blockDoctor,
     blockNurse,

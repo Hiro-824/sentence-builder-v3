@@ -1,5 +1,5 @@
 import * as d3 from 'd3';
-import type { Block, BlockChild } from '@/models/block';
+import type { Block, BlockChild, BlockShape } from '@/models/block';
 import { Converter } from "@/grammar/converter";
 import {
     horizontalPadding,
@@ -47,13 +47,54 @@ const calculateDropdownWidth = (dropdown: BlockChild) => {
     return horizontalPadding * 4 + box.width;
 };
 
+const resolveBlockShape = (block: Block): BlockShape => {
+    if (block.blockShape) return block.blockShape;
+    return block.isRound ? "capsule" : "rect";
+};
+
+const getBlockHorizontalInset = (block: Block, height: number): number => {
+    const shape = resolveBlockShape(block);
+    if (shape === "capsule") return horizontalPadding;
+    if (shape === "bevel") return Math.max(horizontalPadding, Math.round(height * 0.35));
+    return 0;
+};
+
+const renderBlockFrame = <ParentDatum>(
+    block: Block,
+    blockGroup: d3.Selection<SVGGElement, ParentDatum | Block, null, undefined>,
+    width: number,
+    height: number,
+    strokeColor: string
+) => {
+    const shape = resolveBlockShape(block);
+
+    if (shape === "bevel") {
+        const bevel = Math.max(0, Math.min(getBlockHorizontalInset(block, height), width / 2 - 1));
+        const path = `M ${bevel} 0 H ${width - bevel} L ${width} ${height / 2} L ${width - bevel} ${height} H ${bevel} L 0 ${height / 2} Z`;
+        blockGroup.append("path")
+            .attr("d", path)
+            .attr("fill", block.color)
+            .attr("stroke", strokeColor)
+            .attr("stroke-width", blockStrokeWidth);
+        return;
+    }
+
+    const actualCornerRadius = shape === "capsule" ? height / 2 : blockCornerRadius;
+    blockGroup.append("rect")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("fill", block.color)
+        .attr("rx", actualCornerRadius)
+        .attr("ry", actualCornerRadius)
+        .attr("stroke", strokeColor)
+        .attr("stroke-width", blockStrokeWidth);
+};
+
 export const calculateBlockWidth = (block: Block): number => {
     const children = block.children.filter((child) => !child.hidden);
     const paddingNumber = children.length + 1;
-    let width = 0;
-    if (block.isRound) {
-        width += horizontalPadding * 2;
-    }
+    const height = calculateBlockHeight(block);
+    let width = getBlockHorizontalInset(block, height) * 2;
 
     children.forEach(child => {
         if (child.resolved && child.type === "placeholder") {
@@ -125,19 +166,9 @@ export const renderStaticBlock = <ParentDatum>(
     const width = calculateBlockWidth(block);
     const height = calculateBlockHeight(block);
     const strokeColor = darkenColor(block.color, 30);
-    const actualCornerRadius = block.isRound ? height / 2 : blockCornerRadius;
+    renderBlockFrame(block, blockGroup, width, height, strokeColor);
 
-    // Render the main frame
-    blockGroup.append("rect")
-        .attr("width", width)
-        .attr("height", height)
-        .attr("fill", block.color)
-        .attr("rx", actualCornerRadius)
-        .attr("ry", actualCornerRadius)
-        .attr("stroke", strokeColor)
-        .attr("stroke-width", blockStrokeWidth);
-
-    let currentX = horizontalPadding + (block.isRound ? horizontalPadding : 0);
+    let currentX = horizontalPadding + getBlockHorizontalInset(block, height);
 
     // Render each visible child
     for (const child of block.children) {
