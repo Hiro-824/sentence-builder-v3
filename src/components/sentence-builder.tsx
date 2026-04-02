@@ -24,6 +24,7 @@ import { Lesson } from "@/utils/lessons";
 import { Scenario, ScenarioOption, ScenarioProgress } from "@/models/scenario";
 import { Block } from "@/models/block";
 import { ProjectData } from "@/models/project";
+import { WorkspaceManager } from "@/renderer/workspace-manager";
 
 const MOBILE_MAX_WIDTH = 1024;
 const NO_SCENARIO_ID = "none";
@@ -177,6 +178,7 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
 
     const svgContainerRef = useRef(null);
     const rendererRef = useRef<Renderer | null>(null);
+    const workspaceManagerRef = useRef<WorkspaceManager | null>(null);
     const loggingServiceRef = useRef<LoggingService | null>(null);
     const aiTutorStorageSnapshotRef = useRef<string | null>(null);
     const scenarioCompleteTimeoutRef = useRef<number | null>(null);
@@ -347,6 +349,7 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
                 rendererRef.current.destroy();
                 rendererRef.current = null;
             }
+            workspaceManagerRef.current = null;
             return;
         }
 
@@ -386,7 +389,49 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
             loggingServiceRef.current?.logEvent(eventType, eventData);
         };
         const initialSidebarVariant = getEffectiveMode();
-        rendererRef.current = new Renderer([], blockList, svg, () => setIsDirty(true), topBarHeight, logEvent, initialSidebarVariant, scenarioBlocks, shouldEnableSidebarDropDelete);
+        const workspaceManager = new WorkspaceManager({ blocks: [] });
+        workspaceManagerRef.current = workspaceManager;
+        rendererRef.current = new Renderer({
+            workspaceManager,
+            blockList,
+            svg,
+            onDirty: () => setIsDirty(true),
+            topBarHeight,
+            onLogEvent: logEvent,
+            sidebarVariant: initialSidebarVariant,
+            scenarioBlockList: scenarioBlocks,
+            enableSidebarDropDelete: shouldEnableSidebarDropDelete,
+            events: {
+                onDropOnPlaceholder: ({ draggedId, targetBlockId, slotIndex }) => {
+                    workspaceManager.insertBlockIntoPlaceholder(draggedId, targetBlockId, slotIndex);
+                    setIsDirty(true);
+                },
+                onAttachToBlock: ({ draggedId, targetBlockId, side }) => {
+                    workspaceManager.attachBlockToBlock(draggedId, targetBlockId, side);
+                    setIsDirty(true);
+                },
+                onMoveBlock: ({ blockId, x, y }) => {
+                    workspaceManager.moveBlock(blockId, x, y);
+                    setIsDirty(true);
+                },
+                onDropdownChange: ({ blockId, childId, newIndex }) => {
+                    workspaceManager.applyDropdownSelection(blockId, childId, newIndex);
+                    setIsDirty(true);
+                },
+                onTextEdit: ({ blockId, childId, newText }) => {
+                    workspaceManager.updateEditableText(blockId, childId, newText);
+                    setIsDirty(true);
+                },
+                onTrashDrop: ({ blockId }) => {
+                    workspaceManager.deleteBlockById(blockId);
+                    setIsDirty(true);
+                },
+            },
+            getCanvasViewModels: () => workspaceManager.buildViewModels(workspaceManager.blocks),
+        });
+        if (typeof window !== "undefined") {
+            (window as Window & { __sentenceBuilderRenderer?: Renderer | null }).__sentenceBuilderRenderer = rendererRef.current;
+        }
 
         return () => {
             window.removeEventListener("resize", updateSvgSize);
@@ -394,6 +439,10 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
                 rendererRef.current.destroy();
                 rendererRef.current = null;
             }
+            if (typeof window !== "undefined") {
+                (window as Window & { __sentenceBuilderRenderer?: Renderer | null }).__sentenceBuilderRenderer = null;
+            }
+            workspaceManagerRef.current = null;
         };
     }, [isAuthenticated]);
 

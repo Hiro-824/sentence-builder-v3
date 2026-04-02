@@ -28,7 +28,7 @@ const getCalculationSvg = (): d3.Selection<SVGSVGElement, unknown, HTMLElement, 
     return svg;
 };
 
-const calculateTextHeightAndWidth = (content: string) => {
+export const calculateTextHeightAndWidth = (content: string) => {
     const svg = getCalculationSvg();
     const testText = svg.append("text")
         .text(content)
@@ -39,7 +39,7 @@ const calculateTextHeightAndWidth = (content: string) => {
     return box;
 };
 
-const calculateDropdownWidth = (dropdown: BlockChild) => {
+export const calculateDropdownWidth = (dropdown: BlockChild) => {
     if (typeof dropdown.content !== 'object' || dropdown.content === null || !Array.isArray(dropdown.content)) return 0;
     const selected = dropdown.selected ?? 0;
     const text = dropdown.content[selected];
@@ -52,7 +52,7 @@ const resolveBlockShape = (block: Block): BlockShape => {
     return block.isRound ? "capsule" : "rect";
 };
 
-const getBlockHorizontalInset = (block: Block, height: number): number => {
+export const getBlockHorizontalInset = (block: Block, height: number): number => {
     const shape = resolveBlockShape(block);
     if (shape === "capsule") return horizontalPadding;
     if (shape === "bevel") return Math.max(horizontalPadding, Math.round(height * 0.35));

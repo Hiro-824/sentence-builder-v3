@@ -1,13 +1,53 @@
+// @ts-nocheck
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Converter } from "@/grammar/converter";
-import { Grammar } from "@/grammar/grammar";
 import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding, resolvedGapRadius, initialVisibleCount, visiblilityIncrement, buttonRadius, iconSize, navBarWidth, navBarCircleRadius, navBarCircleSpacing, navBarPadding, navBarScrollPadding, sidebarSearchHeight, sidebarSearchPadding, sidebarSearchBorderRadius, defaultInitialZoom, minZoomScale, maxZoomScale, mobileViewportMaxWidth, mobileSidebarTargetWidth, mobileSidebarMinWidth, mobileSidebarMaxWidth } from "./const.js";
+import type { Block } from "@/models/block";
+import type { BlockViewModel, RendererEvents } from "@/renderer/view-models";
 import { createBlockSnapshot, createBlockSnapshotList } from "@/utils/supabase/logging_helpers";
+import { WorkspaceManager, type BlockListSource } from "@/renderer/workspace-manager";
 import * as d3 from "d3";
 
+interface RendererOptions {
+    workspaceManager: WorkspaceManager;
+    blockList: BlockListSource;
+    svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
+    onDirty: () => void;
+    topBarHeight?: number;
+    onLogEvent?: (eventType: string, eventData: object) => void;
+    sidebarVariant?: "sandbox" | "scenario";
+    scenarioBlockList?: BlockListSource;
+    enableSidebarDropDelete?: boolean;
+    events?: RendererEvents;
+    getCanvasViewModels?: () => BlockViewModel[];
+    getSidebarViewModels?: () => Record<string, BlockViewModel[]>;
+}
+
 export class Renderer {
-    constructor(blocks, blockList, svg, onDirty, topBarHeight = 0, onLogEvent = (string, object) => { }, sidebarVariant = "sandbox", scenarioBlockList = blockList, enableSidebarDropDelete = false) {
-        this.blocks = blocks;
+    topBarHeight;
+    canvasHeight;
+    workspaceManager;
+    rendererEvents;
+    getCanvasViewModels;
+    getSidebarViewModels;
+
+    constructor({
+        workspaceManager,
+        blockList,
+        svg,
+        onDirty,
+        topBarHeight = 0,
+        onLogEvent = (_eventType: string, _eventData: object) => { },
+        sidebarVariant = "sandbox",
+        scenarioBlockList = blockList,
+        enableSidebarDropDelete = false,
+        events = {},
+        getCanvasViewModels,
+        getSidebarViewModels,
+    }: RendererOptions) {
+        this.workspaceManager = workspaceManager;
+        this.rendererEvents = events;
+        this.getCanvasViewModels = getCanvasViewModels ?? (() => this.workspaceManager.buildViewModels(this.blocks));
+        this.getSidebarViewModels = getSidebarViewModels ?? (() => this.workspaceManager.buildBlockListViewModels(this.blockList));
         this.topBarHeight = topBarHeight;
         this.canvasHeight = window.innerHeight - this.topBarHeight;
 
@@ -15,7 +55,6 @@ export class Renderer {
         this.savedSandboxSidebarState = null;
         this.enableSidebarDropDelete = Boolean(enableSidebarDropDelete);
 
-        this.converter = new Converter;
         this.sandboxBlockList = this.formatBlockList(blockList || {});
         this.scenarioBlockList = this.formatBlockList(scenarioBlockList || blockList || {});
         const initialScenarioList = this.cloneBlockList(this.scenarioBlockList);
@@ -28,7 +67,6 @@ export class Renderer {
         this.svg = svg;
         this.sideBarScrollExtent = 0;
         this.viewportHeight = window.innerHeight;
-        this.grammar = new Grammar;
 
         this.onDirty = onDirty;
 
@@ -66,6 +104,104 @@ export class Renderer {
         // Add resize event listener to handle orientation changes
         this.handleResize = this.handleResize.bind(this);
         window.addEventListener('resize', this.handleResize);
+    }
+
+    get blocks() {
+        return this.workspaceManager.blocks;
+    }
+
+    set blocks(nextBlocks) {
+        this.workspaceManager.blocks = Array.isArray(nextBlocks) ? nextBlocks : [];
+    }
+
+    getRendererInputSnapshot(context = "renderBlocks") {
+        return {
+            context,
+            canvas: this.getCanvasViewModels(),
+            sidebar: this.getSidebarViewModels(),
+            sidebarVariant: this.sidebarVariant,
+        };
+    }
+
+    logRendererInput(context = "renderBlocks") {
+        const payload = this.getRendererInputSnapshot(context);
+        if (typeof window !== "undefined") {
+            window.__rendererDebugLog = window.__rendererDebugLog ?? [];
+            window.__rendererDebugLog.push({ type: "input", payload });
+        }
+        console.group("Renderer Input");
+        console.log(payload);
+        console.groupEnd();
+    }
+
+    emitRendererEvent(eventName, payload) {
+        if (typeof window !== "undefined") {
+            window.__rendererDebugLog = window.__rendererDebugLog ?? [];
+            window.__rendererDebugLog.push({ type: "output", payload: { eventName, payload } });
+        }
+        console.group("Renderer Output Event");
+        console.log({ eventName, payload });
+        console.groupEnd();
+
+        const handler = this.rendererEvents?.[eventName];
+        if (typeof handler === "function") {
+            return handler(payload);
+        }
+        return undefined;
+    }
+
+    toRenderableBlock(viewModel, rawBlock = null) {
+        return {
+            id: viewModel.id,
+            x: viewModel.x,
+            y: viewModel.y,
+            color: viewModel.color,
+            blockShape: viewModel.shape,
+            undraggable: viewModel.draggable !== true,
+            translation: viewModel.translation,
+            showSendButton: viewModel.showSendButton,
+            sendButtonDisabled: viewModel.sendButtonDisabled,
+            __rawBlock: rawBlock,
+            children: (viewModel.children ?? []).map((child) => {
+                if (child.kind === "text") {
+                    return {
+                        id: child.id,
+                        hidden: child.hidden ?? false,
+                        editable: child.editable,
+                        type: "text",
+                        content: child.text,
+                    };
+                }
+
+                if (child.kind === "dropdown") {
+                    return {
+                        id: child.id,
+                        hidden: child.hidden ?? false,
+                        selected: child.selectedIndex,
+                        type: "dropdown",
+                        content: child.options,
+                    };
+                }
+
+                if (child.kind === "placeholder") {
+                    return {
+                        id: child.id,
+                        hidden: child.hidden ?? false,
+                        resolved: child.resolved,
+                        instanceId: child.instanceId,
+                        type: "placeholder",
+                        content: child.content ? this.toRenderableBlock(child.content) : null,
+                    };
+                }
+
+                return {
+                    id: child.id,
+                    hidden: child.hidden ?? false,
+                    type: "attachment",
+                    content: child.content ? this.toRenderableBlock(child.content) : null,
+                };
+            }),
+        };
     }
 
     getSnapshotAfterDetachment(rootParent, blockToDetachId) {
@@ -442,20 +578,16 @@ export class Renderer {
     }
 
     renderBlocks() {
-        console.log("render blocks")
+        const canvasViewModels = this.getCanvasViewModels();
+        this.logRendererInput("renderBlocks");
         d3.select("#grid").selectAll("*").remove();
         d3.select("#dragboard").selectAll("*").remove();
-        this.blocks = this.blocks.map((block) => {
-            return this.converter.formatBlock(block);
-        });
-        this.blocks.forEach(block => {
-            this.renderBlock(block, this.grid);
+        canvasViewModels.forEach((viewModel, index) => {
+            this.renderBlock(this.toRenderableBlock(viewModel, this.blocks[index] ?? null), this.grid);
         });
     }
 
     renderBlock(block, parent, fromSideBar = false, sideBarId = undefined) {
-        // Update translation before rendering
-        this.updateBlockTranslation(block);
         const blockGroup = parent.append("g")
             .attr("transform", `translate(${block.x}, ${block.y})`)
             .attr("id", block.id)
@@ -476,12 +608,32 @@ export class Renderer {
 
     updateBlock(id) {
         const foundResult = this.findBlock(id);
-        // Update translation for the root parent before rendering
-        this.updateBlockTranslation(foundResult.rootParent);
-        const parentUI = d3.select(`#${foundResult.rootParent.id}`);
-        const parentContainer = d3.select(parentUI.node().parentNode);
-        parentUI.remove();
-        this.renderBlock(foundResult.rootParent, parentContainer);
+        if (!foundResult.rootParent) {
+            this.renderBlocks();
+            return;
+        }
+
+        const existingRoot = d3.select(`#${foundResult.rootParent.id}`);
+        if (existingRoot.empty()) {
+            this.renderBlocks();
+            return;
+        }
+
+        const parentContainerNode = existingRoot.node()?.parentNode;
+        if (!parentContainerNode) {
+            this.renderBlocks();
+            return;
+        }
+
+        const parentContainer = d3.select(parentContainerNode);
+        const viewModel = this.workspaceManager.buildViewModels([foundResult.rootParent])[0];
+        if (!viewModel) {
+            this.renderBlocks();
+            return;
+        }
+
+        existingRoot.remove();
+        this.renderBlock(this.toRenderableBlock(viewModel, foundResult.rootParent), parentContainer);
     }
 
     raiseBlock(id) {
@@ -1247,28 +1399,11 @@ export class Renderer {
     }
 
     formatBlockList(source) {
-        const formatted = {};
-        if (!source) {
-            return formatted;
-        }
-
-        if (Array.isArray(source)) {
-            formatted[""] = source.map(block => this.converter.formatBlock(block));
-            return formatted;
-        }
-
-        Object.entries(source || {}).forEach(([groupName, blocks]) => {
-            formatted[groupName] = Array.isArray(blocks) ? blocks.map(block => this.converter.formatBlock(block)) : [];
-        });
-        return formatted;
+        return this.workspaceManager.formatBlockList(source);
     }
 
     cloneBlockList(source) {
-        const clone = {};
-        Object.entries(source || {}).forEach(([groupName, blocks]) => {
-            clone[groupName] = Array.isArray(blocks) ? blocks.slice() : [];
-        });
-        return clone;
+        return this.workspaceManager.cloneBlockList(source);
     }
 
     getSidebarSearchAreaHeight() {
@@ -1401,11 +1536,11 @@ export class Renderer {
         const previewBlockGroup = d3.select(`#${id}`);
         const block = previewBlockGroup.datum();
         previewBlockGroup.selectAll("*").remove();
-        const realData = JSON.parse(JSON.stringify(block));
-        realData.id = this.generateRandomId();
-        realData.x = 0;
-        realData.y = 0;
-        this.renderBlock(realData, previewBlockGroup, true, id);
+        const realData = this.workspaceManager.createBlockInstance(block);
+        if (!realData) return;
+        const previewViewModel = this.workspaceManager.buildViewModels([realData])[0];
+        if (!previewViewModel) return;
+        this.renderBlock(this.toRenderableBlock(previewViewModel, realData), previewBlockGroup, true, id);
     }
 
     renderSidebarButton(y, text, onClickCallback) {
@@ -1548,10 +1683,10 @@ export class Renderer {
             }
         }
 
-        const isFinite = this.isFiniteSentence(block);
+        const isFinite = block.showSendButton ?? this.isFiniteSentence(block);
         if (isFinite && !fromSideBar && isRootBlock) {
-            const isComplete = this.isBlockComplete(block);
-            this.renderSendButton(block, blockGroup, width, height, !isComplete);
+            const isDisabled = block.sendButtonDisabled ?? !this.isBlockComplete(block);
+            this.renderSendButton(block, blockGroup, width, height, isDisabled);
         }
 
         return { width: width, height: height };
@@ -1772,6 +1907,11 @@ export class Renderer {
                     }
 
                     this.cachedBlockListWidth = null;
+                    this.emitRendererEvent("onTextEdit", {
+                        blockId: block.id,
+                        childId: child.id,
+                        newText: trimmed,
+                    });
                     this.renderBlocks();
                 });
         }
@@ -1875,38 +2015,21 @@ export class Renderer {
                         });
                     }
 
-                    child.selected = index;
                     if (isFromSidebar) {
+                        child.selected = index;
                         this.closeAllDropdowns();
                         const blockGroup = d3.select(`#${block.id}`);
                         this.renderBlockImage(block, blockGroup);
                     } else {
-                        const rootInfo = this.findBlock(block.id);
-                        const rootParent = rootInfo.rootParent;
-
-                        // Use a formatted clone to avoid mutating live data before validation.
-                        const { formattedRoot, formattedTargetBlock } = this.prepareFormattedBlocksForSelection(rootParent, block.id, child.id, index);
-                        const isBlockValid = formattedTargetBlock ? this.validate(formattedTargetBlock) : false;
-                        const isParentValid = formattedRoot ? this.validate(formattedRoot) : false;
-
-                        if (!isBlockValid) {
-                            // Revert selection if the block itself would be invalid.
-                            child.selected = prevSelected;
-                            this.updateBlock(block.id);
-                            this.closeAllDropdowns();
-                            return;
-                        }
-
-                        // Commit selection and apply formatting/ejection as before.
-                        this.formatBlock(block.id);
-                        this.raiseBlock(block.id);
-                        if (!isParentValid) {
-                            this.moveBlockToTopLevel(block.id, true);
-                            this.updateBlock(block.id);
-                            setTimeout(() => d3.select(`#${block.id}`).raise(), 0);
-                        }
-                        this.onDirty();
+                        this.emitRendererEvent("onDropdownChange", {
+                            blockId: block.id,
+                            childId: child.id,
+                            previousIndex: prevSelected,
+                            newIndex: index,
+                        });
+                        this.renderBlocks();
                     }
+                    this.closeAllDropdowns();
                 });
 
             // Highlight rectangle
@@ -2086,7 +2209,7 @@ export class Renderer {
                     block: newBlockSnapshot
                 });
 
-                this.blocks.push(d);
+                this.blocks.push(d.__rawBlock ?? d);
                 const blockRect = d3.select(`#${d.id}`).node().getBoundingClientRect();
                 const sideBarX = blockRect.left;
                 const sideBarY = blockRect.top;
@@ -2095,6 +2218,10 @@ export class Renderer {
                 const gridY = (sideBarY - this.topBarHeight - transform.y) / transform.k;
                 d.x = gridX;
                 d.y = gridY;
+                if (d.__rawBlock) {
+                    d.__rawBlock.x = gridX;
+                    d.__rawBlock.y = gridY;
+                }
                 const blockNode = d3.select(`#${d.id}`).node();
                 const sideBarNode = blockNode ? blockNode.parentNode : null;
                 if (sideBarNode) {
@@ -2236,7 +2363,11 @@ export class Renderer {
             }
 
             if (droppedOnTrash || droppedOnSidebar) {
-                this.deleteBlock(d.id);
+                this.emitRendererEvent("onTrashDrop", {
+                    blockId: d.id,
+                    target: droppedOnTrash ? "trash" : "sidebar",
+                });
+                this.renderBlocks();
                 this.dragStarted = false;
                 this.draggedBlockId = null;
                 if (this.hoverLogContext?.timerId) {
@@ -2283,10 +2414,21 @@ export class Renderer {
             const info = placeholderInfo.id.split("-");
             const parentId = info[2];
             const index = info[1];
-            this.insertBlock(d.id, parentId, index);
+            this.emitRendererEvent("onDropOnPlaceholder", {
+                draggedId: d.id,
+                targetBlockId: parentId,
+                placeholderId: placeholderInfo.id,
+                slotIndex: Number(index),
+            });
+            this.renderBlocks();
         } else if (overlapInfo) {
             const targetBlockId = overlapInfo.id.split("-")[1];
-            this.attachBlock(d.id, targetBlockId, overlapInfo.side)
+            this.emitRendererEvent("onAttachToBlock", {
+                draggedId: d.id,
+                targetBlockId,
+                side: overlapInfo.side,
+            });
+            this.renderBlocks();
         } else {
             const { foundBlock } = this.findBlock(d.id);
             if (foundBlock) {
@@ -2297,8 +2439,12 @@ export class Renderer {
                     position: { x: Math.round(foundBlock.x), y: Math.round(foundBlock.y) }
                 });
             }
-            this.moveBlockToGrid(d.id);
-            this.formatBlock(d.id);
+            this.emitRendererEvent("onMoveBlock", {
+                blockId: d.id,
+                x: d.x,
+                y: d.y,
+            });
+            this.renderBlocks();
         }
 
 
@@ -2307,7 +2453,6 @@ export class Renderer {
             this.updateBlock(d.id);
         }
         this.deemphasizeAllPlaceholder();
-        this.onDirty();
     }
 
     /*当たり判定***********************************************************************************************************************************************************************************************************************************************************************************************************************/
@@ -2499,7 +2644,7 @@ export class Renderer {
         }
 
         // First, update the data model by removing the block
-        this.removeBlock(blockId);
+        this.workspaceManager.removeBlock(blockId);
 
         // Then, remove the block's SVG element from the DOM
         const blockUI = d3.select(`#${blockId}`);
@@ -2511,165 +2656,20 @@ export class Renderer {
 
     // 変更しない
     findBlock(id) {
-        let foundBlock = null;
-        let parentBlock = null;
-        let childIndex = -1;
-        let absoluteX = 0;
-        let absoluteY = 0;
-        let rootParent = null;
-
-        function searchRecursively(blocks, offsetX = 0, offsetY = 0, candidateRoot = null) {
-            for (let i = 0; i < blocks.length; i++) {
-                const block = blocks[i];
-                const currentRoot = candidateRoot === null ? block : candidateRoot;
-
-                if (block.id === id) {
-                    foundBlock = block;
-                    rootParent = currentRoot;
-                    absoluteX = offsetX + block.x;
-                    absoluteY = offsetY + block.y;
-                    return true;
-                }
-
-                if (block.children) {
-                    for (let j = 0; j < block.children.length; j++) {
-                        const child = block.children[j];
-                        if (child.type === "placeholder" || child.type === "attachment") {
-                            const content = child.content;
-                            if (content) {
-                                // direct hit on the content node
-                                if (content.id === id) {
-                                    foundBlock = content;
-                                    parentBlock = block;
-                                    childIndex = j;
-                                    rootParent = currentRoot;
-                                    absoluteX = offsetX + block.x + content.x;
-                                    absoluteY = offsetY + block.y + content.y;
-                                    return true;
-                                }
-                                // or keep recursing deeper
-                                if (searchRecursively(
-                                    [content],
-                                    offsetX + block.x,
-                                    offsetY + block.y,
-                                    currentRoot
-                                )) {
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            return false;
-        }
-
-        // start from the top-level blocks, with no candidate root
-        searchRecursively(this.blocks, 0, 0, null);
-
-        return {
-            foundBlock,
-            parentBlock,
-            childIndex,
-            absoluteX,
-            absoluteY,
-            rootParent    // ← now returned
-        };
+        return this.workspaceManager.findBlock(id);
     }
 
     previewInsertion(id, targetParentId, index) {
-        const foundResult = this.findBlock(id);
-        if (!foundResult.foundBlock) return;
-
-        const targetParentResult = this.findBlock(targetParentId);
-        const targetParent = targetParentResult.foundBlock;
-
-        if (!targetParent || !targetParent.children[index] || targetParent.children[index].type !== "placeholder") {
-            console.error(`previewInsertion: Invalid target at index ${index}. Child is:`, targetParent.children[index]);
-            return;
-        }
-
-        // Create a deep copy of the root parent block
-        const expectedParent = JSON.parse(JSON.stringify(targetParentResult.rootParent));
-
-        // Find the target parent in the copied structure and update its children
-        const updateParentInCopy = (block) => {
-            if (block.id === targetParent.id) {
-                block.children[index].content = foundResult.foundBlock;
-                return true;
-            }
-            if (block.children) {
-                for (const child of block.children) {
-                    if (child.type === "placeholder" || child.type === "attachment") {
-                        if (child.content && updateParentInCopy(child.content)) {
-                            return true;
-                        }
-                    }
-                }
-            }
-            return false;
-        };
-
-        updateParentInCopy(expectedParent);
-        return expectedParent;
+        return this.workspaceManager.previewInsertion(id, targetParentId, Number(index));
     }
 
     previewAttachment(id, targetParentId, side) {
-        const foundResult = this.findBlock(id);
-        if (!foundResult.foundBlock) return;
-
-        const targetParentResult = this.findBlock(targetParentId);
-        const targetParent = targetParentResult.foundBlock;
-        if (!targetParent) return;
-
-        const attachmentChild = {
-            id: "attachment",
-            type: "attachment",
-            side: side,
-            content: foundResult.foundBlock
-        };
-
-        // Create a deep copy of the root parent block
-        const expectedParent = JSON.parse(JSON.stringify(targetParentResult.rootParent));
-
-        // Find the target parent in the copied structure and update its children
-        const updateParentInCopy = (block) => {
-            if (block.id === targetParent.id) {
-                if (side === "left") {
-                    block.children.unshift(attachmentChild);
-                } else {
-                    block.children.push(attachmentChild);
-                }
-                return true;
-            }
-            if (block.children) {
-                for (const child of block.children) {
-                    // Skip hidden children
-                    if (child.hidden || child.resolved) continue;
-
-                    if (child.type === "placeholder" || child.type === "attachment") {
-                        if (child.content && updateParentInCopy(child.content)) {
-                            return true;
-                        }
-                    }
-                }
-            }
-            return false;
-        };
-
-        updateParentInCopy(expectedParent);
-        return expectedParent;
+        return this.workspaceManager.previewAttachment(id, targetParentId, side);
     }
 
     // データを変更する
     removeBlock(id) {
-        const foundResult = this.findBlock(id);
-        if (!foundResult.foundBlock) return;
-        if (foundResult.parentBlock) {
-            this.removeBlockFromParent(foundResult.parentBlock, foundResult.childIndex);
-        } else {
-            this.removeBlockFromTopLevel(id);
-        }
+        this.workspaceManager.removeBlock(id);
     }
 
     removeBlockFromParent(parent, index) {
@@ -2686,17 +2686,7 @@ export class Renderer {
     }
 
     updateBlockInData(newBlock) {
-        const foundResult = this.findBlock(newBlock.id);
-        if (!foundResult.foundBlock) return;
-
-        if (foundResult.parentBlock) {
-            foundResult.parentBlock.children[foundResult.childIndex].content = newBlock;
-        } else {
-            const blockIndex = this.blocks.findIndex(b => b.id === newBlock.id);
-            if (blockIndex !== -1) {
-                this.blocks[blockIndex] = newBlock;
-            }
-        }
+        this.workspaceManager.updateBlockInData(newBlock);
     }
 
     // UIを変更する
@@ -2717,6 +2707,15 @@ export class Renderer {
 
         // UI部分の移動
         const blockUI = d3.select(`#${id}`).node();
+        const blockDatum = blockUI ? d3.select(blockUI).datum() : null;
+        if (blockDatum) {
+            blockDatum.x = block.x;
+            blockDatum.y = block.y;
+            if (blockDatum.__rawBlock) {
+                blockDatum.__rawBlock.x = block.x;
+                blockDatum.__rawBlock.y = block.y;
+            }
+        }
         d3.select(blockUI).attr("transform", `translate(${block.x}, ${block.y})`);
         d3.select(blockUI).raise();
         this.grid.node().appendChild(blockUI);
@@ -2811,7 +2810,7 @@ export class Renderer {
         const block = this.findBlock(id).rootParent;
         if (!block) return;
         const originalHiddenStates = block.children.map(child => child.hidden);
-        const targetStateBlock = this.converter.formatBlock(block);
+        const targetStateBlock = this.workspaceManager.formatBlock(block);
         targetStateBlock.children.forEach((child, index) => {
             const wasVisible = !originalHiddenStates[index];
             const isNowHidden = child.hidden;
@@ -2821,7 +2820,7 @@ export class Renderer {
                 this.moveBlockToTopLevel(originalChild.content.id, true);
             }
         });
-        const finalNewBlock = this.converter.formatBlock(block);
+        const finalNewBlock = this.workspaceManager.formatBlock(block);
         this.updateBlockInData(finalNewBlock);
         this.updateBlock(block.id);
     }
@@ -2894,82 +2893,24 @@ export class Renderer {
     /*文法(できれば他に移動したい)***********************************************************************************************************************************************************************************************************************************************************************************************************************/
 
     findBlockInTree(block, targetId) {
-        if (!block) return null;
-        if (block.id === targetId) return block;
-        if (!Array.isArray(block.children)) return null;
-        for (const child of block.children) {
-            if ((child.type === "placeholder" || child.type === "attachment") && child.content) {
-                const found = this.findBlockInTree(child.content, targetId);
-                if (found) return found;
-            }
-        }
-        return null;
+        return this.workspaceManager.findBlockInTree(block, targetId);
     }
 
     prepareFormattedBlocksForSelection(rootBlock, targetBlockId, dropdownChildId, newSelected) {
-        if (!rootBlock) {
-            return { formattedRoot: null, formattedTargetBlock: null };
-        }
-
-        const clonedRoot = structuredClone(rootBlock);
-        const targetBlock = this.findBlockInTree(clonedRoot, targetBlockId);
-        if (!targetBlock) {
-            return { formattedRoot: null, formattedTargetBlock: null };
-        }
-
-        if (Array.isArray(targetBlock.children)) {
-            const dropdownChild = targetBlock.children.find(c => c.id === dropdownChildId && c.type === "dropdown");
-            if (dropdownChild) {
-                dropdownChild.selected = newSelected;
-            }
-        }
-
-        const formattedRoot = this.converter.formatBlock(clonedRoot);
-        const formattedTargetBlock = this.findBlockInTree(formattedRoot, targetBlockId);
-        return { formattedRoot, formattedTargetBlock };
+        return this.workspaceManager.prepareFormattedBlocksForSelection(
+            rootBlock,
+            targetBlockId,
+            dropdownChildId,
+            newSelected
+        );
     }
 
     validate(block) {
-        const phraseInput = this.converter.convert(block);
-        console.log("block:", block);
-        console.log("converted:", phraseInput);
-        if (!phraseInput) return false;
-        const validationResult = this.grammar.parseNestedPhrase(phraseInput);
-        console.log("validated:", validationResult);
-        return (validationResult.categories.length > 0);
+        return this.workspaceManager.validate(block);
     }
 
     updateBlockTranslation(block) {
-        if (!block) return;
-        // Recursively update children
-        if (Array.isArray(block.children)) {
-            block.children.forEach(child => {
-                if ((child.type === "placeholder" || child.type === "attachment") && child.content) {
-                    this.updateBlockTranslation(child.content);
-                }
-            });
-        }
-        // Set translation for this block
-        const phraseInput = this.converter.convert(block);
-        if (phraseInput) {
-            const result = this.grammar.parseNestedPhrase(phraseInput);
-            if (result && result.categories && result.categories.length > 0) {
-                // Use the first parse result's translation if available
-                const translationObj = result.categories[0].translation;
-                if (translationObj && typeof translationObj === 'object') {
-                    // Use the first key's value as the translation string
-                    const firstKey = Object.keys(translationObj)[0];
-                    const rawTranslation = translationObj[firstKey] || '';
-                    block.translation = this.converter.formatTranslation(rawTranslation);
-                } else {
-                    block.translation = '';
-                }
-            } else {
-                block.translation = '';
-            }
-        } else {
-            block.translation = '';
-        }
+        this.workspaceManager.updateBlockTranslation(block);
     }
 
     /*幅・高さ・色の計算(できれば他に移動したい)***********************************************************************************************************************************************************************************************************************************************************************************************************************/
