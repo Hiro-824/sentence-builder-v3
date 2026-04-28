@@ -9,6 +9,9 @@ export const placeholderCornerRadius = 36;
 export const labelFontSize = 32;
 export const dropdownHeight = 60;
 export const bubbleColor = "#121212";
+export const blockFillColor = "#d4d4d4";
+export const blockTextColor = "#3f3f3f";
+export const useBlockCategoryColors = false;
 export const resolvedGapRadius = 12;
 
 export const defaultInitialZoom = 0.5;

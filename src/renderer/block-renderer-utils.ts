@@ -11,7 +11,10 @@ import {
     blockCornerRadius,
     blockStrokeWidth,
     resolvedGapRadius,
-    placeholderCornerRadius
+    placeholderCornerRadius,
+    blockFillColor,
+    blockTextColor,
+    useBlockCategoryColors
 } from './const';
 
 const getCalculationSvg = (): d3.Selection<SVGSVGElement, unknown, HTMLElement, unknown> => {
@@ -113,6 +116,14 @@ const darkenColor = (color: string, factor: number) => {
     return rgb.toString();
 };
 
+const getBlockFillColor = (block: Block) => (
+    useBlockCategoryColors ? (block.color || blockFillColor) : blockFillColor
+);
+
+const getBlockTextColor = () => (
+    useBlockCategoryColors ? 'white' : blockTextColor
+);
+
 export const renderStaticBlock = <ParentDatum>(
     block: Block,
     parentSelection: d3.Selection<SVGGElement, ParentDatum, null, undefined>
@@ -124,14 +135,15 @@ export const renderStaticBlock = <ParentDatum>(
 
     const width = calculateBlockWidth(block);
     const height = calculateBlockHeight(block);
-    const strokeColor = darkenColor(block.color, 30);
+    const fillColor = getBlockFillColor(block);
+    const strokeColor = darkenColor(fillColor, 30);
     const actualCornerRadius = block.isRound ? height / 2 : blockCornerRadius;
 
     // Render the main frame
     blockGroup.append("rect")
         .attr("width", width)
         .attr("height", height)
-        .attr("fill", block.color)
+        .attr("fill", fillColor)
         .attr("rx", actualCornerRadius)
         .attr("ry", actualCornerRadius)
         .attr("stroke", strokeColor)
@@ -146,7 +158,7 @@ export const renderStaticBlock = <ParentDatum>(
         const childContent = child.content as Block | null;
 
         if (child.resolved && child.type === "placeholder") {
-            const circleColor = darkenColor(block.color, 30);
+            const circleColor = darkenColor(fillColor, 30);
             const centerY = height / 2;
             const centerX = currentX + resolvedGapRadius;
             blockGroup.append("circle")
@@ -171,7 +183,7 @@ export const renderStaticBlock = <ParentDatum>(
             } else if (child.type === 'placeholder') {
                 // Render an empty placeholder slot
                 const y = (height - placeholderHeight) / 2;
-                const inputColor = darkenColor(block.color, 30);
+                const inputColor = darkenColor(fillColor, 30);
                 blockGroup.append("rect")
                     .attr("x", currentX)
                     .attr("y", y)
@@ -190,7 +202,7 @@ export const renderStaticBlock = <ParentDatum>(
                 .text(textContent)
                 .attr("x", currentX)
                 .attr("y", y)
-                .attr('fill', 'white')
+                .attr('fill', getBlockTextColor())
                 .attr('font-size', `${labelFontSize}pt`)
                 .attr('font-weight', 'bold')
                 .attr('dy', '-0.24em')
@@ -202,7 +214,7 @@ export const renderStaticBlock = <ParentDatum>(
             const text = (child.content as string[])[selectedIndex];
             const box = calculateTextHeightAndWidth(text);
             const dropdownWidth = calculateDropdownWidth(child);
-            const inputColor = darkenColor(block.color, 30);
+            const inputColor = darkenColor(fillColor, 30);
             const y = (height - dropdownHeight) / 2;
 
             // Dropdown background
@@ -222,7 +234,7 @@ export const renderStaticBlock = <ParentDatum>(
                 .text(text)
                 .attr("x", textX)
                 .attr("y", textY)
-                .attr('fill', 'white')
+                .attr('fill', getBlockTextColor())
                 .attr('font-size', `${labelFontSize}pt`)
                 .attr('font-weight', 'bold')
                 .attr('dy', '-0.24em')
@@ -233,7 +245,7 @@ export const renderStaticBlock = <ParentDatum>(
                 .text("▼")
                 .attr("x", textX + box.width + horizontalPadding)
                 .attr("y", textY - 10) // Minor adjustment to align icon
-                .attr('fill', 'white')
+                .attr('fill', getBlockTextColor())
                 .attr('font-size', '10pt')
                 .attr('font-weight', 'bold')
                 .attr('dy', '-0.24em')

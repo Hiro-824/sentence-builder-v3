@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Converter } from "@/grammar/converter";
 import { Grammar } from "@/grammar/grammar";
-import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding, resolvedGapRadius, initialVisibleCount, visiblilityIncrement, buttonRadius, iconSize, navBarWidth, navBarCircleRadius, navBarCircleSpacing, navBarPadding, navBarScrollPadding, sidebarSearchHeight, sidebarSearchPadding, sidebarSearchBorderRadius, defaultInitialZoom, minZoomScale, maxZoomScale, mobileViewportMaxWidth, mobileSidebarTargetWidth, mobileSidebarMinWidth, mobileSidebarMaxWidth } from "./const.js";
+import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockFillColor, blockTextColor, useBlockCategoryColors, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding, resolvedGapRadius, initialVisibleCount, visiblilityIncrement, buttonRadius, iconSize, navBarWidth, navBarCircleRadius, navBarCircleSpacing, navBarPadding, navBarScrollPadding, sidebarSearchHeight, sidebarSearchPadding, sidebarSearchBorderRadius, defaultInitialZoom, minZoomScale, maxZoomScale, mobileViewportMaxWidth, mobileSidebarTargetWidth, mobileSidebarMinWidth, mobileSidebarMaxWidth } from "./const.js";
 import { createBlockSnapshot, createBlockSnapshotList } from "@/utils/supabase/logging_helpers";
 import * as d3 from "d3";
 
@@ -737,11 +737,19 @@ export class Renderer {
 
         for (const block of blocks) {
             if (block?.color) {
-                return block.color;
+                return this.getBlockFillColor(block);
             }
         }
 
         return null;
+    }
+
+    getBlockFillColor(block) {
+        return useBlockCategoryColors ? (block?.color || blockFillColor) : blockFillColor;
+    }
+
+    getBlockTextColor() {
+        return useBlockCategoryColors ? "white" : blockTextColor;
     }
 
     scrollToCategory(groupName) {
@@ -1478,7 +1486,8 @@ export class Renderer {
         blockGroup.selectAll("*").remove();
         const width = this.calculateWidth(block);
         const height = this.calculateHeight(block);
-        const strokeColor = this.darkenColor(block.color, 30);
+        const fillColor = this.getBlockFillColor(block);
+        const strokeColor = this.darkenColor(fillColor, 30);
         const actualCornerRadius = block.isRound ? height / 2 : blockCornerRadius;
         const parentNode = blockGroup.node() ? blockGroup.node().parentNode : null;
         const isRootBlock = parentNode && parentNode.id === "grid";
@@ -1493,7 +1502,7 @@ export class Renderer {
             .attr("id", `frame-${block.id}`)
             .attr("width", width)
             .attr("height", height)
-            .attr("fill", block.color)
+            .attr("fill", fillColor)
             .attr("rx", actualCornerRadius)
             .attr("ry", actualCornerRadius)
             .attr("stroke", strokeColor)
@@ -1661,7 +1670,7 @@ export class Renderer {
         } else {
             //ブロックがはまっていない場合
             const y = (height - placeholderHeight) / 2;
-            const inputColor = this.darkenColor(block.color, 30);
+            const inputColor = this.darkenColor(this.getBlockFillColor(block), 30);
 
             const placeholderDomId = `placeholder-${count}-${block.id}-${child.id}`;
 
@@ -1686,7 +1695,7 @@ export class Renderer {
             .text(content)
             .attr("x", x)
             .attr("y", y)
-            .attr('fill', 'white')
+            .attr('fill', this.getBlockTextColor())
             .attr('font-size', `${labelFontSize}pt`)
             .attr('font-weight', 'bold')
             .attr('dy', '-0.24em')
@@ -1758,7 +1767,7 @@ export class Renderer {
         const text = child.content[selected];
         const box = this.calculateTextHeightAndWidth(text);
         const dropdownWidth = this.calculateDropdownWidth(child);
-        const inputColor = this.darkenColor(block.color, 30);
+        const inputColor = this.darkenColor(this.getBlockFillColor(block), 30);
         const y = (height - dropdownHeight) / 2;
         const dropdownId = `dropdown-${count}-${block.id}`;
 
@@ -1779,7 +1788,7 @@ export class Renderer {
             .text(text)
             .attr("x", textX)
             .attr("y", textY)
-            .attr('fill', 'white')
+            .attr('fill', this.getBlockTextColor())
             .attr('font-size', `${labelFontSize}pt`)
             .attr('font-weight', 'bold')
             .attr('dy', '-0.24em')
@@ -1789,7 +1798,7 @@ export class Renderer {
             .text("▼")
             .attr("x", textX + box.width + horizontalPadding)
             .attr("y", textY - 10)
-            .attr('fill', 'white')
+            .attr('fill', this.getBlockTextColor())
             .attr('font-size', `10pt`)
             .attr('font-weight', 'bold')
             .attr('dy', '-0.24em')
@@ -1816,7 +1825,7 @@ export class Renderer {
             .attr("y", optionsPosition.y)
             .attr("width", optionsWidth)
             .attr("height", optionHeight * child.content.length + blockCornerRadius * 2)
-            .attr("fill", block.color)
+            .attr("fill", this.getBlockFillColor(block))
             .attr("rx", blockCornerRadius)
             .attr("ry", blockCornerRadius)
             .attr("stroke", inputColor)
@@ -1890,7 +1899,7 @@ export class Renderer {
                 .attr("y", optionY)
                 .attr("width", optionsWidth)
                 .attr("height", optionHeight)
-                .attr("fill", "white")
+                .attr("fill", this.getBlockTextColor())
                 .attr("opacity", 0);
 
             // Option text
@@ -1898,7 +1907,7 @@ export class Renderer {
                 .text(option)
                 .attr("x", optionsPosition.x + horizontalPadding)
                 .attr("y", optionY + (optionHeight * 0.5) + (optionBox.height * 0.5))
-                .attr("fill", "white")
+                .attr("fill", this.getBlockTextColor())
                 .attr("font-size", `${labelFontSize}pt`)
                 .attr("dy", "-0.15em")
                 .attr('font-weight', isSelected ? 'bold' : 'normal')
@@ -1992,7 +2001,7 @@ export class Renderer {
 
     renderResolvedGap(child, height, block, blockGroup, x) {
         // Use the same darkened color as a regular placeholder for consistency.
-        const circleColor = this.darkenColor(block.color, 30);
+        const circleColor = this.darkenColor(this.getBlockFillColor(block), 30);
         const radius = resolvedGapRadius; // Use our new constant
 
         // Vertically center the circle within the parent block.
@@ -2819,7 +2828,7 @@ export class Renderer {
         const block = this.findBlock(blockId).foundBlock;
         if (!block) return;
 
-        const strokeColor = isDragging ? isError ? "red" : "yellow" : this.darkenColor(block.color, 30);
+        const strokeColor = isDragging ? isError ? "red" : "yellow" : this.darkenColor(this.getBlockFillColor(block), 30);
         const strokeWidth = isDragging ? highlightStrokeWidth : blockStrokeWidth;
 
         d3.select(frameId)
@@ -2854,7 +2863,7 @@ export class Renderer {
                 const parentGroup = d3.select(rect.node().parentNode);
                 const blockData = parentGroup.datum();
                 if (blockData) {
-                    const strokeColor = this.darkenColor(blockData.color, 30);
+                    const strokeColor = this.darkenColor(this.getBlockFillColor(blockData), 30);
                     rect.attr("stroke", strokeColor)
                         .attr("stroke-width", blockStrokeWidth);
                 }
