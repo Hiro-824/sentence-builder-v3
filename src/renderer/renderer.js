@@ -56,6 +56,7 @@ export class Renderer {
         this.sidebarContent = null;
         this.sidebarContentContainer = null;
         this.blockBoard = null;
+        this.activityPanelOpen = false;
         this.searchAreaHeight = this.sidebarVariant === "sandbox" ? this.getSidebarSearchAreaHeight() : 0;
         this.navBackgroundRect = null;
 
@@ -314,6 +315,15 @@ export class Renderer {
             this.renderSideBar();
             this.setBlockBoardTransform();
         }
+    }
+
+    setActivityPanelOpen(isOpen) {
+        const nextIsOpen = Boolean(isOpen);
+        if (this.activityPanelOpen === nextIsOpen) {
+            return;
+        }
+        this.activityPanelOpen = nextIsOpen;
+        this.renderBlocks();
     }
 
     consumeScenarioBlock(blockId) {
@@ -1514,7 +1524,7 @@ export class Renderer {
         }
 
         const isFinite = this.isFiniteSentence(block);
-        if (isFinite && !fromSideBar && isRootBlock) {
+        if (isFinite && !fromSideBar && isRootBlock && this.activityPanelOpen) {
             const isComplete = this.isBlockComplete(block);
             this.renderSendButton(block, blockGroup, width, height, !isComplete);
         }

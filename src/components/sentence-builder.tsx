@@ -168,6 +168,7 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     const [showScenarioCompleteModal, setShowScenarioCompleteModal] = useState(false);
     const [hasShownScenarioComplete, setHasShownScenarioComplete] = useState(false);
     const [aiTutorSyncVersion, setAiTutorSyncVersion] = useState(0);
+    const [isActivityPanelOpen, setIsActivityPanelOpen] = useState(false);
     const [isScenarioSelectorOpen, setIsScenarioSelectorOpen] = useState(false);
     const [scenarioSelectorConfig, setScenarioSelectorConfig] = useState(DEFAULT_SCENARIO_SELECTOR_CONFIG);
 
@@ -737,6 +738,11 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     }, [scenarioBlocks]);
 
     useEffect(() => {
+        if (!rendererRef.current) return;
+        rendererRef.current.setActivityPanelOpen(isActivityPanelOpen && effectiveMode === "sandbox");
+    }, [isActivityPanelOpen, effectiveMode]);
+
+    useEffect(() => {
         return () => {
             if (scenarioCompleteTimeoutRef.current) {
                 window.clearTimeout(scenarioCompleteTimeoutRef.current);
@@ -778,7 +784,13 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
                         }}
                     />
                     {shouldShowActivityPanel && (
-                        <ActivityPanel lessons={lessons} currentProjectId={currentProjectId} aiTutorKey={aiTutorKey} />
+                        <ActivityPanel
+                            lessons={lessons}
+                            currentProjectId={currentProjectId}
+                            aiTutorKey={aiTutorKey}
+                            isOpen={isActivityPanelOpen}
+                            onToggle={() => setIsActivityPanelOpen((prev) => !prev)}
+                        />
                     )}
                     {shouldShowScenarioPanel && (
                         <ScenarioActivityPanel

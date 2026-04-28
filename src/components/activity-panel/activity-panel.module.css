@@ -15,6 +15,40 @@
     transition: transform 0.3s ease-in-out;
 }
 
+.collapsed {
+    transform: translateX(100%);
+}
+
+.open {
+    transform: translateX(0);
+}
+
+.toggleButton {
+    position: absolute;
+    top: 50%;
+    left: -30px;
+    width: 30px;
+    height: 48px;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    color: rgba(80, 80, 80, 0.55);
+    font-size: 32px;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: none;
+    z-index: 1;
+}
+
+.toggleButton:hover {
+    color: rgba(80, 80, 80, 0.85);
+}
+
+.toggleButton:focus,
+.toggleButton:focus-visible {
+    outline: none;
+}
+
 /* Tab Navigation Styles */
 .tabNav {
     display: flex;
