@@ -126,6 +126,23 @@ export const blockWhatDeterminer: Block = {
     ]
 };
 
+export const howManyHowFeatures: FeatureStructure = { type: "interrogative", adverbial: true, quantity: true };
+export const blockHowManyHow: Block = {
+    id: "how_many_how",
+    x: 0, y: 0, isRound: true, undraggable: true,
+    words: [{
+        token: "",
+        categories: [{
+            head: howManyHowFeatures,
+            translationTemplates: {
+                default: [""]
+            }
+        }]
+    }],
+    color: "coral",
+    children: [{ id: "head", hidden: false, type: "text", content: "how" }]
+};
+
 export const howManyFeatures: FeatureStructure = { type: "interrogative", nominal: false, determiner: true, number: true, agr: {} };
 export const blockHowMany: Block = {
     id: "how_many",
@@ -133,6 +150,7 @@ export const blockHowMany: Block = {
     words: [{
         token: "", categories: [{
             head: howManyFeatures,
+            left: [{ head: howManyHowFeatures }],
             right: [{ head: { type: noun, agr: { type: "non-3sing", num: "pl" } } }],
             customUnification: [
                 [["head", "agr"], ["right", 0, "head", "agr"]]
@@ -144,7 +162,8 @@ export const blockHowMany: Block = {
     }],
     color: "dodgerblue",
     children: [
-        { id: "head", hidden: false, type: "text", content: "how many" },
+        { id: "how", hidden: false, type: "placeholder", content: blockHowManyHow },
+        { id: "head", hidden: false, type: "text", content: "many" },
         { id: "complement", hidden: false, type: "placeholder", content: undefined }
     ]
 };
