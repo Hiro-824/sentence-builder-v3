@@ -1,5 +1,6 @@
 export const padding = 3;
 export const horizontalPadding = 12;
+export const verticalPadding = 12;
 export const blockCornerRadius = 10;
 export const blockStrokeWidth = 2;
 export const highlightStrokeWidth = 4;

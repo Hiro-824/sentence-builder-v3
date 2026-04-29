@@ -8,6 +8,7 @@ import {
     placeholderHeight,
     dropdownHeight,
     padding,
+    verticalPadding,
     blockCornerRadius,
     blockStrokeWidth,
     resolvedGapRadius,
@@ -50,6 +51,26 @@ const calculateDropdownWidth = (dropdown: BlockChild) => {
     return horizontalPadding * 4 + box.width;
 };
 
+const getSelectedHeadCategory = (block: Block) => {
+    const headChild = block.children.find(c => c.id === "head");
+    const headIndex = headChild?.type === "dropdown" ? (headChild.selected ?? 0) : 0;
+    const headWord = block.words?.[headIndex];
+    return Array.isArray(headWord?.categories) ? headWord.categories[0] : null;
+};
+
+const isDeterminerBlock = (block: Block) => {
+    const head = getSelectedHeadCategory(block)?.head;
+    const headType = head?.type;
+    return Boolean(
+        (headType && typeof headType === "object" && headType.isDet === true) ||
+        (headType === "interrogative" && head?.determiner === true)
+    );
+};
+
+const getBlockVerticalPadding = (block: Block) => (
+    isDeterminerBlock(block) ? 0 : verticalPadding
+);
+
 export const calculateBlockWidth = (block: Block): number => {
     const children = block.children.filter((child) => !child.hidden);
     const paddingNumber = children.length + 1;
@@ -86,7 +107,8 @@ export const calculateBlockWidth = (block: Block): number => {
 
 export const calculateBlockHeight = (block: Block): number => {
     const children = block.children.filter((child) => (!child.hidden && child.resolved !== true));
-    const heights = [placeholderHeight - padding * 2];
+    const blockVerticalPadding = getBlockVerticalPadding(block);
+    const heights = [placeholderHeight - blockVerticalPadding * 2];
     children.forEach(child => {
         if (child.type === "placeholder") {
             const content = child.content as Block | null;
@@ -105,7 +127,7 @@ export const calculateBlockHeight = (block: Block): number => {
         }
     });
     const highest = Math.max(...heights);
-    return padding * 2 + highest;
+    return blockVerticalPadding * 2 + highest;
 };
 
 const darkenColor = (color: string, factor: number) => {

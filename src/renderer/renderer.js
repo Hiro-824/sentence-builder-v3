@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Converter } from "@/grammar/converter";
 import { Grammar } from "@/grammar/grammar";
-import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockFillColor, blockTextColor, useBlockCategoryColors, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding, resolvedGapRadius, initialVisibleCount, visiblilityIncrement, buttonRadius, iconSize, navBarWidth, navBarCircleRadius, navBarCircleSpacing, navBarPadding, navBarScrollPadding, sidebarSearchHeight, sidebarSearchPadding, sidebarSearchBorderRadius, defaultInitialZoom, minZoomScale, maxZoomScale, mobileViewportMaxWidth, mobileSidebarTargetWidth, mobileSidebarMinWidth, mobileSidebarMaxWidth } from "./const.js";
+import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, verticalPadding, bubbleColor, blockFillColor, blockTextColor, useBlockCategoryColors, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding, resolvedGapRadius, initialVisibleCount, visiblilityIncrement, buttonRadius, iconSize, navBarWidth, navBarCircleRadius, navBarCircleSpacing, navBarPadding, navBarScrollPadding, sidebarSearchHeight, sidebarSearchPadding, sidebarSearchBorderRadius, defaultInitialZoom, minZoomScale, maxZoomScale, mobileViewportMaxWidth, mobileSidebarTargetWidth, mobileSidebarMinWidth, mobileSidebarMaxWidth } from "./const.js";
 import { createBlockSnapshot, createBlockSnapshotList } from "@/utils/supabase/logging_helpers";
 import * as d3 from "d3";
 
@@ -793,6 +793,19 @@ export class Renderer {
         const headIndex = headChild?.type === "dropdown" ? (headChild.selected ?? 0) : 0;
         const headWord = block.words[headIndex];
         return Array.isArray(headWord?.categories) ? headWord.categories[0] : null;
+    }
+
+    isDeterminerBlock(block) {
+        const head = this.getSelectedHeadCategory(block)?.head;
+        const headType = head?.type;
+        return Boolean(
+            (headType && typeof headType === "object" && headType.isDet === true) ||
+            (headType === "interrogative" && head?.determiner === true)
+        );
+    }
+
+    getBlockVerticalPadding(block) {
+        return this.isDeterminerBlock(block) ? 0 : verticalPadding;
     }
 
     isVerbBlock(block) {
@@ -2619,7 +2632,7 @@ export class Renderer {
         const placeholders = d3.selectAll("rect")
             .filter(function () {
                 const id = d3.select(this).attr("id");
-                return id && id.includes("placeholder");
+                return id && id.startsWith("placeholder-");
             })
             .filter(function () {
                 const excludedParent = d3.select(`#${blockData.id}`).node();
@@ -2843,8 +2856,8 @@ export class Renderer {
         const targetParentResult = this.findBlock(targetParentId);
         const targetParent = targetParentResult.foundBlock;
 
-        if (!targetParent || !targetParent.children[index] || targetParent.children[index].type !== "placeholder") {
-            console.error(`previewInsertion: Invalid target at index ${index}. Child is:`, targetParent.children[index]);
+        if (!targetParent || !targetParent.children || !targetParent.children[index] || targetParent.children[index].type !== "placeholder") {
+            console.error(`previewInsertion: Invalid target at index ${index}. Child is:`, targetParent?.children?.[index]);
             return;
         }
 
@@ -3353,7 +3366,8 @@ export class Renderer {
 
     calculateHeight(block) {
         const children = block.children.filter((child) => (!child.hidden && child.resolved !== true));
-        let heights = [placeholderHeight - padding * 2];
+        const blockVerticalPadding = this.getBlockVerticalPadding(block);
+        let heights = [placeholderHeight - blockVerticalPadding * 2];
         children.forEach(child => {
             if (child.type === "placeholder") {
                 const content = child.content;
@@ -3374,7 +3388,7 @@ export class Renderer {
             }
         });
         const highest = Math.max(...heights);
-        const height = padding * 2 + highest;
+        const height = blockVerticalPadding * 2 + highest;
         return height;
     }
 
