@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Converter } from "@/grammar/converter";
 import { Grammar } from "@/grammar/grammar";
-import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, verticalPadding, bubbleColor, blockFillColor, blockTextColor, useBlockCategoryColors, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding, resolvedGapRadius, initialVisibleCount, visiblilityIncrement, buttonRadius, iconSize, navBarWidth, navBarCircleRadius, navBarCircleSpacing, navBarPadding, navBarScrollPadding, sidebarSearchHeight, sidebarSearchPadding, sidebarSearchBorderRadius, defaultInitialZoom, minZoomScale, maxZoomScale, mobileViewportMaxWidth, mobileSidebarTargetWidth, mobileSidebarMinWidth, mobileSidebarMaxWidth } from "./const.js";
+import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, verticalPadding, bubbleColor, blockFillColor, blockTextColor, finiteClauseBlockColor, verbBlockColor, nounBlockColor, outlinedModifierBlockColor, useBlockCategoryColors, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding, resolvedGapRadius, initialVisibleCount, visiblilityIncrement, buttonRadius, iconSize, navBarWidth, navBarCircleRadius, navBarCircleSpacing, navBarPadding, navBarScrollPadding, sidebarSearchHeight, sidebarSearchPadding, sidebarSearchBorderRadius, defaultInitialZoom, minZoomScale, maxZoomScale, mobileViewportMaxWidth, mobileSidebarTargetWidth, mobileSidebarMinWidth, mobileSidebarMaxWidth } from "./const.js";
 import { createBlockSnapshot, createBlockSnapshotList } from "@/utils/supabase/logging_helpers";
 import * as d3 from "d3";
 
@@ -745,7 +745,30 @@ export class Renderer {
     }
 
     getBlockFillColor(block) {
-        return useBlockCategoryColors ? (block?.color || blockFillColor) : blockFillColor;
+        if (!useBlockCategoryColors) {
+            return blockFillColor;
+        }
+
+        if (this.isOutlinedTextBlock(block)) {
+            return outlinedModifierBlockColor;
+        }
+
+        const headType = this.getSelectedHeadCategory(block)?.head?.type;
+        const normalizedHeadType = typeof headType === "object" ? headType?.type : headType;
+
+        if (normalizedHeadType === "sentence") {
+            return finiteClauseBlockColor;
+        }
+
+        if (normalizedHeadType === "verb") {
+            return verbBlockColor;
+        }
+
+        if (normalizedHeadType === "nominal") {
+            return nounBlockColor;
+        }
+
+        return block?.color || blockFillColor;
     }
 
     isOutlinedTextBlock(block) {
@@ -890,7 +913,7 @@ export class Renderer {
 
     getBlockTextColor(block) {
         if (this.isOutlinedTextBlock(block)) {
-            return block?.color || blockTextColor;
+            return this.getBlockFillColor(block);
         }
 
         return useBlockCategoryColors ? "white" : blockTextColor;
@@ -905,7 +928,7 @@ export class Renderer {
             if (outlineNode && node.parentNode) {
                 d3.select(outlineNode)
                     .attr('fill', 'none')
-                    .attr('stroke', '#8a8f98')
+                    .attr('stroke', this.darkenColor(this.getBlockFillColor(block), 30))
                     .attr('stroke-width', 18)
                     .attr('stroke-linejoin', 'round')
                     .attr('paint-order', 'stroke')
@@ -933,7 +956,7 @@ export class Renderer {
             .attr("rx", cornerRadius)
             .attr("ry", cornerRadius)
             .attr("fill", "transparent")
-            .attr("stroke", "#8a8f98")
+            .attr("stroke", this.darkenColor(outlinedModifierBlockColor, 30))
             .attr("stroke-width", 18)
             .attr("pointer-events", "none")
             .attr("opacity", 0.85);

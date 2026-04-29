@@ -12,7 +12,11 @@ export const dropdownHeight = 60;
 export const bubbleColor = "#121212";
 export const blockFillColor = "#d4d4d4";
 export const blockTextColor = "#3f3f3f";
-export const useBlockCategoryColors = false;
+export const finiteClauseBlockColor = "#8a8f98";
+export const verbBlockColor = "#e5484d";
+export const nounBlockColor = "#2f80ed";
+export const outlinedModifierBlockColor = "#2f9e44";
+export const useBlockCategoryColors = true;
 export const resolvedGapRadius = 12;
 
 export const defaultInitialZoom = 0.5;

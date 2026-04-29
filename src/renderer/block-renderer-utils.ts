@@ -15,6 +15,10 @@ import {
     placeholderCornerRadius,
     blockFillColor,
     blockTextColor,
+    finiteClauseBlockColor,
+    verbBlockColor,
+    nounBlockColor,
+    outlinedModifierBlockColor,
     useBlockCategoryColors
 } from './const';
 
@@ -66,6 +70,20 @@ const isDeterminerBlock = (block: Block) => {
         (headType === "interrogative" && head?.determiner === true)
     );
 };
+
+const isOutlinedTextBlock = (block: Block) => (
+    block.words.some(word =>
+        Array.isArray(word?.categories) &&
+        word.categories.some(category => {
+            const head = category?.head;
+            const type = head?.type;
+            return type === "adj" ||
+                type === "adverb" ||
+                type === "prep" ||
+                (type === "interrogative" && head?.adverbial === true);
+        })
+    )
+);
 
 const getBlockVerticalPadding = (block: Block) => (
     isDeterminerBlock(block) ? 0 : verticalPadding
@@ -138,12 +156,37 @@ const darkenColor = (color: string, factor: number) => {
     return rgb.toString();
 };
 
-const getBlockFillColor = (block: Block) => (
-    useBlockCategoryColors ? (block.color || blockFillColor) : blockFillColor
-);
+const getBlockFillColor = (block: Block) => {
+    if (!useBlockCategoryColors) {
+        return blockFillColor;
+    }
 
-const getBlockTextColor = () => (
-    useBlockCategoryColors ? 'white' : blockTextColor
+    if (isOutlinedTextBlock(block)) {
+        return outlinedModifierBlockColor;
+    }
+
+    const headType = getSelectedHeadCategory(block)?.head?.type;
+    const normalizedHeadType = typeof headType === "object" ? headType?.type : headType;
+
+    if (normalizedHeadType === "sentence") {
+        return finiteClauseBlockColor;
+    }
+
+    if (normalizedHeadType === "verb") {
+        return verbBlockColor;
+    }
+
+    if (normalizedHeadType === "nominal") {
+        return nounBlockColor;
+    }
+
+    return block.color || blockFillColor;
+};
+
+const getBlockTextColor = (block: Block) => (
+    isOutlinedTextBlock(block)
+        ? getBlockFillColor(block)
+        : useBlockCategoryColors ? 'white' : blockTextColor
 );
 
 export const renderStaticBlock = <ParentDatum>(
@@ -224,7 +267,7 @@ export const renderStaticBlock = <ParentDatum>(
                 .text(textContent)
                 .attr("x", currentX)
                 .attr("y", y)
-                .attr('fill', getBlockTextColor())
+                .attr('fill', getBlockTextColor(block))
                 .attr('font-size', `${labelFontSize}pt`)
                 .attr('font-weight', 'bold')
                 .attr('dy', '-0.24em')
@@ -256,7 +299,7 @@ export const renderStaticBlock = <ParentDatum>(
                 .text(text)
                 .attr("x", textX)
                 .attr("y", textY)
-                .attr('fill', getBlockTextColor())
+                .attr('fill', getBlockTextColor(block))
                 .attr('font-size', `${labelFontSize}pt`)
                 .attr('font-weight', 'bold')
                 .attr('dy', '-0.24em')
@@ -267,7 +310,7 @@ export const renderStaticBlock = <ParentDatum>(
                 .text("▼")
                 .attr("x", textX + box.width + horizontalPadding)
                 .attr("y", textY - 10) // Minor adjustment to align icon
-                .attr('fill', getBlockTextColor())
+                .attr('fill', getBlockTextColor(block))
                 .attr('font-size', '10pt')
                 .attr('font-weight', 'bold')
                 .attr('dy', '-0.24em')
