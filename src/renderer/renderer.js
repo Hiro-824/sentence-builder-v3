@@ -1533,7 +1533,8 @@ export class Renderer {
         }
 
         const isFinite = this.isFiniteSentence(block);
-        if (isFinite && !fromSideBar && isRootBlock && this.activityPanelOpen) {
+        const canSendToActivePanel = this.activityPanelOpen || this.sidebarVariant === "scenario";
+        if (isFinite && !fromSideBar && isRootBlock && canSendToActivePanel) {
             const isComplete = this.isBlockComplete(block);
             this.renderSendButton(block, blockGroup, width, height, !isComplete);
         }
