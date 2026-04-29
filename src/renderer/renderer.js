@@ -748,8 +748,155 @@ export class Renderer {
         return useBlockCategoryColors ? (block?.color || blockFillColor) : blockFillColor;
     }
 
-    getBlockTextColor() {
+    isOutlinedTextBlock(block) {
+        if (!block || !Array.isArray(block.words)) {
+            return false;
+        }
+
+        return block.words.some(word =>
+            Array.isArray(word?.categories) &&
+            word.categories.some(category => {
+                const type = category?.head?.type;
+                return type === "adj" || type === "adverb" || type === "prep";
+            })
+        );
+    }
+
+    getBlockFrameFill(block) {
+        return this.isOutlinedTextBlock(block) ? "transparent" : this.getBlockFillColor(block);
+    }
+
+    getBlockFrameStroke(block) {
+        return this.isOutlinedTextBlock(block)
+            ? "none"
+            : this.darkenColor(this.getBlockFillColor(block), 30);
+    }
+
+    getBlockFrameStrokeWidth(block) {
+        return this.isOutlinedTextBlock(block) ? 0 : blockStrokeWidth;
+    }
+
+    getSelectedHeadCategory(block) {
+        if (!block || !Array.isArray(block.children) || !Array.isArray(block.words)) {
+            return null;
+        }
+
+        const headChild = block.children.find(c => c.id === "head");
+        const headIndex = headChild?.type === "dropdown" ? (headChild.selected ?? 0) : 0;
+        const headWord = block.words[headIndex];
+        return Array.isArray(headWord?.categories) ? headWord.categories[0] : null;
+    }
+
+    isVerbBlock(block) {
+        const headCategory = this.getSelectedHeadCategory(block);
+        return headCategory?.head?.type === "verb";
+    }
+
+    getVerbShapePath(x, y, width, height) {
+        const radius = Math.min(blockCornerRadius, height / 2);
+        const tabDepth = this.getVerbTabDepth(width);
+        const tabHeight = Math.min(34, height * 0.52);
+        const tabTop = y + (height - tabHeight) / 2;
+        const tabBottom = tabTop + tabHeight;
+        const left = x;
+        const tabLeft = left - tabDepth;
+        const right = x + width;
+        const top = y;
+        const bottom = y + height;
+
+        return [
+            `M ${left + radius} ${top}`,
+            `H ${right - radius}`,
+            `Q ${right} ${top} ${right} ${top + radius}`,
+            `V ${bottom - radius}`,
+            `Q ${right} ${bottom} ${right - radius} ${bottom}`,
+            `H ${left + radius}`,
+            `Q ${left} ${bottom} ${left} ${bottom - radius}`,
+            `V ${tabBottom}`,
+            `C ${tabLeft} ${tabBottom} ${tabLeft} ${tabTop} ${left} ${tabTop}`,
+            `V ${top + radius}`,
+            `Q ${left} ${top} ${left + radius} ${top}`,
+            "Z"
+        ].join(" ");
+    }
+
+    getVerbTabDepth(width) {
+        return Math.min(18, width * 0.18);
+    }
+
+    getEmbeddedVerbLeftSpacing(width) {
+        return this.getVerbTabDepth(width) + horizontalPadding;
+    }
+
+    getExpectedPhraseForPlaceholder(block, child) {
+        const headCategory = this.getSelectedHeadCategory(block);
+        if (!headCategory || !Array.isArray(block?.children)) {
+            return null;
+        }
+
+        const headChildIndex = block.children.findIndex(c => c.id === "head");
+        const childIndex = block.children.indexOf(child);
+        if (headChildIndex === -1 || childIndex === -1) {
+            return null;
+        }
+
+        const placeholderChildren = block.children.filter(c =>
+            c.id !== "head" &&
+            !c.hidden &&
+            c.type === "placeholder"
+        );
+        const sidePlaceholders = placeholderChildren.filter(c =>
+            childIndex < headChildIndex
+                ? block.children.indexOf(c) < headChildIndex
+                : block.children.indexOf(c) > headChildIndex
+        );
+        const placeholderIndex = sidePlaceholders.indexOf(child);
+        if (placeholderIndex === -1) {
+            return null;
+        }
+
+        const expectedArgs = childIndex < headChildIndex ? headCategory.left : headCategory.right;
+        return Array.isArray(expectedArgs) ? expectedArgs[placeholderIndex] : null;
+    }
+
+    doesPlaceholderExpectVerb(block, child) {
+        return this.getExpectedPhraseForPlaceholder(block, child)?.head?.type === "verb";
+    }
+
+    getBlockTextColor(block) {
+        if (this.isOutlinedTextBlock(block)) {
+            return block?.color || blockTextColor;
+        }
+
         return useBlockCategoryColors ? "white" : blockTextColor;
+    }
+
+    applyBlockTextStyle(textSelection, block) {
+        textSelection.attr('fill', this.getBlockTextColor(block));
+
+        if (this.isOutlinedTextBlock(block)) {
+            const node = textSelection.node();
+            const outlineNode = node?.cloneNode(true);
+            if (outlineNode && node.parentNode) {
+                d3.select(outlineNode)
+                    .attr('fill', 'none')
+                    .attr('stroke', '#8a8f98')
+                    .attr('stroke-width', 18)
+                    .attr('stroke-linejoin', 'round')
+                    .attr('paint-order', 'stroke')
+                    .attr('pointer-events', 'none')
+                    .attr('opacity', 0.85);
+                node.parentNode.insertBefore(outlineNode, node);
+            }
+
+            textSelection
+                .attr('stroke', '#ffffff')
+                .attr('stroke-width', 11)
+                .attr('stroke-linejoin', 'round')
+                .attr('paint-order', 'stroke fill');
+        }
+
+        return textSelection;
     }
 
     scrollToCategory(groupName) {
@@ -1486,8 +1633,9 @@ export class Renderer {
         blockGroup.selectAll("*").remove();
         const width = this.calculateWidth(block);
         const height = this.calculateHeight(block);
-        const fillColor = this.getBlockFillColor(block);
-        const strokeColor = this.darkenColor(fillColor, 30);
+        const fillColor = this.getBlockFrameFill(block);
+        const strokeColor = this.getBlockFrameStroke(block);
+        const strokeWidth = this.getBlockFrameStrokeWidth(block);
         const actualCornerRadius = block.isRound ? height / 2 : blockCornerRadius;
         const parentNode = blockGroup.node() ? blockGroup.node().parentNode : null;
         const isRootBlock = parentNode && parentNode.id === "grid";
@@ -1497,16 +1645,32 @@ export class Renderer {
             this.renderTranslationBubble(block, blockGroup, width, height);
         }
 
+        const isVerbBlock = this.isVerbBlock(block);
+
+        if (isVerbBlock) {
+            blockGroup.append("path")
+                .attr("id", `visual-frame-${block.id}`)
+                .attr("d", this.getVerbShapePath(0, 0, width, height))
+                .attr("fill", fillColor)
+                .attr("stroke", strokeColor)
+                .attr("stroke-width", strokeWidth)
+                .attr("pointer-events", "none");
+        }
+
         // フレーム描画
-        blockGroup.append("rect")
+        const frameRect = blockGroup.append("rect")
             .attr("id", `frame-${block.id}`)
             .attr("width", width)
             .attr("height", height)
-            .attr("fill", fillColor)
+            .attr("fill", isVerbBlock ? "transparent" : fillColor)
             .attr("rx", actualCornerRadius)
             .attr("ry", actualCornerRadius)
-            .attr("stroke", strokeColor)
-            .attr("stroke-width", blockStrokeWidth);
+            .attr("stroke", isVerbBlock ? "none" : strokeColor)
+            .attr("stroke-width", isVerbBlock ? 0 : strokeWidth)
+            .attr("pointer-events", "all");
+        if (isVerbBlock) {
+            frameRect.lower();
+        }
 
         let x = horizontalPadding + (block.isRound ? horizontalPadding : 0);
         const allChildren = block.children;
@@ -1664,17 +1828,41 @@ export class Renderer {
             //ブロックがはまっている場合
             const childWidth = this.calculateWidth(content);
             const childHeight = this.calculateHeight(content);
-            content.x = x;
+            const leftSpacing = this.isVerbBlock(content) ? this.getEmbeddedVerbLeftSpacing(childWidth) : 0;
+            content.x = x + leftSpacing;
             content.y = (height - childHeight) / 2;
             this.renderBlock(content, blockGroup);
-            return (childWidth + horizontalPadding)
+            return (childWidth + leftSpacing + horizontalPadding)
         } else {
             //ブロックがはまっていない場合
             const y = (height - placeholderHeight) / 2;
             const inputColor = this.darkenColor(this.getBlockFillColor(block), 30);
 
             const placeholderDomId = `placeholder-${count}-${block.id}-${child.id}`;
+            if (this.doesPlaceholderExpectVerb(block, child)) {
+                const tabDepth = this.getVerbTabDepth(placeholderWidth);
+                blockGroup.append("path")
+                    .attr("id", `visual-${placeholderDomId}`)
+                    .attr("d", this.getVerbShapePath(x + tabDepth, y, placeholderWidth - tabDepth, placeholderHeight))
+                    .attr("fill", inputColor)
+                    .attr("stroke", "none")
+                    .attr("stroke-width", 0)
+                    .attr("pointer-events", "none");
 
+                blockGroup.append("rect")
+                    .attr("id", placeholderDomId)
+                    .attr("x", x)
+                    .attr("y", y)
+                    .attr("width", placeholderWidth)
+                    .attr("height", placeholderHeight)
+                    .attr("rx", blockCornerRadius)
+                    .attr("ry", blockCornerRadius)
+                    .attr("fill", "transparent")
+                    .attr("stroke", "none")
+                    .attr("stroke-width", 0)
+                    .attr("pointer-events", "all");
+                return (placeholderWidth + horizontalPadding);
+            }
             blockGroup.append("rect")
                 .attr("id", placeholderDomId)
                 .attr("x", x)
@@ -1696,11 +1884,11 @@ export class Renderer {
             .text(content)
             .attr("x", x)
             .attr("y", y)
-            .attr('fill', this.getBlockTextColor())
             .attr('font-size', `${labelFontSize}pt`)
             .attr('font-weight', 'bold')
             .attr('dy', '-0.24em')
             .style('user-select', 'none');
+        this.applyBlockTextStyle(textSelection, block);
 
         if (child.editable) {
             textSelection.classed("pointer", true)
@@ -1768,6 +1956,7 @@ export class Renderer {
         const text = child.content[selected];
         const box = this.calculateTextHeightAndWidth(text);
         const dropdownWidth = this.calculateDropdownWidth(child);
+        const isOutlinedTextBlock = this.isOutlinedTextBlock(block);
         const inputColor = this.darkenColor(this.getBlockFillColor(block), 30);
         const y = (height - dropdownHeight) / 2;
         const dropdownId = `dropdown-${count}-${block.id}`;
@@ -1781,29 +1970,29 @@ export class Renderer {
             .attr("height", dropdownHeight)
             .attr("rx", blockCornerRadius)
             .attr("ry", blockCornerRadius)
-            .attr("fill", inputColor);
+            .attr("fill", isOutlinedTextBlock ? "transparent" : inputColor);
 
         const textX = x + horizontalPadding;
         const textY = ((height - box.height) / 2) + box.height;
-        dropdownGroup.append("text")
+        const dropdownText = dropdownGroup.append("text")
             .text(text)
             .attr("x", textX)
             .attr("y", textY)
-            .attr('fill', this.getBlockTextColor())
             .attr('font-size', `${labelFontSize}pt`)
             .attr('font-weight', 'bold')
             .attr('dy', '-0.24em')
-            .style('user-select', 'none')
+            .style('user-select', 'none');
+        this.applyBlockTextStyle(dropdownText, block);
 
-        dropdownGroup.append("text")
+        const dropdownArrow = dropdownGroup.append("text")
             .text("▼")
             .attr("x", textX + box.width + horizontalPadding)
             .attr("y", textY - 10)
-            .attr('fill', this.getBlockTextColor())
             .attr('font-size', `10pt`)
             .attr('font-weight', 'bold')
             .attr('dy', '-0.24em')
             .style('user-select', 'none');
+        this.applyBlockTextStyle(dropdownArrow, block);
 
         const optionHeight = dropdownHeight;
         const optionsWidth = Math.max(...child.content.map(option =>
@@ -1900,19 +2089,19 @@ export class Renderer {
                 .attr("y", optionY)
                 .attr("width", optionsWidth)
                 .attr("height", optionHeight)
-                .attr("fill", this.getBlockTextColor())
+                .attr("fill", this.getBlockTextColor(block))
                 .attr("opacity", 0);
 
             // Option text
-            optionGroup.append("text")
+            const optionText = optionGroup.append("text")
                 .text(option)
                 .attr("x", optionsPosition.x + horizontalPadding)
                 .attr("y", optionY + (optionHeight * 0.5) + (optionBox.height * 0.5))
-                .attr("fill", this.getBlockTextColor())
                 .attr("font-size", `${labelFontSize}pt`)
                 .attr("dy", "-0.15em")
                 .attr('font-weight', isSelected ? 'bold' : 'normal')
                 .style('user-select', 'none');
+            this.applyBlockTextStyle(optionText, block);
 
             // Hover effects remain the same
             optionGroup
@@ -2829,12 +3018,27 @@ export class Renderer {
         const block = this.findBlock(blockId).foundBlock;
         if (!block) return;
 
-        const strokeColor = isDragging ? isError ? "red" : "yellow" : this.darkenColor(this.getBlockFillColor(block), 30);
-        const strokeWidth = isDragging ? highlightStrokeWidth : blockStrokeWidth;
+        if (isDragging && this.isOutlinedTextBlock(block)) {
+            d3.select(frameId)
+                .attr("stroke", "none")
+                .attr("stroke-width", 0);
+            return;
+        }
+
+        const strokeColor = isDragging
+            ? isError ? "red" : "yellow"
+            : this.getBlockFrameStroke(block);
+        const strokeWidth = isDragging ? highlightStrokeWidth : this.getBlockFrameStrokeWidth(block);
 
         d3.select(frameId)
             .attr("stroke", strokeColor)
             .attr("stroke-width", strokeWidth);
+
+        if (this.isVerbBlock(block)) {
+            d3.select(`#visual-frame-${blockId}`)
+                .attr("stroke", strokeColor)
+                .attr("stroke-width", strokeWidth);
+        }
     }
 
     deemphasizeAllPlaceholder() {
@@ -2843,11 +3047,25 @@ export class Renderer {
                 return this.id.includes("placeholder");
             })
             .attr("stroke-width", 0);
+        d3.selectAll("path")
+            .filter(function () {
+                const id = d3.select(this).attr("id");
+                return id && id.includes("visual-placeholder");
+            })
+            .attr("stroke", "none")
+            .attr("stroke-width", 0);
     }
 
     emphasizePlaceholder(id, isError = false) {
         this.deemphasizeAllPlaceholder();
-        d3.select(`#${id}`).attr("stroke-width", highlightStrokeWidth).attr("stroke", isError ? "red" : "yellow");
+        const stroke = isError ? "red" : "yellow";
+        const visualPlaceholder = d3.select(`#visual-${id}`);
+        if (!visualPlaceholder.empty()) {
+            visualPlaceholder.attr("stroke-width", highlightStrokeWidth).attr("stroke", stroke);
+            return;
+        }
+
+        d3.select(`#${id}`).attr("stroke-width", highlightStrokeWidth).attr("stroke", stroke);
     }
 
     deemphasizeAllBlock() {
@@ -2860,19 +3078,30 @@ export class Renderer {
             })
             .each((d, i, nodes) => {
                 const rect = d3.select(nodes[i]);
+                const id = rect.attr("id");
                 // Retrieve the block data from the parent group which holds the block's datum
                 const parentGroup = d3.select(rect.node().parentNode);
                 const blockData = parentGroup.datum();
                 if (blockData) {
-                    const strokeColor = this.darkenColor(this.getBlockFillColor(blockData), 30);
-                    rect.attr("stroke", strokeColor)
-                        .attr("stroke-width", blockStrokeWidth);
+                    rect.attr("stroke", this.getBlockFrameStroke(blockData))
+                        .attr("stroke-width", this.getBlockFrameStrokeWidth(blockData));
+                    if (this.isVerbBlock(blockData)) {
+                        d3.select(`#visual-${id}`)
+                            .attr("stroke", this.getBlockFrameStroke(blockData))
+                            .attr("stroke-width", this.getBlockFrameStrokeWidth(blockData));
+                    }
                 }
             });
     }
 
     emphasizeBlock(id) {
         this.deemphasizeAllBlock();
+        const visualBlock = d3.select(`#visual-${id}`);
+        if (!visualBlock.empty()) {
+            visualBlock.attr("stroke-width", highlightStrokeWidth).attr("stroke", "yellow");
+            return;
+        }
+
         d3.select(`#${id}`).attr("stroke-width", highlightStrokeWidth).attr("stroke", "yellow");
     }
 
@@ -2994,6 +3223,9 @@ export class Renderer {
                 if (content) {
                     const contentWidth = this.calculateWidth(content);
                     width += contentWidth;
+                    if (this.isVerbBlock(content)) {
+                        width += this.getEmbeddedVerbLeftSpacing(contentWidth);
+                    }
                 } else {
                     width += placeholderWidth;
                 }
