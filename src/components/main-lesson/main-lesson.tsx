@@ -8,6 +8,9 @@ import { Renderer } from "@/renderer/renderer";
 import { Block } from "@/models/block";
 import { LESSON_NOUNS, LessonNoun } from "@/data/lesson-nouns";
 import { getLessonBlocks } from "@/data/lesson-blocks";
+import { ACTIVE_LESSON_ID } from "@/data/lesson-curriculum";
+import LessonCompleteModal from "@/components/lesson-complete-modal/lesson-complete-modal";
+import LessonCurriculumModal from "@/components/lesson-curriculum-modal/lesson-curriculum-modal";
 import styles from "./main-lesson.module.css";
 
 type NumberValue = "singular" | "plural";
@@ -26,6 +29,8 @@ interface BuiltAnswer {
 }
 
 const QUESTION_COUNT = 10;
+const WRONG_PHRASE_WARNING_THRESHOLD = 3;
+const COMPLETED_LESSONS_STORAGE_KEY = "syntablo:completed-lessons";
 
 const shuffle = <T,>(items: T[]): T[] => {
   const result = [...items];
@@ -114,7 +119,9 @@ export default function MainLesson() {
   const [showTranslation, setShowTranslation] = useState(false);
   const [showNext, setShowNext] = useState(false);
   const [firstTryCorrect, setFirstTryCorrect] = useState(0);
-  const [completed, setCompleted] = useState(false);
+  const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
+  const [isCurriculumOpen, setIsCurriculumOpen] = useState(false);
+  const [completedLessonIds, setCompletedLessonIds] = useState<string[]>([]);
   const svgContainerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<Renderer | null>(null);
   const questionRef = useRef<LessonQuestion | null>(null);
@@ -123,7 +130,18 @@ export default function MainLesson() {
   const lastEvaluationRef = useRef("");
   const nextTimerRef = useRef<number | null>(null);
 
-  useEffect(() => setQuestions(buildQuestions()), []);
+  useEffect(() => {
+    setQuestions(buildQuestions());
+    try {
+      const stored = window.localStorage.getItem(COMPLETED_LESSONS_STORAGE_KEY);
+      const parsed = stored ? JSON.parse(stored) : [];
+      if (Array.isArray(parsed)) {
+        setCompletedLessonIds(parsed.filter((id): id is string => typeof id === "string"));
+      }
+    } catch {
+      setCompletedLessonIds([]);
+    }
+  }, []);
 
   const question = questions[questionIndex];
   questionRef.current = question ?? null;
@@ -162,9 +180,10 @@ export default function MainLesson() {
       setFeedback("correct");
       if (wrongAttemptsRef.current === 0) setFirstTryCorrect((count) => count + 1);
       nextTimerRef.current = window.setTimeout(() => setShowNext(true), 800);
-    } else {
-      setFeedback("wrong");
-      setWrongAttempts((count) => count + 1);
+    } else if (answers.some((answer) => answer.determiner !== null)) {
+      const nextWrongAttempts = wrongAttemptsRef.current + 1;
+      setWrongAttempts(nextWrongAttempts);
+      setFeedback(nextWrongAttempts >= WRONG_PHRASE_WARNING_THRESHOLD ? "wrong" : "idle");
     }
   }, []);
 
@@ -227,7 +246,10 @@ export default function MainLesson() {
   const goNext = () => {
     if (nextTimerRef.current) window.clearTimeout(nextTimerRef.current);
     if (questionIndex === QUESTION_COUNT - 1) {
-      setCompleted(true);
+      const nextCompleted = Array.from(new Set([...completedLessonIds, ACTIVE_LESSON_ID]));
+      setCompletedLessonIds(nextCompleted);
+      window.localStorage.setItem(COMPLETED_LESSONS_STORAGE_KEY, JSON.stringify(nextCompleted));
+      setIsCompleteModalOpen(true);
       return;
     }
     setQuestionIndex((index) => index + 1);
@@ -244,8 +266,18 @@ export default function MainLesson() {
     setWrongAttempts(0);
     setShowNext(false);
     setFirstTryCorrect(0);
-    setCompleted(false);
+    setIsCompleteModalOpen(false);
     lastEvaluationRef.current = "";
+  };
+
+  const openCurriculumFromCompletion = () => {
+    setIsCompleteModalOpen(false);
+    setIsCurriculumOpen(true);
+  };
+
+  const selectLesson = (lessonId: string) => {
+    if (lessonId !== ACTIVE_LESSON_ID) return;
+    setIsCurriculumOpen(false);
   };
 
   if (!question) {
@@ -267,6 +299,13 @@ export default function MainLesson() {
             <span>Syntablo</span>
           </Link>
           <span className={styles.lessonLabel}>Lesson 1</span>
+          <button
+            type="button"
+            className={styles.curriculumButton}
+            onClick={() => setIsCurriculumOpen(true)}
+          >
+            レッスン一覧
+          </button>
         </div>
         <div className={styles.subNavigation}>
           <Link href="/app/sandbox">Sandbox</Link>
@@ -274,21 +313,9 @@ export default function MainLesson() {
         </div>
       </nav>
 
-      {!completed && <div ref={svgContainerRef} className={styles.canvas} />}
+      <div ref={svgContainerRef} className={styles.canvas} />
 
-      {completed ? (
-        <section className={styles.completion}>
-          <div className={styles.completionIcon}>✓</div>
-          <p className={styles.eyebrow}>Lesson complete</p>
-          <h1>10問、すべて完成しました！</h1>
-          <p>はじめから正解できたのは <strong>{firstTryCorrect} / 10</strong> 問</p>
-          <div className={styles.completionActions}>
-            <button type="button" onClick={restart}>もう一度</button>
-            <Link href="/app/sandbox">自由に作ってみる</Link>
-          </div>
-        </section>
-      ) : (
-        <aside className={styles.lessonPanel}>
+      <aside className={styles.lessonPanel}>
           <div className={styles.panelHeader}>
             <div>
               <p className={styles.eyebrow}>Lesson 1</p>
@@ -340,7 +367,7 @@ export default function MainLesson() {
             {feedback === "wrong" && (
               <>
                 <strong>もう一度やってみよう</strong>
-                {wrongAttempts >= 2 && <span>絵の数と、指があるかを見直してみよう。</span>}
+                <span>絵の数と、指があるかを見直してみよう。</span>
               </>
             )}
             {feedback === "correct" && <strong className={styles.correct}>できました！</strong>}
@@ -351,9 +378,21 @@ export default function MainLesson() {
               {questionIndex === QUESTION_COUNT - 1 ? "結果を見る" : "次へ"} →
             </button>
           )}
-        </aside>
-      )}
+      </aside>
+
+      <LessonCompleteModal
+        isOpen={isCompleteModalOpen}
+        firstTryCorrect={firstTryCorrect}
+        onClose={() => setIsCompleteModalOpen(false)}
+        onRestart={restart}
+        onOpenCurriculum={openCurriculumFromCompletion}
+      />
+      <LessonCurriculumModal
+        isOpen={isCurriculumOpen}
+        completedLessonIds={completedLessonIds}
+        onClose={() => setIsCurriculumOpen(false)}
+        onSelectLesson={selectLesson}
+      />
     </main>
   );
 }
-

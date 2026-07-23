@@ -1,0 +1,183 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal {
+  width: min(760px, 100%);
+  max-height: min(760px, calc(100vh - 48px));
+  overflow: auto;
+  padding: 28px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 30px rgba(0, 0, 0, 0.16);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.header p,
+.header h2 {
+  margin: 0;
+}
+
+.header p {
+  margin-bottom: 3px;
+  color: #2675f5;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.header h2 {
+  color: #111827;
+  font-size: 24px;
+}
+
+.header > button {
+  width: 36px;
+  height: 36px;
+  color: #687386;
+  background: #f3f4f6;
+  border: 0;
+  border-radius: 10px;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.units {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.unit {
+  padding: 20px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+}
+
+.unitHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.unitHeader span {
+  color: #2675f5;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.unitHeader h3 {
+  margin: 3px 0;
+  color: #111827;
+  font-size: 18px;
+}
+
+.unitHeader p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.unitHeader > strong {
+  color: #606b7b;
+  font-size: 13px;
+}
+
+.unitProgress {
+  height: 5px;
+  margin: 14px 0 16px;
+  overflow: hidden;
+  background: #e1e6ed;
+  border-radius: 99px;
+}
+
+.unitProgress span {
+  display: block;
+  height: 100%;
+  background: #2675f5;
+}
+
+.lessons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lesson {
+  width: 100%;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 11px;
+  cursor: pointer;
+}
+
+.lesson:disabled {
+  cursor: default;
+  opacity: 0.62;
+}
+
+.activeLesson {
+  border-color: #a9c9fb;
+  box-shadow: 0 0 0 2px #edf4ff;
+}
+
+.lessonNumber {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  display: grid;
+  place-items: center;
+  color: #2675f5;
+  background: #edf4ff;
+  border-radius: 9px;
+  font-weight: 800;
+}
+
+.lessonText {
+  min-width: 0;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lessonText strong {
+  color: #1f2937;
+  font-size: 14px;
+}
+
+.lessonText small {
+  overflow: hidden;
+  color: #6b7280;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lessonStatus {
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 700;
+}
+

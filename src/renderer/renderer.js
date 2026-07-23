@@ -563,9 +563,10 @@ export class Renderer {
     }
 
     renderLessonTray() {
-        const trayHeight = 150;
+        const trayHeight = 104;
         const trayY = Math.max(0, this.canvasHeight - trayHeight);
         const blocks = Object.values(this.blockList || {}).flat();
+        const candidateScale = this.getInitialZoomScale();
 
         this.sidebar = this.svg.append("g")
             .attr("id", "sidebar")
@@ -580,26 +581,18 @@ export class Renderer {
             .attr("stroke-width", "1")
             .on("mousedown", (event) => event.stopPropagation());
 
-        this.sidebar.append("text")
-            .text("使えるブロック　クリックまたはドラッグ")
-            .attr("x", 28)
-            .attr("y", 28)
-            .attr("fill", "#687386")
-            .attr("font-size", "12pt")
-            .attr("font-weight", "600")
-            .style("user-select", "none");
+        const widths = blocks.map(block => this.calculateWidth(block) * candidateScale);
+        const totalWidth = widths.reduce((sum, width) => sum + width, 0) + Math.max(0, blocks.length - 1) * 24;
+        const trayStartX = Math.max(24, (window.innerWidth - totalWidth) / 2);
+        let x = trayStartX;
 
         this.blockBoard = this.sidebar.append("g")
-            .attr("transform", "translate(28, 48)");
-
-        const widths = blocks.map(block => this.calculateWidth(block));
-        const totalWidth = widths.reduce((sum, width) => sum + width, 0) + Math.max(0, blocks.length - 1) * 24;
-        let x = Math.max(28, (window.innerWidth - totalWidth) / 2);
+            .attr("transform", `translate(${trayStartX}, 24) scale(${candidateScale})`);
 
         blocks.forEach((block, index) => {
             const previewId = this.generateRandomId();
             const previewGroup = this.blockBoard.append("g")
-                .attr("transform", `translate(${x - 28}, 0)`)
+                .attr("transform", `translate(${(x - trayStartX) / candidateScale}, 0)`)
                 .attr("id", previewId)
                 .datum(block);
             this.renderPreviewBlock(previewId);
@@ -1491,37 +1484,10 @@ export class Renderer {
         realData.y = 0;
         this.renderBlock(realData, previewBlockGroup, true, id);
 
-        if (this.sidebarVariant === "lesson") {
-            const blockWidth = this.calculateWidth(realData);
-            const blockHeight = this.calculateHeight(realData);
-            const addButton = previewBlockGroup.append("g")
-                .attr("transform", `translate(${blockWidth + 7}, ${blockHeight / 2})`)
-                .style("cursor", "pointer")
-                .on("click", (event) => {
-                    event.stopPropagation();
-                    this.addLessonBlock(realData);
-                });
-            addButton.append("circle")
-                .attr("r", 12)
-                .attr("fill", "#2675f5");
-            addButton.append("text")
-                .text("+")
-                .attr("text-anchor", "middle")
-                .attr("dy", "0.34em")
-                .attr("fill", "white")
-                .attr("font-size", "15pt")
-                .attr("font-weight", "700")
-                .style("user-select", "none")
-                .attr("pointer-events", "none");
-        }
-
         previewBlockGroup
             .style("cursor", "pointer")
             .on("click.lesson", (event) => {
                 if (this.sidebarVariant !== "lesson" || event.defaultPrevented) return;
-                if (event.target?.closest?.(".block-dropdown")) return;
-                const targetId = event.target?.id || "";
-                if (targetId.startsWith("dropdown-")) return;
                 this.addLessonBlock(realData);
             });
     }
@@ -2068,6 +2034,11 @@ export class Renderer {
 
             dropdownGroup.on("click", (event) => {
                 const isFromSidebar = event.currentTarget.closest("#sidebar") !== null;
+                if (isFromSidebar && this.sidebarVariant === "lesson") {
+                    event.stopPropagation();
+                    this.addLessonBlock(block);
+                    return;
+                }
                 const currentDisplay = optionsGroup.attr("display");
                 if (currentDisplay === "none") {
                     this.closeAllDropdowns();
