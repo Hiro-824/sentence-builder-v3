@@ -262,7 +262,7 @@ const LessonPicture = ({ visual }: { visual: LessonVisual }) => {
             className={styles.predicatePicture}
             role="img"
             aria-label={`${visual.predicate} の動作`}
-            style={{ backgroundImage: `url("/lesson-assets/predicates/${visual.predicate}.png")` }}
+            style={{ backgroundImage: `url("/lesson-assets/predicates/${visual.predicate}-v2.png")` }}
           />
         </div>
         {visual.complements.map((complement, index) => (

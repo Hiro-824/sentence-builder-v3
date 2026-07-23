@@ -2,6 +2,7 @@
 import { Converter } from "@/grammar/converter";
 import { Grammar } from "@/grammar/grammar";
 import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding, resolvedGapRadius, initialVisibleCount, visiblilityIncrement, buttonRadius, iconSize, navBarWidth, navBarCircleRadius, navBarCircleSpacing, navBarPadding, navBarScrollPadding, sidebarSearchHeight, sidebarSearchPadding, sidebarSearchBorderRadius, defaultInitialZoom, minZoomScale, maxZoomScale, mobileViewportMaxWidth, mobileSidebarTargetWidth, mobileSidebarMinWidth, mobileSidebarMaxWidth } from "./const.js";
+import { buildShapePath, getBlockShape, getPlaceholderShape } from "./block-shape";
 import { createBlockSnapshot, createBlockSnapshotList } from "@/utils/supabase/logging_helpers";
 import { playBlockConnectSound } from "@/utils/audio-feedback";
 import * as d3 from "d3";
@@ -1594,7 +1595,6 @@ export class Renderer {
         const width = this.calculateWidth(block);
         const height = this.calculateHeight(block);
         const strokeColor = this.darkenColor(block.color, 30);
-        const actualCornerRadius = block.isRound ? height / 2 : blockCornerRadius;
         const parentNode = blockGroup.node() ? blockGroup.node().parentNode : null;
         const isRootBlock = parentNode && parentNode.id === "grid";
 
@@ -1604,13 +1604,13 @@ export class Renderer {
         }
 
         // フレーム描画
-        blockGroup.append("rect")
+        blockGroup.append("path")
             .attr("id", `frame-${block.id}`)
+            .attr("class", "block-frame")
+            .attr("d", buildShapePath(getBlockShape(block), 0, 0, width, height))
             .attr("width", width)
             .attr("height", height)
             .attr("fill", block.color)
-            .attr("rx", actualCornerRadius)
-            .attr("ry", actualCornerRadius)
             .attr("stroke", strokeColor)
             .attr("stroke-width", blockStrokeWidth);
 
@@ -1780,14 +1780,18 @@ export class Renderer {
 
             const placeholderDomId = `placeholder-${count}-${block.id}-${child.id}`;
 
-            blockGroup.append("rect")
+            blockGroup.append("path")
                 .attr("id", placeholderDomId)
-                .attr("x", x)
-                .attr("y", y)
+                .attr("class", "block-placeholder")
+                .attr("d", buildShapePath(
+                    getPlaceholderShape(block, child),
+                    x,
+                    y,
+                    placeholderWidth,
+                    placeholderHeight,
+                ))
                 .attr("width", placeholderWidth)
                 .attr("height", placeholderHeight)
-                .attr("rx", placeholderCornerRadius)
-                .attr("ry", placeholderCornerRadius)
                 .attr("fill", inputColor);
             return (placeholderWidth + horizontalPadding);
         }
@@ -2454,7 +2458,7 @@ export class Renderer {
             return Math.sqrt(Math.pow(mouseX - rectCenterX, 2) + Math.pow(mouseY - rectCenterY, 2));
         };
 
-        const placeholders = d3.selectAll("rect")
+        const placeholders = d3.selectAll(".block-placeholder")
             .filter(function () {
                 const id = d3.select(this).attr("id");
                 return id && id.includes("placeholder");
@@ -2531,7 +2535,7 @@ export class Renderer {
         const descendantFrameIds = collectDescendantFrameIds(blockData);
 
         // Select all block frames except the dragged block's own frame and its descendant frames.
-        const blockFrameIds = d3.selectAll("rect")
+        const blockFrameIds = d3.selectAll(".block-frame")
             .filter(function () {
                 const id = d3.select(this).attr("id");
                 return id && id.startsWith("frame-") &&
@@ -2952,10 +2956,7 @@ export class Renderer {
     }
 
     deemphasizeAllPlaceholder() {
-        d3.selectAll("rect")
-            .filter(function () {
-                return this.id.includes("placeholder");
-            })
+        d3.selectAll(".block-placeholder")
             .attr("stroke-width", 0);
     }
 
@@ -2965,7 +2966,7 @@ export class Renderer {
     }
 
     deemphasizeAllBlock() {
-        d3.selectAll("rect")
+        d3.selectAll(".block-frame")
             .filter(function () {
                 const id = d3.select(this).attr("id");
                 // Only consider frames, and exclude those whose parent group has class "grabbing"

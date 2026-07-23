@@ -13,6 +13,11 @@ import {
     resolvedGapRadius,
     placeholderCornerRadius
 } from './const';
+import {
+    buildShapePath,
+    getBlockShape,
+    getPlaceholderShape,
+} from './block-shape';
 
 const getCalculationSvg = (): d3.Selection<SVGSVGElement, unknown, HTMLElement, unknown> => {
     const selectorId = '__text_calculation_svg__';
@@ -125,15 +130,13 @@ export const renderStaticBlock = <ParentDatum>(
     const width = calculateBlockWidth(block);
     const height = calculateBlockHeight(block);
     const strokeColor = darkenColor(block.color, 30);
-    const actualCornerRadius = block.isRound ? height / 2 : blockCornerRadius;
 
     // Render the main frame
-    blockGroup.append("rect")
+    blockGroup.append("path")
+        .attr("d", buildShapePath(getBlockShape(block), 0, 0, width, height))
         .attr("width", width)
         .attr("height", height)
         .attr("fill", block.color)
-        .attr("rx", actualCornerRadius)
-        .attr("ry", actualCornerRadius)
         .attr("stroke", strokeColor)
         .attr("stroke-width", blockStrokeWidth);
 
@@ -172,13 +175,16 @@ export const renderStaticBlock = <ParentDatum>(
                 // Render an empty placeholder slot
                 const y = (height - placeholderHeight) / 2;
                 const inputColor = darkenColor(block.color, 30);
-                blockGroup.append("rect")
-                    .attr("x", currentX)
-                    .attr("y", y)
+                blockGroup.append("path")
+                    .attr("d", buildShapePath(
+                        getPlaceholderShape(block, child),
+                        currentX,
+                        y,
+                        placeholderWidth,
+                        placeholderHeight,
+                    ))
                     .attr("width", placeholderWidth)
                     .attr("height", placeholderHeight)
-                    .attr("rx", placeholderCornerRadius)
-                    .attr("ry", placeholderCornerRadius)
                     .attr("fill", inputColor);
                 currentX += (placeholderWidth + horizontalPadding);
             }
