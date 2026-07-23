@@ -1,0 +1,471 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { useCallback, useEffect, useRef, useState } from "react";
+import styles from "./exhibit.module.css";
+
+type Language = "ja" | "en";
+type ViewMode = "presentation" | "document";
+
+const content = {
+  ja: {
+    languageLabel: "言語",
+    modeLabel: "表示",
+    japanese: "日本語",
+    english: "English",
+    presentation: "プレゼン",
+    document: "通常閲覧",
+    eyebrow: "研究・開発プロジェクト",
+    title: "英文法学習アプリ Syntablo",
+    subtitle: "見えない文法制約を操作可能な図形として外在化する試み",
+    summary:
+      "Syntabloは、英単語や句をブロックとして組み合わせながら、英文の構造を学ぶためのWebアプリケーションです。",
+    cards: [
+      {
+        label: "背景",
+        title: "英文法学習における課題",
+        text: "文法制約や文の階層構造は、言語による説明だけでは具体的に操作・観察することが難しい。",
+      },
+      {
+        label: "提案",
+        title: "制約と構造の可視化",
+        text: "語や句の結合条件を、ブロックの形、空所、入れ子構造として表現する。",
+      },
+      {
+        label: "実装",
+        title: "文法エンジンによる判定",
+        text: "語彙項目が持つ素性と結合条件を照合し、ブロック同士の結合可能性を判定する。",
+      },
+    ],
+    screenshotAlt: "Syntabloで英単語ブロックを組み合わせている画面",
+    screenshotCaption:
+      "単語や句をブロックとして操作し、結合可能性と階層構造を画面上に表示する。",
+    tryTitle: "実際のアプリ",
+    tryText: "隣のPCで操作できます",
+    openApp: "アプリを開く",
+    page: "1 / 5",
+    problem: {
+      section: "背景",
+      title: "英文法学習における課題",
+      subtitle:
+        "言語による説明だけでは、文法制約と文の階層構造を具体的に操作・観察することが難しい",
+      introduction:
+        "英文を構成するには、単語の意味や表面的な語順だけでなく、語と句の間にある制約や包含関係を扱う必要があります。",
+      explanationTitle: "従来的な文法説明の限界",
+      rule:
+        "「関係代名詞の後ろには、名詞が1つ欠けた文が置かれます。」",
+      explanationPoints: [
+        {
+          title: "抽象的な説明",
+          text: "学習者が理解して実際に使うのが難しい。",
+        },
+        {
+          title: "使用場面が不明確",
+          text: "いつ、何を伝えるための表現なのかが示されない。",
+        },
+        {
+          title: "意味内容を無視してしまうことが多い",
+          text: "学習者の目的は文法的に正しく作文することではなく、意味内容を英語で表現すること。",
+        },
+      ],
+      hierarchyTitle: "階層構造",
+      hierarchySummary:
+        "英文は単語の平面的な列ではなく、句が段階的に組み合わされた構造を持ちます。",
+      words: [
+        { word: "The", part: "冠詞", meaning: "その" },
+        { word: "teacher", part: "名詞", meaning: "先生" },
+        { word: "gave", part: "動詞", meaning: "与えた" },
+        { word: "the", part: "冠詞", meaning: "その" },
+        { word: "child", part: "名詞", meaning: "子ども" },
+        { word: "a", part: "冠詞", meaning: "一つの" },
+        { word: "book", part: "名詞", meaning: "本" },
+      ],
+      nounPhrase: "名詞句",
+      verbPhrase: "動詞句",
+      sentenceNode: "文",
+      page: "2 / 5",
+    },
+  },
+  en: {
+    languageLabel: "Language",
+    modeLabel: "View",
+    japanese: "日本語",
+    english: "English",
+    presentation: "Presentation",
+    document: "Document",
+    eyebrow: "Research and development project",
+    title: "Syntablo: An English Grammar Learning Application",
+    subtitle:
+      "An attempt to externalize invisible grammatical constraints as manipulable shapes",
+    summary:
+      "Syntablo is a web application for learning English sentence structure by combining words and phrases as blocks.",
+    cards: [
+      {
+        label: "Background",
+        title: "A problem in grammar learning",
+        text: "Grammatical constraints and hierarchical sentence structures are difficult to manipulate and observe through verbal explanations alone.",
+      },
+      {
+        label: "Approach",
+        title: "Visualizing constraints and structure",
+        text: "Combinatory constraints are represented through block shapes, open slots, and nested structures.",
+      },
+      {
+        label: "Implementation",
+        title: "Grammar-based validation",
+        text: "The system compares lexical features and combinatory constraints to determine whether blocks can be connected.",
+      },
+    ],
+    screenshotAlt: "The Syntablo interface showing English word blocks being combined",
+    screenshotCaption:
+      "Words and phrases are manipulated as blocks, while compatibility and hierarchical structure are displayed on screen.",
+    tryTitle: "Interactive application",
+    tryText: "Available on the adjacent PC",
+    openApp: "Open application",
+    page: "1 / 5",
+    problem: {
+      section: "Background",
+      title: "Problems in English Grammar Learning",
+      subtitle:
+        "Verbal explanations alone make grammatical constraints and hierarchical sentence structures difficult to manipulate and observe",
+      introduction:
+        "Constructing an English sentence requires more than lexical meaning and surface word order. Learners must also handle constraints and containment relations between words and phrases.",
+      explanationTitle: "Limitations of traditional grammar explanations",
+      rule:
+        "“A relative pronoun is followed by a clause in which one noun is missing.”",
+      explanationPoints: [
+        {
+          title: "Abstract explanations",
+          text: "They are difficult for learners to understand and use in practice.",
+        },
+        {
+          title: "Unclear context of use",
+          text: "The explanation does not show when or why the expression is used.",
+        },
+        {
+          title: "Meaning is often disregarded",
+          text: "The learner’s goal is not merely to produce grammatically correct sentences, but to express meaning in English.",
+        },
+      ],
+      hierarchyTitle: "Hierarchical structure",
+      hierarchySummary:
+        "A sentence is not a flat sequence of words; it consists of phrases combined at multiple levels.",
+      words: [
+        { word: "The", part: "Article", meaning: "その / the" },
+        { word: "teacher", part: "Noun", meaning: "先生 / teacher" },
+        { word: "gave", part: "Verb", meaning: "与えた / gave" },
+        { word: "the", part: "Article", meaning: "その / the" },
+        { word: "child", part: "Noun", meaning: "子ども / child" },
+        { word: "a", part: "Article", meaning: "一つの / a" },
+        { word: "book", part: "Noun", meaning: "本 / book" },
+      ],
+      nounPhrase: "Noun phrase",
+      verbPhrase: "Verb phrase",
+      sentenceNode: "Sentence",
+      page: "2 / 5",
+    },
+  },
+} as const;
+
+interface ExhibitFooterProps {
+  appLabel: string;
+  appText: string;
+  openAppLabel: string;
+  page: string;
+  showAppButton?: boolean;
+}
+
+function ExhibitFooter({
+  appLabel,
+  appText,
+  openAppLabel,
+  page,
+  showAppButton = false,
+}: ExhibitFooterProps) {
+  return (
+    <footer className={styles.slideFooter}>
+      <div className={styles.tryApp}>
+        <Image src="/QR_972221.png" width={76} height={76} alt="" />
+        <div>
+          <strong>{appLabel}</strong>
+          <span>{appText}</span>
+        </div>
+        {showAppButton && (
+          <Link href="/app" className={styles.primaryButton}>
+            {openAppLabel}
+          </Link>
+        )}
+      </div>
+      <span className={styles.pageNumber}>{page}</span>
+    </footer>
+  );
+}
+
+export default function ExhibitPage() {
+  const [language, setLanguage] = useState<Language>("ja");
+  const [viewMode, setViewMode] = useState<ViewMode>("presentation");
+  const [currentPage, setCurrentPage] = useState(0);
+  const wheelLockedRef = useRef(false);
+  const t = content[language];
+  const implementedPageCount = 2;
+
+  const movePage = useCallback((direction: 1 | -1) => {
+    setCurrentPage((page) =>
+      Math.min(Math.max(page + direction, 0), implementedPageCount - 1),
+    );
+  }, []);
+
+  useEffect(() => {
+    if (viewMode !== "presentation") return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (
+        target?.tagName === "BUTTON" ||
+        target?.tagName === "A" ||
+        target?.tagName === "INPUT"
+      ) {
+        return;
+      }
+
+      if (
+        event.key === "ArrowDown" ||
+        event.key === "ArrowRight" ||
+        event.key === " " ||
+        event.key === "Enter"
+      ) {
+        event.preventDefault();
+        movePage(1);
+      } else if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
+        event.preventDefault();
+        movePage(-1);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [movePage, viewMode]);
+
+  const handleWheel = (event: React.WheelEvent<HTMLElement>) => {
+    if (
+      viewMode !== "presentation" ||
+      wheelLockedRef.current ||
+      Math.abs(event.deltaY) < 30
+    ) {
+      return;
+    }
+
+    wheelLockedRef.current = true;
+    movePage(event.deltaY > 0 ? 1 : -1);
+    window.setTimeout(() => {
+      wheelLockedRef.current = false;
+    }, 650);
+  };
+
+  return (
+    <main
+      className={`${styles.exhibit} ${
+        viewMode === "presentation" ? styles.presentation : styles.document
+      }`}
+      onWheel={handleWheel}
+    >
+      <header className={styles.header}>
+        <div className={styles.headerContent}>
+          <Link href="/" className={styles.logo} aria-label="Syntablo ホーム">
+            <Image
+              src="/android-chrome-512x512.png"
+              width={30}
+              height={30}
+              alt=""
+              priority
+            />
+            <span>Syntablo</span>
+          </Link>
+
+          <div className={styles.controls}>
+            <div className={styles.controlGroup} aria-label={t.languageLabel}>
+              <span className={styles.controlLabel}>{t.languageLabel}</span>
+              <div className={styles.segmented}>
+                <button
+                  type="button"
+                  className={language === "ja" ? styles.active : ""}
+                  aria-pressed={language === "ja"}
+                  onClick={() => setLanguage("ja")}
+                >
+                  {t.japanese}
+                </button>
+                <button
+                  type="button"
+                  className={language === "en" ? styles.active : ""}
+                  aria-pressed={language === "en"}
+                  onClick={() => setLanguage("en")}
+                >
+                  {t.english}
+                </button>
+              </div>
+            </div>
+
+            <div className={styles.controlGroup} aria-label={t.modeLabel}>
+              <span className={styles.controlLabel}>{t.modeLabel}</span>
+              <div className={styles.segmented}>
+                <button
+                  type="button"
+                  className={viewMode === "presentation" ? styles.active : ""}
+                  aria-pressed={viewMode === "presentation"}
+                  onClick={() => setViewMode("presentation")}
+                >
+                  {t.presentation}
+                </button>
+                <button
+                  type="button"
+                  className={viewMode === "document" ? styles.active : ""}
+                  aria-pressed={viewMode === "document"}
+                  onClick={() => setViewMode("document")}
+                >
+                  {t.document}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <article
+        className={`${styles.slide} ${
+          currentPage === 0 ? styles.activeSlide : ""
+        }`}
+      >
+        <section className={styles.introduction}>
+          <div className={styles.titleBlock}>
+            <p className={styles.eyebrow}>{t.eyebrow}</p>
+            <h1>{t.title}</h1>
+            <p className={styles.subtitle}>{t.subtitle}</p>
+            <p className={styles.summary}>{t.summary}</p>
+          </div>
+
+          <figure className={styles.visual}>
+            <div className={styles.screenshotFrame}>
+              <Image
+                src="/screenshots/syntablo-hero.png"
+                alt={t.screenshotAlt}
+                width={1440}
+                height={811}
+                priority
+                sizes="(max-width: 900px) 100vw, 50vw"
+              />
+            </div>
+            <figcaption>{t.screenshotCaption}</figcaption>
+          </figure>
+        </section>
+
+        <section className={styles.cardGrid} aria-label={t.summary}>
+          {t.cards.map((card) => (
+            <article className={styles.card} key={card.label}>
+              <span>{card.label}</span>
+              <h2>{card.title}</h2>
+              <p>{card.text}</p>
+            </article>
+          ))}
+        </section>
+
+        <ExhibitFooter
+          appLabel={t.tryTitle}
+          appText={t.tryText}
+          openAppLabel={t.openApp}
+          page={t.page}
+          showAppButton
+        />
+      </article>
+
+      <article
+        className={`${styles.slide} ${styles.problemSlide} ${
+          currentPage === 1 ? styles.activeSlide : ""
+        }`}
+      >
+        <header className={styles.slideHeading}>
+          <p className={styles.eyebrow}>{t.problem.section}</p>
+          <h1>{t.problem.title}</h1>
+          <p className={styles.slideSubtitle}>{t.problem.subtitle}</p>
+          <p className={styles.slideIntroduction}>{t.problem.introduction}</p>
+        </header>
+
+        <div className={styles.problemGrid}>
+          <section className={`${styles.problemPanel} ${styles.explanationPanel}`}>
+            <div className={styles.panelHeading}>
+              <span className={styles.panelNumber}>01</span>
+              <div>
+                <h2>{t.problem.explanationTitle}</h2>
+              </div>
+            </div>
+
+            <blockquote className={styles.ruleExample}>{t.problem.rule}</blockquote>
+
+            <div className={styles.explanationPoints}>
+              {t.problem.explanationPoints.map((point) => (
+                <div className={styles.explanationPoint} key={point.title}>
+                  <strong>{point.title}</strong>
+                  <p>{point.text}</p>
+                </div>
+              ))}
+            </div>
+
+          </section>
+
+          <section className={styles.problemPanel}>
+            <div className={styles.panelHeading}>
+              <span className={styles.panelNumber}>02</span>
+              <div>
+                <h2>{t.problem.hierarchyTitle}</h2>
+                <p>{t.problem.hierarchySummary}</p>
+              </div>
+            </div>
+
+            <div className={styles.structureExample}>
+              <div
+                className={styles.proofTree}
+                aria-label="The teacher gave the child a book."
+              >
+                {t.problem.words.map((item) => (
+                  <div className={styles.lexicalItem} key={`${item.word}-${item.meaning}`}>
+                    <strong>{item.word}</strong>
+                    <span>{item.part}</span>
+                    <small>{item.meaning}</small>
+                  </div>
+                ))}
+
+                <div className={`${styles.constituent} ${styles.subjectPhrase}`}>
+                  <span>The teacher</span>
+                  <strong>{t.problem.nounPhrase}</strong>
+                </div>
+                <div className={`${styles.constituent} ${styles.recipientPhrase}`}>
+                  <span>the child</span>
+                  <strong>{t.problem.nounPhrase}</strong>
+                </div>
+                <div className={`${styles.constituent} ${styles.objectPhrase}`}>
+                  <span>a book</span>
+                  <strong>{t.problem.nounPhrase}</strong>
+                </div>
+                <div className={`${styles.constituent} ${styles.predicatePhrase}`}>
+                  <span>gave the child a book</span>
+                  <strong>{t.problem.verbPhrase}</strong>
+                </div>
+                <div className={`${styles.constituent} ${styles.sentencePhrase}`}>
+                  <span>The teacher gave the child a book.</span>
+                  <strong>{t.problem.sentenceNode}</strong>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <ExhibitFooter
+          appLabel={t.tryTitle}
+          appText={t.tryText}
+          openAppLabel={t.openApp}
+          page={t.problem.page}
+        />
+      </article>
+    </main>
+  );
+}
