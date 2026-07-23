@@ -44,7 +44,7 @@ const content = {
     tryTitle: "実際のアプリ",
     tryText: "隣のPCで操作できます",
     openApp: "アプリを開く",
-    page: "1 / 5",
+    page: "1 / 6",
     problem: {
       section: "背景",
       title: "英文法学習における課題",
@@ -84,7 +84,7 @@ const content = {
       nounPhrase: "名詞句",
       verbPhrase: "動詞句",
       sentenceNode: "文",
-      page: "2 / 5",
+      page: "2 / 6",
     },
     method: {
       section: "提案手法",
@@ -101,7 +101,7 @@ const content = {
         "完成した句は一つのまとまりとして、さらに大きな句や文へ組み込まれます。",
       hierarchyAlt:
         "Learning Englishを含む文を入れ子のブロックで表したSyntabloの画面",
-      page: "3 / 5",
+      page: "3 / 6",
     },
     learning: {
       section: "学習設計",
@@ -116,7 +116,7 @@ const content = {
       syntabloText: "意味内容と英語表現（形式）の対応を重視",
       screenshotAlt:
         "食べる動作とリンゴの画像を見てeat an appleを組み立てる教材画面",
-      page: "4 / 5",
+      page: "4 / 6",
     },
     validation: {
       section: "内部実装",
@@ -133,7 +133,36 @@ const content = {
       incorrectText: "3sing と non-3sing が衝突",
       correctAlt: "Sheとlikesのブロックが接続可能と判定された画面",
       incorrectAlt: "Sheとlikeのブロックが接続不可能と判定された画面",
-      page: "5 / 5",
+      page: "5 / 6",
+    },
+    scope: {
+      section: "現状と展望",
+      title: "現在の実装範囲と今後の課題",
+      subtitle:
+        "教材と文法エンジンの対応範囲を区別し、図形化の限界と今後の検証項目を整理する",
+      lessonsTitle: "教材として提供",
+      lessons: [
+        "可算・不可算名詞句",
+        "単数・複数、冠詞、限定性",
+        "疑問決定詞を含む名詞句",
+        "自動詞・他動詞・二重目的語動詞",
+      ],
+      engineTitle: "文法エンジンで試行可能",
+      engine: [
+        "主語と動詞の一致、代名詞の格",
+        "時制・進行・完了・受動",
+        "否定文・疑問文・法助動詞",
+        "修飾、従属節、関係詞、日本語訳",
+      ],
+      engineNote: "語彙主義・単一化文法を参考",
+      futureTitle: "限界と今後の検証",
+      future: [
+        "複数の品詞・用法を持つ語の図形化",
+        "意味的・語用論的な自然さの判定",
+        "より広い構文への対応",
+        "学習効果と英文産出への転移",
+      ],
+      page: "6 / 6",
     },
   },
   en: {
@@ -172,7 +201,7 @@ const content = {
     tryTitle: "Interactive application",
     tryText: "Available on the adjacent PC",
     openApp: "Open application",
-    page: "1 / 5",
+    page: "1 / 6",
     problem: {
       section: "Background",
       title: "Problems in English Grammar Learning",
@@ -212,7 +241,7 @@ const content = {
       nounPhrase: "Noun phrase",
       verbPhrase: "Verb phrase",
       sentenceNode: "Sentence",
-      page: "2 / 5",
+      page: "2 / 6",
     },
     method: {
       section: "Approach",
@@ -229,7 +258,7 @@ const content = {
         "A completed phrase becomes a single unit that can be inserted into a larger phrase or sentence.",
       hierarchyAlt:
         "The Syntablo interface showing a nested sentence containing Learning English",
-      page: "3 / 5",
+      page: "3 / 6",
     },
     learning: {
       section: "Learning design",
@@ -244,7 +273,7 @@ const content = {
       syntabloText: "Emphasis on the correspondence between meaning and English form",
       screenshotAlt:
         "A lesson screen in which the learner sees an eating action and an apple and builds eat an apple",
-      page: "4 / 5",
+      page: "4 / 6",
     },
     validation: {
       section: "Implementation",
@@ -261,7 +290,36 @@ const content = {
       incorrectText: "3sing conflicts with non-3sing",
       correctAlt: "The interface showing that the blocks She and likes are compatible",
       incorrectAlt: "The interface showing that the blocks She and like are incompatible",
-      page: "5 / 5",
+      page: "5 / 6",
+    },
+    scope: {
+      section: "Current status and outlook",
+      title: "Current Scope and Future Work",
+      subtitle:
+        "The scope of the lessons and grammar engine is distinguished from the limitations of visualization and questions for future evaluation",
+      lessonsTitle: "Available as lessons",
+      lessons: [
+        "Countable and uncountable noun phrases",
+        "Number, articles, and definiteness",
+        "Noun phrases with interrogative determiners",
+        "Intransitive, transitive, and ditransitive verbs",
+      ],
+      engineTitle: "Supported by the grammar engine",
+      engine: [
+        "Subject–verb agreement and pronoun case",
+        "Tense, progressive, perfect, and passive",
+        "Negation, questions, and modal auxiliaries",
+        "Modification, clauses, relatives, and translation",
+      ],
+      engineNote: "Inspired by lexicalist and unification-based grammar",
+      futureTitle: "Limitations and future evaluation",
+      future: [
+        "Words with multiple parts of speech and usages",
+        "Semantic and pragmatic naturalness",
+        "Support for a wider range of constructions",
+        "Learning outcomes and transfer to sentence production",
+      ],
+      page: "6 / 6",
     },
   },
 } as const;
@@ -306,7 +364,7 @@ export default function ExhibitPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const wheelLockedRef = useRef(false);
   const t = content[language];
-  const implementedPageCount = 5;
+  const implementedPageCount = 6;
 
   const movePage = useCallback((direction: 1 | -1) => {
     setCurrentPage((page) =>
@@ -768,6 +826,58 @@ export default function ExhibitPage() {
           appText={t.tryText}
           openAppLabel={t.openApp}
           page={t.validation.page}
+        />
+      </article>
+
+      <article
+        className={`${styles.slide} ${styles.scopeSlide} ${
+          currentPage === 5 ? styles.activeSlide : ""
+        }`}
+      >
+        <header className={styles.slideHeading}>
+          <p className={styles.eyebrow}>{t.scope.section}</p>
+          <h1>{t.scope.title}</h1>
+          <p className={styles.slideSubtitle}>{t.scope.subtitle}</p>
+        </header>
+
+        <div className={styles.scopeGrid}>
+          <section className={styles.scopeCard}>
+            <div className={styles.scopeIcon}>01</div>
+            <h2>{t.scope.lessonsTitle}</h2>
+            <ul>
+              {t.scope.lessons.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </section>
+
+          <section className={`${styles.scopeCard} ${styles.engineScopeCard}`}>
+            <div className={styles.scopeIcon}>02</div>
+            <h2>{t.scope.engineTitle}</h2>
+            <ul>
+              {t.scope.engine.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+            <p>{t.scope.engineNote}</p>
+          </section>
+
+          <section className={styles.scopeCard}>
+            <div className={styles.scopeIcon}>03</div>
+            <h2>{t.scope.futureTitle}</h2>
+            <ul>
+              {t.scope.future.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </section>
+        </div>
+
+        <ExhibitFooter
+          appLabel={t.tryTitle}
+          appText={t.tryText}
+          openAppLabel={t.openApp}
+          page={t.scope.page}
         />
       </article>
     </main>
