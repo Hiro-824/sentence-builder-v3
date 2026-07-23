@@ -1,4 +1,4 @@
-import { AppPageContent } from "./app-page-content";
+import MainLesson from "@/components/main-lesson/main-lesson";
 
 export const metadata = {
   alternates: { canonical: "/app" },
@@ -8,5 +8,5 @@ export const metadata = {
 };
 
 export default function AppHome() {
-  return <AppPageContent basePath="/app" />;
+  return <MainLesson />;
 }

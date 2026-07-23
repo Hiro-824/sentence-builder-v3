@@ -1,0 +1,442 @@
+.page {
+  min-height: 100vh;
+  color: #1a1a1a;
+  background: white;
+}
+
+.canvas {
+  position: fixed;
+  top: var(--top-bar-height);
+  left: 0;
+}
+
+.lessonLabel {
+  padding: 5px 10px;
+  color: #2675f5;
+  background: #edf4ff;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.curriculumButton {
+  padding: 7px 11px;
+  color: #4f5b6d;
+  background: #f7f8fa;
+  border: 1px solid #e2e6ec;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.curriculumButton:hover {
+  color: #2675f5;
+  background: #edf4ff;
+}
+
+.lessonPanel {
+  position: fixed;
+  z-index: 5;
+  top: calc(var(--top-bar-height) + 22px);
+  right: 24px;
+  width: 370px;
+  padding: 22px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #e1e6ed;
+  border-radius: 20px;
+  box-shadow: 0 16px 46px rgba(24, 35, 52, 0.13);
+  backdrop-filter: blur(12px);
+}
+
+.panelHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.eyebrow {
+  margin: 0 0 3px;
+  color: #2675f5;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.panelHeader h1 {
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: -0.03em;
+}
+
+.panelHeader > strong {
+  color: #6b7584;
+  font-size: 14px;
+}
+
+.progress {
+  height: 6px;
+  margin: 15px 0;
+  overflow: hidden;
+  background: #e6eaf0;
+  border-radius: 99px;
+}
+
+.progress span {
+  display: block;
+  height: 100%;
+  background: #2675f5;
+  transition: width 250ms ease;
+}
+
+.instruction {
+  margin: 0 0 12px;
+  color: #6c7685;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.pictureStage {
+  position: relative;
+  height: 250px;
+  overflow: hidden;
+  background: #f9f9f9;
+  border: 1px solid #e4e9f0;
+  border-radius: 16px;
+}
+
+.singlePicture,
+.pluralPictures {
+  position: absolute;
+  inset: 0;
+}
+
+.nounPicture {
+  position: absolute;
+  width: 135px;
+  height: 135px;
+  display: block;
+  background-color: #f9f9f9;
+  background-image: url("/lesson-assets/noun-sprite-v2.png");
+  background-size: 500% 400%;
+  background-repeat: no-repeat;
+  border-radius: 14px;
+}
+
+.singlePicture .nounPicture {
+  left: 95px;
+  top: 56px;
+}
+
+.pluralPictures .nounPicture {
+  width: 82px;
+  height: 82px;
+}
+
+.pluralPictures .nounPicture:nth-child(1) {
+  left: 105px;
+  top: 34px;
+}
+
+.pluralPictures .nounPicture:nth-child(2) {
+  left: 64px;
+  top: 121px;
+}
+
+.pluralPictures .nounPicture:nth-child(3) {
+  right: 80px;
+  top: 121px;
+}
+
+.pointer {
+  position: absolute;
+  right: -17px;
+  bottom: -17px;
+  object-fit: contain;
+  filter: drop-shadow(0 7px 8px rgba(30, 42, 60, 0.14));
+}
+
+.uncountablePicture {
+  position: absolute;
+  inset: 18px 58px;
+  display: block;
+  background-repeat: no-repeat;
+  border-radius: 14px;
+}
+
+.uncountablePicture {
+  background-image: url("/lesson-assets/uncountable-sprite.png");
+  background-size: 500% 200%;
+}
+
+.predicateScene {
+  position: absolute;
+  inset: 24px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.predicateTile,
+.entityTile {
+  position: relative;
+  flex: 0 0 128px;
+  height: 184px;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 5px 18px rgba(31, 55, 86, 0.08);
+}
+
+.arity0 .predicateTile {
+  flex-basis: 210px;
+}
+
+.predicatePicture,
+.assetEntity {
+  position: absolute;
+  inset: 5px;
+  display: block;
+  background-position: center;
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+.complementGroup {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.relationArrow {
+  flex: 0 0 18px;
+  color: #93a1b5;
+  font-size: 22px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.entityTile .complementNoun {
+  width: 118px;
+  height: 118px;
+  top: 33px;
+  left: 5px;
+}
+
+.arity2 {
+  gap: 2px;
+}
+
+.arity2 .complementGroup {
+  gap: 2px;
+}
+
+.arity2 .predicateTile,
+.arity2 .entityTile {
+  flex-basis: 82px;
+  height: 158px;
+  border-radius: 14px;
+}
+
+.arity2 .relationArrow {
+  flex-basis: 13px;
+  font-size: 16px;
+}
+
+.arity2 .entityTile .complementNoun {
+  width: 78px;
+  height: 78px;
+  top: 40px;
+  left: 2px;
+}
+
+.objectPointer {
+  position: absolute;
+  right: -10px;
+  bottom: -7px;
+  object-fit: contain;
+  filter: drop-shadow(0 5px 6px rgba(30, 42, 60, 0.12));
+}
+
+.whichScene,
+.whatScene,
+.whoseScene {
+  position: absolute;
+  inset: 0;
+}
+
+.whichScene .nounPicture {
+  width: 82px;
+  height: 82px;
+  top: 62px;
+}
+
+.whichScene .nounPicture:nth-child(1) {
+  left: 24px;
+}
+
+.whichScene .nounPicture:nth-child(2) {
+  left: 122px;
+}
+
+.whichScene .nounPicture:nth-child(3) {
+  left: 220px;
+}
+
+.whichScene strong,
+.whatScene strong,
+.whoseScene strong {
+  position: absolute;
+  color: #2675f5;
+  font-size: 44px;
+  line-height: 1;
+  text-shadow: 0 2px 0 white;
+}
+
+.whichScene strong {
+  top: 18px;
+  left: 154px;
+}
+
+.choosingPointer {
+  position: absolute;
+  left: 126px;
+  bottom: -8px;
+  transform: rotate(-12deg);
+  object-fit: contain;
+}
+
+.whatScene .nounPicture,
+.whatScene .silhouettePicture {
+  width: 145px;
+  height: 145px;
+  left: 88px;
+  top: 54px;
+}
+
+.silhouettePicture {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  font-size: 116px;
+  line-height: 1;
+  filter: brightness(0);
+  opacity: 0.78;
+}
+
+.whatScene strong {
+  top: 28px;
+  right: 74px;
+}
+
+.peopleRow {
+  position: absolute;
+  top: 22px;
+  left: 42px;
+  right: 42px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 48px;
+}
+
+.whoseScene .nounPicture {
+  width: 82px;
+  height: 82px;
+}
+
+.whoseObject {
+  left: 120px;
+  bottom: 22px;
+}
+
+.arrowRow {
+  position: absolute;
+  top: 92px;
+  left: 67px;
+  right: 67px;
+  display: flex;
+  justify-content: space-between;
+  color: #2675f5;
+  font-size: 31px;
+  font-weight: 800;
+}
+
+.whoseScene strong {
+  right: 68px;
+  bottom: 35px;
+}
+
+.translationRow {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 9px;
+  color: #687386;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.switch {
+  width: 40px;
+  height: 23px;
+  padding: 3px;
+  background: #cbd2dc;
+  border: 0;
+  border-radius: 99px;
+  cursor: pointer;
+}
+
+.switch span {
+  width: 17px;
+  height: 17px;
+  display: block;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 160ms ease;
+}
+
+.switchOn {
+  background: #2675f5;
+}
+
+.switchOn span {
+  transform: translateX(17px);
+}
+
+.feedback {
+  min-height: 44px;
+  margin-top: 11px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #ca6040;
+  font-size: 13px;
+}
+
+.correct {
+  color: #26955a;
+  font-size: 16px;
+}
+
+.nextButton {
+  width: 100%;
+  padding: 11px 16px;
+  color: white;
+  background: #2675f5;
+  border: 0;
+  border-radius: 11px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.loading {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  color: #667184;
+}
