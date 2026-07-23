@@ -118,6 +118,23 @@ const content = {
         "食べる動作とリンゴの画像を見てeat an appleを組み立てる教材画面",
       page: "4 / 5",
     },
+    validation: {
+      section: "内部実装",
+      title: "正誤判定の内部実装",
+      subtitle:
+        "ブロックデータにJSON形式で豊富な文法的情報を添付している。これらの衝突によって文法エラーを検知する。",
+      actualLabel: "主語 She の素性",
+      requiredLabel: "動詞が要求する主語",
+      correctTitle: "She + likes",
+      correctStatus: "単一化成功",
+      correctText: "agr.type がともに 3sing",
+      incorrectTitle: "She + like",
+      incorrectStatus: "単一化失敗",
+      incorrectText: "3sing と non-3sing が衝突",
+      correctAlt: "Sheとlikesのブロックが接続可能と判定された画面",
+      incorrectAlt: "Sheとlikeのブロックが接続不可能と判定された画面",
+      page: "5 / 5",
+    },
   },
   en: {
     languageLabel: "Language",
@@ -229,6 +246,23 @@ const content = {
         "A lesson screen in which the learner sees an eating action and an apple and builds eat an apple",
       page: "4 / 5",
     },
+    validation: {
+      section: "Implementation",
+      title: "How Grammatical Validation Works",
+      subtitle:
+        "Block data includes rich grammatical information in JSON format. Grammatical errors are detected when these features conflict.",
+      actualLabel: "Features of the subject She",
+      requiredLabel: "Subject required by the verb",
+      correctTitle: "She + likes",
+      correctStatus: "Unification succeeds",
+      correctText: "Both agr.type values are 3sing",
+      incorrectTitle: "She + like",
+      incorrectStatus: "Unification fails",
+      incorrectText: "3sing conflicts with non-3sing",
+      correctAlt: "The interface showing that the blocks She and likes are compatible",
+      incorrectAlt: "The interface showing that the blocks She and like are incompatible",
+      page: "5 / 5",
+    },
   },
 } as const;
 
@@ -272,7 +306,7 @@ export default function ExhibitPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const wheelLockedRef = useRef(false);
   const t = content[language];
-  const implementedPageCount = 4;
+  const implementedPageCount = 5;
 
   const movePage = useCallback((direction: 1 | -1) => {
     setCurrentPage((page) =>
@@ -633,6 +667,107 @@ export default function ExhibitPage() {
           appText={t.tryText}
           openAppLabel={t.openApp}
           page={t.learning.page}
+        />
+      </article>
+
+      <article
+        className={`${styles.slide} ${styles.validationSlide} ${
+          currentPage === 4 ? styles.activeSlide : ""
+        }`}
+      >
+        <header className={styles.slideHeading}>
+          <p className={styles.eyebrow}>{t.validation.section}</p>
+          <h1>{t.validation.title}</h1>
+          <p className={styles.slideSubtitle}>{t.validation.subtitle}</p>
+        </header>
+
+        <div className={styles.validationGrid}>
+          <section className={`${styles.validationCard} ${styles.correctCard}`}>
+            <div className={styles.validationHeading}>
+              <div>
+                <h2>{t.validation.correctTitle}</h2>
+                <p>{t.validation.correctText}</p>
+              </div>
+              <span>{t.validation.correctStatus}</span>
+            </div>
+
+            <figure className={styles.validationVisual}>
+              <Image
+                src="/screenshots/5-correct.png"
+                alt={t.validation.correctAlt}
+                width={1088}
+                height={756}
+                sizes="(max-width: 900px) 100vw, 50vw"
+              />
+            </figure>
+
+            <div className={styles.featureComparison}>
+              <div>
+                <span>{t.validation.actualLabel}</span>
+                <pre><code>{`{
+  "case": "nom",
+  "agr.type":
+    `}<strong className={styles.matchFeature}>&quot;3sing&quot;</strong>{`
+}`}</code></pre>
+              </div>
+              <b aria-hidden="true">+</b>
+              <div>
+                <span>{t.validation.requiredLabel}</span>
+                <pre><code>{`{
+  "case": "nom",
+  "agr.type":
+    `}<strong className={styles.matchFeature}>&quot;3sing&quot;</strong>{`
+}`}</code></pre>
+              </div>
+            </div>
+          </section>
+
+          <section className={`${styles.validationCard} ${styles.incorrectCard}`}>
+            <div className={styles.validationHeading}>
+              <div>
+                <h2>{t.validation.incorrectTitle}</h2>
+                <p>{t.validation.incorrectText}</p>
+              </div>
+              <span>{t.validation.incorrectStatus}</span>
+            </div>
+
+            <figure className={styles.validationVisual}>
+              <Image
+                src="/screenshots/5-incorrect.png"
+                alt={t.validation.incorrectAlt}
+                width={1088}
+                height={756}
+                sizes="(max-width: 900px) 100vw, 50vw"
+              />
+            </figure>
+
+            <div className={styles.featureComparison}>
+              <div>
+                <span>{t.validation.actualLabel}</span>
+                <pre><code>{`{
+  "case": "nom",
+  "agr.type":
+    `}<strong className={styles.conflictFeature}>&quot;3sing&quot;</strong>{`
+}`}</code></pre>
+              </div>
+              <b aria-hidden="true">+</b>
+              <div>
+                <span>{t.validation.requiredLabel}</span>
+                <pre><code>{`{
+  "case": "nom",
+  "agr.type":
+    `}<strong className={styles.conflictFeature}>&quot;non-3sing&quot;</strong>{`
+}`}</code></pre>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <ExhibitFooter
+          appLabel={t.tryTitle}
+          appText={t.tryText}
+          openAppLabel={t.openApp}
+          page={t.validation.page}
         />
       </article>
     </main>
