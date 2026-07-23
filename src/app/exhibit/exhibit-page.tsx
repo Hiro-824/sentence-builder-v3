@@ -44,7 +44,7 @@ const content = {
     tryTitle: "実際のアプリ",
     tryText: "隣のPCで操作できます",
     openApp: "アプリを開く",
-    page: "1 / 6",
+    page: "1 / 7",
     problem: {
       section: "背景",
       title: "英文法学習における課題",
@@ -84,7 +84,7 @@ const content = {
       nounPhrase: "名詞句",
       verbPhrase: "動詞句",
       sentenceNode: "文",
-      page: "2 / 6",
+      page: "2 / 7",
     },
     method: {
       section: "提案手法",
@@ -101,7 +101,7 @@ const content = {
         "完成した句は一つのまとまりとして、さらに大きな句や文へ組み込まれます。",
       hierarchyAlt:
         "Learning Englishを含む文を入れ子のブロックで表したSyntabloの画面",
-      page: "3 / 6",
+      page: "3 / 7",
     },
     learning: {
       section: "学習設計",
@@ -116,7 +116,34 @@ const content = {
       syntabloText: "意味内容と英語表現（形式）の対応を重視",
       screenshotAlt:
         "食べる動作とリンゴの画像を見てeat an appleを組み立てる教材画面",
-      page: "4 / 6",
+      page: "4 / 7",
+    },
+    modes: {
+      section: "学習モード",
+      title: "目的に合わせて選べる3つのモード",
+      subtitle:
+        "段階的な学習、対話練習、自由な試行を、一つの文法エンジン上で行える",
+      items: [
+        {
+          title: "レッスンモード",
+          text: "画像が表す意味を英語のブロックで組み立て、文法事項を段階的に学ぶ。",
+          image: "/screenshots/4.png",
+          alt: "画像を見ながら英文を組み立てるレッスンモード",
+        },
+        {
+          title: "会話モード",
+          text: "場面に応じた応答を組み立て、相手とのやり取りの中で英文を使う。",
+          image: "/screenshots/conversation-mode.png",
+          alt: "相手とのやり取りを練習する会話モード",
+        },
+        {
+          title: "サンドボックスモード",
+          text: "語彙や構文を自由に選び、ブロックの結合条件を確かめながら英文を試作する。",
+          image: "/screenshots/sandbox-mode.png",
+          alt: "英文を自由に組み立てるサンドボックスモード",
+        },
+      ],
+      page: "5 / 7",
     },
     validation: {
       section: "内部実装",
@@ -133,36 +160,52 @@ const content = {
       incorrectText: "3sing と non-3sing が衝突",
       correctAlt: "Sheとlikesのブロックが接続可能と判定された画面",
       incorrectAlt: "Sheとlikeのブロックが接続不可能と判定された画面",
-      page: "5 / 6",
+      page: "6 / 7",
     },
     scope: {
-      section: "現状と展望",
-      title: "現在の実装範囲と今後の課題",
+      section: "対応範囲",
+      title: "現在できること・できないこと",
       subtitle:
-        "教材と文法エンジンの対応範囲を区別し、図形化の限界と今後の検証項目を整理する",
-      lessonsTitle: "教材として提供",
-      lessons: [
-        "可算・不可算名詞句",
-        "単数・複数、冠詞、限定性",
-        "疑問決定詞を含む名詞句",
-        "自動詞・他動詞・二重目的語動詞",
+        "現在扱える文法と未対応の文法を具体化し、文法を図形で表現する方式自体の限界も示す",
+      supportedTitle: "できること",
+      supportedGroups: [
+        {
+          title: "名詞句",
+          text: "可算・不可算、単数・複数、冠詞、所有格、代名詞の格、形容詞による修飾",
+        },
+        {
+          title: "動詞と文",
+          text: "自動詞・他動詞・二重目的語、主語と動詞の一致、現在・過去、否定、疑問文",
+        },
+        {
+          title: "動詞の拡張",
+          text: "進行・完了・受動、法助動詞、to不定詞、動名詞",
+        },
+        {
+          title: "修飾と複文",
+          text: "副詞、前置詞句、that節、because節、wh疑問文、関係節と空所",
+        },
+        {
+          title: "出力",
+          text: "構造に基づく文法判定と日本語訳",
+        },
       ],
-      engineTitle: "文法エンジンで試行可能",
-      engine: [
-        "主語と動詞の一致、代名詞の格",
-        "時制・進行・完了・受動",
-        "否定文・疑問文・法助動詞",
-        "修飾、従属節、関係詞、日本語訳",
+      unsupportedTitle: "できないこと",
+      unsupportedGrammarTitle: "未対応の主な文法",
+      unsupportedGrammar: [
+        "and・or・butによる等位接続",
+        "if・unless・althoughなどの副詞節",
+        "than・asを伴う比較構文",
+        "存在構文、分裂文、付加疑問",
+        "省略、広範な句動詞・慣用構文",
       ],
-      engineNote: "語彙主義・単一化文法を参考",
-      futureTitle: "限界と今後の検証",
-      future: [
-        "複数の品詞・用法を持つ語の図形化",
-        "意味的・語用論的な自然さの判定",
-        "より広い構文への対応",
-        "学習効果と英文産出への転移",
+      limitationsTitle: "方式上の限界",
+      limitations: [
+        "複数の品詞を受け付けるスロットでも形は1つだけになり、候補を十分に視覚提示できない",
+        "意味的・語用論的に適切かどうかは判定できない",
+        "文法的でも不自然な文を排除できない",
       ],
-      page: "6 / 6",
+      page: "7 / 7",
     },
   },
   en: {
@@ -201,7 +244,7 @@ const content = {
     tryTitle: "Interactive application",
     tryText: "Available on the adjacent PC",
     openApp: "Open application",
-    page: "1 / 6",
+    page: "1 / 7",
     problem: {
       section: "Background",
       title: "Problems in English Grammar Learning",
@@ -241,7 +284,7 @@ const content = {
       nounPhrase: "Noun phrase",
       verbPhrase: "Verb phrase",
       sentenceNode: "Sentence",
-      page: "2 / 6",
+      page: "2 / 7",
     },
     method: {
       section: "Approach",
@@ -258,7 +301,7 @@ const content = {
         "A completed phrase becomes a single unit that can be inserted into a larger phrase or sentence.",
       hierarchyAlt:
         "The Syntablo interface showing a nested sentence containing Learning English",
-      page: "3 / 6",
+      page: "3 / 7",
     },
     learning: {
       section: "Learning design",
@@ -273,7 +316,34 @@ const content = {
       syntabloText: "Emphasis on the correspondence between meaning and English form",
       screenshotAlt:
         "A lesson screen in which the learner sees an eating action and an apple and builds eat an apple",
-      page: "4 / 6",
+      page: "4 / 7",
+    },
+    modes: {
+      section: "Learning modes",
+      title: "Three Modes for Different Learning Goals",
+      subtitle:
+        "Structured learning, conversation practice, and free exploration—all powered by the same grammar engine",
+      items: [
+        {
+          title: "Lesson mode",
+          text: "Build the meaning shown in an image with English blocks and learn grammar step by step.",
+          image: "/screenshots/4.png",
+          alt: "Lesson mode for building an English expression from an image",
+        },
+        {
+          title: "Conversation mode",
+          text: "Construct responses for each situation and use English within an unfolding interaction.",
+          image: "/screenshots/conversation-mode.png",
+          alt: "Conversation mode for practicing an interaction",
+        },
+        {
+          title: "Sandbox mode",
+          text: "Freely choose words and constructions and test sentences while checking how blocks can combine.",
+          image: "/screenshots/sandbox-mode.png",
+          alt: "Sandbox mode for freely building English sentences",
+        },
+      ],
+      page: "5 / 7",
     },
     validation: {
       section: "Implementation",
@@ -290,36 +360,52 @@ const content = {
       incorrectText: "3sing conflicts with non-3sing",
       correctAlt: "The interface showing that the blocks She and likes are compatible",
       incorrectAlt: "The interface showing that the blocks She and like are incompatible",
-      page: "5 / 6",
+      page: "6 / 7",
     },
     scope: {
-      section: "Current status and outlook",
-      title: "Current Scope and Future Work",
+      section: "Coverage",
+      title: "What the Current System Can and Cannot Do",
       subtitle:
-        "The scope of the lessons and grammar engine is distinguished from the limitations of visualization and questions for future evaluation",
-      lessonsTitle: "Available as lessons",
-      lessons: [
-        "Countable and uncountable noun phrases",
-        "Number, articles, and definiteness",
-        "Noun phrases with interrogative determiners",
-        "Intransitive, transitive, and ditransitive verbs",
+        "The current grammar coverage is distinguished from unsupported constructions and limitations of representing grammar through shapes",
+      supportedTitle: "Supported",
+      supportedGroups: [
+        {
+          title: "Noun phrases",
+          text: "Countability, number, articles, possessives, pronoun case, and adjectival modification",
+        },
+        {
+          title: "Verbs and sentences",
+          text: "Intransitive, transitive, and ditransitive verbs; agreement; present and past; negation; questions",
+        },
+        {
+          title: "Verb extensions",
+          text: "Progressive, perfect, passive, modal auxiliaries, to-infinitives, and gerunds",
+        },
+        {
+          title: "Modification and clauses",
+          text: "Adverbs, prepositional phrases, that- and because-clauses, wh-questions, and relative-clause gaps",
+        },
+        {
+          title: "Output",
+          text: "Structure-based grammatical validation and Japanese translation",
+        },
       ],
-      engineTitle: "Supported by the grammar engine",
-      engine: [
-        "Subject–verb agreement and pronoun case",
-        "Tense, progressive, perfect, and passive",
-        "Negation, questions, and modal auxiliaries",
-        "Modification, clauses, relatives, and translation",
+      unsupportedTitle: "Unsupported",
+      unsupportedGrammarTitle: "Major unsupported grammar",
+      unsupportedGrammar: [
+        "Coordination with and, or, and but",
+        "Adverbial clauses with if, unless, although, etc.",
+        "Comparative constructions with than and as",
+        "Existentials, clefts, and tag questions",
+        "Ellipsis and a broad range of phrasal or idiomatic constructions",
       ],
-      engineNote: "Inspired by lexicalist and unification-based grammar",
-      futureTitle: "Limitations and future evaluation",
-      future: [
-        "Words with multiple parts of speech and usages",
-        "Semantic and pragmatic naturalness",
-        "Support for a wider range of constructions",
-        "Learning outcomes and transfer to sentence production",
+      limitationsTitle: "Limitations of the approach",
+      limitations: [
+        "A slot has only one shape even when it accepts multiple parts of speech, limiting visual feedforward",
+        "Semantic and pragmatic appropriateness cannot be evaluated",
+        "Grammatical but unnatural sentences cannot be excluded",
       ],
-      page: "6 / 6",
+      page: "7 / 7",
     },
   },
 } as const;
@@ -364,7 +450,7 @@ export default function ExhibitPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const wheelLockedRef = useRef(false);
   const t = content[language];
-  const implementedPageCount = 6;
+  const implementedPageCount = 7;
 
   const movePage = useCallback((direction: 1 | -1) => {
     setCurrentPage((page) =>
@@ -729,8 +815,52 @@ export default function ExhibitPage() {
       </article>
 
       <article
-        className={`${styles.slide} ${styles.validationSlide} ${
+        className={`${styles.slide} ${styles.modesSlide} ${
           currentPage === 4 ? styles.activeSlide : ""
+        }`}
+      >
+        <header className={styles.slideHeading}>
+          <p className={styles.eyebrow}>{t.modes.section}</p>
+          <h1>{t.modes.title}</h1>
+          <p className={styles.slideSubtitle}>{t.modes.subtitle}</p>
+        </header>
+
+        <div className={styles.modesGrid}>
+          {t.modes.items.map((item, index) => (
+            <section className={styles.modeCard} key={item.title}>
+              <div className={styles.modeCardHeading}>
+                <span className={styles.panelNumber}>
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <div>
+                  <h2>{item.title}</h2>
+                  <p>{item.text}</p>
+                </div>
+              </div>
+              <figure className={styles.modeVisual}>
+                <Image
+                  src={item.image}
+                  alt={item.alt}
+                  width={index === 0 ? 1528 : index === 1 ? 1764 : 1974}
+                  height={index === 0 ? 1598 : index === 1 ? 770 : 1496}
+                  sizes="(max-width: 900px) 100vw, 33vw"
+                />
+              </figure>
+            </section>
+          ))}
+        </div>
+
+        <ExhibitFooter
+          appLabel={t.tryTitle}
+          appText={t.tryText}
+          openAppLabel={t.openApp}
+          page={t.modes.page}
+        />
+      </article>
+
+      <article
+        className={`${styles.slide} ${styles.validationSlide} ${
+          currentPage === 5 ? styles.activeSlide : ""
         }`}
       >
         <header className={styles.slideHeading}>
@@ -831,7 +961,7 @@ export default function ExhibitPage() {
 
       <article
         className={`${styles.slide} ${styles.scopeSlide} ${
-          currentPage === 5 ? styles.activeSlide : ""
+          currentPage === 6 ? styles.activeSlide : ""
         }`}
       >
         <header className={styles.slideHeading}>
@@ -841,35 +971,44 @@ export default function ExhibitPage() {
         </header>
 
         <div className={styles.scopeGrid}>
-          <section className={styles.scopeCard}>
-            <div className={styles.scopeIcon}>01</div>
-            <h2>{t.scope.lessonsTitle}</h2>
-            <ul>
-              {t.scope.lessons.map((item) => (
-                <li key={item}>{item}</li>
+          <section className={`${styles.scopeCard} ${styles.supportedCard}`}>
+            <div className={styles.scopeCardHeading}>
+              <div className={styles.scopeIcon}>01</div>
+              <h2>{t.scope.supportedTitle}</h2>
+            </div>
+            <div className={styles.supportedGroups}>
+              {t.scope.supportedGroups.map((group) => (
+                <div className={styles.supportedGroup} key={group.title}>
+                  <strong>{group.title}</strong>
+                  <p>{group.text}</p>
+                </div>
               ))}
-            </ul>
+            </div>
           </section>
 
-          <section className={`${styles.scopeCard} ${styles.engineScopeCard}`}>
-            <div className={styles.scopeIcon}>02</div>
-            <h2>{t.scope.engineTitle}</h2>
-            <ul>
-              {t.scope.engine.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-            <p>{t.scope.engineNote}</p>
-          </section>
+          <section className={`${styles.scopeCard} ${styles.unsupportedCard}`}>
+            <div className={styles.scopeCardHeading}>
+              <div className={styles.scopeIcon}>02</div>
+              <h2>{t.scope.unsupportedTitle}</h2>
+            </div>
 
-          <section className={styles.scopeCard}>
-            <div className={styles.scopeIcon}>03</div>
-            <h2>{t.scope.futureTitle}</h2>
-            <ul>
-              {t.scope.future.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
+            <div className={styles.unsupportedSection}>
+              <h3>{t.scope.unsupportedGrammarTitle}</h3>
+              <ul>
+                {t.scope.unsupportedGrammar.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div className={styles.limitationSection}>
+              <h3>{t.scope.limitationsTitle}</h3>
+              <ul>
+                {t.scope.limitations.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
           </section>
         </div>
 
