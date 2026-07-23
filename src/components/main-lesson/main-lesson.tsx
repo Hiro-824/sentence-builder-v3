@@ -24,7 +24,8 @@ interface LessonQuestion {
 }
 
 interface BuiltAnswer {
-  determiner: "a" | "the" | "some" | null;
+  blockId: string;
+  determiner: "a" | "an" | "the" | "some" | null;
   noun: string;
 }
 
@@ -79,7 +80,8 @@ const readBuiltAnswers = (blocks: Block[]): BuiltAnswer[] => {
   for (const block of blocks) {
     const sourceId = (block as Block & { sourceBlockId?: string }).sourceBlockId ?? "";
     const determiner =
-      sourceId === "det_a_an" ? "a"
+      sourceId === "det_a" ? "a"
+        : sourceId === "det_an" ? "an"
         : sourceId === "det_the" ? "the"
           : sourceId === "det_some" ? "some"
             : null;
@@ -88,13 +90,15 @@ const readBuiltAnswers = (blocks: Block[]): BuiltAnswer[] => {
       const nounChild = block.children.find(
         (child) => child.type === "placeholder" && child.content,
       )?.content as Block | undefined;
-      if (nounChild) answers.push({ determiner, noun: getSelectedToken(nounChild) });
+      if (nounChild) answers.push({ blockId: block.id, determiner, noun: getSelectedToken(nounChild) });
       continue;
     }
 
     if (sourceId.startsWith("lesson_noun_")) {
       const token = getSelectedToken(block);
-      if (token && !token.endsWith("(base)")) answers.push({ determiner: null, noun: token });
+      if (token && !token.endsWith("(base)")) {
+        answers.push({ blockId: block.id, determiner: null, noun: token });
+      }
     }
   }
   return answers;
@@ -128,7 +132,6 @@ export default function MainLesson() {
   const feedbackRef = useRef<Feedback>("idle");
   const wrongAttemptsRef = useRef(0);
   const lastEvaluationRef = useRef("");
-  const nextTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     setQuestions(buildQuestions());
@@ -169,17 +172,21 @@ export default function MainLesson() {
       activeQuestion.number === "plural"
         ? activeQuestion.noun.plural
         : activeQuestion.noun.singular;
-    const isCorrect = answers.some((answer) => {
+    const correctAnswer = answers.find((answer) => {
       if (answer.noun !== targetWord) return false;
       if (activeQuestion.definite) return answer.determiner === "the";
-      if (activeQuestion.number === "singular") return answer.determiner === "a";
+      if (activeQuestion.number === "singular") {
+        const expectedArticle = /^[aeiou]/i.test(activeQuestion.noun.singular) ? "an" : "a";
+        return answer.determiner === expectedArticle;
+      }
       return answer.determiner === null || answer.determiner === "some";
     });
 
-    if (isCorrect) {
+    if (correctAnswer) {
       setFeedback("correct");
+      setShowNext(true);
       if (wrongAttemptsRef.current === 0) setFirstTryCorrect((count) => count + 1);
-      nextTimerRef.current = window.setTimeout(() => setShowNext(true), 800);
+      renderer.emphasizeBlock(`frame-${correctAnswer.blockId}`);
     } else if (answers.some((answer) => answer.determiner !== null)) {
       const nextWrongAttempts = wrongAttemptsRef.current + 1;
       setWrongAttempts(nextWrongAttempts);
@@ -224,7 +231,6 @@ export default function MainLesson() {
       window.removeEventListener("resize", handleResize);
       renderer.destroy();
       rendererRef.current = null;
-      if (nextTimerRef.current) window.clearTimeout(nextTimerRef.current);
     };
   }, [evaluateCanvas, lessonBlocks, question]);
 
@@ -244,7 +250,6 @@ export default function MainLesson() {
   };
 
   const goNext = () => {
-    if (nextTimerRef.current) window.clearTimeout(nextTimerRef.current);
     if (questionIndex === QUESTION_COUNT - 1) {
       const nextCompleted = Array.from(new Set([...completedLessonIds, ACTIVE_LESSON_ID]));
       setCompletedLessonIds(nextCompleted);
@@ -259,18 +264,12 @@ export default function MainLesson() {
     lastEvaluationRef.current = "";
   };
 
-  const restart = () => {
-    setQuestions(buildQuestions());
-    setQuestionIndex(0);
-    setFeedback("idle");
-    setWrongAttempts(0);
-    setShowNext(false);
-    setFirstTryCorrect(0);
+  const openCurriculumFromCompletion = () => {
     setIsCompleteModalOpen(false);
-    lastEvaluationRef.current = "";
+    setIsCurriculumOpen(true);
   };
 
-  const openCurriculumFromCompletion = () => {
+  const goToNextLesson = () => {
     setIsCompleteModalOpen(false);
     setIsCurriculumOpen(true);
   };
@@ -341,11 +340,12 @@ export default function MainLesson() {
             {question.definite && (
               <Image
                 className={styles.pointer}
-                src="/lesson-assets/pointer.png"
+                src="/lesson-assets/pointer-opaque.png"
                 alt="指差している手"
                 width={160}
                 height={160}
                 priority
+                unoptimized
               />
             )}
           </div>
@@ -384,8 +384,8 @@ export default function MainLesson() {
         isOpen={isCompleteModalOpen}
         firstTryCorrect={firstTryCorrect}
         onClose={() => setIsCompleteModalOpen(false)}
-        onRestart={restart}
         onOpenCurriculum={openCurriculumFromCompletion}
+        onNextLesson={goToNextLesson}
       />
       <LessonCurriculumModal
         isOpen={isCurriculumOpen}

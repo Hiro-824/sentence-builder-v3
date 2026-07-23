@@ -2,7 +2,7 @@ import { Generator, NounConfig } from "@/grammar/generator";
 import { Block } from "@/models/block";
 import { det, noun } from "@/models/grammar-entities";
 import { LESSON_NOUNS } from "./lesson-nouns";
-import { blockA, blockThe } from "./determiners";
+import { blockA, blockAn, blockThe } from "./determiners";
 
 const generator = new Generator();
 
@@ -65,7 +65,6 @@ export const blockSome: Block = {
 export const getLessonBlocks = (noun: string, distractor: string): Block[] => {
   const nounBlock = lessonNounBlocks.get(noun);
   const distractorBlock = lessonNounBlocks.get(distractor);
-  return [blockA, blockThe, blockSome, nounBlock, distractorBlock]
+  return [blockA, blockAn, blockThe, blockSome, nounBlock, distractorBlock]
     .filter((block): block is Block => Boolean(block));
 };
-

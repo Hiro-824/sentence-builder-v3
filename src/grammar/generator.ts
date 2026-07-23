@@ -29,6 +29,7 @@ export interface NounConfig {
     isCountable: boolean;
     singularForm: string;
     pluralForm?: string;
+    initialSound?: 'vowel' | 'consonant';
     translation: string;
     pluralTranslation?: string;
     color?: string;
@@ -455,9 +456,17 @@ export class Generator {
         }
     }
 
-    private createSingularCountableNounCategory(translation: string): Phrase {
+    private createSingularCountableNounCategory(
+        translation: string,
+        initialSound: 'vowel' | 'consonant',
+    ): Phrase {
         return {
-            head: { type: noun, agr: { type: "3sing" } },
+            head: {
+                type: noun,
+                agr: { type: "3sing" },
+                count: true,
+                phonology: { initialSound },
+            },
             translationTemplates: {
                 default: [translation]
             }
@@ -500,6 +509,8 @@ export class Generator {
 
     createNounBlock(config: NounConfig): Block {
         const { id, isCountable, singularForm, translation, pluralTranslation } = config;
+        const initialSound = config.initialSound
+            ?? (/^[aeiou]/i.test(singularForm) ? 'vowel' : 'consonant');
         const color = config.color || "dodgerblue";
         let words: Word[];
         let children: Block['children'];
@@ -509,7 +520,7 @@ export class Generator {
             words = [
                 {
                     token: singularForm,
-                    categories: [this.createSingularCountableNounCategory(translation)]
+                    categories: [this.createSingularCountableNounCategory(translation, initialSound)]
                 },
                 {
                     token: plural,

@@ -27,7 +27,7 @@ export const LESSON_CURRICULUM: CurriculumUnit[] = [
         id: ACTIVE_LESSON_ID,
         order: 1,
         title: "可算名詞句練習",
-        description: "a・the・someと、名詞の単数形・複数形を組み合わせます。",
+        description: "a・an・the・someと、名詞の単数形・複数形を組み合わせます。",
         available: true,
       },
       {
@@ -90,4 +90,3 @@ export const LESSON_CURRICULUM: CurriculumUnit[] = [
     ],
   },
 ];
-

@@ -5,16 +5,16 @@ import styles from "@/components/scenario-complete-modal.module.css";
 interface LessonCompleteModalProps {
   isOpen: boolean;
   firstTryCorrect: number;
-  onRestart: () => void;
   onOpenCurriculum: () => void;
+  onNextLesson: () => void;
   onClose: () => void;
 }
 
 export default function LessonCompleteModal({
   isOpen,
   firstTryCorrect,
-  onRestart,
   onOpenCurriculum,
+  onNextLesson,
   onClose,
 }: LessonCompleteModalProps) {
   if (!isOpen) return null;
@@ -31,14 +31,11 @@ export default function LessonCompleteModal({
             10問すべて完成しました。はじめから正解できたのは {firstTryCorrect} / 10 問です。
           </p>
           <div className={styles.actions}>
-            <button type="button" className={`${styles.button} ${styles.secondaryButton}`} onClick={onClose}>
-              完成したブロックを見る
-            </button>
-            <button type="button" className={`${styles.button} ${styles.secondaryButton}`} onClick={onRestart}>
-              もう一度練習する
-            </button>
-            <button type="button" className={`${styles.button} ${styles.primaryButton}`} onClick={onOpenCurriculum}>
+            <button type="button" className={`${styles.button} ${styles.secondaryButton}`} onClick={onOpenCurriculum}>
               レッスン一覧へ
+            </button>
+            <button type="button" className={`${styles.button} ${styles.primaryButton}`} onClick={onNextLesson}>
+              次のレッスンへ
             </button>
           </div>
         </div>
@@ -46,4 +43,3 @@ export default function LessonCompleteModal({
     </div>
   );
 }
-

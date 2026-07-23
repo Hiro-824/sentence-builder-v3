@@ -3,7 +3,7 @@ import { allPronounBlocks } from "./pronouns";
 import { allNounBlocks } from "./nouns";
 import { allVerbBlocks } from "./verbs";
 import { allAdjectiveBlocks } from "./adjectives";
-import { blockA, blockMany, blockS, blockThe } from "./determiners";
+import { blockA, blockAn, blockMany, blockS, blockThe } from "./determiners";
 import { allAuxiliaryBlocks } from "./auxiliaries";
 import { allPrepositionBlocks } from "./prepositions";
 import { blockBecause, blockHowManySentence, blockHowSentence, blockThat, blockWhatDetSentence, blockWhatSentence, blockWhereSentence, blockWhichDetSentence, blockWhichSentence, blockWhoseDetSentence, blockWhoSentence, blockWhoseSentence } from "./complementizers";
@@ -130,6 +130,7 @@ export const blockList = {
     ],
     "冠詞": [
         blockA,
+        blockAn,
         blockThe,
         blockMany,
         blockS,

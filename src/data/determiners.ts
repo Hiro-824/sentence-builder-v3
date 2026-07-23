@@ -36,8 +36,11 @@ export const blockThe: Block = {
     }]
 }
 
-export const blockA: Block = {
-    id: "det_a_an",
+const createIndefiniteArticleBlock = (
+    article: "a" | "an",
+    initialSound: "consonant" | "vowel",
+): Block => ({
+    id: `det_${article}`,
     x: 0,
     y: 0,
     words: [{
@@ -45,7 +48,12 @@ export const blockA: Block = {
         categories: [{
             head: { type: det, agr: { type: "3sing" }, determinered: true },
             right: [{
-                head: { type: noun, agr: { type: "3sing" }, count: true }
+                head: {
+                    type: noun,
+                    agr: { type: "3sing" },
+                    count: true,
+                    phonology: { initialSound },
+                }
             }],
             translationTemplates: {
                 default: ["", { path: ["right", 0], key: "default" }]
@@ -58,7 +66,7 @@ export const blockA: Block = {
         id: "head",
         hidden: false,
         type: "text",
-        content: "a/an",
+        content: article,
     },
     {
         id: "complement",
@@ -66,7 +74,10 @@ export const blockA: Block = {
         type: "placeholder",
         content: null,
     }]
-}
+});
+
+export const blockA = createIndefiniteArticleBlock("a", "consonant");
+export const blockAn = createIndefiniteArticleBlock("an", "vowel");
 
 export const blockS: Block = {
     id: "s",
