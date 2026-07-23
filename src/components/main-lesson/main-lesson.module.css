@@ -35,25 +35,6 @@
   background: #edf4ff;
 }
 
-.subNavigation {
-  display: flex;
-  gap: 8px;
-}
-
-.subNavigation a {
-  padding: 8px 11px;
-  color: #606b7b;
-  font-size: 13px;
-  font-weight: 700;
-  text-decoration: none;
-  border-radius: 8px;
-}
-
-.subNavigation a:hover {
-  color: #2675f5;
-  background: #edf4ff;
-}
-
 .lessonPanel {
   position: fixed;
   z-index: 5;
@@ -120,7 +101,7 @@
   position: relative;
   height: 250px;
   overflow: hidden;
-  background: #f8faff;
+  background: #f9f9f9;
   border: 1px solid #e4e9f0;
   border-radius: 16px;
 }
@@ -136,7 +117,8 @@
   width: 135px;
   height: 135px;
   display: block;
-  background-image: url("/lesson-assets/noun-sprite.png");
+  background-color: #f9f9f9;
+  background-image: url("/lesson-assets/noun-sprite-v2.png");
   background-size: 500% 400%;
   background-repeat: no-repeat;
   border-radius: 14px;
@@ -148,23 +130,23 @@
 }
 
 .pluralPictures .nounPicture {
-  width: 105px;
-  height: 105px;
+  width: 82px;
+  height: 82px;
 }
 
 .pluralPictures .nounPicture:nth-child(1) {
-  left: 110px;
-  top: 7px;
+  left: 105px;
+  top: 34px;
 }
 
 .pluralPictures .nounPicture:nth-child(2) {
-  left: 48px;
-  top: 126px;
+  left: 64px;
+  top: 121px;
 }
 
 .pluralPictures .nounPicture:nth-child(3) {
-  right: 48px;
-  top: 126px;
+  right: 80px;
+  top: 121px;
 }
 
 .pointer {

@@ -7,9 +7,7 @@ import { Renderer } from "@/renderer/renderer";
 import { blockList } from "@/data/blocks";
 import { DEFAULT_SCENARIO_ID as DEFAULT_SCENARIO_KEY, SCENARIO_OPTIONS, getScenarioById, greetingScenario } from "@/data/scenarios";
 import TopBar from "./top-bar";
-import AuthModal from "./auth-modal";
-import { createClient } from "@/utils/supabase/client";
-import { User } from "@supabase/supabase-js";
+import { useAppAuth } from "./app-auth-provider";
 import { getProjectData, saveProjectData } from '@/utils/supabase/projects';
 import ProjectListModal from "./project-list-modal";
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -143,9 +141,13 @@ interface SentenceBuilderProps {
 }
 
 const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [showAuthModal, setShowAuthModal] = useState(false);
-    const [user, setUser] = useState<User | null>(null);
+    const {
+        hasAccess: isAuthenticated,
+        user,
+        isAuthModalOpen: showAuthModal,
+        openAuthModal,
+        signOut,
+    } = useAppAuth();
 
     const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
     const [isDirty, setIsDirty] = useState(true);
@@ -155,10 +157,12 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     const router = useRouter();
     const searchParams = useSearchParams();
     const routeBase = basePath ?? "/app";
-    const enableModeSwitch = routeBase === "/app" || routeBase === "/app/scenario";
+    const enableModeSwitch = true;
     const shouldEnableSidebarDropDelete = enableModeSwitch;
 
-    const [mode, setMode] = useState<"scenario" | "sandbox">(enableModeSwitch ? "scenario" : "sandbox");
+    const [mode, setMode] = useState<"scenario" | "sandbox">(
+        routeBase === "/app/scenario" ? "scenario" : "sandbox",
+    );
     const [isMobileViewport, setIsMobileViewport] = useState(false);
     const [isPortrait, setIsPortrait] = useState(false);
     const [scenarioId, setScenarioId] = useState<string>(DEFAULT_SCENARIO_KEY);
@@ -171,9 +175,7 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     const [isScenarioSelectorOpen, setIsScenarioSelectorOpen] = useState(false);
     const [scenarioSelectorConfig, setScenarioSelectorConfig] = useState(DEFAULT_SCENARIO_SELECTOR_CONFIG);
 
-    const getEffectiveMode = () => enableModeSwitch
-        ? (isMobileViewport ? "scenario" : mode)
-        : "sandbox";
+    const getEffectiveMode = () => mode;
 
     const svgContainerRef = useRef(null);
     const rendererRef = useRef<Renderer | null>(null);
@@ -183,8 +185,6 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     const scenarioSelectorHandlerRef = useRef<(option: ScenarioOption | null) => void>(null);
     const skipScenarioResetRef = useRef(false);
     const pendingProjectIdRef = useRef<string | null>(null);
-    const supabase = createClient();
-
     const getAiTutorStorageKeys = useCallback((projectId?: string | null) => {
         const projectKey = (projectId ?? "").trim() || "default";
         return {
@@ -313,35 +313,6 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     }, [applyScenarioSelection, scenario, scenarioId]);
 
     useEffect(() => {
-        const checkAuth = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                setUser(user);
-                setIsAuthenticated(true);
-            } else {
-                setShowAuthModal(true);
-            }
-        };
-        checkAuth();
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            async (event, session) => {
-                if (session?.user) {
-                    setUser(session.user);
-                    setIsAuthenticated(true);
-                    setShowAuthModal(false);
-                } else {
-                    setUser(null);
-                    setIsAuthenticated(false);
-                    setShowAuthModal(true);
-                }
-            }
-        );
-
-        return () => subscription.unsubscribe();
-    }, [supabase.auth]);
-
-    useEffect(() => {
         if (!isAuthenticated) {
             if (rendererRef.current) {
                 rendererRef.current.destroy();
@@ -434,26 +405,6 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
         }
     }, [user?.id, currentProjectId]);
 
-    const handleAuthSuccess = () => {
-        setIsAuthenticated(true);
-        setShowAuthModal(false);
-    };
-
-    const handleAnonymousAccess = () => {
-        setIsAuthenticated(true);
-        setShowAuthModal(false);
-        setCurrentProjectId(null);
-        openScenarioSelector((option) => {
-            const nextId = option ? option.id : DEFAULT_SCENARIO_KEY;
-            const nextScenario = option ? option.scenario : FALLBACK_SCENARIO;
-            applyScenarioSelection(option ? nextId : DEFAULT_SCENARIO_KEY, nextScenario, { clearCanvas: true, resetBlocks: true });
-        }, {
-            title: "シナリオを選んでスタート",
-            description: "練習したいシナリオを選択してください。",
-            allowNoScenario: false,
-        });
-    };
-
     const handleSignOut = async () => {
         loggingServiceRef.current?.logEvent('SIGN_OUT', {});
 
@@ -468,9 +419,7 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
             rendererRef.current = null;
         }
 
-        await supabase.auth.signOut();
-        setUser(null);
-        setIsAuthenticated(false);
+        await signOut();
         setCurrentProjectId(null);
         setScenarioId(DEFAULT_SCENARIO_KEY);
         setScenario(DEFAULT_SCENARIO);
@@ -484,11 +433,10 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
         pendingProjectIdRef.current = null;
         setAiTutorSyncVersion(0);
         router.push(routeBase, { scroll: false });
-        setShowAuthModal(true);
     };
 
     const handleShowAuthModal = () => {
-        setShowAuthModal(true);
+        openAuthModal();
     };
 
     const handleSaveProject = async () => {
@@ -761,7 +709,6 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
                 onSave={handleSaveProject}
                 onShowProjects={() => setIsProjectListOpen(true)}
                 currentProjectId={currentProjectId}
-                documentURL="https://sentence-builder-docs.hirodevs.com/docs/Introduction/intro"
                 showModeSwitch={!isMobileViewport && enableModeSwitch}
                 mode={effectiveMode}
                 onModeChange={(nextMode) => {
@@ -769,6 +716,7 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
                         router.push("/app");
                         return;
                     }
+                    router.push(`/app/${nextMode}`);
                     setMode(nextMode);
                 }}
             />
@@ -799,12 +747,6 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
             )}
 
             {isProjectLoading && <Loader />}
-
-            <AuthModal
-                isOpen={showAuthModal}
-                onAuthSuccess={handleAuthSuccess}
-                onAnonymousAccess={handleAnonymousAccess}
-            />
 
             <ProjectListModal
                 isOpen={isProjectListOpen}

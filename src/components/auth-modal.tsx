@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, type CSSProperties } from "react";
+import { useState, useEffect, useMemo, type CSSProperties } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
 
@@ -60,7 +60,7 @@ const AuthModal = ({ isOpen, onAuthSuccess, onAnonymousAccess }: AuthModalProps)
     () => typeof window !== "undefined" && window.innerWidth <= MOBILE_MAX_WIDTH
   );
 
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
     const getUser = async () => {

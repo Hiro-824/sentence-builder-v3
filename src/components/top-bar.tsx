@@ -15,13 +15,14 @@ interface TopBarProps {
     onSave: () => void;
     onShowProjects: () => void;
     currentProjectId: string | null;
-    documentURL: string;
+    showProjectActions?: boolean;
+    contextActions?: React.ReactNode;
     showModeSwitch?: boolean;
     mode?: BuilderMode;
     onModeChange?: (mode: BuilderMode) => void;
 }
 
-const TopBar = ({ user, onSignOut, onShowAuthModal, isDirty, isSaving, onSave, onShowProjects, currentProjectId, documentURL, showModeSwitch, mode = "scenario", onModeChange }: TopBarProps) => {
+const TopBar = ({ user, onSignOut, onShowAuthModal, isDirty, isSaving, onSave, onShowProjects, currentProjectId, showProjectActions = true, contextActions, showModeSwitch, mode = "scenario", onModeChange }: TopBarProps) => {
     const [showUserMenu, setShowUserMenu] = useState(false);
     const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -100,7 +101,7 @@ const TopBar = ({ user, onSignOut, onShowAuthModal, isDirty, isSaving, onSave, o
                     />
                     <span>Syntablo</span>
                 </Link>
-                {user && currentProjectId && (
+                {showProjectActions && user && currentProjectId && (
                     <div style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -117,7 +118,7 @@ const TopBar = ({ user, onSignOut, onShowAuthModal, isDirty, isSaving, onSave, o
                         </span>
                     </div>
                 )}
-                {user && (
+                {showProjectActions && user && (
                     <button
                         className="top-bar-button"
                         onMouseEnter={(e) => handleButtonHover(e, true)}
@@ -127,17 +128,7 @@ const TopBar = ({ user, onSignOut, onShowAuthModal, isDirty, isSaving, onSave, o
                         プロジェクト一覧
                     </button>
                 )}
-                <a
-                    href={documentURL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="top-bar-button top-bar-docs"
-                    style={{ textDecoration: 'none' }}
-                    onMouseEnter={(e) => handleButtonHover(e, true)}
-                    onMouseLeave={(e) => handleButtonHover(e, false)}
-                >
-                    ドキュメント
-                </a>
+                {contextActions}
                 {showModeSwitch && (
                     <div style={{
                         display: 'flex',
@@ -149,9 +140,9 @@ const TopBar = ({ user, onSignOut, onShowAuthModal, isDirty, isSaving, onSave, o
                         border: '1px solid #e5e7eb'
                     }}>
                         {[
-                            { id: 'lesson', label: 'Lesson' },
-                            { id: 'scenario', label: 'Scenario' },
-                            { id: 'sandbox', label: 'Sandbox' },
+                            { id: 'lesson', label: 'メイン学習' },
+                            { id: 'scenario', label: '会話練習' },
+                            { id: 'sandbox', label: '自由練習' },
                         ].map((item) => {
                             const isActive = mode === item.id;
                             return (
@@ -180,7 +171,7 @@ const TopBar = ({ user, onSignOut, onShowAuthModal, isDirty, isSaving, onSave, o
                 )}
             </div>
             <div className="top-bar-right">
-                {user && <button
+                {showProjectActions && user && <button
                     className="top-bar-save-button"
                     disabled={!isDirty || isSaving}
                     onMouseEnter={(e) => handleSaveButtonHover(e, true)}

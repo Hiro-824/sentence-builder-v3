@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import * as d3 from "d3";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Renderer } from "@/renderer/renderer";
@@ -11,6 +11,8 @@ import { getLessonBlocks } from "@/data/lesson-blocks";
 import { ACTIVE_LESSON_ID } from "@/data/lesson-curriculum";
 import LessonCompleteModal from "@/components/lesson-complete-modal/lesson-complete-modal";
 import LessonCurriculumModal from "@/components/lesson-curriculum-modal/lesson-curriculum-modal";
+import TopBar from "@/components/top-bar";
+import { useAppAuth } from "@/components/app-auth-provider";
 import styles from "./main-lesson.module.css";
 
 type NumberValue = "singular" | "plural";
@@ -104,6 +106,69 @@ const readBuiltAnswers = (blocks: Block[]): BuiltAnswer[] => {
   return answers;
 };
 
+const getSourceBlockId = (block: Block): string =>
+  (block as Block & { sourceBlockId?: string }).sourceBlockId ?? "";
+
+let speechEngineWarmed = false;
+
+const getPreferredEnglishVoice = (voices: SpeechSynthesisVoice[]) =>
+  voices.find((voice) => /google/i.test(voice.name) && /^en(-|_)/i.test(voice.lang))
+  ?? voices.find((voice) => /^en-US$/i.test(voice.lang))
+  ?? voices.find((voice) => /^en(-|_)/i.test(voice.lang))
+  ?? null;
+
+const speakPhrase = (phrase: string) => {
+  if (!("speechSynthesis" in window)) return;
+  const synthesis = window.speechSynthesis;
+  let hasStarted = false;
+
+  const start = () => {
+    if (hasStarted) return;
+    hasStarted = true;
+    synthesis.removeEventListener("voiceschanged", start);
+    const voice = getPreferredEnglishVoice(synthesis.getVoices());
+
+    const speakActualPhrase = () => {
+      const utterance = new SpeechSynthesisUtterance(phrase);
+      utterance.lang = voice?.lang ?? "en-US";
+      utterance.voice = voice;
+      utterance.rate = 0.82;
+      synthesis.cancel();
+      synthesis.speak(utterance);
+    };
+
+    if (speechEngineWarmed) {
+      speakActualPhrase();
+      return;
+    }
+
+    speechEngineWarmed = true;
+    const warmup = new SpeechSynthesisUtterance(".");
+    warmup.lang = voice?.lang ?? "en-US";
+    warmup.voice = voice;
+    warmup.volume = 0;
+    warmup.rate = 2;
+    let didFinishWarmup = false;
+    const finishWarmup = () => {
+      if (didFinishWarmup) return;
+      didFinishWarmup = true;
+      speakActualPhrase();
+    };
+    warmup.onend = finishWarmup;
+    warmup.onerror = finishWarmup;
+    synthesis.cancel();
+    synthesis.speak(warmup);
+    window.setTimeout(finishWarmup, 350);
+  };
+
+  if (synthesis.getVoices().length > 0) {
+    start();
+  } else {
+    synthesis.addEventListener("voiceschanged", start, { once: true });
+    window.setTimeout(start, 1200);
+  }
+};
+
 const NounPicture = ({ noun }: { noun: LessonNoun }) => (
   <span
     className={styles.nounPicture}
@@ -116,6 +181,8 @@ const NounPicture = ({ noun }: { noun: LessonNoun }) => (
 );
 
 export default function MainLesson() {
+  const router = useRouter();
+  const { user, openAuthModal, signOut } = useAppAuth();
   const [questions, setQuestions] = useState<LessonQuestion[]>([]);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [feedback, setFeedback] = useState<Feedback>("idle");
@@ -134,6 +201,9 @@ export default function MainLesson() {
   const lastEvaluationRef = useRef("");
 
   useEffect(() => {
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.getVoices();
+    }
     setQuestions(buildQuestions());
     try {
       const stored = window.localStorage.getItem(COMPLETED_LESSONS_STORAGE_KEY);
@@ -164,6 +234,17 @@ export default function MainLesson() {
     const answers = readBuiltAnswers(renderer.blocks as Block[]);
     if (answers.length === 0) return;
 
+    const hasIncompleteSome =
+      !activeQuestion.definite
+      && activeQuestion.number === "plural"
+      && (renderer.blocks as Block[]).some((block) =>
+        getSourceBlockId(block) === "det_some"
+        && block.children.some((child) =>
+          child.type === "placeholder" && !child.content
+        )
+      );
+    if (hasIncompleteSome) return;
+
     const signature = JSON.stringify(answers);
     if (signature === lastEvaluationRef.current) return;
     lastEvaluationRef.current = signature;
@@ -186,7 +267,10 @@ export default function MainLesson() {
       setFeedback("correct");
       setShowNext(true);
       if (wrongAttemptsRef.current === 0) setFirstTryCorrect((count) => count + 1);
-      renderer.emphasizeBlock(`frame-${correctAnswer.blockId}`);
+      renderer.celebrateBlock(`frame-${correctAnswer.blockId}`);
+      speakPhrase(
+        [correctAnswer.determiner, correctAnswer.noun].filter(Boolean).join(" "),
+      );
     } else if (answers.some((answer) => answer.determiner !== null)) {
       const nextWrongAttempts = wrongAttemptsRef.current + 1;
       setWrongAttempts(nextWrongAttempts);
@@ -285,32 +369,35 @@ export default function MainLesson() {
 
   return (
     <main className={styles.page}>
-      <nav className="top-bar-nav">
-        <div className="top-bar-left">
-          <Link href="/" className="top-bar-logo" style={{ textDecoration: "none" }}>
-            <Image
-              src="/android-chrome-512x512.png"
-              alt="Syntablo icon"
-              className="top-bar-logo-icon"
-              width={28}
-              height={28}
-            />
-            <span>Syntablo</span>
-          </Link>
-          <span className={styles.lessonLabel}>Lesson 1</span>
-          <button
-            type="button"
-            className={styles.curriculumButton}
-            onClick={() => setIsCurriculumOpen(true)}
-          >
-            レッスン一覧
-          </button>
-        </div>
-        <div className={styles.subNavigation}>
-          <Link href="/app/sandbox">Sandbox</Link>
-          <Link href="/app/scenario">Scenario</Link>
-        </div>
-      </nav>
+      <TopBar
+        user={user}
+        onSignOut={() => void signOut()}
+        onShowAuthModal={openAuthModal}
+        isDirty={false}
+        isSaving={false}
+        onSave={() => undefined}
+        onShowProjects={() => undefined}
+        currentProjectId={null}
+        showProjectActions={false}
+        contextActions={(
+          <>
+            <span className={styles.lessonLabel}>Lesson 1</span>
+            <button
+              type="button"
+              className={styles.curriculumButton}
+              onClick={() => setIsCurriculumOpen(true)}
+            >
+              レッスン一覧
+            </button>
+          </>
+        )}
+        showModeSwitch
+        mode="lesson"
+        onModeChange={(nextMode) => {
+          if (nextMode === "lesson") return;
+          router.push(`/app/${nextMode}`);
+        }}
+      />
 
       <div ref={svgContainerRef} className={styles.canvas} />
 

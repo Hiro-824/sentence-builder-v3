@@ -871,7 +871,8 @@ export class Renderer {
         this.cachedBlockListWidth = blockListWidth;
         const headerWidth = blockListWidth / 2;
 
-        let y = sidebarPadding.top;
+        const searchToListGap = this.sidebarVariant === "sandbox" ? 24 : 0;
+        let y = sidebarPadding.top + searchToListGap;
         const entries = Object.entries(this.blockList || {});
 
         if (entries.length === 0) {
@@ -2984,6 +2985,49 @@ export class Renderer {
     emphasizeBlock(id) {
         this.deemphasizeAllBlock();
         d3.select(`#${id}`).attr("stroke-width", highlightStrokeWidth).attr("stroke", "yellow");
+    }
+
+    celebrateBlock(id) {
+        this.deemphasizeAllBlock();
+        const frame = d3.select(`#${id}`);
+        if (frame.empty()) return;
+
+        const group = d3.select(frame.node().parentNode);
+        const x = Number(frame.attr("x") || 0);
+        const y = Number(frame.attr("y") || 0);
+        const width = Number(frame.attr("width") || 120);
+        const height = Number(frame.attr("height") || 50);
+        const centerX = x + width / 2;
+        const centerY = y + height / 2;
+        const radius = Math.max(width, height);
+        const colors = ["#ff4d6d", "#ffb703", "#2675f5", "#9b5de5"];
+
+        d3.range(20).forEach((index) => {
+            const angle = (Math.PI * 2 * index) / 20;
+            const innerRadius = radius * (index % 2 === 0 ? 0.12 : 0.2);
+            const outerRadius = radius * (index % 3 === 0 ? 1.12 : 0.92);
+            group
+                .append("line")
+                .attr("x1", centerX + Math.cos(angle) * innerRadius)
+                .attr("y1", centerY + Math.sin(angle) * innerRadius)
+                .attr("x2", centerX + Math.cos(angle) * innerRadius)
+                .attr("y2", centerY + Math.sin(angle) * innerRadius)
+                .attr("stroke", colors[index % colors.length])
+                .attr("stroke-width", index % 2 === 0 ? 8 : 6)
+                .attr("stroke-linecap", "round")
+                .attr("pointer-events", "none")
+                .transition()
+                .delay(index * 18)
+                .duration(1850)
+                .ease(d3.easeCubicInOut)
+                .attr("x1", centerX + Math.cos(angle) * outerRadius * 0.58)
+                .attr("y1", centerY + Math.sin(angle) * outerRadius * 0.58)
+                .attr("x2", centerX + Math.cos(angle) * outerRadius)
+                .attr("y2", centerY + Math.sin(angle) * outerRadius)
+                .attr("stroke-width", 2)
+                .attr("opacity", 0)
+                .remove();
+        });
     }
 
     /*文法(できれば他に移動したい)***********************************************************************************************************************************************************************************************************************************************************************************************************************/
