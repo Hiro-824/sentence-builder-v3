@@ -5,10 +5,15 @@ import { useRouter } from "next/navigation";
 import * as d3 from "d3";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Renderer } from "@/renderer/renderer";
-import { Block } from "@/models/block";
-import { LESSON_NOUNS, LessonNoun } from "@/data/lesson-nouns";
-import { getLessonBlocks } from "@/data/lesson-blocks";
-import { ACTIVE_LESSON_ID } from "@/data/lesson-curriculum";
+import type { Block, BlockChild } from "@/models/block";
+import type { LessonNoun } from "@/data/lesson-nouns";
+import {
+  LESSON_ORDER,
+  getLessonDefinition,
+  type LessonEntityVisual,
+  type LessonQuestion,
+  type LessonVisual,
+} from "@/data/lesson-content";
 import LessonCompleteModal from "@/components/lesson-complete-modal/lesson-complete-modal";
 import LessonCurriculumModal from "@/components/lesson-curriculum-modal/lesson-curriculum-modal";
 import LessonExitModal from "@/components/lesson-exit-modal/lesson-exit-modal";
@@ -20,99 +25,58 @@ import {
 } from "@/utils/audio-feedback";
 import styles from "./main-lesson.module.css";
 
-type NumberValue = "singular" | "plural";
 type Feedback = "idle" | "wrong" | "correct";
-
-interface LessonQuestion {
-  noun: LessonNoun;
-  distractor: LessonNoun;
-  number: NumberValue;
-  definite: boolean;
-}
-
-interface BuiltAnswer {
-  blockId: string;
-  determiner: "a" | "an" | "the" | "some" | null;
-  noun: string;
-}
 
 const QUESTION_COUNT = 10;
 const WRONG_PHRASE_WARNING_THRESHOLD = 3;
 const COMPLETED_LESSONS_STORAGE_KEY = "syntablo:completed-lessons";
 
-const shuffle = <T,>(items: T[]): T[] => {
-  const result = [...items];
-  for (let index = result.length - 1; index > 0; index -= 1) {
-    const swapIndex = Math.floor(Math.random() * (index + 1));
-    [result[index], result[swapIndex]] = [result[swapIndex], result[index]];
-  }
-  return result;
-};
-
-const buildQuestions = (): LessonQuestion[] => {
-  const opening: Array<Pick<LessonQuestion, "number" | "definite">> = [
-    { number: "singular", definite: false },
-    { number: "plural", definite: false },
-    { number: "singular", definite: true },
-    { number: "plural", definite: true },
-  ];
-  const remaining: Array<Pick<LessonQuestion, "number" | "definite">> = [
-    { number: "singular", definite: false },
-    { number: "singular", definite: false },
-    { number: "plural", definite: false },
-    { number: "plural", definite: false },
-    { number: "singular", definite: true },
-    { number: "plural", definite: true },
-  ];
-  const conditions = shuffle(opening).concat(shuffle(remaining));
-  const nouns = shuffle(LESSON_NOUNS).slice(0, QUESTION_COUNT);
-
-  return conditions.map((condition, index) => ({
-    ...condition,
-    noun: nouns[index],
-    distractor: shuffle(
-      LESSON_NOUNS.filter((candidate) => candidate.singular !== nouns[index].singular),
-    )[0],
-  }));
-};
-
-const getSelectedToken = (block: Block): string => {
-  const head = block.children.find((child) => child.id === "head");
-  const selected = head?.type === "dropdown" ? head.selected ?? 0 : 0;
-  return block.words[selected]?.token?.replace(/\([^)]*\)/g, "") || "";
-};
-
-const readBuiltAnswers = (blocks: Block[]): BuiltAnswer[] => {
-  const answers: BuiltAnswer[] = [];
-  for (const block of blocks) {
-    const sourceId = (block as Block & { sourceBlockId?: string }).sourceBlockId ?? "";
-    const determiner =
-      sourceId === "det_a" ? "a"
-        : sourceId === "det_an" ? "an"
-        : sourceId === "det_the" ? "the"
-          : sourceId === "det_some" ? "some"
-            : null;
-
-    if (determiner) {
-      const nounChild = block.children.find(
-        (child) => child.type === "placeholder" && child.content,
-      )?.content as Block | undefined;
-      if (nounChild) answers.push({ blockId: block.id, determiner, noun: getSelectedToken(nounChild) });
-      continue;
-    }
-
-    if (sourceId.startsWith("lesson_noun_")) {
-      const token = getSelectedToken(block);
-      if (token && !token.endsWith("(base)")) {
-        answers.push({ blockId: block.id, determiner: null, noun: token });
-      }
-    }
-  }
-  return answers;
-};
+const normalizePhrase = (value: string) =>
+  value
+    .replace(/\([^)]*\)/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
 
 const getSourceBlockId = (block: Block): string =>
-  (block as Block & { sourceBlockId?: string }).sourceBlockId ?? "";
+  (block as Block & { sourceBlockId?: string }).sourceBlockId ?? block.id;
+
+const childText = (child: BlockChild): string => {
+  if (child.hidden) return "";
+  if ((child.type === "placeholder" || child.type === "attachment") && child.content) {
+    return blockText(child.content as Block);
+  }
+  if (child.type === "dropdown" && Array.isArray(child.content)) {
+    return String(child.content[child.selected ?? 0] ?? "");
+  }
+  if (child.type === "text") return String(child.content ?? "");
+  return "";
+};
+
+const blockText = (block: Block): string =>
+  normalizePhrase(block.children.map(childText).filter(Boolean).join(" "));
+
+const isCompleteBlock = (block: Block): boolean =>
+  block.children.every((child) => {
+    if (child.hidden) return true;
+    if (child.type === "placeholder") {
+      return Boolean(child.content) && isCompleteBlock(child.content as Block);
+    }
+    if (child.type === "attachment" && child.content) {
+      return isCompleteBlock(child.content as Block);
+    }
+    return true;
+  });
+
+const isEvaluableRoot = (block: Block, phrase: string, expected: string[]) => {
+  if (expected.includes(phrase)) return true;
+  const sourceId = getSourceBlockId(block);
+  return (
+    sourceId.startsWith("det_")
+    || sourceId.endsWith("_determiner")
+    || sourceId.endsWith("_verb")
+  );
+};
 
 let speechEngineWarmed = false;
 
@@ -166,35 +130,199 @@ const speakPhrase = (phrase: string) => {
     window.setTimeout(finishWarmup, 350);
   };
 
-  if (synthesis.getVoices().length > 0) {
-    start();
-  } else {
+  if (synthesis.getVoices().length > 0) start();
+  else {
     synthesis.addEventListener("voiceschanged", start, { once: true });
     window.setTimeout(start, 1200);
   }
 };
 
-const NounPicture = ({ noun }: { noun: LessonNoun }) => (
+const nounPictureStyle = (noun: LessonNoun) =>
+  noun.singular === "egg"
+    ? {
+        backgroundImage: 'url("/lesson-assets/egg-clean-v3.png")',
+        backgroundPosition: "center",
+        backgroundSize: "100% 100%",
+      }
+    : {
+        backgroundPosition: `${noun.spriteColumn * 25}% ${noun.spriteRow * (100 / 3)}%`,
+      };
+
+const NounPicture = ({ noun, className = "" }: { noun: LessonNoun; className?: string }) => (
   <span
-    className={styles.nounPicture}
+    className={`${styles.nounPicture} ${className}`}
     role="img"
     aria-label={noun.translation}
-    style={noun.singular === "egg"
-      ? {
-          backgroundImage: 'url("/lesson-assets/egg-clean-v3.png")',
-          backgroundPosition: "center",
-          backgroundSize: "100% 100%",
-        }
-      : {
-          backgroundPosition: `${noun.spriteColumn * 25}% ${noun.spriteRow * (100 / 3)}%`,
-        }}
+    style={nounPictureStyle(noun)}
   />
 );
+
+const EntityPicture = ({ entity }: { entity: LessonEntityVisual }) => (
+  <div className={styles.entityTile}>
+    {entity.type === "noun" ? (
+      <>
+        <NounPicture noun={entity.noun} className={styles.complementNoun} />
+        {entity.definite && (
+          <Image
+            className={styles.objectPointer}
+            src="/lesson-assets/pointer-opaque.png"
+            alt="対象を指差している手"
+            width={72}
+            height={72}
+            unoptimized
+          />
+        )}
+      </>
+    ) : (
+      <span
+        className={styles.assetEntity}
+        role="img"
+        aria-label={entity.label}
+        style={{ backgroundImage: `url("/lesson-assets/entities/${entity.name}.png")` }}
+      />
+    )}
+  </div>
+);
+
+const LessonPicture = ({ visual }: { visual: LessonVisual }) => {
+  if (visual.type === "countable") {
+    return (
+      <>
+        <div className={visual.number === "plural" ? styles.pluralPictures : styles.singlePicture}>
+          <NounPicture noun={visual.noun} />
+          {visual.number === "plural" && (
+            <>
+              <NounPicture noun={visual.noun} />
+              <NounPicture noun={visual.noun} />
+            </>
+          )}
+        </div>
+        {visual.definite && (
+          <Image
+            className={styles.pointer}
+            src="/lesson-assets/pointer-opaque.png"
+            alt="指差している手"
+            width={160}
+            height={160}
+            priority
+            unoptimized
+          />
+        )}
+      </>
+    );
+  }
+
+  if (visual.type === "uncountable") {
+    const standaloneImage =
+      visual.spriteIndex === 7
+        ? "/lesson-assets/juice-clean-v2.png"
+        : visual.spriteIndex === 8
+          ? "/lesson-assets/soup-clean-v2.png"
+          : null;
+    return (
+      <>
+        <span
+          className={styles.uncountablePicture}
+          role="img"
+          aria-label={visual.label}
+          style={
+            standaloneImage
+              ? {
+                  backgroundImage: `url("${standaloneImage}")`,
+                  backgroundPosition: "center",
+                  backgroundSize: "contain",
+                }
+              : {
+                  backgroundPosition: `${(visual.spriteIndex % 5) * 25}% ${Math.floor(visual.spriteIndex / 5) * 100}%`,
+                }
+          }
+        />
+        {visual.definite && (
+          <Image
+            className={styles.pointer}
+            src="/lesson-assets/pointer-opaque.png"
+            alt="指差している手"
+            width={160}
+            height={160}
+            unoptimized
+          />
+        )}
+      </>
+    );
+  }
+
+  if (visual.type === "predicate") {
+    return (
+      <div
+        className={`${styles.predicateScene} ${styles[`arity${visual.complements.length}`]}`}
+        aria-label={visual.label}
+      >
+        <div className={styles.predicateTile}>
+          <span
+            className={styles.predicatePicture}
+            role="img"
+            aria-label={`${visual.predicate} の動作`}
+            style={{ backgroundImage: `url("/lesson-assets/predicates/${visual.predicate}.png")` }}
+          />
+        </div>
+        {visual.complements.map((complement, index) => (
+          <div className={styles.complementGroup} key={`${visual.predicate}-${index}`}>
+            <span className={styles.relationArrow} aria-hidden="true">→</span>
+            <EntityPicture entity={complement} />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (visual.kind === "what") {
+    return (
+      <div className={styles.whatScene}>
+        <span
+          className={styles.silhouettePicture}
+          role="img"
+          aria-label={visual.target === "animal" ? "動物のシルエット" : "食べ物のシルエット"}
+        >
+          {visual.target === "animal" ? "🐈" : "🍎"}
+        </span>
+        <strong>?</strong>
+      </div>
+    );
+  }
+
+  if (visual.kind === "whose") {
+    return (
+      <div className={styles.whoseScene}>
+        <div className={styles.peopleRow}><span>🧒</span><span>👧</span><span>🧑</span></div>
+        <NounPicture noun={visual.noun} className={styles.whoseObject} />
+        <div className={styles.arrowRow}><span>↖</span><span>↑</span><span>↗</span></div>
+        <strong>?</strong>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.whichScene}>
+      <NounPicture noun={visual.noun} />
+      <NounPicture noun={visual.noun} />
+      <NounPicture noun={visual.noun} />
+      <Image
+        className={styles.choosingPointer}
+        src="/lesson-assets/pointer-opaque.png"
+        alt="どれにするか迷っている手"
+        width={105}
+        height={105}
+        unoptimized
+      />
+      <strong>?</strong>
+    </div>
+  );
+};
 
 export default function MainLesson() {
   const router = useRouter();
   const { user, openAuthModal, signOut } = useAppAuth();
-  const [questions, setQuestions] = useState<LessonQuestion[]>([]);
+  const [activeLessonId, setActiveLessonId] = useState(LESSON_ORDER[0]);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [feedback, setFeedback] = useState<Feedback>("idle");
   const [wrongAttempts, setWrongAttempts] = useState(0);
@@ -213,11 +341,16 @@ export default function MainLesson() {
   const wrongAttemptsRef = useRef(0);
   const lastEvaluationRef = useRef("");
 
+  const activeLesson = useMemo(() => getLessonDefinition(activeLessonId), [activeLessonId]);
+  const question = activeLesson.questions[questionIndex];
+  questionRef.current = question ?? null;
+  feedbackRef.current = feedback;
+  wrongAttemptsRef.current = wrongAttempts;
+  const lessonNumber = LESSON_ORDER.indexOf(activeLessonId) + 1;
+  const lessonBlocks = useMemo(() => question?.blocks ?? [], [question]);
+
   useEffect(() => {
-    if ("speechSynthesis" in window) {
-      window.speechSynthesis.getVoices();
-    }
-    setQuestions(buildQuestions());
+    if ("speechSynthesis" in window) window.speechSynthesis.getVoices();
     try {
       const stored = window.localStorage.getItem(COMPLETED_LESSONS_STORAGE_KEY);
       const parsed = stored ? JSON.parse(stored) : [];
@@ -229,71 +362,50 @@ export default function MainLesson() {
     }
   }, []);
 
-  const question = questions[questionIndex];
-  questionRef.current = question ?? null;
-  feedbackRef.current = feedback;
-  wrongAttemptsRef.current = wrongAttempts;
-
-  const lessonBlocks = useMemo(
-    () => question ? getLessonBlocks(question.noun.singular, question.distractor.singular) : [],
-    [question],
-  );
-
   const evaluateCanvas = useCallback(() => {
     const renderer = rendererRef.current;
     const activeQuestion = questionRef.current;
     if (!renderer || !activeQuestion || feedbackRef.current === "correct") return;
 
-    const answers = readBuiltAnswers(renderer.blocks as Block[]);
-    if (answers.length === 0) return;
+    const rootBlocks = renderer.blocks as Block[];
+    const incompleteSome = rootBlocks.some((block) =>
+      getSourceBlockId(block) === "det_some" && !isCompleteBlock(block)
+    );
+    if (incompleteSome && activeQuestion.expected.some((answer) => !answer.startsWith("some "))) return;
 
-    const hasIncompleteSome =
-      !activeQuestion.definite
-      && activeQuestion.number === "plural"
-      && (renderer.blocks as Block[]).some((block) =>
-        getSourceBlockId(block) === "det_some"
-        && block.children.some((child) =>
-          child.type === "placeholder" && !child.content
-        )
-      );
-    if (hasIncompleteSome) return;
+    const completeAnswers = rootBlocks
+      .filter(isCompleteBlock)
+      .map((block) => ({ block, phrase: blockText(block) }))
+      .filter((answer) => answer.phrase);
+    if (completeAnswers.length === 0) return;
 
-    const signature = JSON.stringify(answers);
+    const expected = activeQuestion.expected.map(normalizePhrase);
+    const evaluableAnswers = completeAnswers.filter((answer) =>
+      isEvaluableRoot(answer.block, answer.phrase, expected)
+    );
+    if (evaluableAnswers.length === 0) return;
+
+    const signature = JSON.stringify(evaluableAnswers.map((answer) => answer.phrase));
     if (signature === lastEvaluationRef.current) return;
     lastEvaluationRef.current = signature;
-
-    const targetWord =
-      activeQuestion.number === "plural"
-        ? activeQuestion.noun.plural
-        : activeQuestion.noun.singular;
-    const correctAnswer = answers.find((answer) => {
-      if (answer.noun !== targetWord) return false;
-      if (activeQuestion.definite) return answer.determiner === "the";
-      if (activeQuestion.number === "singular") {
-        const expectedArticle = /^[aeiou]/i.test(activeQuestion.noun.singular) ? "an" : "a";
-        return answer.determiner === expectedArticle;
-      }
-      return answer.determiner === null || answer.determiner === "some";
-    });
+    const correctAnswer = evaluableAnswers.find((answer) => expected.includes(answer.phrase));
 
     if (correctAnswer) {
       setFeedback("correct");
       setShowNext(true);
       if (wrongAttemptsRef.current === 0) setFirstTryCorrect((count) => count + 1);
-      renderer.celebrateBlock(`frame-${correctAnswer.blockId}`);
-      speakPhrase(
-        [correctAnswer.determiner, correctAnswer.noun].filter(Boolean).join(" "),
-      );
-    } else if (answers.some((answer) => answer.determiner !== null)) {
-      const nextWrongAttempts = wrongAttemptsRef.current + 1;
-      setWrongAttempts(nextWrongAttempts);
-      setFeedback(nextWrongAttempts >= WRONG_PHRASE_WARNING_THRESHOLD ? "wrong" : "idle");
+      renderer.celebrateBlock(`frame-${correctAnswer.block.id}`);
+      speakPhrase(correctAnswer.phrase);
+      return;
     }
+
+    const nextWrongAttempts = wrongAttemptsRef.current + 1;
+    setWrongAttempts(nextWrongAttempts);
+    setFeedback(nextWrongAttempts >= WRONG_PHRASE_WARNING_THRESHOLD ? "wrong" : "idle");
   }, []);
 
   useEffect(() => {
     if (!question || !svgContainerRef.current || rendererRef.current) return;
-
     const container = d3.select(svgContainerRef.current);
     container.selectAll("*").remove();
     const topBarHeight = 64;
@@ -316,7 +428,7 @@ export default function MainLesson() {
       false,
       lessonBlocks,
     );
-    renderer.setTranslationVisibility(false);
+    renderer.setTranslationVisibility(showTranslation);
     rendererRef.current = renderer;
 
     const handleResize = () => {
@@ -329,16 +441,24 @@ export default function MainLesson() {
       renderer.destroy();
       rendererRef.current = null;
     };
-  }, [evaluateCanvas, lessonBlocks, question]);
+  }, [evaluateCanvas, lessonBlocks, question, showTranslation]);
 
-  useEffect(() => {
-    const renderer = rendererRef.current;
-    if (!renderer || !question) return;
-    renderer.blocks = [];
-    renderer.setLessonBlockList(lessonBlocks);
-    renderer.renderBlocks();
+  const resetQuestionState = () => {
+    setFeedback("idle");
+    setWrongAttempts(0);
+    setShowNext(false);
     lastEvaluationRef.current = "";
-  }, [lessonBlocks, question]);
+  };
+
+  const startLesson = (lessonId: string) => {
+    setActiveLessonId(lessonId);
+    setQuestionIndex(0);
+    setFirstTryCorrect(0);
+    setHasCompletedCurrentSession(false);
+    setIsCompleteModalOpen(false);
+    setIsCurriculumOpen(false);
+    resetQuestionState();
+  };
 
   const handleTranslationChange = () => {
     const next = !showTranslation;
@@ -349,7 +469,7 @@ export default function MainLesson() {
   const goNext = () => {
     if (questionIndex === QUESTION_COUNT - 1) {
       playLessonCompleteSound();
-      const nextCompleted = Array.from(new Set([...completedLessonIds, ACTIVE_LESSON_ID]));
+      const nextCompleted = Array.from(new Set([...completedLessonIds, activeLessonId]));
       setCompletedLessonIds(nextCompleted);
       window.localStorage.setItem(COMPLETED_LESSONS_STORAGE_KEY, JSON.stringify(nextCompleted));
       setHasCompletedCurrentSession(true);
@@ -358,45 +478,33 @@ export default function MainLesson() {
     }
     playNextQuestionSound();
     setQuestionIndex((index) => index + 1);
-    setFeedback("idle");
-    setWrongAttempts(0);
-    setShowNext(false);
-    lastEvaluationRef.current = "";
-  };
-
-  const openCurriculumFromCompletion = () => {
-    setIsCompleteModalOpen(false);
-    setIsCurriculumOpen(true);
+    resetQuestionState();
   };
 
   const goToNextLesson = () => {
-    setIsCompleteModalOpen(false);
-    setIsCurriculumOpen(true);
+    const nextId = LESSON_ORDER[LESSON_ORDER.indexOf(activeLessonId) + 1];
+    if (nextId) startLesson(nextId);
+    else {
+      setIsCompleteModalOpen(false);
+      setIsCurriculumOpen(true);
+    }
   };
 
   const selectLesson = (lessonId: string) => {
-    if (lessonId !== ACTIVE_LESSON_ID) return;
-    setIsCurriculumOpen(false);
+    const index = LESSON_ORDER.indexOf(lessonId);
+    const unlocked = index === 0 || completedLessonIds.includes(LESSON_ORDER[index - 1]);
+    if (unlocked) startLesson(lessonId);
   };
 
   const requestModeChange = (nextMode: "scenario" | "sandbox") => {
     const hasLessonProgress =
       !hasCompletedCurrentSession
-      && (
-        questionIndex > 0
-        || feedback !== "idle"
-        || Boolean(rendererRef.current?.blocks.length)
-      );
-    if (hasLessonProgress) {
-      setPendingMode(nextMode);
-      return;
-    }
-    router.push(`/app/${nextMode}`);
+      && (questionIndex > 0 || feedback !== "idle" || Boolean(rendererRef.current?.blocks.length));
+    if (hasLessonProgress) setPendingMode(nextMode);
+    else router.push(`/app/${nextMode}`);
   };
 
-  if (!question) {
-    return <div className={styles.loading}>レッスンを準備しています…</div>;
-  }
+  if (!question) return <div className={styles.loading}>レッスンを準備しています…</div>;
 
   return (
     <main className={styles.page}>
@@ -412,12 +520,8 @@ export default function MainLesson() {
         showProjectActions={false}
         contextActions={(
           <>
-            <span className={styles.lessonLabel}>Lesson 1</span>
-            <button
-              type="button"
-              className={styles.curriculumButton}
-              onClick={() => setIsCurriculumOpen(true)}
-            >
+            <span className={styles.lessonLabel}>Lesson {lessonNumber}</span>
+            <button type="button" className={styles.curriculumButton} onClick={() => setIsCurriculumOpen(true)}>
               レッスン一覧
             </button>
           </>
@@ -425,89 +529,73 @@ export default function MainLesson() {
         showModeSwitch
         mode="lesson"
         onModeChange={(nextMode) => {
-          if (nextMode === "lesson") return;
-          requestModeChange(nextMode);
+          if (nextMode !== "lesson") requestModeChange(nextMode);
         }}
       />
 
       <div ref={svgContainerRef} className={styles.canvas} />
 
       <aside className={styles.lessonPanel}>
-          <div className={styles.panelHeader}>
-            <div>
-              <p className={styles.eyebrow}>Lesson 1</p>
-              <h1>絵に合うことばを作ろう</h1>
-            </div>
-            <strong>{questionIndex + 1} / {QUESTION_COUNT}</strong>
+        <div className={styles.panelHeader}>
+          <div>
+            <p className={styles.eyebrow}>Lesson {lessonNumber}</p>
+            <h1>{activeLesson.title}</h1>
           </div>
-          <div className={styles.progress}>
-            <span style={{ width: `${((questionIndex + 1) / QUESTION_COUNT) * 100}%` }} />
-          </div>
-          <p className={styles.instruction}>絵の数と、指が示しているものに注目しよう</p>
+          <strong>{questionIndex + 1} / {QUESTION_COUNT}</strong>
+        </div>
+        <div className={styles.progress}>
+          <span style={{ width: `${((questionIndex + 1) / QUESTION_COUNT) * 100}%` }} />
+        </div>
+        <p className={styles.instruction}>{activeLesson.instruction}</p>
 
-          <div className={styles.pictureStage}>
-            <div className={question.number === "plural" ? styles.pluralPictures : styles.singlePicture}>
-              <NounPicture noun={question.noun} />
-              {question.number === "plural" && (
-                <>
-                  <NounPicture noun={question.noun} />
-                  <NounPicture noun={question.noun} />
-                </>
-              )}
-            </div>
-            {question.definite && (
-              <Image
-                className={styles.pointer}
-                src="/lesson-assets/pointer-opaque.png"
-                alt="指差している手"
-                width={160}
-                height={160}
-                priority
-                unoptimized
-              />
-            )}
-          </div>
+        <div className={styles.pictureStage}>
+          <LessonPicture visual={question.visual} />
+        </div>
 
-          <div className={styles.translationRow}>
-            <span>日本語訳</span>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={showTranslation}
-              className={`${styles.switch} ${showTranslation ? styles.switchOn : ""}`}
-              onClick={handleTranslationChange}
-            >
-              <span />
-            </button>
-          </div>
+        <div className={styles.translationRow}>
+          <span>日本語訳</span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={showTranslation}
+            className={`${styles.switch} ${showTranslation ? styles.switchOn : ""}`}
+            onClick={handleTranslationChange}
+          >
+            <span />
+          </button>
+        </div>
 
-          <div className={styles.feedback} aria-live="polite">
-            {feedback === "wrong" && (
-              <>
-                <strong>もう一度やってみよう</strong>
-                <span>絵の数と、指があるかを見直してみよう。</span>
-              </>
-            )}
-            {feedback === "correct" && <strong className={styles.correct}>できました！</strong>}
-          </div>
-
-          {showNext && (
-            <button className={styles.nextButton} type="button" onClick={goNext}>
-              {questionIndex === QUESTION_COUNT - 1 ? "結果を見る" : "次へ"} →
-            </button>
+        <div className={styles.feedback} aria-live="polite">
+          {feedback === "wrong" && (
+            <>
+              <strong>もう一度やってみよう</strong>
+              <span>絵と、完成したブロックをもう一度見比べよう。</span>
+            </>
           )}
+          {feedback === "correct" && <strong className={styles.correct}>できました！</strong>}
+        </div>
+
+        {showNext && (
+          <button className={styles.nextButton} type="button" onClick={goNext}>
+            {questionIndex === QUESTION_COUNT - 1 ? "レッスン完了" : "次へ"} →
+          </button>
+        )}
       </aside>
 
       <LessonCompleteModal
         isOpen={isCompleteModalOpen}
         firstTryCorrect={firstTryCorrect}
         onClose={() => setIsCompleteModalOpen(false)}
-        onOpenCurriculum={openCurriculumFromCompletion}
+        onOpenCurriculum={() => {
+          setIsCompleteModalOpen(false);
+          setIsCurriculumOpen(true);
+        }}
         onNextLesson={goToNextLesson}
       />
       <LessonCurriculumModal
         isOpen={isCurriculumOpen}
         completedLessonIds={completedLessonIds}
+        activeLessonId={activeLessonId}
         onClose={() => setIsCurriculumOpen(false)}
         onSelectLesson={selectLesson}
       />

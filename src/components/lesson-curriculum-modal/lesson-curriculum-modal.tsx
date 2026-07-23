@@ -1,11 +1,12 @@
 "use client";
 
-import { ACTIVE_LESSON_ID, LESSON_CURRICULUM } from "@/data/lesson-curriculum";
+import { LESSON_CURRICULUM } from "@/data/lesson-curriculum";
 import styles from "./lesson-curriculum-modal.module.css";
 
 interface LessonCurriculumModalProps {
   isOpen: boolean;
   completedLessonIds: string[];
+  activeLessonId: string;
   onClose: () => void;
   onSelectLesson: (lessonId: string) => void;
 }
@@ -13,10 +14,12 @@ interface LessonCurriculumModalProps {
 export default function LessonCurriculumModal({
   isOpen,
   completedLessonIds,
+  activeLessonId,
   onClose,
   onSelectLesson,
 }: LessonCurriculumModalProps) {
   if (!isOpen) return null;
+  const orderedLessons = LESSON_CURRICULUM.flatMap((unit) => unit.lessons);
 
   return (
     <div className={styles.overlay} role="dialog" aria-modal="true" aria-labelledby="curriculum-title" onClick={onClose}>
@@ -49,12 +52,16 @@ export default function LessonCurriculumModal({
                 <div className={styles.lessons}>
                   {unit.lessons.map((lesson) => {
                     const completed = completedLessonIds.includes(lesson.id);
-                    const active = lesson.id === ACTIVE_LESSON_ID;
+                    const active = lesson.id === activeLessonId;
+                    const lessonIndex = orderedLessons.findIndex((item) => item.id === lesson.id);
+                    const unlocked =
+                      lessonIndex === 0
+                      || completedLessonIds.includes(orderedLessons[lessonIndex - 1].id);
                     return (
                       <button
                         type="button"
                         key={lesson.id}
-                        disabled={!lesson.available}
+                        disabled={!unlocked}
                         className={`${styles.lesson} ${active ? styles.activeLesson : ""}`}
                         onClick={() => onSelectLesson(lesson.id)}
                       >
@@ -66,7 +73,7 @@ export default function LessonCurriculumModal({
                           <small>{lesson.description}</small>
                         </span>
                         <span className={styles.lessonStatus}>
-                          {completed ? "完了" : lesson.available ? "学習する" : "準備中"}
+                          {completed ? "完了" : unlocked ? "学習する" : "未解放"}
                         </span>
                       </button>
                     );
@@ -80,4 +87,3 @@ export default function LessonCurriculumModal({
     </div>
   );
 }
-

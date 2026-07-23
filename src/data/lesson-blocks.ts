@@ -42,6 +42,22 @@ export const blockSome: Block = {
       translationTemplates: {
         default: ["いくつかの", { path: ["right", 0], key: "default" }],
       },
+    }, {
+      head: {
+        type: det,
+        agr: { type: "3sing" },
+        determinered: true,
+      },
+      right: [{
+        head: {
+          type: noun,
+          agr: { type: "3sing" },
+          count: false,
+        },
+      }],
+      translationTemplates: {
+        default: ["いくらかの", { path: ["right", 0], key: "default" }],
+      },
     }],
   }],
   color: "dodgerblue",
