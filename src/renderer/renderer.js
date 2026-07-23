@@ -3,6 +3,7 @@ import { Converter } from "@/grammar/converter";
 import { Grammar } from "@/grammar/grammar";
 import { padding, blockCornerRadius, blockStrokeWidth, highlightStrokeWidth, placeholderWidth, placeholderHeight, placeholderCornerRadius, labelFontSize, dropdownHeight, horizontalPadding, bubbleColor, blockListSpacing, blockListFontSize, scrollMomentumExtent, sidebarPadding, resolvedGapRadius, initialVisibleCount, visiblilityIncrement, buttonRadius, iconSize, navBarWidth, navBarCircleRadius, navBarCircleSpacing, navBarPadding, navBarScrollPadding, sidebarSearchHeight, sidebarSearchPadding, sidebarSearchBorderRadius, defaultInitialZoom, minZoomScale, maxZoomScale, mobileViewportMaxWidth, mobileSidebarTargetWidth, mobileSidebarMinWidth, mobileSidebarMaxWidth } from "./const.js";
 import { createBlockSnapshot, createBlockSnapshotList } from "@/utils/supabase/logging_helpers";
+import { playBlockConnectSound } from "@/utils/audio-feedback";
 import * as d3 from "d3";
 
 export class Renderer {
@@ -2872,6 +2873,7 @@ export class Renderer {
         // Update translation for the updated parent/root
         this.updateBlockTranslation(updatedParent);
         this.renderBlocks();
+        playBlockConnectSound();
     }
 
     attachBlock(id, targetParentId, side) {
@@ -2901,6 +2903,7 @@ export class Renderer {
         // Update translation for the updated parent/root
         this.updateBlockTranslation(updatedParent);
         this.renderBlocks();
+        playBlockConnectSound();
     }
 
     formatBlock(id) {
@@ -3000,30 +3003,45 @@ export class Renderer {
         const centerX = x + width / 2;
         const centerY = y + height / 2;
         const radius = Math.max(width, height);
-        const colors = ["#ff4d6d", "#ffb703", "#2675f5", "#9b5de5"];
+        const celebrationColor = "#2675f5";
 
         d3.range(20).forEach((index) => {
             const angle = (Math.PI * 2 * index) / 20;
-            const innerRadius = radius * (index % 2 === 0 ? 0.12 : 0.2);
-            const outerRadius = radius * (index % 3 === 0 ? 1.12 : 0.92);
+            const cos = Math.cos(angle);
+            const sin = Math.sin(angle);
+            const distanceToVerticalEdge = (width / 2) / Math.max(Math.abs(cos), 0.001);
+            const distanceToHorizontalEdge = (height / 2) / Math.max(Math.abs(sin), 0.001);
+            const blockEdgeRadius = Math.min(distanceToVerticalEdge, distanceToHorizontalEdge);
+            const innerRadius = blockEdgeRadius + 14;
+            const outerRadius = innerRadius + radius * (index % 3 === 0 ? 0.38 : 0.32);
+            const initialLineEnd = innerRadius + radius * (index % 2 === 0 ? 0.17 : 0.13);
+            const finalLineStart = outerRadius - radius * (index % 2 === 0 ? 0.17 : 0.13);
             group
                 .append("line")
-                .attr("x1", centerX + Math.cos(angle) * innerRadius)
-                .attr("y1", centerY + Math.sin(angle) * innerRadius)
-                .attr("x2", centerX + Math.cos(angle) * innerRadius)
-                .attr("y2", centerY + Math.sin(angle) * innerRadius)
-                .attr("stroke", colors[index % colors.length])
+                .attr("x1", centerX + cos * innerRadius)
+                .attr("y1", centerY + sin * innerRadius)
+                .attr("x2", centerX + cos * initialLineEnd)
+                .attr("y2", centerY + sin * initialLineEnd)
+                .attr("stroke", celebrationColor)
                 .attr("stroke-width", index % 2 === 0 ? 8 : 6)
                 .attr("stroke-linecap", "round")
                 .attr("pointer-events", "none")
                 .transition()
                 .delay(index * 18)
-                .duration(1850)
-                .ease(d3.easeCubicInOut)
-                .attr("x1", centerX + Math.cos(angle) * outerRadius * 0.58)
-                .attr("y1", centerY + Math.sin(angle) * outerRadius * 0.58)
-                .attr("x2", centerX + Math.cos(angle) * outerRadius)
-                .attr("y2", centerY + Math.sin(angle) * outerRadius)
+                .duration(800)
+                .ease(d3.easeCubicOut)
+                .attr("x1", centerX + cos * finalLineStart)
+                .attr("y1", centerY + sin * finalLineStart)
+                .attr("x2", centerX + cos * outerRadius)
+                .attr("y2", centerY + sin * outerRadius)
+                .attr("stroke-width", index % 2 === 0 ? 6 : 5)
+                .transition()
+                .duration(450)
+                .ease(d3.easeCubicIn)
+                .attr("x1", centerX + cos * (outerRadius + radius * 0.05))
+                .attr("y1", centerY + sin * (outerRadius + radius * 0.05))
+                .attr("x2", centerX + cos * (outerRadius + radius * 0.14))
+                .attr("y2", centerY + sin * (outerRadius + radius * 0.14))
                 .attr("stroke-width", 2)
                 .attr("opacity", 0)
                 .remove();

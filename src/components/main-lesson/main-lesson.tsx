@@ -11,8 +11,13 @@ import { getLessonBlocks } from "@/data/lesson-blocks";
 import { ACTIVE_LESSON_ID } from "@/data/lesson-curriculum";
 import LessonCompleteModal from "@/components/lesson-complete-modal/lesson-complete-modal";
 import LessonCurriculumModal from "@/components/lesson-curriculum-modal/lesson-curriculum-modal";
+import LessonExitModal from "@/components/lesson-exit-modal/lesson-exit-modal";
 import TopBar from "@/components/top-bar";
 import { useAppAuth } from "@/components/app-auth-provider";
+import {
+  playLessonCompleteSound,
+  playNextQuestionSound,
+} from "@/utils/audio-feedback";
 import styles from "./main-lesson.module.css";
 
 type NumberValue = "singular" | "plural";
@@ -174,9 +179,15 @@ const NounPicture = ({ noun }: { noun: LessonNoun }) => (
     className={styles.nounPicture}
     role="img"
     aria-label={noun.translation}
-    style={{
-      backgroundPosition: `${noun.spriteColumn * 25}% ${noun.spriteRow * (100 / 3)}%`,
-    }}
+    style={noun.singular === "egg"
+      ? {
+          backgroundImage: 'url("/lesson-assets/egg-clean-v3.png")',
+          backgroundPosition: "center",
+          backgroundSize: "100% 100%",
+        }
+      : {
+          backgroundPosition: `${noun.spriteColumn * 25}% ${noun.spriteRow * (100 / 3)}%`,
+        }}
   />
 );
 
@@ -191,7 +202,9 @@ export default function MainLesson() {
   const [showNext, setShowNext] = useState(false);
   const [firstTryCorrect, setFirstTryCorrect] = useState(0);
   const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
+  const [hasCompletedCurrentSession, setHasCompletedCurrentSession] = useState(false);
   const [isCurriculumOpen, setIsCurriculumOpen] = useState(false);
+  const [pendingMode, setPendingMode] = useState<"scenario" | "sandbox" | null>(null);
   const [completedLessonIds, setCompletedLessonIds] = useState<string[]>([]);
   const svgContainerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<Renderer | null>(null);
@@ -335,12 +348,15 @@ export default function MainLesson() {
 
   const goNext = () => {
     if (questionIndex === QUESTION_COUNT - 1) {
+      playLessonCompleteSound();
       const nextCompleted = Array.from(new Set([...completedLessonIds, ACTIVE_LESSON_ID]));
       setCompletedLessonIds(nextCompleted);
       window.localStorage.setItem(COMPLETED_LESSONS_STORAGE_KEY, JSON.stringify(nextCompleted));
+      setHasCompletedCurrentSession(true);
       setIsCompleteModalOpen(true);
       return;
     }
+    playNextQuestionSound();
     setQuestionIndex((index) => index + 1);
     setFeedback("idle");
     setWrongAttempts(0);
@@ -361,6 +377,21 @@ export default function MainLesson() {
   const selectLesson = (lessonId: string) => {
     if (lessonId !== ACTIVE_LESSON_ID) return;
     setIsCurriculumOpen(false);
+  };
+
+  const requestModeChange = (nextMode: "scenario" | "sandbox") => {
+    const hasLessonProgress =
+      !hasCompletedCurrentSession
+      && (
+        questionIndex > 0
+        || feedback !== "idle"
+        || Boolean(rendererRef.current?.blocks.length)
+      );
+    if (hasLessonProgress) {
+      setPendingMode(nextMode);
+      return;
+    }
+    router.push(`/app/${nextMode}`);
   };
 
   if (!question) {
@@ -395,7 +426,7 @@ export default function MainLesson() {
         mode="lesson"
         onModeChange={(nextMode) => {
           if (nextMode === "lesson") return;
-          router.push(`/app/${nextMode}`);
+          requestModeChange(nextMode);
         }}
       />
 
@@ -479,6 +510,16 @@ export default function MainLesson() {
         completedLessonIds={completedLessonIds}
         onClose={() => setIsCurriculumOpen(false)}
         onSelectLesson={selectLesson}
+      />
+      <LessonExitModal
+        isOpen={pendingMode !== null}
+        onCancel={() => setPendingMode(null)}
+        onConfirm={() => {
+          if (!pendingMode) return;
+          const destination = pendingMode;
+          setPendingMode(null);
+          router.push(`/app/${destination}`);
+        }}
       />
     </main>
   );
