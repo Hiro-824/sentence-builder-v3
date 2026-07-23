@@ -86,6 +86,38 @@ const content = {
       sentenceNode: "文",
       page: "2 / 5",
     },
+    method: {
+      section: "提案手法",
+      title: "文法制約と階層構造の可視化",
+      subtitle:
+        "結合条件をブロックの形と空所として表し、完成した句を別のブロックに組み込む",
+      constraintsTitle: "結合条件を空所として表示",
+      constraintsText:
+        "動詞が必要とする要素の数と種類を、空所の数と形で示します。適合するブロックだけを空所に組み込めます。",
+      constraintsAlt:
+        "空所の数が異なる動詞ブロックを表示しているSyntabloの画面",
+      hierarchyTitle: "句を入れ子にして構造を保持",
+      hierarchyText:
+        "完成した句は一つのまとまりとして、さらに大きな句や文へ組み込まれます。",
+      hierarchyAlt:
+        "Learning Englishを含む文を入れ子のブロックで表したSyntabloの画面",
+      page: "3 / 5",
+    },
+    learning: {
+      section: "学習設計",
+      title: "意味を起点とした学習活動",
+      subtitle:
+        "画像が表す内容をブロックで表現し、必要な文法形式へ注意を向ける",
+      comparisonTitle: "意味と形式の対応",
+      conventionalLabel: "従来の文法説明",
+      conventionalText:
+        "文法形式ばかりに注意が向いてしまうことが多い。",
+      syntabloLabel: "Syntabloの教材",
+      syntabloText: "意味内容と英語表現（形式）の対応を重視",
+      screenshotAlt:
+        "食べる動作とリンゴの画像を見てeat an appleを組み立てる教材画面",
+      page: "4 / 5",
+    },
   },
   en: {
     languageLabel: "Language",
@@ -165,6 +197,38 @@ const content = {
       sentenceNode: "Sentence",
       page: "2 / 5",
     },
+    method: {
+      section: "Approach",
+      title: "Visualizing Grammatical Constraints and Hierarchy",
+      subtitle:
+        "Combinatory constraints are represented by block shapes and slots, while completed phrases can be nested inside other blocks",
+      constraintsTitle: "Displaying constraints as slots",
+      constraintsText:
+        "The number and shape of slots show what elements a verb requires. Only compatible blocks can be inserted.",
+      constraintsAlt:
+        "The Syntablo interface showing verb blocks with different numbers of slots",
+      hierarchyTitle: "Preserving structure through nesting",
+      hierarchyText:
+        "A completed phrase becomes a single unit that can be inserted into a larger phrase or sentence.",
+      hierarchyAlt:
+        "The Syntablo interface showing a nested sentence containing Learning English",
+      page: "3 / 5",
+    },
+    learning: {
+      section: "Learning design",
+      title: "Meaning-Oriented Learning Activities",
+      subtitle:
+        "Learners use blocks to express the content of an image and attend to the grammatical forms needed to do so",
+      comparisonTitle: "Connecting meaning and form",
+      conventionalLabel: "Traditional grammar explanations",
+      conventionalText:
+        "Learners’ attention is often directed primarily toward grammatical form.",
+      syntabloLabel: "Syntablo lessons",
+      syntabloText: "Emphasis on the correspondence between meaning and English form",
+      screenshotAlt:
+        "A lesson screen in which the learner sees an eating action and an apple and builds eat an apple",
+      page: "4 / 5",
+    },
   },
 } as const;
 
@@ -208,7 +272,7 @@ export default function ExhibitPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const wheelLockedRef = useRef(false);
   const t = content[language];
-  const implementedPageCount = 2;
+  const implementedPageCount = 4;
 
   const movePage = useCallback((direction: 1 | -1) => {
     setCurrentPage((page) =>
@@ -464,6 +528,111 @@ export default function ExhibitPage() {
           appText={t.tryText}
           openAppLabel={t.openApp}
           page={t.problem.page}
+        />
+      </article>
+
+      <article
+        className={`${styles.slide} ${styles.methodSlide} ${
+          currentPage === 2 ? styles.activeSlide : ""
+        }`}
+      >
+        <header className={styles.slideHeading}>
+          <p className={styles.eyebrow}>{t.method.section}</p>
+          <h1>{t.method.title}</h1>
+          <p className={styles.slideSubtitle}>{t.method.subtitle}</p>
+        </header>
+
+        <div className={styles.methodGrid}>
+          <section className={styles.methodCard}>
+            <div className={styles.methodCardHeading}>
+              <span className={styles.panelNumber}>01</span>
+              <div>
+                <h2>{t.method.constraintsTitle}</h2>
+                <p>{t.method.constraintsText}</p>
+              </div>
+            </div>
+            <figure className={styles.methodVisual}>
+              <Image
+                src="/screenshots/3-1.png"
+                alt={t.method.constraintsAlt}
+                width={1118}
+                height={758}
+                sizes="(max-width: 900px) 100vw, 50vw"
+              />
+            </figure>
+          </section>
+
+          <section className={styles.methodCard}>
+            <div className={styles.methodCardHeading}>
+              <span className={styles.panelNumber}>02</span>
+              <div>
+                <h2>{t.method.hierarchyTitle}</h2>
+                <p>{t.method.hierarchyText}</p>
+              </div>
+            </div>
+            <figure className={styles.methodVisual}>
+              <Image
+                src="/screenshots/3-2.png"
+                alt={t.method.hierarchyAlt}
+                width={1118}
+                height={758}
+                sizes="(max-width: 900px) 100vw, 50vw"
+              />
+            </figure>
+          </section>
+        </div>
+
+        <ExhibitFooter
+          appLabel={t.tryTitle}
+          appText={t.tryText}
+          openAppLabel={t.openApp}
+          page={t.method.page}
+        />
+      </article>
+
+      <article
+        className={`${styles.slide} ${styles.learningSlide} ${
+          currentPage === 3 ? styles.activeSlide : ""
+        }`}
+      >
+        <header className={styles.slideHeading}>
+          <p className={styles.eyebrow}>{t.learning.section}</p>
+          <h1>{t.learning.title}</h1>
+          <p className={styles.slideSubtitle}>{t.learning.subtitle}</p>
+        </header>
+
+        <div className={styles.learningLayout}>
+          <div className={styles.learningContent}>
+            <section className={styles.comparisonCard}>
+              <h2>{t.learning.comparisonTitle}</h2>
+              <div className={`${styles.comparisonItem} ${styles.conventionalItem}`}>
+                <span>{t.learning.conventionalLabel}</span>
+                <p>{t.learning.conventionalText}</p>
+              </div>
+              <div className={styles.comparisonArrow} aria-hidden="true">↓</div>
+              <div className={`${styles.comparisonItem} ${styles.syntabloItem}`}>
+                <span>{t.learning.syntabloLabel}</span>
+                <p>{t.learning.syntabloText}</p>
+              </div>
+            </section>
+          </div>
+
+          <figure className={styles.learningVisual}>
+            <Image
+              src="/screenshots/4.png"
+              alt={t.learning.screenshotAlt}
+              width={1528}
+              height={1598}
+              sizes="(max-width: 900px) 100vw, 58vw"
+            />
+          </figure>
+        </div>
+
+        <ExhibitFooter
+          appLabel={t.tryTitle}
+          appText={t.tryText}
+          openAppLabel={t.openApp}
+          page={t.learning.page}
         />
       </article>
     </main>
