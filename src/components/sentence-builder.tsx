@@ -155,7 +155,7 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
     const router = useRouter();
     const searchParams = useSearchParams();
     const routeBase = basePath ?? "/app";
-    const enableModeSwitch = routeBase === "/app";
+    const enableModeSwitch = routeBase === "/app" || routeBase === "/app/scenario";
     const shouldEnableSidebarDropDelete = enableModeSwitch;
 
     const [mode, setMode] = useState<"scenario" | "sandbox">(enableModeSwitch ? "scenario" : "sandbox");
@@ -764,7 +764,13 @@ const SentenceBuilder = ({ lessons, basePath }: SentenceBuilderProps) => {
                 documentURL="https://sentence-builder-docs.hirodevs.com/docs/Introduction/intro"
                 showModeSwitch={!isMobileViewport && enableModeSwitch}
                 mode={effectiveMode}
-                onModeChange={(nextMode) => setMode(nextMode)}
+                onModeChange={(nextMode) => {
+                    if (nextMode === "lesson") {
+                        router.push("/app");
+                        return;
+                    }
+                    setMode(nextMode);
+                }}
             />
 
             {isAuthenticated && (

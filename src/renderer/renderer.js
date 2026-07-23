@@ -6,21 +6,27 @@ import { createBlockSnapshot, createBlockSnapshotList } from "@/utils/supabase/l
 import * as d3 from "d3";
 
 export class Renderer {
-    constructor(blocks, blockList, svg, onDirty, topBarHeight = 0, onLogEvent = (string, object) => { }, sidebarVariant = "sandbox", scenarioBlockList = blockList, enableSidebarDropDelete = false) {
+    constructor(blocks, blockList, svg, onDirty, topBarHeight = 0, onLogEvent = (string, object) => { }, sidebarVariant = "sandbox", scenarioBlockList = blockList, enableSidebarDropDelete = false, lessonBlockList = []) {
         this.blocks = blocks;
         this.topBarHeight = topBarHeight;
         this.canvasHeight = window.innerHeight - this.topBarHeight;
 
-        this.sidebarVariant = sidebarVariant === "scenario" ? "scenario" : "sandbox";
+        this.sidebarVariant = ["scenario", "lesson"].includes(sidebarVariant) ? sidebarVariant : "sandbox";
         this.savedSandboxSidebarState = null;
         this.enableSidebarDropDelete = Boolean(enableSidebarDropDelete);
 
         this.converter = new Converter;
         this.sandboxBlockList = this.formatBlockList(blockList || {});
         this.scenarioBlockList = this.formatBlockList(scenarioBlockList || blockList || {});
+        this.lessonBlockList = this.formatBlockList(lessonBlockList || []);
         const initialScenarioList = this.cloneBlockList(this.scenarioBlockList);
+        const initialLessonList = this.cloneBlockList(this.lessonBlockList);
         const initialSandboxList = this.cloneBlockList(this.sandboxBlockList);
-        const initialFullBlockList = this.sidebarVariant === "scenario" ? initialScenarioList : initialSandboxList;
+        const initialFullBlockList = this.sidebarVariant === "scenario"
+            ? initialScenarioList
+            : this.sidebarVariant === "lesson"
+                ? initialLessonList
+                : initialSandboxList;
         this.fullBlockList = initialFullBlockList;
         this.blockList = this.cloneBlockList(initialFullBlockList);
 
@@ -31,6 +37,7 @@ export class Renderer {
         this.grammar = new Grammar;
 
         this.onDirty = onDirty;
+        this.showTranslations = true;
 
         this.onLogEvent = onLogEvent;
         this.dragLogContext = null;
@@ -104,6 +111,10 @@ export class Renderer {
 
         // Clear cache on resize
         this.cachedBlockListWidth = null;
+
+        if (this.sidebarVariant === "lesson") {
+            this.renderSideBar();
+        }
 
         // Update sidebar background height
         const sidebarBackground = d3.select("#sidebar-background");
@@ -269,11 +280,11 @@ export class Renderer {
     }
 
     getSidebarNavWidth() {
-        return this.sidebarVariant === "scenario" ? 0 : navBarWidth;
+        return ["scenario", "lesson"].includes(this.sidebarVariant) ? 0 : navBarWidth;
     }
 
     setSidebarVariant(variant) {
-        const normalized = variant === "scenario" ? "scenario" : "sandbox";
+        const normalized = ["scenario", "lesson"].includes(variant) ? variant : "sandbox";
         if (this.sidebarVariant === normalized) {
             return;
         }
@@ -286,6 +297,11 @@ export class Renderer {
             this.searchQuery = "";
             const scenarioListClone = this.cloneBlockList(this.scenarioBlockList);
             this.fullBlockList = scenarioListClone;
+            this.blockList = this.cloneBlockList(this.fullBlockList);
+        } else if (normalized === "lesson") {
+            this.searchQuery = "";
+            const lessonListClone = this.cloneBlockList(this.lessonBlockList);
+            this.fullBlockList = lessonListClone;
             this.blockList = this.cloneBlockList(this.fullBlockList);
         } else if (normalized === "sandbox") {
             const restoredSearchQuery = this.savedSandboxSidebarState?.searchQuery ?? "";
@@ -314,6 +330,22 @@ export class Renderer {
             this.renderSideBar();
             this.setBlockBoardTransform();
         }
+    }
+
+    setLessonBlockList(newList) {
+        this.lessonBlockList = this.formatBlockList(newList || []);
+        if (this.sidebarVariant === "lesson") {
+            const lessonListClone = this.cloneBlockList(this.lessonBlockList);
+            this.fullBlockList = lessonListClone;
+            this.blockList = this.cloneBlockList(this.fullBlockList);
+            this.cachedBlockListWidth = null;
+            this.renderSideBar();
+        }
+    }
+
+    setTranslationVisibility(visible) {
+        this.showTranslations = Boolean(visible);
+        this.renderBlocks();
     }
 
     consumeScenarioBlock(blockId) {
@@ -517,12 +549,62 @@ export class Renderer {
         this.blockBoard = null;
         this.navBackgroundRect = null;
 
+        if (this.sidebarVariant === "lesson") {
+            this.renderLessonTray();
+            return;
+        }
+
         if (this.sidebarVariant === "scenario") {
             this.renderScenarioSidebar();
             return;
         }
 
         this.renderSandboxSidebar();
+    }
+
+    renderLessonTray() {
+        const trayHeight = 150;
+        const trayY = Math.max(0, this.canvasHeight - trayHeight);
+        const blocks = Object.values(this.blockList || {}).flat();
+
+        this.sidebar = this.svg.append("g")
+            .attr("id", "sidebar")
+            .attr("transform", `translate(0, ${trayY})`);
+
+        this.sidebar.append("rect")
+            .attr("id", "sidebar-background")
+            .attr("width", window.innerWidth)
+            .attr("height", trayHeight)
+            .attr("fill", "#fafafa")
+            .attr("stroke", "#e3e7ed")
+            .attr("stroke-width", "1")
+            .on("mousedown", (event) => event.stopPropagation());
+
+        this.sidebar.append("text")
+            .text("使えるブロック　クリックまたはドラッグ")
+            .attr("x", 28)
+            .attr("y", 28)
+            .attr("fill", "#687386")
+            .attr("font-size", "12pt")
+            .attr("font-weight", "600")
+            .style("user-select", "none");
+
+        this.blockBoard = this.sidebar.append("g")
+            .attr("transform", "translate(28, 48)");
+
+        const widths = blocks.map(block => this.calculateWidth(block));
+        const totalWidth = widths.reduce((sum, width) => sum + width, 0) + Math.max(0, blocks.length - 1) * 24;
+        let x = Math.max(28, (window.innerWidth - totalWidth) / 2);
+
+        blocks.forEach((block, index) => {
+            const previewId = this.generateRandomId();
+            const previewGroup = this.blockBoard.append("g")
+                .attr("transform", `translate(${x - 28}, 0)`)
+                .attr("id", previewId)
+                .datum(block);
+            this.renderPreviewBlock(previewId);
+            x += widths[index] + 24;
+        });
     }
 
     renderSandboxSidebar() {
@@ -1357,6 +1439,7 @@ export class Renderer {
     }
 
     setBlockBoardTransform() {
+        if (this.sidebarVariant === "lesson") return;
         const zoomExtent = this.getCurrentZoomExtent();
 
         const scrollableHeight = Math.max(0, this.canvasHeight - (this.searchAreaHeight || 0));
@@ -1403,9 +1486,83 @@ export class Renderer {
         previewBlockGroup.selectAll("*").remove();
         const realData = JSON.parse(JSON.stringify(block));
         realData.id = this.generateRandomId();
+        realData.sourceBlockId = block.sourceBlockId || block.id;
         realData.x = 0;
         realData.y = 0;
         this.renderBlock(realData, previewBlockGroup, true, id);
+
+        if (this.sidebarVariant === "lesson") {
+            const blockWidth = this.calculateWidth(realData);
+            const blockHeight = this.calculateHeight(realData);
+            const addButton = previewBlockGroup.append("g")
+                .attr("transform", `translate(${blockWidth + 7}, ${blockHeight / 2})`)
+                .style("cursor", "pointer")
+                .on("click", (event) => {
+                    event.stopPropagation();
+                    this.addLessonBlock(realData);
+                });
+            addButton.append("circle")
+                .attr("r", 12)
+                .attr("fill", "#2675f5");
+            addButton.append("text")
+                .text("+")
+                .attr("text-anchor", "middle")
+                .attr("dy", "0.34em")
+                .attr("fill", "white")
+                .attr("font-size", "15pt")
+                .attr("font-weight", "700")
+                .style("user-select", "none")
+                .attr("pointer-events", "none");
+        }
+
+        previewBlockGroup
+            .style("cursor", "pointer")
+            .on("click.lesson", (event) => {
+                if (this.sidebarVariant !== "lesson" || event.defaultPrevented) return;
+                if (event.target?.closest?.(".block-dropdown")) return;
+                const targetId = event.target?.id || "";
+                if (targetId.startsWith("dropdown-")) return;
+                this.addLessonBlock(realData);
+            });
+    }
+
+    addLessonBlock(sourceBlock) {
+        if (!sourceBlock || this.sidebarVariant !== "lesson") return;
+        const newBlock = JSON.parse(JSON.stringify(sourceBlock));
+        newBlock.sourceBlockId = sourceBlock.sourceBlockId || sourceBlock.id;
+        newBlock.id = this.generateRandomId();
+        newBlock.x = Math.max(330, (window.innerWidth * 0.45) - (this.calculateWidth(newBlock) / 2));
+        newBlock.y = Math.max(120, (this.canvasHeight - 150) * 0.48);
+        this.blocks.push(newBlock);
+
+        const otherRoots = this.blocks.filter(block => block.id !== newBlock.id);
+        const newPlaceholders = newBlock.children
+            .map((child, index) => ({ child, index }))
+            .filter(({ child }) => child.type === "placeholder" && !child.hidden && !child.content);
+
+        for (const existing of otherRoots) {
+            for (const { index } of newPlaceholders) {
+                const hypothetical = this.previewInsertion(existing.id, newBlock.id, index);
+                if (hypothetical && this.validate(hypothetical)) {
+                    this.insertBlock(existing.id, newBlock.id, index);
+                    return;
+                }
+            }
+
+            const existingPlaceholders = existing.children
+                .map((child, index) => ({ child, index }))
+                .filter(({ child }) => child.type === "placeholder" && !child.hidden && !child.content);
+            for (const { index } of existingPlaceholders) {
+                const hypothetical = this.previewInsertion(newBlock.id, existing.id, index);
+                if (hypothetical && this.validate(hypothetical)) {
+                    this.insertBlock(newBlock.id, existing.id, index);
+                    return;
+                }
+            }
+        }
+
+        this.renderBlocks();
+        this.onDirty();
     }
 
     renderSidebarButton(y, text, onClickCallback) {
@@ -1474,7 +1631,7 @@ export class Renderer {
         const isRootBlock = parentNode && parentNode.id === "grid";
 
         // 日本語訳を表示する条件：ドラッグ中 or トップレベル(gridの直下にある)
-        if (isRootBlock || block.id === this.draggedBlockId) {
+        if (this.showTranslations && (isRootBlock || block.id === this.draggedBlockId)) {
             this.renderTranslationBubble(block, blockGroup, width, height);
         }
 
@@ -1752,7 +1909,9 @@ export class Renderer {
         const y = (height - dropdownHeight) / 2;
         const dropdownId = `dropdown-${count}-${block.id}`;
 
-        const dropdownGroup = blockGroup.append("g").classed("pointer", true);
+        const dropdownGroup = blockGroup.append("g")
+            .classed("pointer", true)
+            .classed("block-dropdown", true);
         dropdownGroup.append("rect")
             .attr("id", dropdownId)
             .attr("x", x)

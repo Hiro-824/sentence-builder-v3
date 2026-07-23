@@ -4,7 +4,7 @@ import React, { useCallback, useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { User } from '@supabase/supabase-js';
 
-type BuilderMode = "scenario" | "sandbox";
+type BuilderMode = "lesson" | "scenario" | "sandbox";
 
 interface TopBarProps {
     user: User | null;
@@ -149,6 +149,7 @@ const TopBar = ({ user, onSignOut, onShowAuthModal, isDirty, isSaving, onSave, o
                         border: '1px solid #e5e7eb'
                     }}>
                         {[
+                            { id: 'lesson', label: 'Lesson' },
                             { id: 'scenario', label: 'Scenario' },
                             { id: 'sandbox', label: 'Sandbox' },
                         ].map((item) => {
