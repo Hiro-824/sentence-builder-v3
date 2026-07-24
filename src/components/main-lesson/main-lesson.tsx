@@ -289,14 +289,20 @@ const LessonPicture = ({ visual }: { visual: LessonVisual }) => {
   }
 
   if (visual.kind === "what") {
+    const silhouette = visual.target === "animal"
+      ? { picture: "🐈", label: "動物のシルエット" }
+      : visual.target === "bird"
+        ? { picture: "🐦", label: "鳥のシルエット" }
+        : { picture: "🍎", label: "食べ物のシルエット" };
+
     return (
       <div className={styles.whatScene}>
         <span
           className={styles.silhouettePicture}
           role="img"
-          aria-label={visual.target === "animal" ? "動物のシルエット" : "食べ物のシルエット"}
+          aria-label={silhouette.label}
         >
-          {visual.target === "animal" ? "🐈" : "🍎"}
+          {silhouette.picture}
         </span>
         <strong>?</strong>
       </div>
