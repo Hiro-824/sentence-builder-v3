@@ -252,6 +252,8 @@ const LessonPicture = ({ visual }: { visual: LessonVisual }) => {
   }
 
   if (visual.type === "predicate") {
+    const isDitransitive = visual.complements.length === 2;
+
     return (
       <div
         className={`${styles.predicateScene} ${styles[`arity${visual.complements.length}`]}`}
@@ -265,12 +267,23 @@ const LessonPicture = ({ visual }: { visual: LessonVisual }) => {
             style={{ backgroundImage: `url("/lesson-assets/predicates/${visual.predicate}-v2.png")` }}
           />
         </div>
-        {visual.complements.map((complement, index) => (
-          <div className={styles.complementGroup} key={`${visual.predicate}-${index}`}>
+        {isDitransitive ? (
+          <>
             <span className={styles.relationArrow} aria-hidden="true">→</span>
-            <EntityPicture entity={complement} />
-          </div>
-        ))}
+            <div className={styles.ditransitiveComplements}>
+              <EntityPicture entity={visual.complements[1]} />
+              <span className={styles.downArrow} aria-hidden="true">↓</span>
+              <EntityPicture entity={visual.complements[0]} />
+            </div>
+          </>
+        ) : (
+          visual.complements.map((complement, index) => (
+            <div className={styles.complementGroup} key={`${visual.predicate}-${index}`}>
+              <span className={styles.relationArrow} aria-hidden="true">→</span>
+              <EntityPicture entity={complement} />
+            </div>
+          ))
+        )}
       </div>
     );
   }

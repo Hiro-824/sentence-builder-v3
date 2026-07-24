@@ -226,30 +226,46 @@
 }
 
 .arity2 {
-  gap: 2px;
+  gap: 6px;
 }
 
-.arity2 .complementGroup {
-  gap: 2px;
+.ditransitiveComplements {
+  display: grid;
+  grid-template-rows: 82px 18px 82px;
+  align-items: center;
+  justify-items: center;
 }
 
-.arity2 .predicateTile,
+.arity2 .predicateTile {
+  flex-basis: 128px;
+  height: 184px;
+}
+
 .arity2 .entityTile {
-  flex-basis: 82px;
-  height: 158px;
+  width: 112px;
+  height: 82px;
+  flex-basis: auto;
   border-radius: 14px;
 }
 
 .arity2 .relationArrow {
-  flex-basis: 13px;
-  font-size: 16px;
+  flex-basis: 22px;
+  font-size: 22px;
+}
+
+.downArrow {
+  color: #93a1b5;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
 }
 
 .arity2 .entityTile .complementNoun {
   width: 78px;
   height: 78px;
-  top: 40px;
-  left: 2px;
+  top: 2px;
+  left: 17px;
 }
 
 .objectPointer {
