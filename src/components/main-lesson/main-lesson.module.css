@@ -276,6 +276,13 @@
   filter: drop-shadow(0 5px 6px rgba(30, 42, 60, 0.12));
 }
 
+.arity2 .objectPointer {
+  right: -4px;
+  bottom: -4px;
+  width: 52px;
+  height: 52px;
+}
+
 .whichScene,
 .whatScene,
 .whoseScene {

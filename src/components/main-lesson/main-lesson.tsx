@@ -160,25 +160,23 @@ const NounPicture = ({ noun, className = "" }: { noun: LessonNoun; className?: s
 const EntityPicture = ({ entity }: { entity: LessonEntityVisual }) => (
   <div className={styles.entityTile}>
     {entity.type === "noun" ? (
-      <>
-        <NounPicture noun={entity.noun} className={styles.complementNoun} />
-        {entity.definite && (
-          <Image
-            className={styles.objectPointer}
-            src="/lesson-assets/pointer-opaque.png"
-            alt="対象を指差している手"
-            width={72}
-            height={72}
-            unoptimized
-          />
-        )}
-      </>
+      <NounPicture noun={entity.noun} className={styles.complementNoun} />
     ) : (
       <span
         className={styles.assetEntity}
         role="img"
         aria-label={entity.label}
         style={{ backgroundImage: `url("/lesson-assets/entities/${entity.name}.png")` }}
+      />
+    )}
+    {entity.definite && (
+      <Image
+        className={styles.objectPointer}
+        src="/lesson-assets/pointer-opaque.png"
+        alt="対象を指差している手"
+        width={72}
+        height={72}
+        unoptimized
       />
     )}
   </div>

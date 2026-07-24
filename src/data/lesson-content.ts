@@ -37,7 +37,12 @@ export type LessonPredicate =
 
 export type LessonEntityVisual =
   | { type: "noun"; noun: LessonNoun; definite: boolean }
-  | { type: "asset"; name: "girl" | "boy" | "teacher" | "child" | "picture" | "message" | "story"; label: string };
+  | {
+      type: "asset";
+      name: "girl" | "boy" | "teacher" | "child" | "picture" | "message" | "story";
+      label: string;
+      definite: boolean;
+    };
 
 export type LessonVisual =
   | { type: "countable"; noun: LessonNoun; number: "singular" | "plural"; definite: boolean }
@@ -290,7 +295,8 @@ const transitiveQuestions = (): LessonQuestion[] => [
 const entity = (
   name: "girl" | "boy" | "teacher" | "child" | "picture" | "message" | "story",
   label: string,
-): LessonEntityVisual => ({ type: "asset", name, label });
+  definite = false,
+): LessonEntityVisual => ({ type: "asset", name, label, definite });
 
 const ditransitiveQuestion = (
   predicate: "give" | "show" | "send" | "tell",
@@ -308,7 +314,7 @@ const ditransitiveQuestion = (
     predicate,
     label: `${recipientLabel}に${objectLabel}を`,
     complements: [
-      entity(recipient, recipientLabel),
+      entity(recipient, recipientLabel, true),
       object === "book"
         ? { type: "noun", noun: LESSON_NOUNS.find((item) => item.singular === "book")!, definite: false }
         : entity(object, objectLabel),
