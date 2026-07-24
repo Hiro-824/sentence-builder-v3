@@ -20,7 +20,7 @@ const content = {
     title: "英文法学習アプリ Syntablo",
     subtitle: "見えない文法制約を操作可能な図形として外在化する試み",
     summary:
-      "Syntabloは、英単語や句をブロックとして組み合わせながら、英文の構造を学ぶためのWebアプリケーションです。",
+      "Syntabloは、英単語や句をブロックとして組み合わせながら、英語の文法を学ぶためのWebアプリケーションです。",
     cards: [
       {
         label: "背景",
@@ -107,7 +107,7 @@ const content = {
       section: "学習設計",
       title: "意味を起点とした学習活動",
       subtitle:
-        "画像が表す内容をブロックで表現し、必要な文法形式へ注意を向ける",
+        "画像が表す内容を単語ブロックの組み合わせで表現しようとすることで、必要な文法形式へ注意が向く体験を目指す",
       comparisonTitle: "意味と形式の対応",
       conventionalLabel: "従来の文法説明",
       conventionalText:
@@ -122,7 +122,7 @@ const content = {
       section: "学習モード",
       title: "目的に合わせて選べる3つのモード",
       subtitle:
-        "段階的な学習、対話練習、自由な試行を、一つの文法エンジン上で行える",
+        "段階的な文法演習を行うモード、会話シナリオで練習するモード、自由な作文を行うモードがある",
       items: [
         {
           title: "レッスンモード",
@@ -166,7 +166,7 @@ const content = {
       section: "対応範囲",
       title: "現在できること・できないこと",
       subtitle:
-        "現在扱える文法と未対応の文法を具体化し、文法を図形で表現する方式自体の限界も示す",
+        "対応している文法事項とそうでない文法事項がある。また、文法を図形で表現するという方式にも限界がある",
       supportedTitle: "できること",
       supportedGroups: [
         {
@@ -220,7 +220,7 @@ const content = {
     subtitle:
       "An attempt to externalize invisible grammatical constraints as manipulable shapes",
     summary:
-      "Syntablo is a web application for learning English sentence structure by combining words and phrases as blocks.",
+      "Syntablo is a web application for learning English grammar by combining words and phrases as blocks.",
     cards: [
       {
         label: "Background",
@@ -307,7 +307,7 @@ const content = {
       section: "Learning design",
       title: "Meaning-Oriented Learning Activities",
       subtitle:
-        "Learners use blocks to express the content of an image and attend to the grammatical forms needed to do so",
+        "The experience is designed so that trying to express the content of an image by combining word blocks draws learners’ attention to the grammatical forms they need",
       comparisonTitle: "Connecting meaning and form",
       conventionalLabel: "Traditional grammar explanations",
       conventionalText:
@@ -322,7 +322,7 @@ const content = {
       section: "Learning modes",
       title: "Three Modes for Different Learning Goals",
       subtitle:
-        "Structured learning, conversation practice, and free exploration—all powered by the same grammar engine",
+        "There is a mode for step-by-step grammar exercises, a mode for practicing through conversation scenarios, and a mode for free-form sentence writing",
       items: [
         {
           title: "Lesson mode",
@@ -366,7 +366,7 @@ const content = {
       section: "Coverage",
       title: "What the Current System Can and Cannot Do",
       subtitle:
-        "The current grammar coverage is distinguished from unsupported constructions and limitations of representing grammar through shapes",
+        "Some grammar topics are supported, while others are not. The approach of representing grammar through shapes also has limitations",
       supportedTitle: "Supported",
       supportedGroups: [
         {
