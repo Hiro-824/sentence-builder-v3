@@ -388,7 +388,6 @@ export default function MainLesson() {
     const incompleteSome = rootBlocks.some((block) =>
       getSourceBlockId(block) === "det_some" && !isCompleteBlock(block)
     );
-    if (incompleteSome && activeQuestion.expected.some((answer) => !answer.startsWith("some "))) return;
 
     const completeAnswers = rootBlocks
       .filter(isCompleteBlock)
@@ -399,6 +398,14 @@ export default function MainLesson() {
     const expected = activeQuestion.expected.map(normalizePhrase);
     const evaluableAnswers = completeAnswers.filter((answer) =>
       isEvaluableRoot(answer.block, answer.phrase, expected)
+      // An unfinished "some" may be intended for a bare plural/uncountable
+      // noun, so defer only that bare-noun candidate. Other completed
+      // determiner phrases (for example "the cars") must still be graded.
+      && !(
+        incompleteSome
+        && expected.includes(answer.phrase)
+        && !getSourceBlockId(answer.block).startsWith("det_")
+      )
     );
     if (evaluableAnswers.length === 0) return;
 
