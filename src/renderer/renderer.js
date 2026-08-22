@@ -1106,7 +1106,7 @@ export class Renderer {
         if (!document.getElementById(styleId)) {
             const style = document.createElement('style');
             style.id = styleId;
-            style.innerHTML = `
+            style.textContent = `
                 #sidebar-search-input::-webkit-search-decoration,
                 #sidebar-search-input::-webkit-search-cancel-button,
                 #sidebar-search-input::-webkit-search-results-button,

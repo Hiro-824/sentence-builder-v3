@@ -1,0 +1,230 @@
+
+
+Select alert: Next.js vulnerable to server-side request forgery in applications using WebSocket upgrades
+Next.js vulnerable to server-side request forgery in applications using WebSocket upgrades High Direct
+#48 opened 3 months ago • Detected in next (npm) • package-lock.json
+
+Select alert: Prototype Pollution via parse() in NodeJS flatted
+Prototype Pollution via parse() in NodeJS flatted High Development
+#34 opened 5 months ago • Detected in flatted (npm) • package-lock.json
+
+Select alert: Next.js: Middleware / Proxy bypass in App Router applications using Turbopack and single locale
+Next.js: Middleware / Proxy bypass in App Router applications using Turbopack and single locale High Direct
+#73 opened last month • Detected in next (npm) • package-lock.json
+
+Select alert: Next.js has a Middleware / Proxy bypass in App Router applications via segment-prefetch routes
+Next.js has a Middleware / Proxy bypass in App Router applications via segment-prefetch routes High Direct
+#47 opened 3 months ago • Detected in next (npm) • package-lock.json
+
+Select alert: Next.js: Server-Side Request Forgery in rewrites via attacker-controlled destination hostname
+Next.js: Server-Side Request Forgery in rewrites via attacker-controlled destination hostname High Direct
+#67 opened last month • Detected in next (npm) • package-lock.json
+
+Select alert: Next.js: Server-Side Request Forgery in Server Actions on custom servers
+Next.js: Server-Side Request Forgery in Server Actions on custom servers High Direct
+#68 opened last month • Detected in next (npm) • package-lock.json
+
+Select alert: Next.js: Denial of Service in App Router using Server Actions
+Next.js: Denial of Service in App Router using Server Actions High Direct
+#66 opened last month • Detected in next (npm) • package-lock.json
+
+Select alert: Next.js has a Middleware / Proxy bypass through dynamic route parameter injection
+Next.js has a Middleware / Proxy bypass through dynamic route parameter injection High Direct
+#45 opened 3 months ago • Detected in next (npm) • package-lock.json
+
+Select alert: nanoid: non-secure generators can loop indefinitely with negative size
+nanoid: non-secure generators can loop indefinitely with negative size High
+#85 opened 2 weeks ago • Detected in nanoid (npm) • package-lock.json
+
+Select alert: nanoid: custom generators can loop indefinitely when size is zero
+nanoid: custom generators can loop indefinitely when size is zero High
+#86 opened last week • Detected in nanoid (npm) • package-lock.json
+
+Select alert: ws: Memory exhaustion DoS from tiny fragments and data chunks
+ws: Memory exhaustion DoS from tiny fragments and data chunks High
+#61 opened 2 months ago • Detected in ws (npm) • package-lock.json
+
+Select alert: Next.js vulnerable to Denial of Service via connection exhaustion in applications using Cache Components
+Next.js vulnerable to Denial of Service via connection exhaustion in applications using Cache Components High Direct
+#53 opened 3 months ago • Detected in next (npm) • package-lock.json
+
+Select alert: Next.js has a Middleware / Proxy bypass in Pages Router applications using i18n
+Next.js has a Middleware / Proxy bypass in Pages Router applications using i18n High Direct
+#46 opened 3 months ago • Detected in next (npm) • package-lock.json
+
+Select alert: PostCSS: Arbitrary file read and information disclosure via attacker-controlled sourceMappingURL in CSS comments
+PostCSS: Arbitrary file read and information disclosure via attacker-controlled sourceMappingURL in CSS comments High Development
+#76 opened last month • Detected in postcss (npm) • package-lock.json
+
+Select alert: Next.js has a Middleware / Proxy bypass in App Router applications via segment-prefetch routes - Incomplete Fix Follow-Up
+Next.js has a Middleware / Proxy bypass in App Router applications via segment-prefetch routes - Incomplete Fix Follow-Up High Direct
+#56 opened 3 months ago • Detected in next (npm) • package-lock.json
+
+Select alert: brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups
+brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups High Development
+#88 opened 2 days ago • Detected in brace-expansion (npm) • package-lock.json
+
+Select alert: brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups
+brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups High Development
+#75 opened last month • Detected in brace-expansion (npm) • package-lock.json
+
+Select alert: minimatch has ReDoS: matchOne() combinatorial backtracking via multiple non-adjacent GLOBSTAR segments
+minimatch has ReDoS: matchOne() combinatorial backtracking via multiple non-adjacent GLOBSTAR segments High Development
+#26 opened 6 months ago • Detected in minimatch (npm) • package-lock.json
+
+Select alert: minimatch has ReDoS: matchOne() combinatorial backtracking via multiple non-adjacent GLOBSTAR segments
+minimatch has ReDoS: matchOne() combinatorial backtracking via multiple non-adjacent GLOBSTAR segments High Development
+#24 opened 6 months ago • Detected in minimatch (npm) • package-lock.json
+
+Select alert: js-yaml: YAML merge-key chains can force quadratic CPU consumption
+js-yaml: YAML merge-key chains can force quadratic CPU consumption High Development
+#74 opened last month • Detected in js-yaml (npm) • package-lock.json
+
+Select alert: js-yaml: YAML merge-key chains can force quadratic CPU consumption
+js-yaml: YAML merge-key chains can force quadratic CPU consumption High
+#64 opened last month • Detected in js-yaml (npm) • package-lock.json
+
+Select alert: Next.js: Unbounded next/image disk cache growth can exhaust storage
+Next.js: Unbounded next/image disk cache growth can exhaust storage Moderate Direct
+#33 opened 5 months ago • Detected in next (npm) • package-lock.json
+
+Select alert: Next.js: Unbounded postponed resume buffering can lead to DoS
+Next.js: Unbounded postponed resume buffering can lead to DoS Moderate Direct
+#31 opened 5 months ago • Detected in next (npm) • package-lock.json
+
+Select alert: JS-YAML: Quadratic CPU consumption in !!omap resolution (3.x and 4.x) — CVE-2026-59870 fix not backported
+JS-YAML: Quadratic CPU consumption in !!omap resolution (3.x and 4.x) — CVE-2026-59870 fix not backported High Development
+#83 opened 2 weeks ago • Detected in js-yaml (npm) • package-lock.json
+
+Select alert: JS-YAML: Quadratic CPU consumption in !!omap resolution (3.x and 4.x) — CVE-2026-59870 fix not backported
+JS-YAML: Quadratic CPU consumption in !!omap resolution (3.x and 4.x) — CVE-2026-59870 fix not backported High
+#82 opened 2 weeks ago • Detected in js-yaml (npm) • package-lock.json
+
+
+
+Select alert: PostCSS: Path Traversal in Previous Source Map Auto-Loading (sourceMappingURL) leads to Arbitrary .map File Disclosure
+PostCSS: Path Traversal in Previous Source Map Auto-Loading (sourceMappingURL) leads to Arbitrary .map File Disclosure High Development
+#77 opened 3 weeks ago • Detected in postcss (npm) • package-lock.json
+
+Select alert: Next.js Vulnerable to Denial of Service with Server Components
+Next.js Vulnerable to Denial of Service with Server Components High Direct
+#44 opened 3 months ago • Detected in next (npm) • package-lock.json
+
+Select alert: Next.js has a Denial of Service with Server Components
+Next.js has a Denial of Service with Server Components High Direct
+#40 opened 4 months ago • Detected in next (npm) • package-lock.json
+
+Select alert: Next.js HTTP request deserialization can lead to DoS when using insecure React Server Components
+Next.js HTTP request deserialization can lead to DoS when using insecure React Server Components High Direct
+#17 opened 7 months ago • Detected in next (npm) • package-lock.json
+
+Select alert: mdast-util-to-hast has unsanitized class attribute
+mdast-util-to-hast has unsanitized class attribute Moderate
+#9 opened 9 months ago • Detected in mdast-util-to-hast (npm) • package-lock.json
+
+Select alert: sharp inherited vulnerabilities in libvips: CVE-2026-33327, CVE-2026-33328, CVE-2026-35590, CVE-2026-35591
+sharp inherited vulnerabilities in libvips: CVE-2026-33327, CVE-2026-33328, CVE-2026-35590, CVE-2026-35591 High
+#65 opened last month • Detected in sharp (npm) • package-lock.json
+
+Select alert: Next.js: Denial of Service in the Image Optimization API using SVGs
+Next.js: Denial of Service in the Image Optimization API using SVGs Moderate Direct
+#71 opened last month • Detected in next (npm) • package-lock.json
+
+Select alert: Next.js: Unbounded Server Action payload in Edge runtime
+Next.js: Unbounded Server Action payload in Edge runtime Moderate Direct
+#87 opened 3 days ago • Detected in next (npm) • package-lock.json
+
+Select alert: Next.js: Unauthenticated disclosure of internal Server Function endpoints
+Next.js: Unauthenticated disclosure of internal Server Function endpoints Moderate Direct
+#72 opened last month • Detected in next (npm) • package-lock.json
+
+Select alert: Next.js: HTTP request smuggling in rewrites
+Next.js: HTTP request smuggling in rewrites Moderate Direct
+#32 opened 5 months ago • Detected in next (npm) • package-lock.json
+
+Select alert: Next.js: Cache confusion of response bodies for requests with bodies containing invalid UTF-8 byte sequences
+Next.js: Cache confusion of response bodies for requests with bodies containing invalid UTF-8 byte sequences Moderate Direct
+#70 opened last month • Detected in next (npm) • package-lock.json
+
+Select alert: Next.js has a Denial of Service in the Image Optimization API
+Next.js has a Denial of Service in the Image Optimization API Moderate Direct
+#54 opened 3 months ago • Detected in next (npm) • package-lock.json
+
+Select alert: uuid: Missing buffer bounds check in v3/v5/v6 when buf is provided
+uuid: Missing buffer bounds check in v3/v5/v6 when buf is provided Moderate Direct
+#58 opened 3 months ago • Detected in uuid (npm) • package-lock.json
+
+Select alert: PostCSS: incomplete fix of GHSA-6g55-p6wh-862q — attacker-controlled sourceMappingURL reads arbitrary .map files when `from` is unset
+PostCSS: incomplete fix of GHSA-6g55-p6wh-862q — attacker-controlled sourceMappingURL reads arbitrary .map files when `from` is unset Moderate Development
+#80 opened 2 weeks ago • Detected in postcss (npm) • package-lock.json
+
+Select alert: Next.js self-hosted applications vulnerable to DoS via Image Optimizer remotePatterns configuration
+Next.js self-hosted applications vulnerable to DoS via Image Optimizer remotePatterns configuration Moderate Direct
+#16 opened 7 months ago • Detected in next (npm) • package-lock.json
+
+Select alert: Next.js: Cache confusion of response bodies for requests with bodies
+Next.js: Cache confusion of response bodies for requests with bodies Moderate Direct
+#69 opened last month • Detected in next (npm) • package-lock.json
+
+Select alert: PostCSS has XSS via Unescaped </style> in its CSS Stringify Output
+PostCSS has XSS via Unescaped </style> in its CSS Stringify Output Moderate
+#57 opened 3 months ago • Detected in postcss (npm) • package-lock.json
+
+Select alert: Next.js has cross-site scripting in beforeInteractive scripts with untrusted input
+Next.js has cross-site scripting in beforeInteractive scripts with untrusted input Moderate Direct
+#49 opened 3 months ago • Detected in next (npm) • package-lock.json
+
+Select alert: Next.js has Unbounded Memory Consumption via PPR Resume Endpoint
+Next.js has Unbounded Memory Consumption via PPR Resume Endpoint Moderate Direct
+#18 opened 7 months ago • Detected in next (npm) • package-lock.json
+
+Select alert: Picomatch: Method Injection in POSIX Character Classes causes incorrect Glob Matching
+Picomatch: Method Injection in POSIX Character Classes causes incorrect Glob Matching Moderate Development
+#39 opened 4 months ago • Detected in picomatch (npm) • package-lock.json
+
+Select alert: Picomatch: Method Injection in POSIX Character Classes causes incorrect Glob Matching
+Picomatch: Method Injection in POSIX Character Classes causes incorrect Glob Matching Moderate Development
+#35 opened 5 months ago • Detected in picomatch (npm) • package-lock.json
+
+Select alert: js-yaml has prototype pollution in merge (<<)
+js-yaml has prototype pollution in merge (<<) Moderate
+#8 opened 9 months ago • Detected in js-yaml (npm) • package-lock.json
+
+Select alert: js-yaml has prototype pollution in merge (<<)
+js-yaml has prototype pollution in merge (<<) Moderate Development
+#7 opened 9 months ago • Detected in js-yaml (npm) • package-lock.json
+
+Select alert: Next.js vulnerable to cache poisoning in React Server Component responses
+Next.js vulnerable to cache poisoning in React Server Component responses Moderate Direct
+#52 opened 3 months ago • Detected in next (npm) • package-lock.json
+
+Select alert: JS-YAML: Quadratic-complexity DoS in merge key handling via repeated aliases
+JS-YAML: Quadratic-complexity DoS in merge key handling via repeated aliases Moderate Development
+#63 opened last month • Detected in js-yaml (npm) • package-lock.json
+
+JS-YAML: Quadratic-complexity DoS in merge key handling via repeated aliases Moderate
+#62 opened last month • Detected in js-yaml (npm) • package-lock.json
+
+Select alert: Next.js: null origin can bypass Server Actions CSRF checks
+Next.js: null origin can bypass Server Actions CSRF checks Moderate Direct
+#29 opened 5 months ago • Detected in next (npm) • package-lock.json
+
+Select alert: ws: Uninitialized memory disclosure
+ws: Uninitialized memory disclosure Moderate
+#59 opened 3 months ago • Detected in ws (npm) • package-lock.json
+
+Select alert: Next.js vulnerable to cross-site scripting in App Router applications using CSP nonces
+Next.js vulnerable to cross-site scripting in App Router applications using CSP nonces Moderate Direct
+#51 opened 3 months ago • Detected in next (npm) • package-lock.json
+
+Select alert: Next.js's Middleware / Proxy redirects can be cache-poisoned
+Next.js's Middleware / Proxy redirects can be cache-poisoned Low Direct
+#55 opened 3 months ago • Detected in next (npm) • package-lock.json
+
+Select alert: Next.js vulnerable to cache poisoning via collisions in React Server Component cache-busting
+Next.js vulnerable to cache poisoning via collisions in React Server Component cache-busting Low Direct
+#50 opened 3 months ago • Detected in next (npm) • package-lock.json
+
+Select alert: Next.js: null origin can bypass dev HMR websocket CSRF checks
+Next.js: null origin can bypass dev HMR websocket CSRF checks Low Direct
+#30 opened 5 months ago • Detected in next (npm) • package-lock.json

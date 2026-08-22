@@ -11,6 +11,25 @@ type TutorScenario = {
   followUpStyle: string;
 };
 
+type TutorMessage = {
+  role: 'user' | 'assistant';
+  content: string;
+};
+
+const MAX_REQUEST_BYTES = 64 * 1024;
+const MAX_MESSAGES = 50;
+const MAX_MESSAGE_LENGTH = 8_000;
+const MAX_CUSTOM_SCENARIO_LENGTH = 1_000;
+
+class ApiRequestError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message);
+  }
+}
+
 const BUILT_IN_SCENARIOS: TutorScenario[] = [
   {
     id: 'cafe_ordering',
@@ -172,14 +191,82 @@ function parseTutorResponse(rawContent: unknown) {
   };
 }
 
+async function readJsonBody(req: Request): Promise<unknown> {
+  const contentType = req.headers.get('content-type')?.toLowerCase() ?? '';
+  if (!contentType.startsWith('application/json')) {
+    throw new ApiRequestError('Content-Type must be application/json.', 415);
+  }
+
+  const declaredLength = Number(req.headers.get('content-length'));
+  if (Number.isFinite(declaredLength) && declaredLength > MAX_REQUEST_BYTES) {
+    throw new ApiRequestError('Request payload is too large.', 413);
+  }
+
+  if (!req.body) {
+    throw new ApiRequestError('Request body is required.', 400);
+  }
+
+  const reader = req.body.getReader();
+  const decoder = new TextDecoder();
+  let byteLength = 0;
+  let rawBody = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    byteLength += value.byteLength;
+    if (byteLength > MAX_REQUEST_BYTES) {
+      await reader.cancel();
+      throw new ApiRequestError('Request payload is too large.', 413);
+    }
+    rawBody += decoder.decode(value, { stream: true });
+  }
+  rawBody += decoder.decode();
+
+  try {
+    return JSON.parse(rawBody);
+  } catch {
+    throw new ApiRequestError('Request body must contain valid JSON.', 400);
+  }
+}
+
+function parseMessages(value: unknown): TutorMessage[] {
+  if (!Array.isArray(value)) {
+    throw new ApiRequestError('Invalid payload: messages must be an array.', 400);
+  }
+  if (value.length === 0 || value.length > MAX_MESSAGES) {
+    throw new ApiRequestError(`Invalid payload: messages must contain between 1 and ${MAX_MESSAGES} items.`, 400);
+  }
+
+  return value.map((message) => {
+    if (!message || typeof message !== 'object') {
+      throw new ApiRequestError('Invalid payload: each message must be an object.', 400);
+    }
+
+    const { role, content } = message as Record<string, unknown>;
+    if (role !== 'user' && role !== 'assistant') {
+      throw new ApiRequestError('Invalid payload: message roles must be user or assistant.', 400);
+    }
+    if (typeof content !== 'string' || content.length === 0 || content.length > MAX_MESSAGE_LENGTH) {
+      throw new ApiRequestError(`Invalid payload: message content must contain 1-${MAX_MESSAGE_LENGTH} characters.`, 400);
+    }
+
+    return { role, content };
+  });
+}
+
 export async function GET() {
   const scenarios = BUILT_IN_SCENARIOS.map(({ id, title, description }) => ({ id, title, description }));
   return NextResponse.json({ scenarios, allowCustomScenario: true });
 }
 
 export async function POST(req: Request) {
-
   try {
+    if (req.headers.get('sec-fetch-site') === 'cross-site') {
+      throw new ApiRequestError('Cross-site requests are not allowed.', 403);
+    }
+
     if (!openrouter) {
       return NextResponse.json(
         { error: 'AI Tutor is unavailable: missing OPENROUTER_API_KEY on the server.' },
@@ -187,14 +274,21 @@ export async function POST(req: Request) {
       );
     }
 
-    const body = await req.json();
-    const { messages, scenarioId, customScenario } = body ?? {};
-
-    if (!Array.isArray(messages)) {
-      return NextResponse.json({ error: 'Invalid payload: messages must be an array.' }, { status: 400 });
+    const body = await readJsonBody(req);
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      throw new ApiRequestError('Invalid payload: request body must be an object.', 400);
     }
 
+    const { messages, scenarioId, customScenario } = body as Record<string, unknown>;
+    const validatedMessages = parseMessages(messages);
+
     const trimmedCustomScenario = typeof customScenario === 'string' ? customScenario.trim() : '';
+    if (trimmedCustomScenario.length > MAX_CUSTOM_SCENARIO_LENGTH) {
+      throw new ApiRequestError(
+        `Invalid payload: customScenario must not exceed ${MAX_CUSTOM_SCENARIO_LENGTH} characters.`,
+        400,
+      );
+    }
     const scenario = typeof scenarioId === 'string' ? BUILT_IN_SCENARIOS.find((item) => item.id === scenarioId) : undefined;
 
     const systemPrompt = createSystemPrompt({
@@ -203,8 +297,8 @@ export async function POST(req: Request) {
     });
 
     const apiMessages = [
-      { role: 'system', content: systemPrompt },
-      ...messages,
+      { role: 'system' as const, content: systemPrompt },
+      ...validatedMessages,
     ];
 
     const completion = await openrouter.chat.completions.create({
@@ -215,9 +309,16 @@ export async function POST(req: Request) {
     const messageContent = completion.choices[0]?.message?.content ?? '';
     const { english, japanese } = parseTutorResponse(messageContent);
 
-    return NextResponse.json({ text: english, translation: japanese });
+    return NextResponse.json(
+      { text: english, translation: japanese },
+      { headers: { 'Cache-Control': 'no-store' } },
+    );
   } catch (err) {
-    console.log(err);
-    return NextResponse.json({ error: `AI request failed (${err})` }, { status: 500 });
+    if (err instanceof ApiRequestError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
+
+    console.error('[AI Tutor] Request failed:', err instanceof Error ? err.message : 'Unknown error');
+    return NextResponse.json({ error: 'AI request failed.' }, { status: 500 });
   }
 }

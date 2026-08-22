@@ -47,7 +47,7 @@ The project leverages a modern, robust, and type-safe technology stack.
 
 | Category      | Technology                                                                                                                              |
 | :------------ | :-------------------------------------------------------------------------------------------------------------------------------------- |
-| **Frontend**  | **Next.js 15** (App Router), **React 19**, **TypeScript**                                                                               |
+| **Frontend**  | **Next.js 16** (App Router), **React 19**, **TypeScript**                                                                               |
 | **Rendering** | **D3.js** (for SVG rendering, drag-and-drop, and zoom/pan functionality)                                                                  |
 | **Backend**   | **Supabase** (Authentication, PostgreSQL Database for logging, Storage for project files)                                               |
 | **Styling**   | **CSS Modules** & global CSS                                                                                                            |
@@ -108,7 +108,7 @@ To run this project locally, you will need a Supabase account.
 
 3.  **Set up your Supabase project:**
     *   Create a new project on [supabase.com](https://supabase.com).
-    *   In your project's dashboard, go to the **Storage** section and create a new bucket named `projects`.
+    *   In your project's dashboard, go to the **Storage** section and create a new **private** bucket named `projects`. Keep the public-bucket option disabled so project files cannot be fetched without authorization.
     *   Go to **Project Settings** > **API**. Find your Project URL and your `anon` public key.
 
 4.  **Configure environment variables:**
@@ -118,6 +118,7 @@ To run this project locally, you will need a Supabase account.
     NEXT_PUBLIC_SUPABASE_URL=YOUR_SUPABASE_PROJECT_URL
     NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
     ```
+    The anonymous key is designed for browser use with Row Level Security. Never put a Supabase service-role key in a `NEXT_PUBLIC_` variable.
 
 5.  **Set up Supabase Storage Policies:**
     *   For the `projects` bucket to work correctly, you need to set up Row Level Security (RLS) policies. Go to **Storage** > **Policies**.

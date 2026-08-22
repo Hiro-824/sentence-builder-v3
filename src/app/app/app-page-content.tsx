@@ -22,13 +22,14 @@ export function AppPageContent({ basePath }: AppPageContentProps) {
       "query-input": "required name=query",
     },
   };
+  const serializedLdSite = JSON.stringify(ldSite).replace(/</g, "\\u003c");
 
   return (
     <>
       <Script
         id="ld-website"
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(ldSite) }}
+        dangerouslySetInnerHTML={{ __html: serializedLdSite }}
       />
       <main>
         <Suspense fallback={<Loading />}>
