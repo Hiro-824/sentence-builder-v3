@@ -1,0 +1,436 @@
+{
+  "headless": true,
+  "viewport": {
+    "width": 1800,
+    "height": 1100
+  },
+  "deviceScaleFactor": 2,
+  "frames": [
+    {
+      "name": "01-insertion-before",
+      "clip": {
+        "x": 484,
+        "y": 213,
+        "width": 480,
+        "height": 116
+      },
+      "elements": [
+        {
+          "id": "frame-fig_eat_eat_verb",
+          "x": 500,
+          "y": 274,
+          "width": 135.65625,
+          "height": 39
+        },
+        {
+          "id": "placeholder-1-fig_eat_eat_verb-complement-0",
+          "x": 573.65625,
+          "y": 275.5,
+          "width": 50,
+          "height": 36
+        },
+        {
+          "id": "frame-fig_an_det_an",
+          "x": 790,
+          "y": 274,
+          "width": 157.25,
+          "height": 39
+        },
+        {
+          "id": "frame-fig_apple_lesson_noun_apple",
+          "x": 832.3359375,
+          "y": 275.5,
+          "width": 102.9140625,
+          "height": 36
+        }
+      ],
+      "blocks": [
+        {
+          "id": "fig_eat_eat_verb",
+          "valid": true,
+          "text": "eat"
+        },
+        {
+          "id": "fig_an_det_an",
+          "valid": true,
+          "text": "an apple"
+        }
+      ]
+    },
+    {
+      "name": "02-insertion-after",
+      "clip": {
+        "x": 484,
+        "y": 213,
+        "width": 275,
+        "height": 119
+      },
+      "elements": [
+        {
+          "id": "frame-fig_eat_eat_verb",
+          "x": 500,
+          "y": 274,
+          "width": 242.90625,
+          "height": 42
+        },
+        {
+          "id": "frame-fig_an_det_an",
+          "x": 573.65625,
+          "y": 275.5,
+          "width": 157.25,
+          "height": 39
+        },
+        {
+          "id": "frame-fig_apple_lesson_noun_apple",
+          "x": 615.9921875,
+          "y": 277,
+          "width": 102.9140625,
+          "height": 36
+        }
+      ],
+      "blocks": [
+        {
+          "id": "fig_eat_eat_verb",
+          "valid": true,
+          "text": "eat an apple"
+        }
+      ]
+    },
+    {
+      "name": "03-sleep",
+      "clip": {
+        "x": 484,
+        "y": 213,
+        "width": 134,
+        "height": 113
+      },
+      "elements": [
+        {
+          "id": "frame-fig_sleep_sleep_verb",
+          "x": 500,
+          "y": 274,
+          "width": 101.40625,
+          "height": 36
+        }
+      ],
+      "blocks": [
+        {
+          "id": "fig_sleep_sleep_verb",
+          "valid": true,
+          "text": "sleep"
+        }
+      ]
+    },
+    {
+      "name": "04-attachment-before",
+      "clip": {
+        "x": 484,
+        "y": 213,
+        "width": 548,
+        "height": 119
+      },
+      "elements": [
+        {
+          "id": "frame-fig_eat_eat_verb",
+          "x": 500,
+          "y": 274,
+          "width": 242.90625,
+          "height": 42
+        },
+        {
+          "id": "frame-fig_an_det_an",
+          "x": 573.65625,
+          "y": 275.5,
+          "width": 157.25,
+          "height": 39
+        },
+        {
+          "id": "frame-fig_apple_lesson_noun_apple",
+          "x": 615.9921875,
+          "y": 277,
+          "width": 102.9140625,
+          "height": 36
+        },
+        {
+          "id": "frame-fig_slow_adverb_slowly",
+          "x": 925,
+          "y": 275.5,
+          "width": 86.8828125,
+          "height": 33
+        }
+      ],
+      "blocks": [
+        {
+          "id": "fig_eat_eat_verb",
+          "valid": true,
+          "text": "eat an apple"
+        },
+        {
+          "id": "fig_slow_adverb_slowly",
+          "valid": true,
+          "text": "slowly"
+        }
+      ]
+    },
+    {
+      "name": "05-attachment-after",
+      "clip": {
+        "x": 484,
+        "y": 213,
+        "width": 368,
+        "height": 119
+      },
+      "elements": [
+        {
+          "id": "frame-fig_eat_eat_verb",
+          "x": 500,
+          "y": 274,
+          "width": 335.7890625,
+          "height": 42
+        },
+        {
+          "id": "frame-fig_an_det_an",
+          "x": 573.65625,
+          "y": 275.5,
+          "width": 157.25,
+          "height": 39
+        },
+        {
+          "id": "frame-fig_apple_lesson_noun_apple",
+          "x": 615.9921875,
+          "y": 277,
+          "width": 102.9140625,
+          "height": 36
+        },
+        {
+          "id": "frame-fig_slow_adverb_slowly",
+          "x": 736.90625,
+          "y": 278.5,
+          "width": 86.8828125,
+          "height": 33
+        }
+      ],
+      "blocks": [
+        {
+          "id": "fig_eat_eat_verb",
+          "valid": true,
+          "text": "eat an apple slowly"
+        }
+      ]
+    },
+    {
+      "name": "06-active",
+      "clip": {
+        "x": 484,
+        "y": 213,
+        "width": 168,
+        "height": 116
+      },
+      "elements": [
+        {
+          "id": "frame-fig_voice_eat_verb",
+          "x": 500,
+          "y": 274,
+          "width": 135.65625,
+          "height": 39
+        },
+        {
+          "id": "placeholder-1-fig_voice_eat_verb-complement-0",
+          "x": 573.65625,
+          "y": 275.5,
+          "width": 50,
+          "height": 36
+        }
+      ],
+      "blocks": [
+        {
+          "id": "fig_voice_eat_verb",
+          "valid": true,
+          "text": "eat"
+        }
+      ]
+    },
+    {
+      "name": "07-voice-menu",
+      "clip": {
+        "x": 484,
+        "y": 213,
+        "width": 168,
+        "height": 303
+      },
+      "elements": [
+        {
+          "id": "frame-fig_voice_eat_verb",
+          "x": 500,
+          "y": 274,
+          "width": 135.65625,
+          "height": 39
+        },
+        {
+          "id": "placeholder-1-fig_voice_eat_verb-complement-0",
+          "x": 573.65625,
+          "y": 275.5,
+          "width": 50,
+          "height": 36
+        }
+      ],
+      "blocks": [
+        {
+          "id": "fig_voice_eat_verb",
+          "valid": true,
+          "text": "eat"
+        }
+      ]
+    },
+    {
+      "name": "08-passive",
+      "clip": {
+        "x": 484,
+        "y": 213,
+        "width": 136,
+        "height": 113
+      },
+      "elements": [
+        {
+          "id": "frame-fig_voice_eat_verb",
+          "x": 500,
+          "y": 274,
+          "width": 104,
+          "height": 36
+        }
+      ],
+      "blocks": [
+        {
+          "id": "fig_voice_eat_verb",
+          "valid": true,
+          "text": "eaten"
+        }
+      ]
+    },
+    {
+      "name": "09-gap-before",
+      "clip": {
+        "x": 448,
+        "y": 173,
+        "width": 387,
+        "height": 279
+      },
+      "elements": [
+        {
+          "id": "frame-fig_wh_what_question",
+          "x": 500,
+          "y": 234,
+          "width": 168.625,
+          "height": 39
+        },
+        {
+          "id": "frame-fig_wh_what_pronoun",
+          "x": 506,
+          "y": 235.5,
+          "width": 77.0546875,
+          "height": 36
+        },
+        {
+          "id": "placeholder-2-fig_wh_what_question-sentence-complement",
+          "x": 595.0546875,
+          "y": 235.5,
+          "width": 50,
+          "height": 36
+        },
+        {
+          "id": "frame-fig_did_inverted_do",
+          "x": 500,
+          "y": 394,
+          "width": 318.7265625,
+          "height": 42
+        },
+        {
+          "id": "frame-fig_you_pronoun_you_sg",
+          "x": 569.328125,
+          "y": 397,
+          "width": 84.171875,
+          "height": 36
+        },
+        {
+          "id": "frame-fig_gap_eat_verb",
+          "x": 659.5,
+          "y": 395.5,
+          "width": 135.65625,
+          "height": 39
+        },
+        {
+          "id": "placeholder-1-fig_gap_eat_verb-complement-0",
+          "x": 733.15625,
+          "y": 397,
+          "width": 50,
+          "height": 36
+        }
+      ],
+      "blocks": [
+        {
+          "id": "fig_wh_what_question",
+          "valid": true,
+          "text": "What"
+        },
+        {
+          "id": "fig_did_inverted_do",
+          "valid": true,
+          "text": "Did you eat"
+        }
+      ]
+    },
+    {
+      "name": "10-gap-after",
+      "clip": {
+        "x": 448,
+        "y": 173,
+        "width": 454,
+        "height": 119
+      },
+      "elements": [
+        {
+          "id": "frame-fig_wh_what_question",
+          "x": 500,
+          "y": 234,
+          "width": 385.5546875,
+          "height": 42
+        },
+        {
+          "id": "frame-fig_wh_what_pronoun",
+          "x": 506,
+          "y": 237,
+          "width": 77.0546875,
+          "height": 36
+        },
+        {
+          "id": "frame-fig_did_inverted_do",
+          "x": 595.0546875,
+          "y": 235.5,
+          "width": 266.9296875,
+          "height": 39
+        },
+        {
+          "id": "frame-fig_you_pronoun_you_sg",
+          "x": 662.15625,
+          "y": 237,
+          "width": 84.171875,
+          "height": 36
+        },
+        {
+          "id": "frame-fig_gap_eat_verb",
+          "x": 752.328125,
+          "y": 237,
+          "width": 97.65625,
+          "height": 36
+        }
+      ],
+      "blocks": [
+        {
+          "id": "fig_wh_what_question",
+          "valid": true,
+          "text": "What did you eat"
+        }
+      ]
+    }
+  ]
+}
