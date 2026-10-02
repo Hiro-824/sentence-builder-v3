@@ -1,0 +1,155 @@
+[
+  {
+    "name": "fig01-A-sidebar-drag",
+    "clip": {
+      "x": 0,
+      "y": 75,
+      "width": 1000,
+      "height": 460
+    }
+  },
+  {
+    "name": "fig01-B-insert-hover",
+    "clip": {
+      "x": 0,
+      "y": 75,
+      "width": 1000,
+      "height": 460
+    }
+  },
+  {
+    "name": "fig02-a-insert-valid",
+    "clip": {
+      "x": 525,
+      "y": 280,
+      "width": 300,
+      "height": 200
+    }
+  },
+  {
+    "name": "fig01-C-insert-complete",
+    "clip": {
+      "x": 0,
+      "y": 75,
+      "width": 1000,
+      "height": 460
+    }
+  },
+  {
+    "name": "fig02-b-insert-invalid",
+    "clip": {
+      "x": 525,
+      "y": 280,
+      "width": 300,
+      "height": 200
+    }
+  },
+  {
+    "name": "fig02-c-attach-valid",
+    "clip": {
+      "x": 470,
+      "y": 270,
+      "width": 360,
+      "height": 230
+    }
+  },
+  {
+    "name": "fig02-d-attach-invalid",
+    "clip": {
+      "x": 470,
+      "y": 270,
+      "width": 360,
+      "height": 230
+    }
+  },
+  {
+    "name": "fig03-A-pronoun-dropdown",
+    "clip": {
+      "x": 370,
+      "y": 270,
+      "width": 430,
+      "height": 330
+    }
+  },
+  {
+    "name": "fig03-B-pronoun-me",
+    "clip": {
+      "x": 370,
+      "y": 270,
+      "width": 430,
+      "height": 330
+    }
+  },
+  {
+    "name": "fig04-A-unresolved-gap",
+    "clip": {
+      "x": 430,
+      "y": 280,
+      "width": 650,
+      "height": 220
+    }
+  },
+  {
+    "name": "fig04-B-resolved-gap",
+    "clip": {
+      "x": 430,
+      "y": 280,
+      "width": 650,
+      "height": 220
+    }
+  },
+  {
+    "name": "fig05-a-main-lesson",
+    "clip": {
+      "x": 650,
+      "y": 75,
+      "width": 930,
+      "height": 590
+    }
+  },
+  {
+    "name": "fig05-b-scenario-conversation",
+    "clip": {
+      "x": 500,
+      "y": 90,
+      "width": 1080,
+      "height": 500
+    }
+  },
+  {
+    "name": "fig05-c-ai-tutor-api-error",
+    "clip": {
+      "x": 480,
+      "y": 75,
+      "width": 1100,
+      "height": 870
+    }
+  },
+  {
+    "name": "fig05-c-ai-tutor-before-send",
+    "clip": {
+      "x": 480,
+      "y": 75,
+      "width": 1100,
+      "height": 700
+    }
+  },
+  {
+    "name": "fig04-A-unresolved-gap",
+    "clip": {
+      "x": 430,
+      "y": 280,
+      "width": 650,
+      "height": 220
+    }
+  },
+  {
+    "name": "fig04-B-resolved-gap",
+    "clip": {
+      "x": 430,
+      "y": 280,
+      "width": 650,
+      "height": 220
+    }
+  }
+]
